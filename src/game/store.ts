@@ -1,0 +1,91 @@
+import { create } from "zustand";
+import { act, ageUp, applyHeroTalk, choose, createGame, freshen, heirFrom, resolveMini, type NewLifeOpts } from "./engine";
+import { loadGame, loadScores, pushScore, saveGame, saveScores, type ScoreRow } from "./save";
+import type { Game } from "./types";
+
+type Screen = "title" | "create" | "play";
+
+interface Store {
+  hydrated: boolean;
+  screen: Screen;
+  game: Game | null;
+  scores: ScoreRow[];
+  hydrate: () => void;
+  openCreate: () => void;
+  begin: (opts: NewLifeOpts) => void;
+  resume: () => void;
+  age: () => void;
+  pick: (id: string) => void;
+  do: (id: string) => void;
+  finishMini: (ratio: number, used?: string[]) => void;
+  noteTalk: (heroId: string, line: string, reply: string) => void;
+  toTitle: () => void;
+  playHeir: () => void;
+}
+
+function commit(set: (partial: Partial<Store>) => void, scores: ScoreRow[], game: Game) {
+  let nextScores = scores;
+  if (game.phase === "dead" && game.death) {
+    nextScores = pushScore(scores, game);
+    saveScores(nextScores);
+  }
+  saveGame(game);
+  set({ game, scores: nextScores, screen: "play" });
+}
+
+export const useGame = create<Store>((set, get) => ({
+  hydrated: false,
+  screen: "title",
+  game: null,
+  scores: [],
+  hydrate: () => {
+    if (get().hydrated) return;
+    const loaded = loadGame();
+    const game = loaded ? freshen(loaded) : null;
+    if (game) saveGame(game);
+    set({ hydrated: true, game, scores: loadScores() });
+  },
+  openCreate: () => set({ screen: "create" }),
+  begin: (opts) => {
+    const game = createGame({ ...opts, seed: opts.seed ?? ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0) });
+    commit(set, get().scores, game);
+  },
+  resume: () => {
+    const game = get().game ?? loadGame();
+    if (!game) return;
+    set({ game: freshen(game), screen: "play" });
+  },
+  age: () => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get().scores, ageUp(freshen(game)));
+  },
+  pick: (id) => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get().scores, choose(freshen(game), id));
+  },
+  do: (id) => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get().scores, act(freshen(game), id));
+  },
+  finishMini: (ratio, used) => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get().scores, resolveMini(game, ratio, used));
+  },
+  noteTalk: (heroId, line, reply) => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get().scores, applyHeroTalk(game, heroId, line, reply));
+  },
+  toTitle: () => set({ screen: "title" }),
+  playHeir: () => {
+    const game = get().game;
+    if (!game) return;
+    const opts = heirFrom(game);
+    if (!opts) return;
+    commit(set, get().scores, createGame(opts));
+  },
+}));
