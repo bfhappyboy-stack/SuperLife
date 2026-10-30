@@ -50,7 +50,8 @@ function Timing({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number) 
 
   useEffect(() => {
     root.current?.focus();
-    return () => timers.current.forEach((id) => window.clearTimeout(id));
+    const pending = timers.current;
+    return () => pending.forEach((id) => window.clearTimeout(id));
   }, []);
 
   useEffect(() => {
@@ -192,7 +193,8 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
   const timers = useRef<number[]>([]);
 
   useEffect(() => {
-    return () => timers.current.forEach((id) => window.clearTimeout(id));
+    const pending = timers.current;
+    return () => pending.forEach((id) => window.clearTimeout(id));
   }, []);
 
   useEffect(() => {

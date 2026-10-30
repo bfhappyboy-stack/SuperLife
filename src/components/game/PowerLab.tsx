@@ -5,7 +5,7 @@ import { getPower, mix, teachableBases, viewPowers } from "@/game/combo";
 import { mergeHeroes, replyLocally } from "@/game/heroes";
 import { askHero } from "@/game/hero-talk";
 import { masteryCap, masteryLevel, nextMasteryExp, powerRank } from "@/game/mastery";
-import { knownMoves, moveLevel } from "@/game/moves";
+import { knownMoves, moveLevel, MOVESET_SIZE, STREET_MOVES } from "@/game/moves";
 import { dossier, talkBrief } from "@/game/origin";
 import { hasGift } from "@/game/theme";
 import { useGame } from "@/game/store";
@@ -515,20 +515,23 @@ function Loadout({ game, onAct, onNote }: { game: Game; onAct: (id: string) => v
       <h2 className="text-xs font-semibold tracking-widest text-muted">SIX MOVES</h2>
       <p className="mt-1 text-sm text-muted">Tap a filled slot to drop it. Tap a move below to add it. Swapping is free. A locked move tells you the rank it wants.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        {Array.from({ length: 6 }, (_, index) => {
+        {Array.from({ length: MOVESET_SIZE }, (_, index) => {
           const id = equipped[index];
           const def = known.find((entry) => entry.def.id === id)?.def;
+          const filledCount = equipped.filter((slot) => known.some((entry) => entry.def.id === slot)).length;
+          const street = def ? null : STREET_MOVES[Math.max(0, index - filledCount)];
           return (
             <button
               key={`slot-${index}`}
               type="button"
               aria-pressed={!!def}
-              onClick={() => drop(id)}
-              className={`min-h-16 rounded-2xl border px-3 py-2 text-left ${def ? "border-gold bg-panel-2" : "border-line"}`}
+              disabled={!def}
+              onClick={() => def && drop(id)}
+              className={`min-h-16 rounded-2xl border px-3 py-2 text-left ${def ? "border-gold bg-panel-2" : "border-dashed border-line"}`}
             >
               <p className="text-xs font-semibold tracking-widest text-muted">Slot {index + 1}</p>
-              <p className="text-sm font-semibold text-fg">{def?.name ?? "Empty"}</p>
-              <p className="text-xs text-muted">{def ? `${def.kind} · tap to drop` : "Open"}</p>
+              <p className={`text-sm font-semibold ${def ? "text-fg" : "text-muted"}`}>{def?.name ?? street?.name ?? "Empty"}</p>
+              <p className="text-xs text-muted">{def ? `${def.kind} · tap to drop` : "street move · fills in fights"}</p>
             </button>
           );
         })}

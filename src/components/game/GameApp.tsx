@@ -424,7 +424,7 @@ function Life({ game }: { game: Game }) {
                   {line}
                 </p>
               ))}
-              <p className={`mt-2 text-pretty whitespace-pre-wrap text-sm leading-relaxed ${choosing || !folded ? "" : "line-clamp-2"}`}>{game.card.body}</p>
+              <p className={`mt-2 text-pretty whitespace-pre-wrap text-sm leading-relaxed ${choosing || !folded ? "" : desk === "life" ? "line-clamp-2" : "hidden"}`}>{game.card.body}</p>
               {(choosing || !folded) && game.card.deltas.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {game.card.deltas.map((delta, index) => (
@@ -506,11 +506,9 @@ function Life({ game }: { game: Game }) {
           </div>
           {game.phase === "live" && (
             <div className="shrink-0 border-t border-line px-4 pt-2 pb-3">
-              {ack && (
-                <p role="status" className="mb-2 rounded-2xl border border-gold bg-panel px-3 py-2 text-center text-sm font-semibold text-fg">
-                  {ack}
-                </p>
-              )}
+              <p role="status" className="sr-only">
+                {ack}
+              </p>
               <p className="mb-2 text-center text-xs font-semibold tracking-wide text-muted">
                 {game.majorsLeft > 0 ? `${game.majorsLeft} MOVE${game.majorsLeft === 1 ? "" : "S"} LEFT` : "OUT OF MOVES"}
               </p>
@@ -528,11 +526,9 @@ function Life({ game }: { game: Game }) {
           )}
           {game.phase === "choice" && game.pending && (
             <div className="shrink-0 flex flex-col gap-2 border-t border-line px-4 pt-2 pb-3">
-              {ack && (
-                <p role="status" className="rounded-2xl border border-gold bg-panel px-3 py-2 text-center text-sm font-semibold text-fg">
-                  {ack}
-                </p>
-              )}
+              <p role="status" className="sr-only">
+                {ack}
+              </p>
               {game.pending.choices.map((choice) => (
                 <button
                   key={choice.id}

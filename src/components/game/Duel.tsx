@@ -139,7 +139,7 @@ export function Duel({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: num
     if (move.id) used.current.push(move.id);
     lastStyle.current = move.style;
     swinging.current = true;
-    let dealt = damage(move, foeMove);
+    const dealt = damage(move, foeMove);
     let taken = Math.round(damage(foeMove, move) * slow * (1 - Math.min(0.4, (fight.guard ?? 0) / 100)));
     if (move.kind === "guard") taken = Math.round(taken * 0.8);
     const nextFoe = Math.max(0, foeHp - dealt);
