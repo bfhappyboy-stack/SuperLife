@@ -26,11 +26,11 @@ import { clamp, firstName, money, whenLabel } from "./format";
 import { getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
-import { judgeTalk, heroLevelCap, levelFor, mergeHeroes, seedHeroes } from "./heroes";
+import { judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { availableArcs, currentCase, type ArcStep } from "./arcs";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
-import { equippedMoves, fillLoadout, grantMoveExp, moveById, toggleLoadout } from "./moves";
+import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
   asFace,
@@ -590,9 +590,8 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     if (!hero) return "";
     hero.exp += special.exp;
     const before = hero.level;
-    hero.level = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship + special.bond));
     hero.relationship = clamp(hero.relationship + special.bond, 0, 100);
-    hero.level = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship));
+    settleHeroLevel(hero);
     const taught = special.teach ? unlockCombo(d, special.teach) : "";
     const drilled = special.masteryId && special.masteryExp ? grantMastery(d, special.masteryId, special.masteryExp) : "";
     const grew = hero.level > before ? ` ${hero.alias} hits level ${hero.level}. Slowly.` : "";
@@ -617,7 +616,7 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     return advanceArc(d, deltas);
   }
   if (special.kind === "trait") {
-    return grantTrait(d, special.traitId) ? ` ${special.traitId} sticks.` : "";
+    return grantTrait(d, special.traitId) ? ` ${traitById(special.traitId)?.title ?? "The new reputation"} sticks.` : "";
   }
   if (special.kind === "dropTrait") {
     dropTrait(d, special.traitId);
@@ -1188,9 +1187,12 @@ function movesFrom(powerId: PowerId | null, level: number): DuelMove[] {
 
 function playerMoves(d: Game): DuelMove[] {
   fillLoadout(d);
-  const equipped = equippedMoves(d);
-  if (equipped.length) return equipped.slice(0, 6);
-  return movesFrom(d.powerId, d.stats.powerLevel).slice(0, 4);
+  if (equippedMoves(d).length) return battleMoves(d);
+  // Unpowered life: the legacy street kit, still padded to the full six.
+  const legacy = movesFrom(d.powerId, d.stats.powerLevel).slice(0, 4);
+  const names = new Set(legacy.map((move) => move.name));
+  const padding = STREET_MOVES.filter((move) => !names.has(move.name)).map((move) => ({ ...move }));
+  return [...legacy, ...padding].slice(0, MOVESET_SIZE);
 }
 
 function makeDuel(
@@ -3052,7 +3054,7 @@ export function act(game: Game, id: string): Game {
     hero.relationship = clamp(hero.relationship + 5, 0, 100);
     hero.exp += 18;
     const before = hero.level;
-    hero.level = levelFor(hero.exp);
+    settleHeroLevel(hero);
     const grew = hero.level > before ? ` They hit level ${hero.level}.` : "";
     setStory(d, `${hero.alias} teaches you ${name || power.name}. It is yours now, which means it can braid.${grew}`, [], [`Learned ${power.name}`], "major");
     peaks(d);
@@ -3069,7 +3071,7 @@ export function act(game: Game, id: string): Game {
     hero.unlocked.push(power.id);
     hero.relationship = clamp(hero.relationship + 4, 0, 100);
     hero.exp += 16;
-    hero.level = levelFor(hero.exp);
+    settleHeroLevel(hero);
     setStory(d, `You walk ${hero.alias} through ${power.name}. They get it faster than you did, which you allow them to notice.`, [], [], "major");
     peaks(d);
     return d;
@@ -3173,7 +3175,7 @@ export function act(game: Game, id: string): Game {
       spend(d);
       hero.relationship = clamp(hero.relationship + 3, 0, 100);
       hero.exp += 8;
-      hero.level = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship));
+      settleHeroLevel(hero);
       const extra = finishStep(d);
       setStory(d, `${hero.alias} gives you the page about ${current.arc.villain}. ${step.brief}${extra}`, [], [], "major");
       peaks(d);
@@ -3341,7 +3343,7 @@ export function applyHeroTalk(game: Game, heroId: string, line: string, reply: s
   const delta = prior === 0 ? judged.delta : Math.sign(judged.delta) * Math.min(2, Math.abs(judged.delta));
   hero.relationship = clamp(hero.relationship + delta, 0, 100);
   hero.exp += 2;
-  hero.level = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship));
+  settleHeroLevel(hero);
   hero.memory.push({ role: "you", text: said.slice(0, 180) });
   hero.memory.push({ role: "them", text: heard.slice(0, 280) });
   if (hero.memory.length > 8) hero.memory.splice(0, hero.memory.length - 8);

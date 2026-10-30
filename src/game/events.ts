@@ -694,7 +694,7 @@ const HAND: EventDef[] = [
     once: true,
     needsJob: true,
     minAge: 15,
-    text: (g) => `First real week at work. Your boss says "be normal" with the confidence of someone who has not read your file.`,
+    text: () => `First real week at work. Your boss says "be normal" with the confidence of someone who has not read your file.`,
     choices: [
       { label: "Be normal", text: "You are normal for eight hours. It is a superpower you do not list.", effects: { happiness: 2, money: 100 } },
       { label: "Be useful your way", text: "You solve a problem the manual didn't imagine. The manual takes it personally.", effects: { fame: 1, happiness: 3, reputation: 1, powerLevel: 0.1 } },
