@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Anton", system-ui, sans-serif;
+  --font-sans: "Figtree", system-ui, sans-serif;
+  --color-ink: #10141c;
+  --color-panel: #1a2130;
+  --color-panel-2: #263044;
+  --color-paper: #f4ead6;
+  --color-paper-ink: #1c140e;
+  --color-fg: #f4efe4;
+  --color-muted: #a3adbd;
+  --color-cape: #c42f2f;
+  --color-gold: #e6b34d;
+  --color-line: #313a4d;
+  --color-good: #3dba8c;
+  --color-bad: #ef5d52;
+  --color-spark: #3cb8b0;
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--color-ink);
+    background-image: radial-gradient(rgba(244, 239, 228, 0.045) 1px, transparent 1px);
+    background-size: 12px 12px;
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:not(:disabled) {
+    transition: transform 150ms ease-out, filter 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.96);
+    filter: brightness(1.12);
+  }
+
+  button[aria-pressed="true"] {
+    box-shadow: inset 4px 0 0 var(--color-gold);
+  }
+
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .phone-shell {
+    width: min(100%, 28rem);
+    background-color: var(--color-ink);
+    color: var(--color-fg);
+    transition: background-color 200ms ease-out, color 200ms ease-out;
+  }
+}
+
+/* Power themes. Cape stays dark enough for light text. Gold stays light enough to read on panels and to hold dark text. */
+.phone-shell[data-cape="fire"] {
+  --color-ink: #160e0c;
+  --color-panel: #261612;
+  --color-panel-2: #3c241c;
+  --color-fg: #fbf6f1;
+  --color-muted: #d2bfb4;
+  --color-cape: #b42323;
+  --color-gold: #f0c36a;
+  --color-line: #5c382c;
+  --color-spark: #e08a4a;
+  --color-paper: #f8e7d8;
+  --color-paper-ink: #1c140e;
+}
+.phone-shell[data-cape="ice"] {
+  --color-ink: #0e1418;
+  --color-panel: #152028;
+  --color-panel-2: #203444;
+  --color-fg: #f4f8fb;
+  --color-muted: #c5d4e0;
+  --color-cape: #1d6f96;
+  --color-gold: #f2d48a;
+  --color-line: #345066;
+  --color-spark: #7eb6d4;
+  --color-paper: #e7f1f6;
+  --color-paper-ink: #102028;
+}
+.phone-shell[data-cape="storm"] {
+  --color-ink: #101018;
+  --color-panel: #181a2a;
+  --color-panel-2: #262844;
+  --color-fg: #f6f5ee;
+  --color-muted: #c8c6da;
+  --color-cape: #2c3a86;
+  --color-gold: #f0e2a0;
+  --color-line: #3c4068;
+  --color-spark: #9aa0e6;
+  --color-paper: #eee8d4;
+  --color-paper-ink: #16141a;
+}
+.phone-shell[data-cape="mind"] {
+  --color-ink: #101218;
+  --color-panel: #181e2e;
+  --color-panel-2: #24304a;
+  --color-fg: #f4f6fb;
+  --color-muted: #c5cce0;
+  --color-cape: #2f4ea8;
+  --color-gold: #f2d48a;
+  --color-line: #3a4a72;
+  --color-spark: #8aa4e8;
+  --color-paper: #e8eef8;
+  --color-paper-ink: #121826;
+}
+.phone-shell[data-cape="might"] {
+  --color-ink: #14100e;
+  --color-panel: #261c16;
+  --color-panel-2: #3c2a1e;
+  --color-fg: #fbf6f1;
+  --color-muted: #d4c4b6;
+  --color-cape: #a34a1c;
+  --color-gold: #f0c9a0;
+  --color-line: #5c4030;
+  --color-spark: #e08a48;
+  --color-paper: #f6e6d4;
+  --color-paper-ink: #1c140e;
+}
+.phone-shell[data-cape="swift"] {
+  --color-ink: #0e1414;
+  --color-panel: #142220;
+  --color-panel-2: #1c3430;
+  --color-fg: #f3faf8;
+  --color-muted: #c2d6d2;
+  --color-cape: #0c6e66;
+  --color-gold: #f2d48a;
+  --color-line: #2c504a;
+  --color-spark: #3ecfc0;
+  --color-paper: #e5f4f0;
+  --color-paper-ink: #10201c;
+}
+.phone-shell[data-cape="veil"] {
+  --color-ink: #101114;
+  --color-panel: #1c1e24;
+  --color-panel-2: #2a2e38;
+  --color-fg: #f4f3ef;
+  --color-muted: #c8c6c0;
+  --color-cape: #4a5366;
+  --color-gold: #f0d48a;
+  --color-line: #3e4554;
+  --color-spark: #a8b0c0;
+  --color-paper: #eeeae2;
+  --color-paper-ink: #16171c;
+}
+.phone-shell[data-cape="life"] {
+  --color-ink: #0e1410;
+  --color-panel: #16241c;
+  --color-panel-2: #1e382c;
+  --color-fg: #f4faf6;
+  --color-muted: #c5d8cc;
+  --color-cape: #1a6b48;
+  --color-gold: #f2d48a;
+  --color-line: #2e5240;
+  --color-spark: #3dba8c;
+  --color-paper: #e7f4ec;
+  --color-paper-ink: #102018;
+}
+.phone-shell[data-cape="arcane"] {
+  --color-ink: #14110e;
+  --color-panel: #241c16;
+  --color-panel-2: #3a2c20;
+  --color-fg: #fbf6f0;
+  --color-muted: #d4c6b6;
+  --color-cape: #7a3e28;
+  --color-gold: #f0d2a8;
+  --color-line: #5a4030;
+  --color-spark: #c4844a;
+  --color-paper: #f6eadc;
+  --color-paper-ink: #1c140e;
+}
+
+.phone-shell[data-braid="fire"] { --color-gold: #f6c2a8; --color-spark: #e07a3d; }
+.phone-shell[data-braid="ice"] { --color-gold: #d5e8f6; --color-spark: #7eb6d4; }
+.phone-shell[data-braid="storm"] { --color-gold: #f3e7ae; --color-spark: #b7b6f0; }
+.phone-shell[data-braid="mind"] { --color-gold: #dce4fb; --color-spark: #9bb0ee; }
+.phone-shell[data-braid="might"] { --color-gold: #f3d2b4; --color-spark: #e09a62; }
+.phone-shell[data-braid="swift"] { --color-gold: #d7f6f1; --color-spark: #5ed4c6; }
+.phone-shell[data-braid="veil"] { --color-gold: #e8e4da; --color-spark: #b7becc; }
+.phone-shell[data-braid="life"] { --color-gold: #daf3e6; --color-spark: #5ec99a; }
+.phone-shell[data-braid="arcane"] { --color-gold: #f3ddc0; --color-spark: #d09a62; }
+.phone-shell[data-braid="more"] { --color-gold: #ffe7a8; --color-spark: #fff1c9; }
+
+.swatch[data-swatch="skin-0"] { background-color: #f6e2c8; }
+.swatch[data-swatch="skin-1"] { background-color: #f0c7a4; }
+.swatch[data-swatch="skin-2"] { background-color: #d9a066; }
+.swatch[data-swatch="skin-3"] { background-color: #a86b3c; }
+.swatch[data-swatch="skin-4"] { background-color: #6b3a22; }
+.swatch[data-swatch="skin-5"] { background-color: #e7b898; }
+.swatch[data-swatch="hair-0"] { background-color: #1c1a22; }
+.swatch[data-swatch="hair-1"] { background-color: #3a2418; }
+.swatch[data-swatch="hair-2"] { background-color: #6e3418; }
+.swatch[data-swatch="hair-3"] { background-color: #c4552a; }
+.swatch[data-swatch="hair-4"] { background-color: #d7a441; }
+.swatch[data-swatch="hair-5"] { background-color: #8e8e96; }
+.swatch[data-swatch="hair-6"] { background-color: #5c1d28; }
+
+@keyframes hp-flash {
+  0% { filter: brightness(1.7); }
+  100% { filter: brightness(1); }
+}
+
+.hp-flash {
+  animation: hp-flash 280ms ease-out;
+}
+
+@keyframes fight-kick {
+  0% { transform: translate3d(0, 0, 0); }
+  30% { transform: translate3d(-4px, 0, 0); }
+  60% { transform: translate3d(3px, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+.fight-kick {
+  animation: fight-kick 180ms ease-out;
+}
+
+@keyframes stamp-in {
+  0% { transform: scale(0.86); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.stamp-in {
+  animation: stamp-in 140ms ease-out;
+}
+
+.desk[data-desk="life"] { --desk-accent: var(--color-gold); }
+.desk[data-desk="gift"] {
+  --desk-accent: var(--color-cape);
+  background-color: color-mix(in srgb, var(--color-cape) 8%, var(--color-ink));
+}
+.desk[data-desk="cases"] {
+  --desk-accent: var(--color-gold);
+  background-color: color-mix(in srgb, var(--color-gold) 7%, var(--color-ink));
+}
+.desk[data-desk="people"] {
+  --desk-accent: var(--color-spark);
+  background-color: color-mix(in srgb, var(--color-spark) 8%, var(--color-ink));
+}
+.desk[data-desk="work"] {
+  --desk-accent: var(--color-fg);
+  background-color: color-mix(in srgb, var(--color-panel-2) 70%, var(--color-ink));
+}
+.desk[data-desk="board"] { --desk-accent: var(--color-gold); }
+
+.desk-accent { color: var(--desk-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-flash,
+  .fight-kick,
+  .stamp-in,
+  .motion-safe {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  button:not(:disabled):active {
+    transform: none;
+    filter: none;
+  }
+}
