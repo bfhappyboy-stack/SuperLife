@@ -1,4 +1,12 @@
-/** Data-only braid book. Add a recipe by appending one `braid(...)` line. Generation is assigned in combo.ts. */
+/**
+ * Data-only braid book. Add a recipe by appending one `braid(...)` line. Generation is assigned in combo.ts.
+ *
+ * Rules (checked by src/game/test/catalog.test.ts):
+ * - generation = max(parent generations) + 1, and Generation 2 is the hard ceiling,
+ *   so a Gen 2 power is never an ingredient. Parents are Gen 0 + Gen 0 (→ Gen 1) or Gen 1 + anything below Gen 2 (→ Gen 2).
+ * - Each unordered pair appears at most once.
+ * - Required chain: Fire Control + Super Speed → Light Speed (Gen 1); Light Speed + Super Strength → Lightning Strikes (Gen 2).
+ */
 
 export interface CatalogEntry {
   id: string;
@@ -78,7 +86,7 @@ export const CATALOG: CatalogEntry[] = [
   braid("teleportation", "telekinesis", "spatial-snatch", "Spatial Snatch", "The object arrives. The explanation does not.", ["control", "mobility"]),
   braid("invisibility", "force-field", "quiet-bubble", "Quiet Bubble", "A room inside the room, and neither knows.", ["defense", "mental"]),
   braid("lightning-control", "super-strength", "thunder-clap", "Thunder Clap", "Your hands meet and the block flinches.", ["physical", "energy", "offense"]),
-  braid("telepathy", "super-senses", "crowd-read", "Crowd Read", "A street's worth of secrets, indexed.", ["mental"]),
+  braid("telepathy", "teleportation", "crowd-read", "Crowd Read", "A street's worth of secrets, indexed.", ["mental"]),
   braid("sorcery", "fire-control", "cinder-hex", "Cinder Hex", "A spell that remembers being a fire.", ["mystic", "elemental", "offense"]),
   braid("sorcery", "telepathy", "bound-word", "Bound Word", "You say their name and the room agrees.", ["mystic", "mental", "control"]),
   braid("shape-shifting", "invisibility", "perfect-blank", "Perfect Blank", "Not them. Not you. A pause where a person was.", ["mental", "control"]),
@@ -98,13 +106,13 @@ export const CATALOG: CatalogEntry[] = [
   braid("light-speed", "lightning-control", "photon-bolt", "Photon Bolt", "Light that took a class in being a weapon.", ["energy", "offense"]),
   braid("magma-fist", "super-speed", "volcanic-rush", "Volcanic Rush", "The punch is a street long and still personal.", ["physical", "elemental", "mobility"]),
   braid("kinetic-impact", "telekinesis", "shockwave-mastery", "Shockwave Mastery", "You decide where the force is allowed to stop.", ["mental", "offense", "control"]),
-  braid("lightning-strikes", "weather", "cataclysm-storm", "Cataclysm Storm", "A front with a grudge and excellent aim.", ["elemental", "offense"]),
-  braid("lightning-strikes", "energy-projection", "divine-thunder", "Divine Thunder", "The shot sounds like a chapel falling down on purpose.", ["energy", "offense"]),
+  braid("thunder-clap", "weather", "cataclysm-storm", "Cataclysm Storm", "A front with a grudge and excellent aim.", ["elemental", "offense"]),
+  braid("thunder-clap", "energy-projection", "divine-thunder", "Divine Thunder", "The shot sounds like a chapel falling down on purpose.", ["energy", "offense"]),
   braid("storm-calling", "flight", "tempest-rider", "Tempest Rider", "You live in the part of the storm that makes decisions.", ["mobility", "elemental"]),
-  braid("solar-flare", "ice-control", "eclipse-brand", "Eclipse Brand", "Light and frost sign the same nasty letter.", ["elemental", "offense"]),
-  braid("photon-bolt", "telekinesis", "guided-star", "Guided Star", "The bolt checks with you mid-flight, then commits.", ["energy", "mental", "offense"]),
-  braid("volcanic-rush", "flight", "eruption-line", "Eruption Line", "A contrail that is still on fire and not sorry.", ["mobility", "elemental"]),
-  braid("shockwave-mastery", "super-durability", "city-stopper", "City Stopper", "The shock hits you, sits down, and ends.", ["defense", "physical"]),
+  braid("frost-beam", "fire-control", "eclipse-brand", "Eclipse Brand", "Light and frost sign the same nasty letter.", ["elemental", "offense"]),
+  braid("plasma-blast", "telekinesis", "guided-star", "Guided Star", "The bolt checks with you mid-flight, then commits.", ["energy", "mental", "offense"]),
+  braid("magma-fist", "flight", "eruption-line", "Eruption Line", "A contrail that is still on fire and not sorry.", ["mobility", "elemental"]),
+  braid("kinetic-impact", "super-durability", "city-stopper", "City Stopper", "The shock hits you, sits down, and ends.", ["defense", "physical"]),
   braid("sonic-flight", "fire-control", "afterburn-saint", "Afterburn Saint", "Holy is a strong word. Loud is accurate.", ["mobility", "elemental"]),
   braid("plasma-blast", "flight", "corona-dive", "Corona Dive", "You fall upward, brightly.", ["mobility", "energy"]),
   braid("absolute-zero-dash", "fire-control", "phase-clash", "Phase Clash", "Two temperatures try to own the same second.", ["elemental", "offense"]),
@@ -120,8 +128,8 @@ export const CATALOG: CatalogEntry[] = [
   braid("light-speed", "teleportation", "everywhere-at-once", "Everywhere at Once", "Location files a complaint and loses.", ["mobility", "control"]),
   braid("kinetic-impact", "force-field", "ricochet-god", "Ricochet God", "Force goes out, comes back, and picks a favorite.", ["defense", "offense"]),
   braid("storm-calling", "super-strength", "hammer-rain", "Hammer Rain", "Weather with fists. Personal ones.", ["elemental", "physical", "offense"]),
-  braid("divine-thunder", "flight", "sermon-from-above", "Sermon from Above", "You deliver the point from a height that feels like a thesis.", ["mobility", "energy"]),
-  braid("cataclysm-storm", "telepathy", "sky-knows", "The Sky Knows Your Name", "The storm aims with someone else's secret.", ["mental", "elemental"]),
+  braid("bolt-rider", "energy-projection", "sermon-from-above", "Sermon from Above", "You deliver the point from a height that feels like a thesis.", ["mobility", "energy"]),
+  braid("storm-calling", "telepathy", "sky-knows", "The Sky Knows Your Name", "The storm aims with someone else's secret.", ["mental", "elemental"]),
   braid("thermal-break", "super-strength", "shatter-point", "Shatter Point", "You find the crack and introduce it to a fist.", ["physical", "offense"]),
   braid("aegis-shell", "regeneration", "sainted-hull", "Sainted Hull", "The shield heals. So do you. Rude things bounce.", ["defense"]),
   braid("mind-lance", "super-speed", "thought-faster", "Thought, Faster", "The idea hits before the room agrees it was thrown.", ["mental", "mobility", "offense"]),

@@ -3,6 +3,7 @@
 import { getPower } from "./combo";
 import { upbringingById } from "./data";
 import { clamp } from "./format";
+import { masteryLevel } from "./mastery";
 import type { Effects, Game, TraitId, UpbringingId } from "./types";
 
 export interface OriginBrief {
@@ -256,8 +257,17 @@ const UP_BIAS: Record<UpbringingId, Record<string, number>> = {
   isolated: { pilar: 6, nim: 4 },
 };
 
+/**
+ * Trait and origin bias: a small head start, capped at bond 32. It only nudges toward that cap and never
+ * pulls a bond that was earned in play back down to it (earned traits arrive years in).
+ */
 function bump(hero: { relationship: number }, amount: number) {
   if (!amount) return;
+  if (amount < 0) {
+    hero.relationship = clamp(hero.relationship + amount, 0, 100);
+    return;
+  }
+  if (hero.relationship >= 32) return;
   hero.relationship = clamp(Math.min(32, hero.relationship + amount), 0, 100);
 }
 
@@ -335,11 +345,7 @@ export function earnBlock(game: Game, id: TraitId): string | null {
 
 function masteryLevelSafe(game: Game, powerId: string): number {
   const power = getPower(powerId);
-  const exp = game.mastery?.[powerId] ?? 0;
-  const steps = power?.generation === 2 ? [0, 140, 320, 580, 920] : power?.generation === 1 ? [0, 80, 200, 380, 620] : [0, 36, 96, 190, 320];
-  let level = 1;
-  for (let i = 0; i < steps.length; i++) if (exp >= (steps[i] ?? 0)) level = i + 1;
-  return level;
+  return masteryLevel(game.mastery?.[powerId] ?? 0, power?.generation ?? 0);
 }
 
 export function visibleEarned(game: Game): { def: TraitDef; block: string | null }[] {
