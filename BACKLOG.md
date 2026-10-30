@@ -1,0 +1,121 @@
+# SuperLife — Backlog
+
+## AUDIT (2026-10-30)
+
+This audit compares the code with `DESIGN.md`. Priority: **P0** breaks a design rule, **P1** is a visible bug or high-value gap, **P2** is polish.
+
+### Design conformance
+
+| Area | Status | Notes |
+|---|---|---|
+| 18 base powers | ✅ | All present, plus Elasticity and Sorcery. |
+| Mix any 2 unlocked | ✅ | Named recipe or generated weave. |
+| Gen = max+1, cap Gen 2 | ⚠️ **fixed** | 8 recipes used a Gen-2 parent and the clamp hid it. `mix()` let Gen-2 powers braid again. |
+| Required chain | ✅ | Now covered by a test. |
+| Data-driven recipe book | ⚠️ **fixed** | Two recipes shared one pair (`threat-map` and `crowd-read`), which made Crowd Read impossible to get. |
+| Grind / soft caps / hard as child | ✅ | Mastery caps by age, generation and arcs; train costs; diminishing EXP. |
+| Heroes level slowly | ⚠️ **fixed** | Learn/teach ignored the bond cap. Other paths could *lower* a level when the bond dipped. |
+| Combo powers → unique moves | ⚠️ partial | Only about 14 powers have hand-authored moves; the rest are generated. Generated names collided ("Thunder Strike" ×2, "The Strike"). Names are now unique; authoring the rest is still open. |
+| Moveset exactly 6 | ⚠️ **fixed** | Fights used fewer than 6 when a player had fewer unlocked moves, and 4 when unpowered. They now pad with street moves. |
+| Story arcs, villains, reactions | ✅ partial | 4 arcs × 6 steps. Too few: see the option pools below. |
+| NYC / Hood / Cyberpunk (gritty) | ✅ | The Stacks says "refused the neon". It has no Stacks-only arc yet. |
+| 11 upbringings | ✅ | Plus 5 extras. |
+| 9 starting + 10 unlockable traits | ✅ | Real stat, bias, travel and event effects. |
+| Hero relationship / level / EXP / personality / memory / talk / missions / training | ✅ | Memory capped at 8; the LLM is optional with a local fallback. |
+
+### Bugs found (P0/P1 fixed this pass)
+
+- **P0 Gen-2 cap broken.**
+  - The cause: `cataclysm-storm`, `divine-thunder`, `eclipse-brand`, `guided-star`, `eruption-line`, `city-stopper`, `sermon-from-above` and `sky-knows` all had a Gen-2 parent.
+  - **Fixed:**
+    - Re-rooted them on Gen-1 + base pairs, keeping the same ids and moves so saves are safe.
+    - `mix()` now refuses Gen-2 parents.
+- **P0 Moveset not always 6.** **Fixed:** added `battleMoves` and `STREET_MOVES`.
+- **P1 Earned traits reset hero bonds.**
+  - `origin.ts bump()` clamped every relationship to 32 whenever a trait was granted. Earning e.g. Psychic at 20 dropped a bond of 70 to 32.
+  - **Fixed.**
+- **P1 Hero levels.**
+  - `learn|` and `teach|` skipped the bond cap, and other paths could reduce a level.
+  - **Fixed:** added `settleHeroLevel`.
+- **P1 Martial artist unlock** read the wrong mastery table (`masteryLevelSafe`). **Fixed:** it now uses `masteryLevel`.
+- **P1 Duplicate recipe pair:** Crowd Read was unreachable. **Fixed:** it is now Telepathy + Teleportation.
+- **P1 Hand-authored powers with one move** (kinetic-impact, plasma-blast, sonic-flight) had no signature move. **Fixed:** a generated second move is appended.
+- **P2 Raw trait id in story text** ("martial sticks."). **Fixed:** it now shows the trait title.
+- **P2 Lint:** `Duel.tsx` prefer-const, Minigame ref cleanup warnings, and an unused param. **Fixed.**
+- **P2 `combo.selfCheck()`** asserted the old clamp behaviour. **Updated**, and it now runs in tests.
+
+### Still open
+
+- **P1 Two power layers.**
+  - The header still shows the legacy fusion title (e.g. "Cauter · B 3.8", "Braided with Healing"), while the book says "Regeneration" and "Light Speed".
+  - Unify on the combo catalog: header = focused combo power + mastery rank.
+- **P1 Hand-author moves** for all 106 combo powers (Gen 1 + Gen 2). The generated "X Rush / X Verdict" names are unique but bland.
+- **P1 Child pacing.**
+  - A simulated street kid in the Stacks held 8 base powers by 14, learned from heroes. That is fine for breadth, but power *count* feels easy.
+  - Consider gating hero teaching by age or bond more tightly.
+  - Mastery stayed low (one power at 185), which is correct.
+- **P2 The headless sim loop stalls around age 14** on repeated actions. Investigate whether some action can no-op without spending a move.
+- **P2 `npm test` pre-existing failures.**
+  - 11 failures in `scripts/**` tests need `.grok/skills/og` and nitro middleware files that aren't in the repo.
+  - This is Grok Build plumbing and was left alone. Game tests now run first (`npm run test:game`).
+- **P2 Lint error in plumbing:** `src/lib/app-data/client.server.ts:281` has an empty block. It was left alone on purpose.
+
+## Mobile UX (390px)
+
+Measured at 390×844 with touch emulation. There is no horizontal overflow, no tap target under 44px, and no console errors.
+
+- **Done:**
+  - Removed the persistent "X — pressed." banner above "Next month". It cost about 50px on every screen. It is now screen-reader-only.
+  - On non-Life desks the event card collapses to its title and headline. The Power Lab now starts about 60px higher.
+- **P1** The desk nav scrolls sideways, and "Board" is cut off at 390px with no hint. Add an edge fade or shrink labels to icons + short text.
+- **P1** The create screen is one long scroll (look, city, upbringing, traits, gift). Make it a 4-step stepper with a sticky "Next", and add a "Randomize all".
+- **P1** The Power Lab Book is long (identity, mastery list, heard-of, mixes). Add a sticky segment control (Mix · Mastery · Heard of), or collapse each section.
+- **P1 Mix flow:** make it a two-tap picker (tap power A, then tap power B), with a live result card and the Gen badge, instead of scrolling a list.
+- **P2** Add haptics (`navigator.vibrate`) on duel hits, minigame wins and level-ups, and respect reduced-motion.
+- **P2** Duel: test one-handed reach. Move buttons should sit in the bottom third.
+- **P2** Header power line truncates on small phones. Show the rank as a chip instead.
+- **P2** Add skeleton/fade transitions between desks so they don't hard-cut.
+
+## Minigames
+
+There are only three kinds today: `timing`, `pattern` and `duel`. Add these, each with 3 difficulty tiers and power-flavoured skins:
+
+1. **Swipe-dodge:** dodge debris or bullets. For speed and flight powers and chase scenes.
+2. **Lockpick / hack:** rotate rings to align. For tech genius, insider and Stacks heists.
+3. **Rescue triage:** drag civilians to safety before the timer runs out. For protector and arc "protect" steps.
+4. **Memory interrogation:** recall a suspect's details. For telepathy and investigate steps.
+5. **Rhythm channel:** tap on beat to charge a combo. Use it for mix attempts, so braiding is a skill check rather than a button.
+6. **Aim / trajectory:** energy projection, fire and ice shots at moving targets.
+7. **Stealth path:** a grid where you avoid vision cones. For invisibility and secret identity.
+8. **Press conference:** pick lines on a timer. For loud and celebrity, affecting fame.
+9. **Weight lift / hold:** press and hold within a zone. For strength and durability training.
+10. **Boss phases:** multi-phase duels with a gimmick per villain.
+
+Also give each training action its own mini instead of only stat rolls, and add daily or seasonal challenge minis.
+
+## Option pools (make every choice wide)
+
+| Pool | Today | Target | Concrete items |
+|---|---|---|---|
+| Base powers | 20 | 24+ | Sound, Density, Time Skip, Animal Kinship |
+| Named recipes | 106 | 150+ | Fill in the free Gen-0 pairs (12 still free with Telepathy alone); every Gen-1 should have ≥2 Gen-2 children |
+| Hand-authored moves | ~14 powers | all 126 | 2–3 moves per power with unique effects |
+| Upbringings | 16 | 20+ | Cult escapee, Sidekick's kid, Villain's kid, Refugee |
+| Traits | 19 | 30+ | Starting: Showboat, Cautious, Glory hound. Unlockable: Mayor, Ex-villain, Time-touched |
+| Cities | 8 | 10+ | A Stacks-only arc, a Hood-only arc, plus an undersea or orbital city |
+| Story arcs | 4 | 12+ | One per city, plus 4 cross-city arcs; each with 2 villain variants |
+| Heroes | 10 | 16+ | Diverse power families; each with 40+ local lines across moods |
+| Hero dialogue | small LINES/VOICE banks | 3× | Per-tone banks (thanks, insult, train, mission, neutral) × bond band |
+| Looks | 6 skin, 7 hair, 6 styles, 2 builds, 4 features | 2–3× | More builds, eye colours, facial hair, tattoos, masks |
+| Random events | ~53 | 150+ | Per-city and per-upbringing decks |
+
+## Design ambiguities (need the owner's call)
+
+1. **Can a Gen-2 power be a parent?**
+   - The design says "Gen = max+1, hard limit Gen 2". The old build allowed Gen-2 + X → Gen 2 (clamped).
+   - This pass treats Gen 2 as **final** and re-rooted 8 recipes.
+   - If the owner wants clamped apex braids, revert `childGeneration` to clamp and restore the parents.
+2. **Exactly 6 moves:** should empty slots be padded with street moves (current), or should a player be blocked from fighting with fewer than 6?
+3. **"Cyberpunk World" vs "The Stacks":** should the city be renamed to "Cyberpunk World" in the UI? "Neon Spire" also exists as a separate neon city.
+4. **Legacy 15-power layer:** retire it, or keep it as flavour?
+5. **Should a generated weave (an unnamed pair) count as a "combo power with unique moves"?** Today it uses the generated two-move kit.
