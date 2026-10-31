@@ -1,3 +1,4 @@
+import type { Chapter, ChapterNotice } from "./chapters";
 export type PowerId =
   | "strength"
   | "flight"
@@ -344,6 +345,12 @@ export interface Game {
   death: DeathReport | null;
   lastEvent: string;
   peak: { fame: number; power: number; rank: number; money: number; rep: number };
+  /** Decade chapters, oldest first. The last one is running. Optional for old saves (see migrateChapters). */
+  chapters?: Chapter[];
+  /** Late-life purpose: mentoring, teaching, family and finished chapters. Softens aging. */
+  legacy?: number;
+  /** A chapter title card / recap waiting to be shown. UI-only, cleared on dismiss. */
+  chapterNotice?: ChapterNotice | null;
 }
 
 export interface ActionItem {

@@ -457,7 +457,7 @@ export function teamById(id: string | null | undefined): TeamDef | undefined {
 
 export const RANKS = ["Civilian", "Rookie", "Associate", "Full Member", "Elite", "Legend", "Sentinel"];
 
-export const STIPEND = [0, 12000, 28000, 55000, 90000, 140000, 200000];
+export const STIPEND = [0, 8000, 15000, 24000, 36000, 52000, 75000];
 
 export interface CityDef {
   id: string;

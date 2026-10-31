@@ -1,6 +1,7 @@
 import { RANKS, UPBRINGINGS, powerById } from "./data";
 import { getPower, legacyComboId } from "./combo";
 import { ensureWardrobe } from "./costume";
+import { migrateChapters } from "./chapters";
 import { clamp } from "./format";
 import { mergeHeroes } from "./heroes";
 import { resolveLook } from "./look";
@@ -68,6 +69,7 @@ function migrate(game: Game): Game {
   for (const id of next.unlockedPowers) {
     if (next.mastery[id] == null) next.mastery[id] = 0;
   }
+  migrateChapters(next);
   return next;
 }
 

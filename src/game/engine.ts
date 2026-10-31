@@ -30,6 +30,7 @@ import { judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { availableArcs, currentCase, type ArcStep } from "./arcs";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
+import { migrateChapters, openChapter, turnChapter } from "./chapters";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
@@ -186,7 +187,14 @@ function applyEffects(d: Game, e: Effects | undefined, deltas: Delta[]) {
     if (delta == null) continue;
     const [lo, hi] = ranges[key];
     const before = s[key];
-    s[key] = clamp(Math.round(before + delta), lo, hi);
+    let step = delta;
+    // Fame and reputation get harder to push toward the extremes, so they stay meaningful across decades.
+    if ((key === "fame" || key === "reputation") && Math.sign(delta) === Math.sign(before || delta)) {
+      const scaled = Math.abs(delta) * Math.max(0.12, 1 - Math.abs(before) / 105);
+      const whole = Math.floor(scaled);
+      step = Math.sign(delta) * (whole + (roll(d) < scaled - whole ? 1 : 0));
+    }
+    s[key] = clamp(Math.round(before + step), lo, hi);
     touch(STAT_LABEL[key] ?? key, before, s[key]);
   }
   if (e.money != null) {
@@ -279,10 +287,44 @@ function scoreOf(d: Game): { score: number; rows: { label: string; points: numbe
 
 function deadCause(d: Game): string {
   if (d.age >= 90) return "Old age, which does not take meetings.";
+  if (d.age >= 70 && d.stats.health >= 20) return "A long life that finally asked to sit down.";
   if (d.stats.reputation <= -40) return "A grudge that stopped being theoretical.";
   if (d.powerId) return "A gift that asked for more than the body had.";
   if (d.stats.health < 20) return "A heart that punched out after a long shift.";
   return "An ending the paperwork will describe as natural.";
+}
+
+/**
+ * Health hitting zero is a collapse, not automatically a funeral. The first collapse in a stretch
+ * (and every collapse before 18) is a hospital stay with a real bill and a "critical" window.
+ * A second collapse inside that window can kill an adult. Explicit death outcomes still kill.
+ * Returns true when the hero survived.
+ */
+function collapse(d: Game, story: string): boolean {
+  const critical = (d.flags.critical ?? 0) > 0;
+  if (critical && d.age >= 18) {
+    kill(d, deadCause(d), story);
+    return false;
+  }
+  const bill = Math.min(Math.max(0, d.stats.money), 250 + d.age * 25);
+  const deltas: Delta[] = [];
+  d.stats.health = 30;
+  applyEffects(d, { money: -bill, happiness: -6 }, deltas);
+  deltas.unshift({ stat: "Health", amount: 30 });
+  d.flags.critical = 18;
+  d.flags.collapses = (d.flags.collapses ?? 0) + 1;
+  d.phase = "live";
+  d.pending = null;
+  d.minigame = null;
+  pushHistory(d, `Collapsed at ${d.age} and woke up in a hospital.`, "major");
+  setStory(
+    d,
+    `${story}\n\nYou wake up in a hospital bed with a wristband and a bill${bill ? ` for ${money(bill)}` : ""}. Close call. For the next year and a half your body is on probation: drop to zero again and it may not be a hospital.`,
+    deltas,
+    ["Close call. Rest, see a doctor, and go easy on drills for a while."],
+    "major",
+  );
+  return true;
 }
 
 function kill(d: Game, cause: string, story: string) {
@@ -560,6 +602,11 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     return grantSecondGift(d, deltas);
   }
   if (special.kind === "grant") {
+    // Stray sparks (no specific recipe offered) are rare: at most one every two years, so powers stay an event.
+    if (!special.comboId && d.flags.lastGrantAge !== undefined && d.age - d.flags.lastGrantAge < 2) {
+      return " Something sparks in your palm and goes out. Not yet. You are still learning the last one.";
+    }
+    if (!special.comboId) d.flags.lastGrantAge = d.age;
     const id = special.comboId ?? randomMissingBase(d.unlockedPowers ?? [], roll(d))?.id ?? null;
     const name = unlockCombo(d, id);
     if (!name) return " The spark fizzles. You already hold that page.";
@@ -818,9 +865,20 @@ function grief(d: Game, person: Person, banners: string[]) {
   pushHistory(d, `${person.name} died.`, "major");
 }
 
+/** The body recovers a little every month, less with age. Low health always says what to do about it. */
+function monthlyBody(d: Game, banners: string[]) {
+  if ((d.flags.critical ?? 0) > 0) d.flags.critical = Math.max(0, (d.flags.critical ?? 0) - 1);
+  const ceiling = d.age < 40 ? 70 : d.age < 60 ? 55 : 40;
+  if (d.stats.health < ceiling) {
+    const regen = d.age < 25 ? 2 : d.age < 60 ? 1 : 0;
+    d.stats.health = clamp(d.stats.health + regen, 0, 100);
+  }
+  if (d.stats.health < 25 && d.age >= 7) banners.push(`Health ${d.stats.health}. Rest or see a doctor before you drill or fight.`);
+}
+
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (key === "rested" || key === "mentored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
   }
 }
 
@@ -879,7 +937,7 @@ function openYear(d: Game): string[] {
     pay += 14000;
     d.stats.reputation = clamp(d.stats.reputation - 2, -100, 100);
   }
-  if (d.stats.fame > 45 && d.leagueRank >= 1) pay += Math.round(d.stats.fame * 380);
+  if (d.stats.fame > 45 && d.leagueRank >= 1) pay += Math.round(d.stats.fame * 150);
 
   if (d.schoolId) {
     const school = schoolById(d.schoolId);
@@ -933,7 +991,11 @@ function openYear(d: Game): string[] {
   }
 
   let healthDelta = 0;
-  if (d.age > 58) healthDelta -= Math.floor((d.age - 58) / 5);
+  if (d.age > 58) {
+    // Purpose keeps you upright: a real legacy halves the yearly toll of age.
+    const toll = Math.floor((d.age - 58) / 5);
+    healthDelta -= (d.legacy ?? 0) >= 20 ? Math.ceil(toll / 2) : toll;
+  }
   if (d.stats.happiness < 28) healthDelta -= 2;
   if (d.stats.happiness > 80) healthDelta += 1;
   if (d.age < 18) healthDelta += 1;
@@ -966,7 +1028,8 @@ function openYear(d: Game): string[] {
 
 function offerYearPower(d: Game, banners: string[]): boolean {
   if (d.age < 13) return false;
-  const chance = d.age < 18 ? 0.62 : d.age < 30 ? 0.48 : 0.36;
+  const owned = (d.unlockedPowers ?? []).length;
+  const chance = (d.age < 18 ? 0.34 : d.age < 30 ? 0.28 : 0.2) * (owned >= 10 ? 0.5 : 1);
   if (roll(d) >= chance) return false;
   const offer = offerPower(d.unlockedPowers ?? [], d.age, roll(d));
   if (!offer) return false;
@@ -1138,6 +1201,8 @@ export function createGame(opts: NewLifeOpts): Game {
   peaks(d);
   seedRoster(d);
   ensureProgress(d);
+  d.legacy = 0;
+  openChapter(d);
   return d;
 }
 
@@ -1672,6 +1737,17 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
   return false;
 }
 
+/**
+ * Fast-forward: advance month by month until the next birthday, stopping early the moment the game
+ * needs the player (a choice, a minigame, a chapter card, or death). Cuts the ~960 taps of a long life.
+ */
+export function skipToBirthday(game: Game): Game {
+  let g = ageUp(game);
+  let guard = 0;
+  while (g.phase === "live" && g.month !== 0 && guard++ < 12) g = ageUp(g);
+  return g;
+}
+
 export function ageUp(game: Game): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
@@ -1680,13 +1756,14 @@ export function ageUp(game: Game): Game {
   let banners: string[] = [];
   if (birthday) {
     banners = openYear(d);
+    if (turnChapter(d)) banners.push(`Chapter ${(d.chapters?.length ?? 1)} begins: ${d.chapters?.[d.chapters.length - 1]?.title ?? "a new decade"}.`);
     if (d.stats.health <= 0) {
-      kill(d, deadCause(d), "Your health gives out before the year can even pick a fight.");
+      collapse(d, "Your health gives out before the year can even pick a fight.");
       return d;
     }
     let deathChance = 0;
     if (d.age >= 100) deathChance = clamp(0.5 + (d.age - 100) * 0.15, 0, 0.95);
-    else if (d.age >= 66) deathChance = (d.age - 64) * 0.018 * (1.4 - d.stats.health / 120);
+    else if (d.age >= 70) deathChance = (d.age - 68) * 0.013 * (1.4 - d.stats.health / 120);
     else if (d.stats.health < 8 && d.age > 35) deathChance = 0.3;
     if (deathChance > 0 && roll(d) < deathChance) {
       const cause = d.age >= 78 ? "Old age, which does not take meetings." : deadCause(d);
@@ -1719,6 +1796,11 @@ export function ageUp(game: Game): Game {
     }
   }
   banners.push(...tickRoster(d));
+  if (d.phase === "live") monthlyBody(d, banners);
+  if (d.phase === "live" && d.stats.health <= 0) {
+    collapse(d, "Your legs file a complaint and the floor accepts it.");
+    return d;
+  }
   if (birthday && tryManifest(d, banners)) {
     peaks(d);
     return d;
@@ -1778,8 +1860,12 @@ function resolveOutcome(d: Game, outcome: Outcome) {
   const banners: string[] = [];
   noteGrowth(before, d, banners);
   const story = `${outcome.text}${extra}`;
-  if (outcome.special?.kind === "death" || d.stats.health <= 0) {
-    kill(d, outcome.special?.kind === "death" ? outcome.special.cause : deadCause(d), story);
+  if (outcome.special?.kind === "death") {
+    kill(d, outcome.special.cause, story);
+    return;
+  }
+  if (d.stats.health <= 0) {
+    collapse(d, story);
     return;
   }
   setStory(d, story, deltas, banners, outcome.special ? "major" : undefined);
@@ -1834,8 +1920,12 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   const banners: string[] = [];
   noteGrowth(before, d, banners);
   const story = `${win ? spec.winText : partial ? spec.partialText : spec.loseText}${extra}${archLine}`;
-  if (d.stats.health <= 0 || special?.kind === "death") {
-    kill(d, special?.kind === "death" ? special.cause : deadCause(d), story);
+  if (special?.kind === "death") {
+    kill(d, special.cause, story);
+    return d;
+  }
+  if (d.stats.health <= 0) {
+    collapse(d, story);
     return d;
   }
   setStory(d, story, deltas, banners, spec.tag ? "major" : undefined);
@@ -1897,6 +1987,7 @@ function powerOffer(hero: AiHero, unlocked: readonly string[], discovered: reado
 
 export function freshen(game: Game): Game {
   game.heroes = mergeHeroes(game.heroes);
+  migrateChapters(game);
   if (game.crew) {
     if (typeof game.crew.heat !== "number") game.crew.heat = 15;
     if (typeof game.crew.loyalty !== "number") game.crew.loyalty = 55;
@@ -2302,8 +2393,9 @@ export function act(game: Game, id: string): Game {
 
   if (id === "shift") {
     const job = jobById(d.jobId);
-    if (!job || noTime(d, true)) return game;
+    if (!job || d.flags.shifted || noTime(d, true)) return game;
     spend(d);
+    d.flags.shifted = 1;
     const bonus = Math.round(job.pay * 0.08 * ([1, 1.1, 1.2, 1.35, 1.5][d.jobRank] ?? 1));
     const deltas: Delta[] = [];
     applyEffects(d, { money: bonus, happiness: -1 }, deltas);
@@ -3061,6 +3153,23 @@ export function act(game: Game, id: string): Game {
     return d;
   }
 
+  if (id === "mentor") {
+    if (d.age < 45 || d.flags.mentored || noTime(d, true)) return game;
+    spend(d);
+    d.flags.mentored = 1;
+    const deltas: Delta[] = [];
+    const good = roll(d) < 0.25 + Math.min(0.5, d.stats.reputation / 200 + (d.legacy ?? 0) / 200);
+    d.legacy = (d.legacy ?? 0) + (good ? 3 : 2);
+    applyEffects(d, { happiness: good ? 4 : 2, reputation: d.stats.reputation >= 0 ? 1 : 0, karma: 1 }, deltas);
+    deltas.unshift({ stat: "Legacy", amount: good ? 3 : 2 });
+    const line = good
+      ? "The rookie gets it on the third try and looks at you like you invented gravity. You did not. You let them think it a while."
+      : "You spend an afternoon on footwork and bad habits. The rookie is slow. So were you.";
+    setStory(d, line, deltas, [], undefined);
+    peaks(d);
+    return d;
+  }
+
   if (id.startsWith("teach|")) {
     const [, heroId, powerId] = id.split("|");
     const hero = d.heroes.find((item) => item.id === heroId && item.met);
@@ -3072,6 +3181,7 @@ export function act(game: Game, id: string): Game {
     hero.relationship = clamp(hero.relationship + 4, 0, 100);
     hero.exp += 16;
     settleHeroLevel(hero);
+    d.legacy = (d.legacy ?? 0) + 3;
     setStory(d, `You walk ${hero.alias} through ${power.name}. They get it faster than you did, which you allow them to notice.`, [], [], "major");
     peaks(d);
     return d;
@@ -3378,6 +3488,7 @@ export function actionsFor(g: Game): ActionItem[] {
 
   if (g.age >= 1) {
     items.push(item({ id: "rest", group: life, section: "This month", label: "Rest", detail: "Health and a little peace. Once a month.", disabled: g.flags.rested ? "You already rested." : undefined }));
+    if (g.age >= 45) items.push(item({ id: "mentor", group: life, section: "This month", label: "Mentor a rookie", detail: "Legacy and a little joy. Once a month.", disabled: g.flags.mentored ? "One rookie a month is plenty." : noTime(g, true), accent: g.age >= 60 && !g.flags.mentored }));
   }
   if (g.age >= 8) items.push(item({ id: "gym", group: life, section: "This month", label: "Hit the gym", detail: "Lift, run, or an underground bout.", disabled: noTime(g, true) }));
   if (g.age >= 6) items.push(item({ id: "books", group: life, section: "This month", label: "Hit the books", detail: "Library, stolen notes, or the cape columns.", disabled: noTime(g, true) }));
@@ -3486,7 +3597,7 @@ export function actionsFor(g: Game): ActionItem[] {
   if (g.jobId) {
     const job = jobById(g.jobId);
     const title = JOB_TITLES[g.jobRank] ?? "Staff";
-    items.push(item({ id: "shift", group: career, section: job?.name ?? "Work", label: "Work a heavy shift", detail: `${title}. Extra cash, less joy.`, disabled: noTime(g, true) }));
+    items.push(item({ id: "shift", group: career, section: job?.name ?? "Work", label: "Work a heavy shift", detail: `${title}. Extra cash, less joy.`, disabled: g.flags.shifted ? "Once a month. Your back says so." : noTime(g, true) }));
     items.push(item({ id: "promote", group: career, section: job?.name ?? "Work", label: "Ask for a promotion", detail: title, disabled: noTime(g, true) }));
     items.push(item({ id: "quit", group: career, section: job?.name ?? "Work", label: "Quit", detail: "Freedom has a receipt." }));
   } else if (g.age >= 15) {
