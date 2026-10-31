@@ -10,7 +10,11 @@ import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
 import { Minigame } from "@/components/game/Minigame";
 import { JOB_TITLES, RANKS, fusionTitle, jobById, powerById, schoolById, teamById } from "@/game/data";
-import { abilityList, actionsFor } from "@/game/engine";
+import { abilityList, actionsFor, focusId } from "@/game/engine";
+import { getPower } from "@/game/combo";
+import { ELEMENTS, elementOfPower } from "@/game/elements";
+import { masteryLevel, powerRank } from "@/game/mastery";
+import { ELEMENT_ICON } from "@/components/game/Vfx";
 import { firstName, karmaLabel, money, tierLabel, MONTHS } from "@/game/format";
 import { saveGame } from "@/game/save";
 import { capeTheme } from "@/game/theme";
@@ -137,6 +141,10 @@ function Life({ game }: { game: Game }) {
   const power = powerById(game.powerId);
   const second = powerById(game.secondaryId);
   const fusion = power && second ? fusionTitle(power.id, second.id) : null;
+  const signature = getPower(focusId(game));
+  const sigElement = signature ? elementOfPower(signature.id) : null;
+  const SigIcon = sigElement ? ELEMENT_ICON[sigElement] : null;
+  const sigRank = signature ? powerRank(masteryLevel(game.mastery?.[signature.id] ?? 0, signature.generation)) : "";
   const placed = useMemo(() => actionsFor(game).map((action) => ({ action, ...place(action) })), [game]);
   const onDesk = placed.filter((row) => row.desk === desk);
   const shelves = SHELF_ORDER[desk].filter((name) => (ALWAYS_SHELF[desk] ?? []).includes(name) || onDesk.some((row) => row.shelf === name));
@@ -205,11 +213,20 @@ function Life({ game }: { game: Game }) {
               <Bar label="Look" stat="looks" value={game.stats.looks} />
             </div>
             <div className="-mx-3 mt-2 flex gap-1.5 overflow-x-auto px-3 [scrollbar-width:none]">
-              <span className="chip shrink-0 text-fg">
-                <FamilyGlyph family={family} className="size-3.5" style={{ color: family ? FAMILY_COLOR[family] : undefined }} />
-                {fusion ? fusion : power ? power.name : game.powerless ? "Unpowered" : "No power yet"}
-                {power ? <span className="t-num text-gold">{` ${tierLabel(game.stats.powerLevel)} ${game.stats.powerLevel.toFixed(1)}`}</span> : null}
-              </span>
+              {signature && SigIcon && sigElement ? (
+                <span className="chip shrink-0 text-fg" title={`Signature power: ${signature.name}, mastery rank ${sigRank}. Power level ${game.stats.powerLevel.toFixed(1)}.`} style={{ borderColor: `color-mix(in srgb, ${ELEMENTS[sigElement].color} 45%, transparent)` }}>
+                  <SigIcon className="size-3.5" style={{ color: ELEMENTS[sigElement].color, filter: `drop-shadow(0 0 4px ${ELEMENTS[sigElement].glow})` }} />
+                  {signature.name}
+                  <span className="grid h-4 min-w-4 place-items-center rounded-[5px] px-1 font-display text-[11px] leading-none text-paper-ink" style={{ background: ELEMENTS[sigElement].color }}>{sigRank}</span>
+                  <span className="t-num text-gold">{`${tierLabel(game.stats.powerLevel)} ${game.stats.powerLevel.toFixed(1)}`}</span>
+                </span>
+              ) : (
+                <span className="chip shrink-0 text-fg">
+                  <FamilyGlyph family={family} className="size-3.5" style={{ color: family ? FAMILY_COLOR[family] : undefined }} />
+                  {fusion ? fusion : power ? power.name : game.powerless ? "Unpowered" : "No power yet"}
+                  {power ? <span className="t-num text-gold">{` ${tierLabel(game.stats.powerLevel)} ${game.stats.powerLevel.toFixed(1)}`}</span> : null}
+                </span>
+              )}
               <span className="chip shrink-0 text-fg"><Star className="size-3.5" style={{ color: STAT_COLOR.fame }} /><span className="t-num">{Math.round(game.stats.fame)}</span> Fame</span>
               <span className="chip shrink-0 text-fg"><Shield className="size-3.5" style={{ color: STAT_COLOR.reputation }} />{RANKS[game.leagueRank]}</span>
               <span className="chip shrink-0 text-fg">{karmaLabel(game.stats.karma ?? 0)}</span>

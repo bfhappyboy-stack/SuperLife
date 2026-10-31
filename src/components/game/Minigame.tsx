@@ -3,6 +3,10 @@ import { Eye, Flame, Shield, Star, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Duel, type DuelHero } from "@/components/game/Duel";
 import { HitBurst } from "@/components/game/Vfx";
+import { buzz } from "@/components/game/haptics";
+import { MiniHead } from "@/components/game/MiniKit";
+import { skinColor } from "@/components/game/miniUtil";
+import { Hack, Hold, Press, Rescue } from "@/components/game/MiniGames";
 import type { MinigameSpec } from "@/game/types";
 
 const ICONS = [
@@ -13,21 +17,15 @@ const ICONS = [
   { id: "star", label: "Star", Icon: Star, color: "#ff7ac8" },
 ];
 
-function DrillHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div className="anim-rise">
-      <p className="t-label text-spark">Drill</p>
-      <p className="t-display truncate text-fg">{title}</p>
-      {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
-    </div>
-  );
-}
-
 type Grade = "perfect" | "good" | "miss";
 
 export function Minigame({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
   if (spec.kind === "duel" && spec.duel) return <Duel spec={spec} onDone={onDone} hero={hero} />;
   if (spec.kind === "pattern") return <Pattern spec={spec} onDone={onDone} />;
+  if (spec.kind === "hack") return <Hack spec={spec} onDone={onDone} />;
+  if (spec.kind === "rescue") return <Rescue spec={spec} onDone={onDone} />;
+  if (spec.kind === "press") return <Press spec={spec} onDone={onDone} />;
+  if (spec.kind === "hold") return <Hold spec={spec} onDone={onDone} />;
   return <Timing spec={spec} onDone={onDone} />;
 }
 
@@ -113,6 +111,7 @@ function Timing({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number) 
     scoreRef.current = total;
     setScore(total);
     setFlash(grade);
+    buzz(grade === "perfect" ? "big" : grade === "good" ? "hit" : "miss");
     setMarks((current) => current.map((mark, index) => (index === roundRef.current - 1 ? grade : mark)));
     setNote(grade === "perfect" ? "Perfect. The next band is meaner." : grade === "good" ? "In the band. Not the center." : "Outside. Watch the bounce.");
     lock.current = true;
@@ -145,7 +144,7 @@ function Timing({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number) 
       }}
       tabIndex={0}
     >
-      <DrillHeader title={spec.title} subtitle={spec.subtitle} />
+      <MiniHead spec={spec} kind="timing" />
       <p role="status" className="text-sm font-semibold text-gold">{note}</p>
       <div className="flex gap-2" aria-hidden="true">
         {marks.map((mark, index) => (
@@ -155,9 +154,9 @@ function Timing({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number) 
           />
         ))}
       </div>
-      <div className={`scene-arena relative h-32 overflow-hidden rounded-[1.5rem] border border-white/10 ${flash === "miss" ? "anim-shake" : ""}`} key={flash === "miss" ? `m${round}` : "track"}>
+      <div className={`scene-arena relative min-h-32 flex-1 overflow-hidden rounded-[1.6rem] border border-white/10 ${flash === "miss" ? "anim-shake" : ""}`} style={{ boxShadow: `inset 0 0 60px -20px ${skinColor(spec, "timing")}` }} key={flash === "miss" ? `m${round}` : "track"}>
         <div className="absolute inset-x-4 top-1/2 h-3 -translate-y-1/2 rounded-full bg-black/50 shadow-[inset_0_1px_2px_rgba(0,0,0,.7)]" />
-        <div className="absolute inset-x-4 inset-y-0">
+        <div className="absolute inset-x-4 top-1/2 h-28 -translate-y-1/2">
           <div className="absolute top-3 bottom-3 rounded-2xl border border-gold/50 bg-gold/20 shadow-[0_0_24px_-4px_var(--color-gold)]" style={{ left: `${(0.5 - zone / 2) * 100}%`, width: `${zone * 100}%` }} />
           <div className="absolute top-5 bottom-5 rounded-xl bg-gradient-to-b from-[#fff3c4] to-gold shadow-[0_0_18px_var(--color-gold)]" style={{ left: `${(0.5 - perfect / 2) * 100}%`, width: `${perfect * 100}%` }} />
           <div className="absolute top-1/2 size-9 -translate-y-1/2" style={{ left: `calc(${pos * 100}% - 1.125rem)` }}>
@@ -175,7 +174,7 @@ function Timing({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number) 
         <span className="chip text-fg">Round <span className="t-num">{round}/3</span></span>
         <span className="chip text-gold">Score <span className="t-num">{score.toFixed(1)}/3</span></span>
       </div>
-      <button type="button" onClick={strike} className="btn btn-primary mt-auto min-h-16 text-xl tracking-wide">
+      <button type="button" onClick={strike} className="btn btn-primary min-h-16 text-xl tracking-wide">
         STRIKE
       </button>
     </div>
@@ -246,6 +245,7 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
     const expected = sequence.current[cursor];
     setLit(icon);
     if (icon !== expected) {
+      buzz("miss");
       const ratio = cursor / sequence.current.length;
       setHint(expected ?? null);
       setNote(`${ICONS[icon]?.label ?? "That"} breaks it. ${ICONS[expected]?.label ?? "The next one"} was next. You keep ${cursor}.`);
@@ -253,6 +253,7 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
       return;
     }
     const next = cursor + 1;
+    buzz(next >= sequence.current.length ? "win" : "tap");
     setCursor(next);
     if (next >= sequence.current.length) {
       setNote(`${ICONS[icon]?.label ?? "That"} — the whole drill. Locked in.`);
@@ -268,7 +269,7 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden px-4 pt-3 pb-4">
-      <DrillHeader title={spec.title} subtitle={spec.subtitle} />
+      <MiniHead spec={spec} kind="pattern" />
       <p role="status" className="text-sm font-semibold text-gold">{note}</p>
       <div className="flex gap-1.5">
         {sequence.current.map((icon, index) => {
@@ -288,7 +289,7 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
           );
         })}
       </div>
-      <div className="scene-arena relative flex h-28 items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10">
+      <div className="scene-arena relative flex min-h-28 flex-1 items-center justify-center overflow-hidden rounded-[1.6rem] border border-white/10" style={{ boxShadow: `inset 0 0 60px -20px ${skinColor(spec, "pattern")}` }}>
         {StageIcon && stage ? (
           <span key={`${lit}-${shown}-${cursor}`} className="anim-pop relative grid size-20 place-items-center rounded-3xl" style={{ background: `radial-gradient(circle, ${stage.color}55, transparent 70%)` }}>
             <StageIcon className="size-12" style={{ color: stage.color, filter: `drop-shadow(0 0 12px ${stage.color})` }} />
