@@ -2,7 +2,14 @@
 
 ## NEXT (from the 2026-10-31 playtest)
 
-1. **Minigames** (top priority).
+1. **Minigames.** **Shipped 2026-10-31 (am):** Crack, Rescue, Press and Hold, plus verb pools and a shared frame. Timing fell from about 85% to about 30% of celeb minis. Still open:
+   - a gym mini (gym is still a choice prompt);
+   - villain-pin and heist verbs;
+   - a "chase" kind for mobility powers;
+   - a difficulty curve by mastery rank;
+   - per-kind hint lines after a botch.
+
+   Original note:
    - `timing` makes up 70–80% of all minis, and `pattern` almost never fires.
    - Ship 3 new kinds first: rescue triage, lockpick/hack and press conference (see the Minigames list below).
    - Map each one to its verbs (patrol, heist, stunt), and give the gym prompt (~560× per heavy life) its own mini.
@@ -29,7 +36,11 @@
 
 8. **Art. Shipped 2026-10-31:** all 8 cities have backdrops, and chapter cards have per-phase accents and motifs. Open: regenerate Neon without pseudo-text signage; move art to real `.webp` files when git push is available. Original note: Backdrops exist for NYC, the Hood, the Stacks and the title. Add Metro, Harbor, Neon, Dustreach, Crownbridge and per-chapter-phase art (same pipeline, ~20–30KB each).
 9. **Economy tuning. Done 2026-10-31:** influence fatigue + fame fade; the crook lifespan gap was sampling noise (N=12: 81 with market vs 78 without). Original note: With the market on, hero lives end with ~$0.4M cash but ~$2.5M in holdings at 70. Watch whether influence (the top spend) is too strong a fame lever, and why crook lives get shorter with the market on (75 vs 81 median).
-10. **Haptics.** `navigator.vibrate` on hits and wins is still not wired.
+10. **Haptics.** **Shipped 2026-10-31 (am)** for the skill minis. Open: the duel and a settings toggle.
+12. **Story arcs run out by 30** (2026-10-31 am playtest). Only 4 arcs exist. Add mid-life arcs (crisis and legacy phases) so the arc goal and the story carry past 30.
+13. **Hero bonds stall at about 32**, so the trust goal is never met (0/29). Hero talk and spar need a bond curve that can reach 60 by the 30s.
+14. **Mind saturates** at 100 by about 30 for studious heroes. Consider ageing decay after 60 or a "wisdom" reframe.
+15. **Repeat prompt variants.** Night out (503×), the League call (293×) and villain pins (about 190× each) need 4–6 phase-keyed variants.
 11. **Creation, next.** More hair cuts and face features need new SVG in `Figure.tsx` and `Portrait.tsx`. Eye colour and a third "face" (urban legend) are candidates.
 
 ## AUDIT (2026-10-30)

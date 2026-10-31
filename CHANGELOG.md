@@ -1,5 +1,52 @@
 # Changelog
 
+## 2026-10-31 (am): minigame variety, reachable chapter goals, soft caps (`devbot/2026-10-31-am`)
+
+### Minigames (`minis.ts`, `Minigame.tsx`, `MiniKit.tsx`, `MiniGames.tsx`, `miniUtil.ts`, `haptics.ts`)
+
+- Four new skill games, each with its own rules, art and scoring:
+  - **Crack**: rotating lock rings; stop each notch under the gate.
+  - **Rescue**: a 3×3 burning facade; tap people before their ring runs out, never the fire.
+  - **Press**: reporter card with a tell, a question, a timer and 4 tone answers (bold, humble, witty, straight). Each reporter rewards different tones.
+  - **Hold**: press and hold to keep a load inside a moving gold zone, with momentum.
+- Data-driven verb pools (`VERB_POOLS`): stunt, drill, spar, tryout, dispatch, go loud, bout, hero spar and relic each pick a weighted kind, title, subtitle and kind-specific outcome text.
+  - Signature power tags add weight (physical favours Hold, control favours Crack, mental favours Read).
+  - The kind you just played is down-weighted to 25%.
+- Every mini gets a seed and an element skin from your signature power, which tints the arena.
+- Shared `MiniFrame`:
+  - a kind badge with difficulty pips, title and rule line;
+  - an arena that fills the screen (the old layout left a big gap);
+  - a READY intro and a FLAWLESS/CLEAN/SCRAPED/BOTCHED result stamp.
+- Timing and Read are restyled into the same frame.
+- Haptics: short `navigator.vibrate` buzzes on hits, misses and wins (guarded; silent where unsupported).
+- The market's gear edge still works: new kinds map to the timing or pattern edge family.
+- Result for a celebrity life (20 seeds): timing fell from about 85% of minis to about 30%. The rest is press, rescue, hold, crack, read and duels.
+
+### HUD
+
+- The power chip shows your signature combo power (for example Light Speed) with its element icon, colour and mastery rank letter, instead of the legacy "A + B" fusion name.
+
+### Balance (`engine.ts`)
+
+- `gentleCap`: positive Joy, Mind and Karma gains shrink above 50 (to about 8% at 100). Joy over 70 settles a little each month and over 80 each year.
+- A secret identity halves fame gains.
+- Mentoring: each extra rookie in a year is worth 60% of the last, and a large legacy grows slower.
+- School smarts and joy now go through the same caps.
+
+### Chapter goals (`chapters.ts`)
+
+- New `worth` metric (cash plus property). Cushion, fortune and "don't go broke" use it, so buying a house no longer fails your goal.
+- "Don't go broke" now asks for 60% of your starting worth, and its label says so.
+- Goals that can't be met are no longer offered:
+  - an arc goal when no arc is open;
+  - smart when Mind is already 88+;
+  - fame goals when you are near the top;
+  - loud fame for secret heroes.
+
+### Tests
+
+- New `minis.test.ts` (8 tests): pool data, `pickMini` determinism and repeat down-weighting, press rounds and scoring, `vary`, `gentleCap`, mentor diminishing returns, and the worth snapshot. `test:game` is now 47/47.
+
 ## 2026-10-31 — duel, moves, balance, art and new-life stepper (`devbot/2026-10-31-chapters`)
 
 ### Duel presentation (`Duel.tsx`, `Vfx.tsx`, `duelKit.ts`, `Figure.tsx`)

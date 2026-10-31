@@ -151,6 +151,33 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - Pools: 12 skins, 14 hair colours, 6 cuts, 2 builds, 4 faces; 16 childhoods; 8 cities; 2 faces × 13 drives; 126 gifts (20 basic, 54 mixed, 52 apex) or none.
 - To add a drive: add a `TraitDef` (slot "drive") in `origin.ts`, its id to `TraitId`, and a `walkEffects` line.
 
+## 15. Minigame variety
+
+- Six skill kinds, plus the duel. Each one tests a different hand, and the market gear edge maps them to the timing or pattern family:
+
+  | Kind | What you do |
+  |---|---|
+  | Strike (timing) | Hit the band |
+  | Read (pattern) | Watch the order, then repeat it |
+  | Crack (hack) | Stop each ring's notch under the gate |
+  | Rescue | Triage the windows |
+  | Press | Read the reporter, pick the tone |
+  | Hold | Keep the load in a moving zone |
+
+- Engine call sites name a **verb** (stunt, drill, dispatch…), not a kind.
+  - `minis.ts` holds the weighted pool for each verb: kind, titles, subtitles and kind-specific outcome text.
+  - The signature power's tags add weight, and the last kind played is down-weighted.
+  - New content is data rows only.
+- Every mini carries a seed (deterministic layouts) and an element skin from the signature power.
+- All of them share `MiniFrame`: badge, difficulty, full-height arena, READY intro and result stamp. Each scores 0–1, so the engine's win/partial/lose bands stay unchanged.
+
+## 16. Soft caps on the quiet stats
+
+- Joy, Mind and Karma gains pass through `gentleCap`: full value up to 50, easing to about 8% at 100.
+- Joy above 70 drifts back down monthly, so a great mood takes upkeep.
+- A secret identity halves fame gains. Mentoring has per-year diminishing returns.
+- Chapter goals are only offered when they are still reachable, and money goals count cash plus property ("worth").
+
 ## Existing extras (built, not in the original design)
 
 - **Extra cities:** Metro City, Harbor Bay, Neon Spire, Dustreach, Crownbridge.

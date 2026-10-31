@@ -85,3 +85,46 @@ Harness: `playtest/fame.ts` (not in the repo). Fame is the median at ages 30/50/
 
 - A full run (violet hair, Neon Spire, Curious drive, a Mixed gift) starts a life with those choices saved; no console errors.
 - Screens: `/workspace/superlife-screens/b2/create-*.png`, `b2/city-*.png` (before: `b2-before/`).
+
+---
+
+# Playtest (2026-10-31, am pass)
+
+**Builds played** (scripted, 20 seeds each, market on):
+
+- **celeb**: Crownbridge, celebrity upbringing, loud, glory, Teleportation. Policy: stunts, League, market.
+- **vet**: Dustreach, military upbringing, secret identity, duty, Gravity. Policy: patrol, missions, mentoring.
+
+Mobile screenshots at 390×844: `/workspace/superlife-shots/2026-10-31-am/`.
+
+## Findings (before)
+
+- **Minigames were one game.** Celebrity lives played 928–1339 timing bars per life (stunt 802×, mission 467×). Read appeared about 30 times. Vet lives were about 900 duels. **Fixed:** 6 skill kinds plus duels (see the after section).
+- **Stats saturate by the 20s.** At 26 the celeb sat at Joy 100, Mind 100, Fame 98, Rep 100, Karma 100 with HP 8. **Partly fixed:** soft caps and monthly settling. Joy now hovers around 90–98 for joy-heavy policies; Mind still reaches 100 by about 30.
+- **Mentoring had no diminishing returns.** Vet legacy reached 577 from 174 sessions. **Fixed:** about 200 now. Market legacy items still add on top.
+- **Unreachable chapter goals:**
+  - holdmoney 0/11 (the label didn't match the rule);
+  - fortune 0/15;
+  - arc 2/17, because only 4 arcs exist and they are all done by about 30;
+  - quiet fame 0/5 for secret heroes;
+  - trust 0/29, because hero bonds stall at about 32.
+  - **Fixed** after the change: holdmoney 15/15, cushion 17/17, fortune 6/12, arc 7/26. Trust is still open.
+- **Repeats per life:** the night-out prompt 503×, the League call 293×, villain pins "bring the good trick" 180–190× per villain, patrol 234×.
+- **UI:**
+  - The mini screen had a big empty gap between the arena and the button, and a plain "Drill" header. **Fixed.**
+  - The HUD power chip showed the legacy fusion name. **Fixed.**
+
+## After
+
+- **Celeb minis per life:** timing 415–524, press 192–294, rescue 189–239, hold 193–246, crack 118–147, read 25–51, duel 150–207.
+- **Vet minis per life:** duel about 850, timing about 200, hold about 120, crack about 85, rescue about 75.
+- **Celeb life by decade, seed 1:**
+  - At 20: Joy 93, Mind 98, Fame 98, rank 5, HP 55.
+  - At 30: HP 36 (the stunt grind still hurts).
+  - At 87: $260k cash plus $1.5M in property, legacy 145, 20 powers.
+- **Still open:**
+  - Mind saturation.
+  - Hero bonds stuck in the 30s.
+  - Arcs run out by 30.
+  - Prompt repetition.
+  - Property upkeep of $58k a year by 87 is a slow drain, which is fine.
