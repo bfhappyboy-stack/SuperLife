@@ -10,7 +10,8 @@ import type { ChapterPhaseId } from "./chapters";
 import type { Effects, Game, TraitId } from "./types";
 
 export type MarketCat = "gear" | "supplies" | "intel" | "influence" | "property" | "tech" | "legacy";
-export type MiniKind = "timing" | "pattern" | "duel";
+import { edgeFamily, type EdgeFamily, type MiniKind } from "./minis";
+export type { MiniKind };
 
 export interface MarketItem {
   id: string;
@@ -34,7 +35,7 @@ export interface MarketItem {
   /** Applied once on purchase. */
   buy?: Effects;
   /** Gear and intel: a minigame bonus with limited uses. */
-  edge?: { kinds: MiniKind[]; amount: number; uses: number };
+  edge?: { kinds: EdgeFamily[]; amount: number; uses: number };
   /** Changes flags.heat (police / press attention). Negative cools it. */
   heat?: number;
   /** Passive effects every birthday while owned. */
@@ -415,7 +416,8 @@ export function sellAsset(g: Game, uid: string): MarketResult {
  * Minigame edge from gear, tech and intel. Uses the best applicable gear, the best tech and one intel file.
  * Wears gear down and consumes intel. Mutates g.
  */
-export function marketEdge(g: Game, kind: MiniKind): { bonus: number; notes: string[] } {
+export function marketEdge(g: Game, miniKind: MiniKind): { bonus: number; notes: string[] } {
+  const kind = edgeFamily(miniKind);
   const m = g.market;
   if (!m?.assets?.length) return { bonus: 0, notes: [] };
   let bonus = 0;

@@ -27,7 +27,8 @@ import { clamp, firstName, money, whenLabel } from "./format";
 import { getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
-import { elementOfLegacy } from "./elements";
+import { elementOfLegacy, elementOfPower } from "./elements";
+import { isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
 import { judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { availableArcs, currentCase, type ArcStep } from "./arcs";
 import { arcsCleared } from "./arcs";
@@ -1536,7 +1537,8 @@ function ensureProgress(game: Game) {
   fillLoadout(game);
 }
 
-function focusId(d: Game): string {
+/** The hero's signature power: the chosen focus, else the legacy combo, else the first unlocked. */
+export function focusId(d: Game): string {
   if (d.focusPower && (d.unlockedPowers ?? []).includes(d.focusPower)) return d.focusPower;
   return legacyComboId(d.powerId) ?? d.unlockedPowers?.[0] ?? "";
 }
@@ -1896,7 +1898,7 @@ function resolveOutcome(d: Game, outcome: Outcome) {
     }
   }
   if (outcome.minigame) {
-    d.minigame = outcome.minigame;
+    d.minigame = vary(d, outcome.minigame);
     d.phase = "mini";
     d.pending = null;
     d.card = { kicker: whenLabel(d.age, d.month), banner: d.card.banner, body: outcome.text, deltas: [] };
@@ -2006,9 +2008,36 @@ function relocate(d: Game, cityId: string): string {
   return "";
 }
 
+/**
+ * Finalize a minigame as it opens: give it a seed and the hero's element skin, and if it names a verb,
+ * draw its kind and title from that verb's pool (see minis.ts) so the same action plays differently.
+ */
+export function vary(d: Game, spec: MinigameSpec): MinigameSpec {
+  const out = { ...spec };
+  if (out.seed == null) out.seed = Math.floor(roll(d) * 1_000_000_000);
+  const sig = getPower(focusId(d));
+  if (!out.skin && sig) out.skin = elementOfPower(sig.id);
+  if (out.verb && out.kind !== "duel") {
+    const lastIndex = d.flags.lastMini;
+    const last = lastIndex != null ? (SKILL_KIND_IDS[lastIndex] ?? null) : null;
+    const pick = pickMini(out.verb, () => roll(d), { last, tags: sig?.tags, vars: out.vars, only: out.only });
+    out.kind = pick.kind;
+    out.title = pick.title;
+    out.subtitle = pick.subtitle || out.subtitle;
+    if (pick.winText) out.winText = pick.winText;
+    if (pick.partialText) out.partialText = pick.partialText;
+    if (pick.loseText) out.loseText = pick.loseText;
+  }
+  if (isSkillKind(out.kind)) d.flags.lastMini = SKILL_KIND_IDS.indexOf(out.kind);
+  delete out.verb;
+  delete out.vars;
+  delete out.only;
+  return out;
+}
+
 function openMini(d: Game, spec: MinigameSpec, blurb: string) {
   spend(d);
-  d.minigame = spec;
+  d.minigame = vary(d, spec);
   d.phase = "mini";
   d.pending = null;
   d.card = { kicker: whenLabel(d.age, d.month), banner: [], body: blurb, deltas: [] };
@@ -2175,6 +2204,7 @@ export function act(game: Game, id: string): Game {
           text: "No posters. A circle of people who paid to see someone else lose.",
           minigame: {
             kind: "timing",
+            verb: "bout",
             title: "Underground bout",
             subtitle: "Three beats. The crowd wants blood or a story.",
             difficulty: 2,
@@ -2314,6 +2344,8 @@ export function act(game: Game, id: string): Game {
       d,
       {
         kind: "timing",
+        verb: "drill",
+        vars: { power: trained.name, level: String(level), cap: String(cap) },
         title: `Drill ${trained.name}`,
         subtitle: `Mastery ${level}/${cap}. Small gains. The wall is real.`,
         difficulty: clamp(level, 1, 3),
@@ -2338,6 +2370,7 @@ export function act(game: Game, id: string): Game {
       d,
       {
         kind: "timing",
+        verb: "stunt",
         title: "Public stunt",
         subtitle: "Stick it. The phones are already up.",
         difficulty: d.stats.powerLevel > 6 ? 2 : 3,
@@ -2416,6 +2449,7 @@ export function act(game: Game, id: string): Game {
       d,
       {
         kind: "timing",
+        verb: "spar",
         title: "Campus spar",
         subtitle: "Coach is watching. So is the kid who wants your spot.",
         difficulty: clamp(school.tier, 1, 3),
@@ -2548,6 +2582,8 @@ export function act(game: Game, id: string): Game {
       d,
       {
         kind: d.powerId ? "timing" : "pattern",
+        verb: "tryout",
+        only: d.powerId ? undefined : ["pattern", "press", "rescue"],
         title: "League tryout",
         subtitle: d.powerId ? "Show them the gift, not the nerves." : "No powers. Show them the plan.",
         difficulty: 2,
@@ -2572,7 +2608,8 @@ export function act(game: Game, id: string): Game {
       openMini(
         d,
         {
-          kind: roll(d) < 0.55 ? "timing" : "pattern",
+          kind: "timing",
+          verb: "dispatch",
           title: "Dispatch",
           subtitle: syn ? `${team?.name ?? "Your team"} moves like you practiced this.` : "You are slightly out of position. Improvise.",
           difficulty: clamp(2 + Math.floor(d.leagueRank / 2), 2, 3),
@@ -2605,6 +2642,7 @@ export function act(game: Game, id: string): Game {
             text: "You announce yourself. Subtlety leaves the chat.",
             minigame: {
               kind: "timing",
+              verb: "loud",
               title: "Go loud",
               subtitle: "Three beats. Don't miss the one that matters.",
               difficulty: 3,
@@ -3187,6 +3225,8 @@ export function act(game: Game, id: string): Game {
           kind: "timing",
           title: `Spar ${hero.alias}`,
           subtitle: withHero ? "They match the power you're focused on." : "Bond isn't deep enough for this generation. The reps stay small.",
+          verb: "herospar",
+          vars: { hero: hero.alias, note: withHero ? "They match the power you're focused on." : "Bond isn't deep enough for this generation. The reps stay small." },
           difficulty: clamp(2 + focusGen, 1, 3),
           winText: "You tag them. They look proud and annoyed, which is their love language.",
           partialText: "You split the hour. Both of you pretend that was the plan.",
