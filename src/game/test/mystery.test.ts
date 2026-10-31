@@ -199,3 +199,19 @@ test("legend chapters use the decade titles and never promise powers before the 
   assert.equal(ch?.title, presetDecade("hulk", 2)!.title);
   assert.ok(!ch!.goals.some((goal) => goal.power), "Hulk wakes at 28: no power goals in his twenties");
 });
+
+test("God Mode picks survive a save/load round trip", async () => {
+  const store = new Map<string, string>();
+  (globalThis as { localStorage?: unknown }).localStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  };
+  const { saveGame, loadGame } = await import("../save.ts");
+  const picks = godPicks(["fire-control", "super-speed", "super-strength"]);
+  const g = createGame({ ...base, seed: 5, mode: "god", giftIds: picks, giftId: picks[0] } as never);
+  saveGame(g);
+  const back = loadGame();
+  assert.ok(back);
+  for (const id of picks) assert.ok(back.unlockedPowers.includes(id), `${id} kept after load`);
+});

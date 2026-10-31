@@ -1,10 +1,11 @@
 import type React from "react";
-import { Sparkles } from "lucide-react";
+import { Lock, MousePointerClick, Sparkles } from "lucide-react";
 import { ChapterArt } from "@/components/game/Scene";
 import { phaseStyle } from "@/components/game/phaseStyle";
 import { useEffect, useMemo, useState } from "react";
 import { generateChapterText } from "@/game/chapter-ai";
-import { chapterBrief, currentChapter, goalProgress, phaseForAge, snapshot, type Chapter } from "@/game/chapters";
+import { chapterBrief, currentChapter, goalCount, goalHow, goalLock, goalProgress, phaseForAge, snapshot, type Chapter } from "@/game/chapters";
+import { presetById } from "@/game/presets";
 import { useGame } from "@/game/store";
 import type { Game } from "@/game/types";
 
@@ -29,7 +30,7 @@ export function ChapterStrip({ game }: { game: Game }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="t-label block truncate text-[10px] text-muted">
-          CHAPTER {chapter.index + 1} · {phaseForAge(chapter.startAge).name.toUpperCase()} · AGES {chapter.startAge}–{chapter.endAge}
+          {game.preset ? `${presetById(game.preset)?.earth.toUpperCase() ?? ""} · ` : ""}CHAPTER {chapter.index + 1} · {phaseForAge(chapter.startAge).name.toUpperCase()} · AGES {chapter.startAge}–{chapter.endAge}
         </span>
         <span className="flex items-center gap-1.5 font-bold text-fg">
           <span className="truncate">{chapter.title}</span>
@@ -63,20 +64,61 @@ function Goals({ chapter, game }: { chapter: Chapter; game: Game }) {
     <ul className="mt-3 flex flex-col gap-2">
       {chapter.goals.map((goal, i) => {
         const p = goalProgress(goal, snap);
+        const lock = p.met ? null : goalLock(goal, game);
+        const how = goalHow(goal, game);
         return (
-          <li key={goal.id} className={`rounded-2xl border px-3 py-2.5 ${p.met ? "border-gold/60 bg-gold/10" : "border-white/10 bg-white/[0.03]"}`}>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-fg">{goal.label}</span>
-              <span className={`t-num text-xs ${p.met ? "text-gold" : "text-muted"}`}>{p.met ? "✓ Done" : `${Math.round(p.ratio * 100)}%`}</span>
+          <li
+            key={goal.id}
+            className={`rounded-2xl border px-3 py-2.5 transition-opacity ${p.met ? "border-gold/60 bg-gold/10" : lock ? "border-white/8 bg-white/[0.02] opacity-55 grayscale" : "border-white/10 bg-white/[0.03]"}`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-sm leading-snug font-semibold text-fg">{goal.label}</span>
+              {p.met ? (
+                <span className="t-num shrink-0 text-xs text-gold">✓ Done</span>
+              ) : lock ? (
+                <Lock className="mt-0.5 size-3.5 shrink-0 text-muted" aria-hidden />
+              ) : (
+                <span className="t-num shrink-0 text-xs text-muted">{goalCount(goal, snap)}</span>
+              )}
             </div>
-            <div className="stat-bar mt-1.5">
-              <div className="stat-fill" style={{ width: `${Math.round(p.ratio * 100)}%`, "--fill": "var(--color-gold)" } as React.CSSProperties} />
-            </div>
-            <p className="mt-1 text-xs text-muted">{chapter.beats[i] ?? goal.hint}</p>
+            {lock && (
+              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/30 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-muted uppercase">
+                <Lock className="size-3" aria-hidden />
+                {lock}
+              </span>
+            )}
+            {!lock && (
+              <div className="stat-bar mt-1.5">
+                <div className="stat-fill" style={{ width: `${Math.round(p.ratio * 100)}%`, "--fill": "var(--color-gold)" } as React.CSSProperties} />
+              </div>
+            )}
+            <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-bold text-gold/90">
+              <MousePointerClick className="size-3.5 shrink-0" aria-hidden />
+              <span className="min-w-0">{how}</span>
+            </p>
+            <p className="mt-0.5 text-xs text-muted">{chapter.beats[i] ?? goal.hint}</p>
           </li>
         );
       })}
     </ul>
+  );
+}
+
+/** God Mode: which Earth this is and how far the life has drifted from canon. */
+function CanonBadge({ game }: { game: Game }) {
+  const legend = presetById(game.preset);
+  if (!legend) return null;
+  const kept = game.flags.canonKept ?? 0;
+  const bent = game.flags.canonBent ?? 0;
+  const broke = game.flags.canonBroken ?? 0;
+  return (
+    <div className="mt-3 flex items-center gap-2 rounded-2xl border px-3 py-2" style={{ borderColor: `${legend.color}66`, backgroundImage: `linear-gradient(100deg, ${legend.color}22, transparent 70%)` }}>
+      <span className="t-label text-[10px]" style={{ color: legend.color }}>{legend.earth}</span>
+      <span className="min-w-0 flex-1 truncate text-xs font-bold text-fg">{legend.hero} variant</span>
+      <span className="t-num text-[11px] text-muted" title="Canon kept · bent · broken">
+        <span className="text-fg">{kept}</span> kept · <span className="text-fg">{bent}</span> bent · <span className="text-fg">{broke}</span> broken
+      </span>
+    </div>
   );
 }
 
@@ -150,6 +192,7 @@ export function ChapterOverlay({ game }: { game: Game }) {
             </p>
             <h2 className="mt-1 t-display !text-[2rem] text-fg">{chapter.title}</h2>
             <p className="mt-2 text-pretty text-sm leading-relaxed text-fg">{chapter.premise}</p>
+            <CanonBadge game={game} />
             <p className="t-label mt-4 text-gold">This chapter</p>
             <Goals chapter={chapter} game={game} />
             {past.length > 0 && (

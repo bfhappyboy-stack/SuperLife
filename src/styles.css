@@ -541,3 +541,28 @@
   .fx-flash { animation-duration: 1ms !important; }
   .ko-in { animation: none !important; transform: rotate(-6deg); }
 }
+
+/* Mode select, God Mode picker and the power reveal (night pass). */
+.mode-card {
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--mode) 26%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-ink) 70%, transparent), color-mix(in srgb, var(--color-ink) 92%, transparent));
+  box-shadow: 0 22px 50px -26px var(--mode), inset 0 1px 0 rgb(255 255 255 / 0.08);
+  backdrop-filter: blur(8px);
+  transition: transform 160ms ease;
+}
+.mode-card:active { transform: scale(0.985); }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.reveal-bg { background: radial-gradient(70% 45% at 50% 32%, color-mix(in srgb, var(--el) 70%, transparent), color-mix(in srgb, var(--el) 18%, black) 55%, black 100%); }
+.reveal-rays {
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--glow) 34%, transparent) 0deg 6deg, transparent 6deg 18deg);
+  mask-image: radial-gradient(circle, black 0%, transparent 55%);
+  opacity: 0.8;
+}
+.reveal-core { background: radial-gradient(circle, var(--glow) 0%, var(--el) 35%, transparent 70%); animation: reveal-core 2.4s ease-in-out infinite; }
+.reveal-name { text-shadow: 0 0 24px var(--el), 0 4px 18px rgb(0 0 0 / 0.8); }
+@keyframes reveal-core { 0%, 100% { transform: scale(0.9); opacity: 0.75; } 50% { transform: scale(1.18); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-core { animation: none; }
+}
