@@ -1,5 +1,31 @@
 # SuperLife — Backlog
 
+## NEXT (from the 2026-10-31 playtest)
+
+1. **Minigames** (top priority).
+   - `timing` makes up 70–80% of all minis, and `pattern` almost never fires.
+   - Ship 3 new kinds first: rescue triage, lockpick/hack and press conference (see the Minigames list below).
+   - Map each one to its verbs (patrol, heist, stunt), and give the gym prompt (~560× per heavy life) its own mini.
+2. **Markets across decades.** Money is now the clearest dead stat ($3M–$9M by 80 with nothing to buy).
+   - Add a Market desk where prices move by decade (tech gets cheaper, property gets dearer), covering:
+     - **gear** (stat and move buffs, wear out);
+     - **resources** (lab time and hospital insurance, which caps collapse bills);
+     - **information** (villain dossiers that shorten arcs);
+     - **influence** (PR that buys fame/rep moves inside the soft ceiling);
+     - **property** (a safehouse, a gym or a mentor school, giving monthly legacy and income);
+     - **tech** (unlock tiers by decade).
+   - Chapter goals can then ask for a purchase ("own a safehouse").
+3. **Combat depth.**
+   - Duels are ~20% of minis and always the same shape.
+   - Add villain gimmick phases, combo-power signature moves (hand-author the 106 generated movesets) and a "fight injuries" link to the new collapse system, so fights carry long-term risk.
+4. **Repetition.**
+   - The League mission prompt (~330×/life) and villain pins (~200× per villain) need 4–6 variants each, keyed to chapter phase.
+5. **Fame/rep writes bypassing the soft ceiling.** Jobs, schools and openYear still `clamp(+x)` directly. Route them through `applyEffects`.
+6. **Chapter depth.**
+   - A mid-chapter beat at about year 5: a chapter-specific event drawn from the thread (nemesis, family, body).
+   - A per-chapter "signature choice" with a lasting flag.
+7. **Desk tab row overflows at 390px.** "Work" and "Board" are off-screen; consider icons only or merging Board into Cases.
+
 ## AUDIT (2026-10-30)
 
 This audit compares the code with `DESIGN.md`. Priority: **P0** breaks a design rule, **P1** is a visible bug or high-value gap, **P2** is polish.

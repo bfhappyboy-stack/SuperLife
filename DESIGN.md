@@ -72,6 +72,43 @@ The design asks for these: alien, tragic, normal, military, wealthy but neglecte
 
 ---
 
+## 9. Chapters (a life in decades)
+
+A life is told in ~10-year chapters, so a long life has a shape instead of 960 identical months.
+
+- **Phases** (data table `CHAPTER_PHASES` in `src/game/chapters.ts`):
+  - 0–9 Origin
+  - 10–19 Coming of age
+  - 20s Early career
+  - 30s Rising name
+  - 40s The crisis
+  - 50s Building a legacy
+  - 60s Elder and mentor
+  - 70+ Final years (repeats every decade)
+- **Title card:** shown at birth and on every decade birthday. It has:
+  - a title and a personal premise, built from the hero's city, upbringing, traits, gift, family, best teacher bond, arch-enemy and the last chapter's thread;
+  - three goals with live progress bars, each with a one-line hint naming the desk to use.
+- **Goals** come from a data table (`CHAPTER_GOALS`).
+  - Each phase lists its goal pool, filtered by who you are. Secret heroes get "keep the mask on", loud ones get "get noticed", villains get infamy goals instead of League rank, and so on.
+  - Targets are deltas from the chapter start, so they are always reachable.
+- **Recap** at the decade turn scores the goals and carries consequences forward:
+  - Each goal met is worth +3 legacy. All three met gives Joy +6, power +0.1 and +4 more legacy. None met gives Joy −6.
+  - A **thread** is picked for the next premise: momentum, drift, nemesis, family, infamy, body, fame or quiet. It never repeats the previous thread twice in a row.
+  - Drift forces a "be happy" goal next time; body forces a "come out standing" goal.
+- **Legacy** is a new stat, built from chapter goals, the **Mentor a rookie** action (45+, once a month) and teaching a hero.
+  - Legacy ≥ 20 halves the yearly health toll of age after 58, so late life has a purpose and more runway.
+- **Longevity:**
+  - Health 0 means a hospital stay, not death. A second collapse inside 18 months can kill an adult.
+  - The body recovers a little each month, with a lower ceiling as you age.
+  - Old-age mortality starts at 70, softer than before.
+  - Typical careful lives end between 71 and 94.
+- **Entry point:** one strip at the top of the Life desk ("CHAPTER n · PHASE · AGES a–b · title · k/3"). Tap it to reopen the card and see earlier chapters.
+- **AI:**
+  - The procedural generator is the source of truth: deterministic and seeded by the hero fingerprint, chapter index and RNG.
+  - `src/game/chapter-ai.ts` is an optional server function. If `XAI_API_KEY` is set on the server, it asks Grok to rewrite **only** the title, premise and beat lines, using a strict JSON schema. The output is validated by `validChapterText` (lengths, shape, no markup) and cached in the save (`aiTried`, `source`).
+  - Goals and consequences never come from the model.
+- **Saves:** `chapters`, `legacy` and `chapterNotice` are optional fields. `migrateChapters` (run in `save.ts` migrate and `freshen`) gives old saves a running chapter for their current decade.
+
 ## Existing extras (built, not in the original design)
 
 - **Extra cities:** Metro City, Harbor Bay, Neon Spire, Dustreach, Crownbridge.
