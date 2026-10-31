@@ -2306,9 +2306,22 @@ export function choose(game: Game, choiceId: string): Game {
 }
 
 /** The reveal overlay has played. */
-export function dismissReveal(game: Game): Game {
+/**
+ * Close the reveal. `firstMove` is the 0..1 score from the First Move mini right after it:
+ * a one-time drill bonus for the head power (6 to 20 raw exp), a banner, and a flag so it never repeats.
+ */
+export function dismissReveal(game: Game, firstMove?: number): Game {
   if (!game.reveal) return game;
-  return { ...game, reveal: null };
+  if (firstMove === undefined || !Number.isFinite(firstMove) || game.flags.firstMove !== undefined) return { ...game, reveal: null };
+  const d = structuredClone(game);
+  const score = Math.max(0, Math.min(1, firstMove));
+  const head = d.reveal?.powers[0] ?? null;
+  d.reveal = null;
+  d.flags.firstMove = Math.round(score * 100);
+  const gain = head ? grantMastery(d, head, Math.round(6 + score * 14)) : "";
+  const lead = score >= 0.8 ? "Your first move lands clean." : score >= 0.4 ? "Your first move half works, which is how all of them start." : "Your first move mostly hits the ceiling.";
+  d.card = { ...d.card, banner: [`${lead}${gain}`] };
+  return d;
 }
 
 /** Record one omen line for a sealed power and return it. */

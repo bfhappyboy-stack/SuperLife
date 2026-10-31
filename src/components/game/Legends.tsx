@@ -1,4 +1,7 @@
-import { ArrowLeft, ChevronRight, Crown, Eye, Hammer, Lock, Sparkles, Swords, Wand2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, Crown, Eye, Hammer, Lock, Share2, Sparkles, Swords, Wand2 } from "lucide-react";
+import { FirstMove } from "@/components/game/FirstMove";
+import { RevealShareSheet, type RevealCardData } from "@/components/game/RevealCard";
+import { blip, buzz } from "@/components/game/sfx";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { TitleArt, useArt } from "@/components/game/Scene";
 import { ElementBurst, ElementIcon } from "@/components/game/Vfx";
@@ -224,11 +227,15 @@ export function RevealOverlay({ game }: { game: Game }) {
   const close = useGame((s) => s.closeReveal);
   const reveal = game.reveal;
   const [stage, setStage] = useState(0);
+  const [mode, setMode] = useState<"reveal" | "mini">("reveal");
+  const [sharing, setSharing] = useState(false);
   const legend = presetById(game.preset);
   const art = useArt(legend?.art ?? "");
   useEffect(() => {
     if (!reveal) return;
     setStage(0);
+    setMode("reveal");
+    setSharing(false);
     const timers = [window.setTimeout(() => setStage(1), 650), window.setTimeout(() => setStage(2), 1500), window.setTimeout(() => setStage(3), 2300)];
     try {
       navigator.vibrate?.([30, 60, 90]);
@@ -241,12 +248,36 @@ export function RevealOverlay({ game }: { game: Game }) {
   const head = getPower(reveal.powers[0]);
   const element = elementOfPower(reveal.powers[0] ?? null);
   const meta = ELEMENTS[element];
+  const card: RevealCardData = {
+    lifeName: game.name,
+    age: reveal.age,
+    earth: legend?.earth ?? null,
+    title: legend ? reveal.title : "Your power has awakened",
+    power: head?.name ?? "Unknown",
+    tier: head?.tierName ?? "Basic",
+    elementLabel: meta.label,
+    color: meta.color,
+    glow: meta.glow,
+    line: reveal.line,
+    extras: reveal.powers.slice(1).map((id) => getPower(id)?.name ?? id),
+    art: legend ? art : undefined,
+  };
+  const canMini = !!head && game.flags.firstMove === undefined;
+  function embrace() {
+    blip(440, 0.18, 0.06);
+    buzz(20);
+    if (canMini) setMode("mini");
+    else close();
+  }
   return (
-    <div className="reveal fixed inset-0 z-[60] flex flex-col items-center overflow-hidden bg-black text-center" role="dialog" aria-modal="true" aria-label="Your power has awakened" style={{ "--el": meta.color, "--glow": meta.glow } as CSSProperties}>
+    <div className="reveal fixed inset-0 z-[60] flex flex-col items-center overflow-clip bg-black text-center" role="dialog" aria-modal="true" aria-label="Your power has awakened" style={{ "--el": meta.color, "--glow": meta.glow } as CSSProperties}>
       {legend && art && <img src={art} alt="" className="absolute inset-0 size-full object-cover object-top opacity-40" />}
       <div className="reveal-bg absolute inset-0" />
       <div className="ko-rays reveal-rays pointer-events-none absolute top-[34%] left-1/2 size-[160vmax] -translate-x-1/2 -translate-y-1/2" />
       <div className="fx-flash pointer-events-none absolute inset-0 bg-white" />
+      {mode === "mini" && head && <FirstMove element={element} powerName={head.name} onDone={(score) => close(score)} onSkip={() => close()} />}
+      {mode === "reveal" && (
+        <>
       <div className="relative mt-[13vh] flex flex-col items-center px-6">
         <p className={`t-label text-[11px] tracking-[0.3em] text-fg/80 transition-opacity duration-500 ${stage >= 1 ? "opacity-100" : "opacity-0"}`}>
           {legend ? `${legend.earth.toUpperCase()} · AGE ${reveal.age}` : `AGE ${reveal.age}`}
@@ -296,10 +327,18 @@ export function RevealOverlay({ game }: { game: Game }) {
             {reveal.guess === "right" ? "★ You called it. Power +0.25, Joy +6." : "Not what you guessed. It never is."}
           </p>
         )}
-        <button type="button" onClick={close} disabled={stage < 3} className="btn btn-gold mt-3 min-h-14 w-full text-lg disabled:opacity-60">
-          Embrace it
-        </button>
+        <div className="mt-3 flex gap-2">
+          <button type="button" onClick={() => setSharing(true)} disabled={stage < 3} aria-label="Share your reveal card" className="btn btn-ghost min-h-14 shrink-0 px-4 disabled:opacity-60">
+            <Share2 className="size-5" />
+          </button>
+          <button type="button" onClick={embrace} disabled={stage < 3} className="btn btn-gold min-h-14 flex-1 text-lg disabled:opacity-60">
+            Embrace it
+          </button>
+        </div>
       </div>
+        </>
+      )}
+      {sharing && <RevealShareSheet data={card} onClose={() => setSharing(false)} />}
     </div>
   );
 }

@@ -19,7 +19,7 @@ interface Store {
   pickMode: (mode: GameMode) => void;
   buildOwn: () => void;
   beginLegend: (presetId: string) => void;
-  closeReveal: () => void;
+  closeReveal: (firstMove?: number) => void;
   begin: (opts: NewLifeOpts) => void;
   resume: () => void;
   age: () => void;
@@ -67,10 +67,10 @@ export const useGame = create<Store>((set, get) => ({
     // createGame fills name, city, upbringing, traits and look from the legend.
     get().begin({ name: legend.name, cityId: legend.cityId, upbringing: legend.upbringing, portrait: legend.portrait, sex: legend.sex, face: legend.face, drive: legend.drive, preset: legend.id, mode: "god" });
   },
-  closeReveal: () => {
+  closeReveal: (firstMove) => {
     const game = get().game;
     if (!game?.reveal) return;
-    commit(set, get().scores, dismissReveal(game));
+    commit(set, get().scores, dismissReveal(game, firstMove));
   },
   begin: (opts) => {
     const game = createGame({ ...opts, seed: opts.seed ?? ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0) });
