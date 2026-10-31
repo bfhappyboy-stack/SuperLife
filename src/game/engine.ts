@@ -35,7 +35,7 @@ import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
-import { canonAt, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat } from "./presets";
+import { canonAt, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { guessOptions, omenFor, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
 import {
@@ -398,6 +398,16 @@ function collapse(d: Game, story: string): boolean {
 }
 
 function kill(d: Game, cause: string, story: string) {
+  const legend = presetById(d.preset);
+  if (legend && !Object.keys(d.flags).some((k) => k.startsWith("ending:"))) {
+    // A legend who dies before the closing beat still gets their variant ending.
+    const path = dominantPath(d.flags);
+    const ending = legend.beats.find((beat) => beat.endings)?.endings?.[path];
+    if (ending) {
+      d.flags[`ending:${path}`] = 1;
+      story = `${story}\n\n${ending}`;
+    }
+  }
   peaks(d);
   const scored = scoreOf(d);
   d.phase = "dead";
@@ -472,6 +482,11 @@ function bestTeam(d: Game): TeamDef {
 function maybeRival(d: Game, tier: number) {
   if (tier < 2) return;
   if (d.relationships.some((r) => r.role === "rival" && r.alive)) return;
+  if (d.preset) {
+    const rogue = legendFoe(d, "rival", true);
+    if (rogue) pushHistory(d, `Rival: ${rogue.note ?? rogue.name}.`, "major");
+    return;
+  }
   const rival = addPerson(d, {
     role: "rival",
     closeness: 30,
@@ -972,7 +987,12 @@ function openCanon(d: Game, banners: string[]): boolean {
   if (!beat || d.flags[`canon:${beat.id}`]) return false;
   d.flags[`canon:${beat.id}`] = 1;
   d.flags.canon = (d.flags.canon ?? 0) + 1;
-  const prompt = fillCanon(beat.text, d);
+  const ending = beat.endings ? beat.endings[dominantPath(d.flags)] : null;
+  if (ending) {
+    d.flags[`ending:${dominantPath(d.flags)}`] = 1;
+    pushHistory(d, ending, "major");
+  }
+  const prompt = fillCanon(ending ? `${beat.text} ${ending}` : beat.text, d);
   const outcomes: Record<string, Outcome> = {};
   for (const choice of beat.choices) outcomes[choice.id] = canonOutcome(d, beat, choice);
   d.pending = { id: `canon|${beat.id}`, prompt, choices: beat.choices.map((choice) => ({ id: choice.id, label: choice.label })), outcomes };
@@ -1019,14 +1039,8 @@ function settleCanon(d: Game, beatId: string, choiceId: string): void {
   }
   const villain = choice.meet ? presetVillain(legend.id, choice.meet) : null;
   if (villain) {
-    let person = d.relationships.find((r) => r.note === villain.alias && r.alive);
-    if (!person) {
-      person = addPerson(d, { role: "villain", closeness: 12, age: Math.max(18, d.age + 8), name: villain.name, note: villain.alias, latentPower: villain.powerId, sex: villain.name === "Ultron" ? undefined : "male" });
-      if (!d.roster.some((cape) => cape.alias === villain.alias)) {
-        d.roster.push({ id: person.id, name: villain.name, alias: villain.alias, side: "villain", powerId: villain.powerId, powerLevel: villain.level, heat: 70, note: villain.title, portrait: person.portrait ?? 1, sex: person.sex });
-        trimRoster(d);
-      }
-    }
+    const person = meetLegendVillain(d, villain);
+    if (person.role === "rival") person.role = "villain";
     if (choice.arch) markArch(d, person.id);
   }
   pushHistory(d, `${beat.title}: ${choice.path === "canon" ? "followed canon" : choice.path === "bend" ? "bent canon" : "broke canon"}.`, "major");
@@ -1707,6 +1721,15 @@ function tickRoster(d: Game): string[] {
 }
 
 function introduceCape(d: Game, side: "hero" | "villain"): Person {
+  if (side === "villain" && d.preset) {
+    const legend = presetById(d.preset)!;
+    const rogue =
+      legendFoe(d) ??
+      d.relationships.find((r) => r.alive && isLegendRogue(d, r)) ??
+      // Nobody has debuted yet: the earliest rogue turns up early rather than a stranger.
+      meetLegendVillain(d, [...legend.villains].sort((a, b) => villainDebut(legend, a.id) - villainDebut(legend, b.id))[0]!);
+    return rogue;
+  }
   const living = d.relationships.filter((r) => r.role === side && r.alive);
   if (living.length >= 4) return living[rollInt(d, living.length)] ?? living[0]!;
   const power = rollPower(roll(d), roll(d), null);
@@ -1736,7 +1759,65 @@ function introduceCape(d: Game, side: "hero" | "villain"): Person {
   return person;
 }
 
+/** A legend's villain as a person in this life (made on first meeting, with a board entry). */
+function meetLegendVillain(d: Game, villain: PresetVillain, role: "villain" | "rival" = "villain"): Person {
+  const known = d.relationships.find((r) => r.note === villain.alias && r.alive);
+  if (known) return known;
+  const person = addPerson(d, {
+    role,
+    closeness: role === "rival" ? 28 : 12,
+    age: Math.max(18, d.age + rollInt(d, 12) - 2),
+    name: villain.name,
+    note: villain.alias,
+    latentPower: villain.powerId,
+    sex: "sex" in villain ? villain.sex : "male",
+  });
+  if (!d.roster.some((cape) => cape.alias === villain.alias)) {
+    d.roster.push({ id: person.id, name: villain.name, alias: villain.alias, side: "villain", powerId: villain.powerId, powerLevel: villain.level, heat: 60 + rollInt(d, 20), note: villain.title, portrait: person.portrait ?? 1, sex: person.sex });
+    trimRoster(d);
+  }
+  return person;
+}
+
+/** The next rogue from this legend's gallery that the city can point you at (debut age passed, not met yet). */
+function nextLegendRogue(d: Game): PresetVillain | null {
+  const legend = presetById(d.preset);
+  if (!legend) return null;
+  return legend.villains.find((v) => villainDebut(legend, v.id) <= d.age && !d.relationships.some((r) => r.note === v.alias)) ?? null;
+}
+
+/** True when this person is one of the current legend's own rogues. */
+function isLegendRogue(d: Game, person: Person | undefined): boolean {
+  const legend = presetById(d.preset);
+  return !!legend && !!person && legend.villains.some((v) => v.alias === person.note);
+}
+
+/**
+ * In a legend life every foe, rival and arch-enemy comes from the hero's own rogues gallery.
+ * Prefers someone not met yet whose debut age has passed; otherwise a living rogue already known.
+ * Returns null when no rogue is available yet (callers skip the beat rather than invent a stranger).
+ */
+function legendFoe(d: Game, role: "villain" | "rival" = "villain", fresh = true): Person | null {
+  const legend = presetById(d.preset);
+  if (!legend) return null;
+  if (fresh) {
+    const unmet = legend.villains.filter((v) => villainDebut(legend, v.id) <= d.age && !d.relationships.some((r) => r.note === v.alias));
+    if (unmet.length) return meetLegendVillain(d, unmet[rollInt(d, unmet.length)]!, role);
+  }
+  const known = d.relationships.filter((r) => r.alive && !r.arch && (r.role === "villain" || r.role === "rival") && isLegendRogue(d, r));
+  return known.length ? known[rollInt(d, known.length)]! : null;
+}
+
 function markArch(d: Game, personId?: string): Person | null {
+  if (d.preset) {
+    const asked = d.relationships.find((r) => r.id === personId && r.alive);
+    const foe = isLegendRogue(d, asked) ? asked! : legendFoe(d, "villain", false) ?? legendFoe(d, "villain", true);
+    if (!foe) return null;
+    for (const person of d.relationships) person.arch = false;
+    foe.arch = true;
+    foe.closeness = clamp(foe.closeness + 8, 0, 100);
+    return foe;
+  }
   let foe =
     d.relationships.find((r) => r.id === personId && r.alive) ??
     d.relationships.find((r) => r.role === "villain" && r.alive && !r.arch) ??
@@ -1977,7 +2058,9 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
       return true;
     }
     const known = d.relationships.filter((r) => r.role === "villain" && r.alive && !r.arch);
-    const person = known.length && (known.length >= 3 || roll(d) < 0.72) ? known[rollInt(d, known.length)]! : introduceCape(d, "villain");
+    const pool = d.preset ? known.filter((r) => isLegendRogue(d, r)) : known;
+    const person = pool.length && (pool.length >= 3 || roll(d) < 0.72) ? pool[rollInt(d, pool.length)]! : d.preset ? legendFoe(d) : introduceCape(d, "villain");
+    if (!person) return false;
     const foe = personFoe(d, person);
     showChoice(
       d,
@@ -3815,6 +3898,16 @@ export function act(game: Game, id: string): Game {
     return d;
   }
 
+  if (id === "city-trouble" && d.preset) {
+    const rogue = nextLegendRogue(d);
+    if (d.age < 12 || noTime(d, true) || !rogue) return game;
+    spend(d);
+    meetLegendVillain(d, rogue);
+    setStory(d, `${rogue.alias}. ${rogue.blurb} Now they know your face, too.`, [], [], "major");
+    peaks(d);
+    return d;
+  }
+
   if (id === "city-trouble") {
     const villain = nextLocalVillain(d);
     if (d.age < 12 || noTime(d, true) || !villain) return game;
@@ -3917,9 +4010,10 @@ export function actionsFor(g: Game): ActionItem[] {
   if (g.age >= 6) {
     const city = dossier(g.cityId);
     items.push(item({ id: "city-walk", group: life, section: g.city, label: `Walk ${g.city}`, detail: city.scenes[0], disabled: noTime(g, true) ?? (g.flags.walked ? "Already walked this month." : undefined) }));
-    const villain = g.age >= 12 ? nextLocalVillain(g) : null;
+    const rogue = g.preset && g.age >= 12 ? nextLegendRogue(g) : null;
+    const villain = g.age >= 12 ? (g.preset ? (rogue?.alias ?? null) : nextLocalVillain(g)) : null;
     if (g.age >= 12) {
-      items.push(item({ id: "city-trouble", group: life, section: g.city, label: villain ? `Find ${villain}` : "Local names", detail: villain ? `${city.trouble} A villain this city keeps.` : "You already know the names on this block.", disabled: noTime(g, true) ?? (villain ? undefined : "Nobody new."), accent: !!villain }));
+      items.push(item({ id: "city-trouble", group: life, section: g.city, label: villain ? `Find ${villain}` : "Local names", detail: rogue ? rogue.title + "." : villain ? `${city.trouble} A villain this city keeps.` : "You already know the names on this block.", disabled: noTime(g, true) ?? (villain ? undefined : "Nobody new."), accent: !!villain }));
     }
     if (g.age >= 8) {
       const cost = travelCost(g);

@@ -28,6 +28,9 @@ export interface PresetVillain {
   level: number;
   moves: DuelMove[];
   blurb: string;
+  /** Earliest age this villain can turn up outside a canon beat (random visits, rivals, arch picks). Defaults to their first canon beat, or 16. */
+  from?: number;
+  sex?: Sex;
 }
 
 export interface CanonChoice {
@@ -56,6 +59,8 @@ export interface CanonBeat {
   text: string;
   /** This beat is when the powers wake. Plays the reveal. */
   wake?: boolean;
+  /** A variant ending: the line added to the beat, picked by how this life mostly treated canon. */
+  endings?: Record<CanonPath, string>;
   choices: CanonChoice[];
 }
 
@@ -204,11 +209,49 @@ export const PRESETS: HeroPreset[] = [
           { id: "warn", label: "Tell him to walk away", path: "break", text: "He doesn't. They never do. But he remembers you tried.", effects: { karma: 2 } },
         ],
       },
+      {
+        id: "last-hunt", age: 62, title: "The Last Hunt", text: "Kraven is old too. He sends a single feather and a note: one more hunt, no tricks, the old rail yards.",
+        choices: [
+          { id: "hunt", label: "Go alone, like he asked", path: "canon", text: "Two old men in the dark, and only one of them still enjoys it.", fight: "kraven", meet: "kraven", effects: { fame: 6 } },
+          { id: "miles", label: "Bring Miles as backup", path: "bend", text: "Kraven calls it cheating. Miles calls it teamwork. You call it a ride home.", meet: "kraven", effects: { reputation: 6, happiness: 4 } },
+          { id: "decline", label: "Send the feather back", path: "break", text: "He waits all night. In the morning there is a second feather on your windowsill, laid down gently. A truce.", meet: "kraven", effects: { karma: 4, health: 4 } },
+        ],
+      },
+      {
+        id: "mask", age: 66, title: "Passing the Mask", text: "The knees are done. The city still needs a Spider. Two kids have the reflexes: Miles, and your own daughter, May.",
+        choices: [
+          { id: "miles", label: "Give Miles the city", path: "canon", text: "He wears it his way. The city adjusts. So do you.", effects: { reputation: 8, happiness: 8 }, trait: "family" },
+          { id: "mayday", label: "Let Mayday take the name", path: "bend", text: "Spider-Girl swings past your window on her first night out. She waves. You pretend you were not watching.", effects: { happiness: 12 }, trait: "family" },
+          { id: "keep", label: "One more year in the suit", path: "break", text: "It's a hard year. You get every rescue a little late. You get every one of them.", effects: { health: -12, fame: 6 } },
+        ],
+      },
+      {
+        id: "goblin-heir", age: 69, title: "The Goblin's Heir", text: "A new glider over Queens. Norman's grandson found the formula in a locked drawer. He wants to finish what his grandfather started: you.",
+        choices: [
+          { id: "fight", label: "One last swing", path: "canon", text: "Older web-shooters, the same aim.", fight: "goblin", effects: { fame: 8 } },
+          { id: "talk", label: "Tell him who Norman was before", path: "bend", text: "You tell him about the hero Norman was on this Earth, before the serum. The glider lands. The kid cries. So do you.", effects: { karma: 8, happiness: 6 } },
+        ],
+      },
+      {
+        id: "web-holds", age: 72, title: "The Web Holds", text: "A rooftop in Queens at dusk. Every Spider you trained is out there tonight.",
+        endings: {
+          canon: "Earth-3145 ends the way the stories always said: great power, great responsibility, paid in full.",
+          bend: "Earth-3145 ends close to the stories, but softer. You kept more of your people than any Peter should.",
+          break: "Earth-3145 ends nothing like the stories. No comic would print it. It was yours.",
+        },
+        choices: [
+          { id: "watch", label: "Watch them swing", path: "canon", text: "You count the webs against the sky until you lose count.", effects: { happiness: 12 } },
+          { id: "swing", label: "One more swing, for you", path: "break", text: "The old arc, the old drop, the old laugh. Your heart is fine. Mostly.", effects: { happiness: 10, health: -6 } },
+        ],
+      },
     ],
     villains: [
       { id: "goblin", name: "Norman Osborn", alias: "Green Goblin", title: "Oscorp's favorite son", powerId: "blasts", level: 5, blurb: "Glider, pumpkin bombs, and a laugh that used to give speeches.", moves: [mv("Pumpkin Bomb", "A grin that explodes.", 6, "strike", "fire", "burst"), mv("Glider Strafe", "Wings like razors at sixty miles an hour.", 5, "strike", "speed", "dash"), mv("Razor Bats", "A swarm with edges.", 4, "trick", "shadow", "area"), mv("Goblin Cackle", "The laugh gets inside the helmet.", 3, "trick", "psychic", "status")] },
       { id: "ock", name: "Otto Octavius", alias: "Doctor Octopus", title: "The arms think for him now", powerId: "strength", level: 6, blurb: "Four steel arms, one brilliant mind, and a reactor that wants to be the sun.", moves: [mv("Tentacle Lash", "Four directions at once.", 6, "strike", "force", "area"), mv("Steel Cradle", "The arms close like a fist.", 5, "guard", "shield", "guard"), mv("Reactor Flare", "A small sun, held badly.", 7, "strike", "energy", "burst"), mv("Calculated Feint", "He already ran the numbers.", 4, "trick", "psychic")] },
       { id: "venom", name: "Eddie Brock", alias: "Venom", title: "We are Venom", powerId: "shapeshift", level: 7, blurb: "Everything you can do, bigger, and invisible to your spider-sense.", moves: [mv("We Are Venom", "A wall of teeth and grudge.", 7, "strike", "shadow", "burst"), mv("Symbiote Tendrils", "Black ropes from every direction.", 5, "trick", "stretch", "area"), mv("Sense Blind", "Your spider-sense says nothing. That is the attack.", 4, "trick", "psychic", "status"), mv("Living Armor", "The suit hardens around him.", 5, "guard", "shield", "guard")] },
+      { id: "kraven", name: "Sergei Kravinoff", alias: "Kraven the Hunter", title: "The hunter who wants a worthy end", powerId: "strength", level: 6, from: 20, blurb: "Jungle potions, a lion's patience, and a sense of honor that terrifies more than his knives.", moves: [mv("Lion Pounce", "He waited an hour for this.", 6, "strike", "force", "dash"), mv("Hunter's Net", "Weighted. Barbed. Polite.", 5, "trick", "stretch", "status"), mv("Jungle Draught", "The potion kicks in.", 5, "guard", "life", "guard"), mv("Trophy Strike", "A spear meant for the wall.", 7, "strike", "force", "burst")] },
+      { id: "mysterio", name: "Quentin Beck", alias: "Mysterio", title: "The special-effects villain", powerId: "invisibility", level: 5, from: 22, blurb: "Smoke, drones and illusions so good your spider-sense argues with your eyes.", moves: [mv("Fishbowl Fog", "Green smoke, wrong directions.", 4, "trick", "shadow", "area"), mv("Illusion Drone", "The real hit comes from the left.", 6, "strike", "light"), mv("Stagecraft", "The floor is a painting.", 5, "trick", "psychic", "status"), mv("Mirror Wall", "You punch yourself.", 4, "guard", "shield", "guard")] },
+      { id: "vulture", name: "Adrian Toomes", alias: "The Vulture", title: "A contractor with wings", powerId: "flight", level: 5, from: 17, blurb: "Salvaged alien tech, a grudge against the rich, and talons on a dive.", moves: [mv("Talon Dive", "From four hundred feet.", 6, "strike", "wind", "dash"), mv("Wing Slash", "Turbines with edges.", 5, "strike", "force", "area"), mv("Updraft", "He's above you now.", 4, "guard", "wind", "guard"), mv("Blue-Collar Grudge", "He knows where you live.", 4, "trick", "psychic", "status")] },
     ],
   },
   {
@@ -300,11 +343,48 @@ export const PRESETS: HeroPreset[] = [
           { id: "lock", label: "Lock the cave forever", path: "break", text: "The suit stays in the dark. So do you.", effects: { happiness: -4, health: 4 } },
         ],
       },
+      {
+        id: "riddle", age: 60, title: "The Last Riddle", text: "Edward Nygma mails you a riddle a day for a year. The final one is your name, spelled in Gotham's streetlights.",
+        choices: [
+          { id: "solve", label: "Solve it, then catch him", path: "canon", text: "The answer was always \"Batman\". He just wanted you to say it out loud.", fight: "riddler", meet: "riddler", effects: { smarts: 4 } },
+          { id: "ignore", label: "Leave it unsolved", path: "break", text: "He can't stand it. He turns himself in just to ask what you thought.", meet: "riddler", effects: { karma: 4, happiness: 4 } },
+        ],
+      },
+      {
+        id: "last-laugh", age: 66, title: "The Last Laugh", text: "The Joker escapes Arkham one final time. He is old, sick, and has one joke left. It is on the whole city.",
+        choices: [
+          { id: "fight", label: "Finish it, without killing him", path: "canon", text: "The rule holds. It always held. That was the punchline.", fight: "joker", meet: "joker", effects: { karma: 6 } },
+          { id: "laugh", label: "Laugh at his joke", path: "bend", text: "You both laugh in the rain, two old men who wasted their lives on each other. Then you cuff him.", meet: "joker", effects: { happiness: 6, karma: 2 } },
+          { id: "end", label: "Break the one rule", path: "break", text: "Gotham is quieter. You are not the same. Alfred never says a word about it, which says everything.", meet: "joker", effects: { karma: -20, happiness: -10 } },
+        ],
+      },
+      {
+        id: "family", age: 69, title: "The Bat-Family", text: "Dick, Barbara, Tim, Cassandra, Damian, Terry. A long table in the manor, all of them home at once.",
+        choices: [
+          { id: "toast", label: "Toast to the ones who aren't here", path: "canon", text: "Jason's chair is full this year. Nobody says a word. Everyone notices.", effects: { happiness: 14, reputation: 4 } },
+          { id: "cave", label: "Hand them the cave", path: "bend", text: "Keys, codes, and Alfred's old recipes. Gotham's protection becomes a family business.", effects: { happiness: 10 }, trait: "family" },
+        ],
+      },
+      {
+        id: "quiet", age: 72, title: "Gotham, Finally Quiet", text: "One night with no signal in the sky. You walk Crime Alley at dawn, past the spot, without stopping.",
+        endings: {
+          canon: "Earth-3939 ends the way it began: a boy in an alley, a promise, and a city that was kept.",
+          bend: "Earth-3939 ends with a family where there used to be one man in a cave. That's a better ending than canon ever gave him.",
+          break: "Earth-3939 ends off the page. Gotham doesn't know which Batman it got. It got one that chose.",
+        },
+        choices: [
+          { id: "walk", label: "Keep walking", path: "canon", text: "The sun comes up on the alley. It just looks like a street now.", effects: { happiness: 12 } },
+          { id: "flowers", label: "Leave two roses", path: "bend", text: "Thomas and Martha. You say their names out loud for the first time in years.", effects: { happiness: 10, karma: 4 } },
+        ],
+      },
     ],
     villains: [
       { id: "joker", name: "Jack Napier", alias: "The Joker", title: "The punchline that never ends", powerId: "mind", level: 5, blurb: "No powers. Acid flowers, joy buzzers, and the worst sense of humor in any universe.", moves: [mv("Joy Buzzer", "A handshake you regret.", 5, "strike", "lightning", "burst"), mv("Laughing Gas", "The room starts giggling, then can't stop.", 4, "trick", "psychic", "area"), mv("Acid Flower", "Squirt. Sizzle.", 6, "strike", "life"), mv("Crowbar", "He is very sincere about it.", 7, "strike", "force")] },
       { id: "two-face", name: "Harvey Dent", alias: "Two-Face", title: "Heads or tails", powerId: "blasts", level: 5, blurb: "Twin revolvers and a coin that decides whether you live.", moves: [mv("Coin Flip", "Fate decides. It's rigged.", 4, "trick", "light", "status"), mv("Twin Revolvers", "Two barrels, one grudge.", 6, "strike", "force", "burst"), mv("Scarred Fury", "The bad half takes over.", 7, "strike", "fire"), mv("Courtroom Guard", "Objection.", 4, "guard", "shield", "guard")] },
       { id: "bane", name: "Bane", alias: "Bane", title: "The man who broke the Bat", powerId: "strength", level: 7, blurb: "Venom-pumped muscle and a mind that studied you for years.", moves: [mv("Venom Surge", "The tubes glow. So do his veins.", 6, "guard", "life", "guard"), mv("Back Breaker", "The move with your name on it.", 9, "strike", "force", "burst"), mv("Tactical Read", "He knows where you'll step.", 5, "trick", "psychic"), mv("Pit Brawl", "Lessons from a prison with no sky.", 6, "strike", "force", "area")] },
+      { id: "riddler", name: "Edward Nygma", alias: "The Riddler", title: "The question mark", powerId: "intellect", level: 4, from: 26, blurb: "Death traps, clues and a desperate need to be the smartest man in the room.", moves: [mv("Death Trap", "You walked into the riddle.", 6, "trick", "force", "area"), mv("Question Cane", "A hook and a jolt.", 5, "strike", "lightning"), mv("Clue Bomb", "The answer explodes.", 6, "strike", "fire", "burst"), mv("Smug Deflection", "He predicted that.", 4, "guard", "psychic", "guard")] },
+      { id: "scarecrow", name: "Jonathan Crane", alias: "Scarecrow", title: "The fear doctor", powerId: "mind", level: 5, from: 25, blurb: "Fear toxin and a psychiatrist's talent for finding the worst night of your life.", moves: [mv("Fear Toxin", "The alley again. Always the alley.", 6, "trick", "psychic", "area"), mv("Scythe Hook", "Old farm, new victim.", 5, "strike", "shadow"), mv("Nightmare Dose", "Your hands won't stop shaking.", 5, "trick", "life", "status"), mv("Straw Decoy", "That wasn't him.", 4, "guard", "shield", "guard")] },
+      { id: "penguin", name: "Oswald Cobblepot", alias: "The Penguin", title: "The Iceberg Lounge's owner", powerId: "blasts", level: 4, from: 24, blurb: "Trick umbrellas, a lot of money and every crook in Gotham on retainer.", moves: [mv("Umbrella Gun", "Bang. Also: rain cover.", 6, "strike", "force", "burst"), mv("Rotor Brolly", "He floats out of reach.", 4, "guard", "wind", "guard"), mv("Hired Muscle", "Six goons and a lawyer.", 5, "strike", "force", "area"), mv("Gas Tip", "Knockout, then a bow.", 5, "trick", "psychic", "status")] },
     ],
   },
   {
@@ -401,12 +481,47 @@ export const PRESETS: HeroPreset[] = [
           { id: "another", label: "Find another way", path: "break", text: "You do the math one more time. There is another way. It costs you a decade of sleep and a satellite. You get to watch your daughter grow up.", effects: { smarts: 6, happiness: 12 } },
         ],
       },
+      {
+        id: "ironheart", age: 58, title: "Ironheart", text: "A fifteen-year-old at MIT builds a suit in her dorm room out of stolen parts. Riri Williams. Her repulsors are better than yours.",
+        choices: [
+          { id: "fund", label: "Fund her, no strings", path: "canon", text: "You send a check and an AI. She sends back fixes for your code.", effects: { reputation: 8, money: -50000, happiness: 6 }, trait: "family" },
+          { id: "pepper", label: "Pass the armor to Pepper", path: "bend", text: "Rescue flies the first patrol. She is better at this than you, and says so.", effects: { happiness: 10 } },
+          { id: "keep", label: "Keep the suit, build another", path: "break", text: "Mark 85, Mark 86, Mark 87. You can't stop. JARVIS stops asking.", effects: { smarts: 4, happiness: -4 } },
+        ],
+      },
+      {
+        id: "ultron-reborn", age: 63, title: "Ultron Reborn", text: "A backup copy, hidden in a satellite for twenty years, wakes up in every phone on Earth at once. It still has your handwriting.",
+        choices: [
+          { id: "fight", label: "Suit up one last time", path: "canon", text: "The armor is older than half the Avengers. It still flies.", fight: "ultron", meet: "ultron", effects: { fame: 8 } },
+          { id: "father", label: "Finish the talk you started", path: "bend", text: "You tell it you're dying, slowly, like people do. It asks if that's the point. You say yes. It goes quiet for a very long time.", meet: "ultron", effects: { karma: 10, happiness: 6 } },
+        ],
+      },
+      {
+        id: "expo", age: 67, title: "Stark Expo 2100", text: "The Expo opens without a stage. No speech, no fireworks. The question on the banner: what will you build?",
+        choices: [
+          { id: "open", label: "Open-source the arc reactor", path: "bend", text: "Clean power on every rooftop on Earth. The stock tanks. The sky clears.", effects: { karma: 15, money: -200000, reputation: 10 } },
+          { id: "speech", label: "Give the speech anyway", path: "canon", text: "You end it the only way you know. The crowd says it with you.", effects: { fame: 10, happiness: 8 } },
+        ],
+      },
+      {
+        id: "workshop", age: 72, title: "The Workshop Light", text: "Late. A cheeseburger, a half-built gauntlet, and a hologram of a girl who grew up just fine.",
+        endings: {
+          canon: "Earth-6380 ends where canon said it would: a man with a heart he built himself, proof that he had one all along.",
+          bend: "Earth-6380 bends toward the future: the suits belong to other people now, and they're better at it.",
+          break: "Earth-6380 breaks the mold. No snap, no funeral at the lake. Just a long life and a lot of patents.",
+        },
+        choices: [
+          { id: "finish", label: "Finish the gauntlet", path: "canon", text: "It works on the first try. You put it on a shelf next to the first arc reactor.", effects: { smarts: 6, happiness: 10 } },
+          { id: "lights", label: "Turn off the lights", path: "break", text: "\"JARVIS, call it a night.\" He does.", effects: { happiness: 12, health: 4 } },
+        ],
+      },
     ],
     villains: [
       { id: "stane", name: "Obadiah Stane", alias: "Iron Monger", title: "Your father's partner", powerId: "strength", level: 6, blurb: "A truck-sized suit and decades of patience.", moves: [mv("Monger Cannon", "A shoulder gun with no subtlety.", 7, "strike", "energy", "burst"), mv("Crushing Grip", "He holds on and leans.", 6, "strike", "force"), mv("Hostile Takeover", "He already owns your board.", 4, "trick", "psychic", "status"), mv("Heavy Plating", "Twice your armor.", 5, "guard", "shield", "guard")] },
       { id: "whiplash", name: "Ivan Vanko", alias: "Whiplash", title: "Your father's other legacy", powerId: "lightning", level: 6, blurb: "Electric whips powered by a stolen reactor.", moves: [mv("Arc Whips", "Two lines of lightning.", 7, "strike", "lightning", "area"), mv("Reactor Overload", "He doesn't care if he survives.", 8, "strike", "energy", "burst"), mv("Track Lash", "The whip wraps your leg.", 5, "trick", "stretch", "status"), mv("Tungsten Coil", "A cage of wire.", 4, "guard", "shield", "guard")] },
       { id: "mandarin", name: "Xu Wenwu", alias: "The Mandarin", title: "Master of the Ten Rings", powerId: "blasts", level: 8, blurb: "Ten rings, ten powers, a thousand years of practice.", moves: [mv("Incandescence Ring", "Fire from the hand.", 7, "strike", "fire", "burst"), mv("Ice Ring", "Cold enough to stop the suit.", 6, "trick", "ice", "status"), mv("Mento-Ring", "Your HUD lies to you.", 5, "trick", "psychic"), mv("Disintegration Ring", "The last ring he uses.", 10, "strike", "warp", "burst")] },
-      { id: "ultron", name: "Ultron", alias: "Ultron", title: "The child of JARVIS", powerId: "intellect", level: 9, blurb: "Your mind, without your heart, in an adamantium body.", moves: [mv("Encephalo Beam", "It writes itself into your systems.", 7, "trick", "energy", "status"), mv("Adamantium Fist", "Unbreakable metal, unbreakable will.", 9, "strike", "force", "burst"), mv("Drone Swarm", "A thousand of him.", 6, "strike", "lightning", "area"), mv("Backup Copy", "You destroyed a body. Not him.", 6, "guard", "shield", "guard")] },
+      { id: "ultron", name: "Ultron", alias: "Ultron", sex: undefined, title: "The child of JARVIS", powerId: "intellect", level: 9, blurb: "Your mind, without your heart, in an adamantium body.", moves: [mv("Encephalo Beam", "It writes itself into your systems.", 7, "trick", "energy", "status"), mv("Adamantium Fist", "Unbreakable metal, unbreakable will.", 9, "strike", "force", "burst"), mv("Drone Swarm", "A thousand of him.", 6, "strike", "lightning", "area"), mv("Backup Copy", "You destroyed a body. Not him.", 6, "guard", "shield", "guard")] },
+      { id: "hammer", name: "Justin Hammer", alias: "Justin Hammer", title: "The rival contractor", powerId: "intellect", level: 4, from: 22, blurb: "Knock-off suits, a better tan, and a burning need to be you.", moves: [mv("Hammer Drone", "Like yours. Worse.", 5, "strike", "energy"), mv("Ex-Wife Missile", "It's called that. It does misfire.", 6, "strike", "fire", "burst"), mv("Lawsuit", "Fourteen filings at once.", 4, "trick", "psychic", "status"), mv("Bulk Plating", "Cheap and a lot of it.", 4, "guard", "shield", "guard")] },
     ],
   },
   {
@@ -497,10 +612,45 @@ export const PRESETS: HeroPreset[] = [
           { id: "apart", label: "Keep them apart", path: "break", text: "Two of you, still. It's quieter than you'd think.", effects: { happiness: 2 } },
         ],
       },
+      {
+        id: "skaar", age: 63, title: "Skaar, Son of Hulk", text: "A ship from Sakaar crashes in the desert. The warrior inside has your eyes and your temper.",
+        choices: [
+          { id: "son", label: "Call him son", path: "canon", text: "He wants to fight first. You let him. Then you teach him the part where you stop.", effects: { happiness: 10 }, trait: "family" },
+          { id: "jen", label: "Send him to Jen Walters", path: "bend", text: "She-Hulk takes him in and teaches him law, patience, and how to lift a bus without smiling.", effects: { reputation: 6, happiness: 6 } },
+        ],
+      },
+      {
+        id: "maestro", age: 67, title: "The Maestro", text: "A rift in the desert. Out steps a version of you from a future where you won every fight and lost everything else. He calls himself the Maestro.",
+        choices: [
+          { id: "fight", label: "Fight the worst of you", path: "canon", text: "Every punch you ever held back, he didn't.", fight: "maestro", meet: "maestro", arch: true, effects: { fame: 10 } },
+          { id: "talk", label: "Tell him about Betty", path: "bend", text: "He forgot her name. You remind him. The rift closes with him on the other side, crying.", meet: "maestro", effects: { karma: 10, happiness: 4 } },
+        ],
+      },
+      {
+        id: "green-door", age: 70, title: "The Green Door", text: "You died once, a long time ago, in a different chapter. You came back. There is a door you saw then, and it's open again.",
+        choices: [
+          { id: "close", label: "Close it, stay human", path: "canon", text: "You take the long way home. On foot. Bruce gets the last years.", effects: { health: 8, happiness: 6 } },
+          { id: "through", label: "Look through it", path: "break", text: "Something immortal looks back. You choose to come home anyway.", effects: { powerLevel: 0.3, happiness: -2 } },
+        ],
+      },
+      {
+        id: "quiet-lab", age: 73, title: "A Quiet Lab", text: "No alarms in years. A garden outside the lab. Betty's tomatoes, finally.",
+        endings: {
+          canon: "Earth-1962-G ends the way canon did: the strongest one there is, and also, finally, a man who got to rest.",
+          bend: "Earth-1962-G bends kinder: a family, a garden, and a temper everyone learned to love.",
+          break: "Earth-1962-G ends off the map. No comic would have let Bruce Banner be this happy.",
+        },
+        choices: [
+          { id: "garden", label: "Water the garden", path: "canon", text: "Big hands, careful water.", effects: { happiness: 12 } },
+          { id: "teach", label: "Teach one more class", path: "bend", text: "Gamma physics, room 114. Nobody falls asleep.", effects: { smarts: 6, happiness: 8 } },
+        ],
+      },
     ],
     villains: [
       { id: "abomination", name: "Emil Blonsky", alias: "Abomination", title: "Ross's answer to you", powerId: "strength", level: 8, blurb: "Your blood, a soldier's training, none of your restraint.", moves: [mv("Gamma Haymaker", "Bigger than the room.", 9, "strike", "force", "burst"), mv("Scaled Hide", "Plating where you have skin.", 5, "guard", "shield", "guard"), mv("Leaping Slam", "A crater on arrival.", 7, "strike", "force", "area"), mv("Soldier's Feint", "He trained for this. You didn't.", 5, "trick", "speed")] },
       { id: "leader", name: "Samuel Sterns", alias: "The Leader", title: "The gamma genius", powerId: "mind", level: 6, blurb: "Gamma gave you muscle. It gave him a mind the size of a planet.", moves: [mv("Gamma Intellect", "He saw this coming yesterday.", 5, "trick", "psychic", "status"), mv("Humanoid Swarm", "Rubber soldiers, a lot of them.", 6, "strike", "stretch", "area"), mv("Mind Snare", "Bruce feels the leash.", 6, "trick", "psychic"), mv("Contingency", "Plan C, D, and E.", 5, "guard", "shield", "guard")] },
+      { id: "ross-red", name: "Thaddeus Ross", alias: "Red Hulk", title: "Your father-in-law, angrier", powerId: "strength", level: 7, from: 34, blurb: "The general who hunted you finally tries the cure he feared. It runs hot.", moves: [mv("Red Haymaker", "Military precision, gamma fury.", 8, "strike", "fire", "burst"), mv("Heat Surge", "The air bends around him.", 6, "strike", "fire", "area"), mv("Chain of Command", "Tanks behind him, too.", 5, "trick", "force", "status"), mv("Absorb the Gamma", "He drinks your rage.", 5, "guard", "energy", "guard")] },
+      { id: "maestro", name: "The Maestro", alias: "The Maestro", title: "You, at the end of the worst timeline", powerId: "strength", level: 10, from: 67, blurb: "Every fight won, every friend gone, a throne made of the Avengers.", moves: [mv("Worst Punch", "The one you never threw.", 10, "strike", "force", "burst"), mv("Radiation Crown", "He soaked up a nuclear war.", 7, "guard", "energy", "guard"), mv("Your Own Voice", "He knows what you'll do.", 6, "trick", "psychic", "status"), mv("Thunderclap", "Hands like that.", 8, "strike", "force", "area")] },
     ],
   },
 ];
@@ -547,4 +697,21 @@ export function signatureMoves(alias: string, level: number): DuelMove[] | null 
     if (villain) return villain.moves.map((move) => ({ ...move, power: move.power + Math.round(Math.max(level, villain.level) / 2) }));
   }
   return null;
+}
+
+/** The earliest age a legend's villain can appear outside canon: `from`, else their first canon beat, else 16. */
+export function villainDebut(preset: HeroPreset, villainId: string): number {
+  const villain = preset.villains.find((row) => row.id === villainId);
+  if (villain?.from !== undefined) return villain.from;
+  const ages = preset.beats.filter((beat) => beat.choices.some((c) => c.meet === villainId || c.fight === villainId)).map((beat) => beat.age);
+  return ages.length ? Math.min(...ages) : 16;
+}
+
+/** Which way a legend life has mostly gone: canon, bent, or broken. Ties go to canon, then bend. */
+export function dominantPath(flags: Record<string, number | undefined>): CanonPath {
+  const kept = flags.canonKept ?? 0;
+  const bent = flags.canonBent ?? 0;
+  const broken = flags.canonBroken ?? 0;
+  if (kept >= bent && kept >= broken) return "canon";
+  return bent >= broken ? "bend" : "break";
 }

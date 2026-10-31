@@ -215,3 +215,33 @@ test("God Mode picks survive a save/load round trip", async () => {
   assert.ok(back);
   for (const id of picks) assert.ok(back.unlockedPowers.includes(id), `${id} kept after load`);
 });
+
+test("legend lives only ever meet their own rogues: rivals, visits and arch-enemies", () => {
+  for (const preset of PRESETS) {
+    const aliases = new Set(preset.villains.map((v) => v.alias));
+    for (const seed of [2, 7]) {
+      let g = createGame({ ...base, preset: preset.id, seed } as never);
+      for (let i = 0; i < 6000 && g.phase !== "dead" && g.age < 80; i++) {
+        if (g.phase === "choice" && g.pending) {
+          const pick = g.pending.choices.find((c) => c.id === "arch") ?? g.pending.choices[0]!;
+          g = choose(g, pick.id);
+        } else if (g.phase === "mini") g = resolveMini(g, 0.7);
+        else g = ageUp(g);
+      }
+      const strangers = g.relationships.filter((p) => (p.role === "villain" || p.role === "rival" || p.arch) && !aliases.has(p.note ?? ""));
+      assert.deepEqual(strangers.map((p) => `${p.role}:${p.note}`), [], `${preset.id} seed ${seed}`);
+      assert.ok(Object.keys(g.flags).some((k) => k.startsWith("ending:")), `${preset.id} seed ${seed} reached a variant ending`);
+    }
+  }
+});
+
+test("every legend has late-life canon: successors, a final showdown, and variant endings", () => {
+  for (const preset of PRESETS) {
+    const late = preset.beats.filter((beat) => beat.age >= 58);
+    assert.ok(late.length >= 4, `${preset.id} has ${late.length} late beats`);
+    assert.ok(late.some((beat) => beat.choices.some((c) => c.fight)), `${preset.id} final showdown`);
+    const ending = preset.beats.find((beat) => beat.endings);
+    assert.ok(ending && ending.age <= 75, `${preset.id} ending beat lands before most lives end`);
+    for (const path of ["canon", "bend", "break"] as const) assert.ok(ending!.endings![path].includes(preset.earth), `${preset.id} ${path} ending names its Earth`);
+  }
+});

@@ -19,7 +19,7 @@
 
 ### God Mode legends (`presets.ts`, `engine.ts`, `Legends.tsx`, `src/assets/art/hero-*.ts`)
 
-- **Four legends, using real names for now:** Spider-Man (Earth-3145), Batman (Earth-3939), Iron Man / Tony Stark (Earth-6380) and Hulk (Earth-1962).
+- **Four legends, using real names for now:** Spider-Man (Earth-3145), Batman (Earth-3939), Iron Man / Tony Stark (Earth-6380) and Hulk (Earth-1962-G).
   - Each is a multiverse variant with its own twist, a portrait, themed decade chapters, a canon family and signature villains with authored movesets. Tony's villains include Ultron.
 - **Canon beats** arrive on set birthdays as choices: follow, bend or break. Results are tracked (`canonKept`, `canonBent`, `canonBroken`) and shown on the chapter card as an Earth badge.
   - Fight choices become boss duels against the canon villain.
