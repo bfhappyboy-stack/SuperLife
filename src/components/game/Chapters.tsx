@@ -1,6 +1,7 @@
 import type React from "react";
-import { BookOpen, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { ChapterArt } from "@/components/game/Scene";
+import { phaseStyle } from "@/components/game/phaseStyle";
 import { useEffect, useMemo, useState } from "react";
 import { generateChapterText } from "@/game/chapter-ai";
 import { chapterBrief, currentChapter, goalProgress, phaseForAge, snapshot, type Chapter } from "@/game/chapters";
@@ -14,14 +15,17 @@ export function ChapterStrip({ game }: { game: Game }) {
   const snap = useMemo(() => snapshot(game), [game]);
   if (!chapter) return null;
   const done = chapter.goals.filter((goal) => goalProgress(goal, snap).met).length;
+  const ps = phaseStyle(chapter.phase);
+  const Icon = ps.icon;
   return (
     <button
       type="button"
       onClick={() => showChapter(chapter.index)}
-      className="card mt-3 flex min-h-14 w-full items-center gap-3 !border-gold/50 px-3 py-2.5 text-left"
+      className="card relative mt-3 flex min-h-14 w-full items-center gap-3 overflow-hidden px-3 py-2.5 text-left"
+      style={{ borderColor: `${ps.accent}80`, backgroundImage: `linear-gradient(100deg, ${ps.accent}26, transparent 55%)` }}
     >
-      <span className="ico-tile size-10 shrink-0" style={{ "--tile": "#e6b34d" } as React.CSSProperties}>
-        <BookOpen className="size-5" aria-hidden />
+      <span className="ico-tile size-10 shrink-0" style={{ "--tile": ps.accent } as React.CSSProperties}>
+        <Icon className="size-5" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
         <span className="t-label block truncate text-[10px] text-muted">
@@ -35,7 +39,7 @@ export function ChapterStrip({ game }: { game: Game }) {
       <span className="relative grid size-10 shrink-0 place-items-center">
         <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
           <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="3.5" />
-          <circle cx="18" cy="18" r="15" fill="none" stroke="var(--color-gold)" strokeWidth="3.5" strokeLinecap="round" strokeDasharray={`${(done / Math.max(1, chapter.goals.length)) * 94.2} 94.2`} className="transition-[stroke-dasharray] duration-700" />
+          <circle cx="18" cy="18" r="15" fill="none" stroke={ps.accent} strokeWidth="3.5" strokeLinecap="round" strokeDasharray={`${(done / Math.max(1, chapter.goals.length)) * 94.2} 94.2`} className="transition-[stroke-dasharray] duration-700" />
         </svg>
         <span className="t-num text-xs text-fg">{done}/{chapter.goals.length}</span>
       </span>
@@ -109,7 +113,7 @@ export function ChapterOverlay({ game }: { game: Game }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/85 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={step === "recap" ? "Chapter recap" : "New chapter"}>
-      <div key={step} className="card-glass anim-pop max-h-[90%] w-full max-w-[380px] overflow-y-auto !border-gold/60 px-5 pb-5">
+      <div key={step} className="card-glass anim-pop max-h-[90%] w-full max-w-[380px] overflow-y-auto px-5 pb-5" style={{ borderColor: `${phaseStyle((step === "recap" && recapOf ? recapOf : chapter).phase).accent}99` }}>
         <div className="-mx-5 mb-4">
           <ChapterArt index={(step === "recap" && recapOf ? recapOf : chapter).index} phase={(step === "recap" && recapOf ? recapOf : chapter).phase} cityId={game.cityId} className="h-32" />
         </div>
