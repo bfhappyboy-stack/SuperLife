@@ -109,6 +109,27 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
   - Goals and consequences never come from the model.
 - **Saves:** `chapters`, `legacy` and `chapterNotice` are optional fields. `migrateChapters` (run in `save.ts` migrate and `freshen`) gives old saves a running chapter for their current decade.
 
+## 10. Markets across decades
+
+- **Where:** Work ▸ Market. Buying never spends a move.
+- **Categories:** gear (wears out, minigame edge), supplies (one-use recovery), intel (spent on your next fight), influence (fame, standing or quiet), property (upkeep, perks, value over decades), tech (permanent, era-gated), legacy (late life, outlives you).
+- **Price** = base × city × era × traits × reputation × chapter phase × yearly swing.
+  - City: e.g. NYC property ×1.55, Dustreach property ×0.45, the Stacks tech ×0.7.
+  - Era: tech −8% per decade (floor 45%), property +12% per decade, everything else +3%.
+  - Traits: millionaire, insider, inventor and underworld get discounts in their areas.
+  - Reputation: good standing is cheaper on the clean market; the black market charges the famous more.
+  - Phase: crisis chapters make supplies and intel dearer; legacy chapters make giving cheaper.
+- **Yearly tick (birthday):** upkeep, income and growth for holdings; stock turns over. Debt repossesses the dearest property.
+- **Balance target:** the market should soak up most surplus without forcing it. See `PLAYTEST.md` for sims.
+
+## 11. Design system and art
+
+- Tokens and components live in `src/styles.css` (Tailwind 4). Use them, not one-off classes: `card-paper`, `card-glass`, `btn-primary`, `btn-gold`, `btn-ghost`, `seg`, `chip`, `ico-tile`, `avatar-ring`, `hud`, `tabbar`, `scene-arena`, `t-hero`, `t-label`.
+- The cape theme recolours `--color-gold`, so accents follow the hero.
+- Motion: `anim-pop`, `anim-fade`, `anim-drift`, `anim-float`; all switch off under `prefers-reduced-motion`.
+- **Art pipeline:** backdrops are generated, saved as 540×960 WebP (quality ~62), and stored as data-URI modules in `src/assets/art/`. `index.ts` lazy-loads each one as its own chunk (`useArt(key)` in `Scene.tsx`), so the first load stays small. Data-URI modules are used because the repo is pushed as text. To add a city, add a module and a `LOADERS` entry; cities without art fall back to the gradient scene.
+- Portraits, figures, duel fighters and VFX are SVG/CSS, so they cost no downloads.
+
 ## Existing extras (built, not in the original design)
 
 - **Extra cities:** Metro City, Harbor Bay, Neon Spire, Dustreach, Crownbridge.

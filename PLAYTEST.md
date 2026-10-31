@@ -50,5 +50,20 @@ How it was tested:
 
 - Age 0: the Life desk is empty while People has the actions. **Fixed** with "things you can do right now" desk buttons.
 - "Out of moves" is shown only as a small caption, and the shelf said "Nothing in reach". **Fixed**: the shelf now says what to tap.
-- The desk tab row scrolls horizontally, so "Work/Board" are off-screen at 390px. Not fixed: needs a design call (5 tabs, or icons only).
+- The desk tab row scrolls horizontally, so "Work/Board" are off-screen at 390px. **Fixed**: 5-tab bottom bar, Board inside Cases.
 - The header still shows the legacy power name/fusion title, not the combo book name (open since 2026-10-30).
+
+## Economy with the Market (scripted sims, 8 lives per policy)
+
+Harness: `playtest/life.ts` + `econ.ts` (not in the repo). `MARKET=1` lets the policy buy what it can afford and wants; `MARKET=0` is the old game.
+
+| Policy | Death median (range), market | End cash, no market | End cash, market | Holdings @70, market | Legacy, market vs none |
+|---|---|---|---|---|---|
+| hero | 85 (74–96) | $8.85M | $432k | $2.45M | 74 vs 43 |
+| social | 82 (74–95) | $3.06M | $131k | $141k | 76 vs 37 |
+| crook | 75 (71–86) | $524k | $73k | $4k | 41 vs 31 |
+
+- Money is no longer a dead stat: the surplus goes into influence, property and legacy, and legacy almost doubles.
+- Nobody goes broke: medians stay positive and lifespans are about the same (hero lives run slightly longer thanks to supplies and property perks).
+- Hero spend per life: influence $1.27M, property $1.04M, legacy $738k, intel $463k, gear $364k.
+- **Watch:** crooks die younger with the market on (median 75 vs 81 without). Likely cause: they spend on gear and influence instead of keeping a cash cushion for hospital bills. Not tuned yet; see BACKLOG item 9.

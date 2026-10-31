@@ -6,7 +6,8 @@
    - `timing` makes up 70–80% of all minis, and `pattern` almost never fires.
    - Ship 3 new kinds first: rescue triage, lockpick/hack and press conference (see the Minigames list below).
    - Map each one to its verbs (patrol, heist, stunt), and give the gym prompt (~560× per heavy life) its own mini.
-2. **Markets across decades.** Money is now the clearest dead stat ($3M–$9M by 80 with nothing to buy).
+2. **Markets across decades.** **Shipped 2026-10-31** (Work ▸ Market). Still open: chapter goals that ask for a purchase, hospital insurance, more city art.
+   - Original note: Money is now the clearest dead stat ($3M–$9M by 80 with nothing to buy).
    - Add a Market desk where prices move by decade (tech gets cheaper, property gets dearer), covering:
      - **gear** (stat and move buffs, wear out);
      - **resources** (lab time and hospital insurance, which caps collapse bills);
@@ -24,7 +25,11 @@
 6. **Chapter depth.**
    - A mid-chapter beat at about year 5: a chapter-specific event drawn from the thread (nemesis, family, body).
    - A per-chapter "signature choice" with a lasting flag.
-7. **Desk tab row overflows at 390px.** "Work" and "Board" are off-screen; consider icons only or merging Board into Cases.
+7. **Desk tab row overflows at 390px.** **Fixed 2026-10-31** with a 5-tab bottom bar. "Work" and "Board" are off-screen; consider icons only or merging Board into Cases.
+
+8. **Art.** Backdrops exist for NYC, the Hood, the Stacks and the title. Add Metro, Harbor, Neon, Dustreach, Crownbridge and per-chapter-phase art (same pipeline, ~20–30KB each).
+9. **Economy tuning.** With the market on, hero lives end with ~$0.4M cash but ~$2.5M in holdings at 70. Watch whether influence (the top spend) is too strong a fame lever, and why crook lives get shorter with the market on (75 vs 81 median).
+10. **Haptics.** `navigator.vibrate` on hits and wins is still not wired.
 
 ## AUDIT (2026-10-30)
 
