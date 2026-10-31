@@ -1,5 +1,11 @@
+import type React from "react";
 import { useRef, useState } from "react";
+import { Shield, Sparkles, Swords } from "lucide-react";
 import type { DuelMove, MinigameSpec, MoveStyle } from "@/game/types";
+import { FloatNumber, Fighter, HitBurst } from "@/components/game/Vfx";
+
+const HEX: Record<MoveStyle, string> = { strike: "#ff5a4f", guard: "#3fe0c5", trick: "#ffcf4d" };
+const STYLE_ICON: Record<MoveStyle, typeof Swords> = { strike: Swords, guard: Shield, trick: Sparkles };
 
 const STYLE: Record<MoveStyle, string> = {
   strike: "Strike",
@@ -92,7 +98,7 @@ export function Duel({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: num
   const [pulse, setPulse] = useState<"you" | "foe" | "both" | null>(null);
   const [kick, setKick] = useState(0);
   const [tell, setTell] = useState<MoveStyle>(opening);
-  const [clash, setClash] = useState<{ you: string; them: string; edge: Edge; dealt: number; taken: number } | null>(null);
+  const [clash, setClash] = useState<{ you: string; them: string; edge: Edge; dealt: number; taken: number; style: MoveStyle; foeStyle: MoveStyle } | null>(null);
   const done = useRef(false);
   const swinging = useRef(false);
   const used = useRef<string[]>([]);
@@ -155,7 +161,7 @@ export function Duel({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: num
     setLast(key);
     setPulse(dealt > 0 && taken > 0 ? "both" : dealt > 0 ? "foe" : "you");
     setKick((value) => value + 1);
-    setClash({ you: move.name, them: foeMove.name, edge, dealt, taken });
+    setClash({ you: move.name, them: foeMove.name, edge, dealt, taken, style: move.style, foeStyle: foeMove.style });
     const line =
       edge === "you"
         ? `${move.name} catches ${foeMove.name}.${flavor} ${dealt} out, ${taken} back.`
@@ -181,47 +187,73 @@ export function Duel({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: num
     setLast("breath");
     setPulse("you");
     setKick((value) => value + 1);
-    setClash({ you: "Breath", them: foeMove.name, edge: "them", dealt: 0, taken });
+    setClash({ you: "Breath", them: foeMove.name, edge: "them", dealt: 0, taken, style: "guard", foeStyle: foeMove.style });
     setLog(`You catch a breath. ${fight.foeName} still lands ${foeMove.name} for ${taken}. ${ahead}`);
     finish(foeHp, nextPlayer);
   }
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden px-4 pt-3 pb-4">
-      <div className="min-w-0">
-        <p className="text-xs font-semibold tracking-widest text-muted">{fight.foeSide === "villain" ? "FIGHT" : "SPARRING"}</p>
-        <p className="truncate font-display text-2xl tracking-wide text-fg">{fight.foeName}</p>
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="t-label text-cape">{fight.foeSide === "villain" ? "Fight" : "Sparring"}</p>
+          <p className="t-display truncate text-fg">{fight.foeName}</p>
+        </div>
+        <span className="chip shrink-0 text-fg" style={{ borderColor: HEX[tell] }}>
+          {(() => {
+            const Icon = STYLE_ICON[tell];
+            return <Icon className="size-3.5" style={{ color: HEX[tell] }} />;
+          })()}
+          Tell: {STYLE[tell]}
+        </span>
       </div>
-      <Bar label={fight.foeName} value={foeHp} max={maxF} tone="cape" hot={pulse === "foe" || pulse === "both"} kick={kick} />
-      <Bar label="You" value={playerHp} max={maxP} tone="gold" hot={pulse === "you" || pulse === "both"} kick={kick} />
-      <div key={kick} className={`rounded-2xl border border-line bg-paper px-3 py-2 text-paper-ink ${kick ? "fight-kick" : ""}`}>
-        <p className="text-sm font-semibold">{TELL[tell]}</p>
-        <p className="text-sm">{BEAT[tell]}</p>
-        {clash && (
-          <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-end gap-2 border-t border-paper-ink/15 pt-2">
-            <div>
-              <p className="text-[10px] font-semibold tracking-widest">YOU</p>
-              <p className="truncate text-sm font-semibold">{clash.you}</p>
-              <p className="font-display text-lg tabular-nums">{clash.dealt > 0 ? `−${clash.dealt}` : "—"}</p>
-            </div>
-            <p className="pb-1 text-[10px] font-semibold tracking-widest">{clash.edge === "you" ? "EDGE" : clash.edge === "them" ? "THEIRS" : "EVEN"}</p>
-            <div className="text-right">
-              <p className="text-[10px] font-semibold tracking-widest">THEM</p>
-              <p className="truncate text-sm font-semibold">{clash.them}</p>
-              <p className="font-display text-lg tabular-nums">{clash.taken > 0 ? `−${clash.taken}` : "—"}</p>
-            </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Bar label="You" value={playerHp} max={maxP} tone="gold" hot={pulse === "you" || pulse === "both"} kick={kick} />
+        <Bar label={fight.foeName} value={foeHp} max={maxF} tone="cape" hot={pulse === "foe" || pulse === "both"} kick={kick} right />
+      </div>
+      <div className="scene-arena relative h-36 shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10">
+        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-x-6 bottom-5 flex items-end justify-between">
+          <div className="relative">
+            <Fighter label="you" color="#ffcf4d" hurt={!!clash && clash.taken > 0 && kick > 0} hurtKey={kick} />
+            {clash && clash.taken > 0 && kick > 0 && (
+              <span key={`p${kick}`} className="absolute inset-0">
+                <HitBurst color={HEX[clash.foeStyle]} size={56} seed={kick} />
+                <FloatNumber text={`−${clash.taken}`} color="#ff8f87" className="-top-3 left-1/2 -translate-x-1/2" />
+              </span>
+            )}
           </div>
+          <div key={`c${kick}`} className={`t-label mb-10 rounded-full px-2.5 py-1 text-[10px] ${kick ? "anim-pop" : ""} ${clash?.edge === "you" ? "bg-gold text-paper-ink" : clash?.edge === "them" ? "bg-cape text-white" : "bg-white/10 text-fg"}`}>
+            {clash ? (clash.edge === "you" ? "Your edge" : clash.edge === "them" ? "Their edge" : "Even") : "VS"}
+          </div>
+          <div className="relative">
+            <Fighter label="foe" color="#ff5a4f" flip hurt={!!clash && clash.dealt > 0 && kick > 0} hurtKey={kick} />
+            {clash && clash.dealt > 0 && kick > 0 && (
+              <span key={`f${kick}`} className="absolute inset-0">
+                <HitBurst color={HEX[clash.style]} size={clash.edge === "you" ? 84 : 60} count={clash.edge === "you" ? 12 : 8} seed={kick} />
+                <FloatNumber text={`−${clash.dealt}`} color={clash.edge === "you" ? "#ffe08a" : "#fff"} className="-top-3 left-1/2 -translate-x-1/2" />
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div key={kick} className={`card-paper px-3 py-2 ${kick ? "fight-kick" : ""}`}>
+        <p className="text-sm font-bold">{TELL[tell]} <span className="font-semibold opacity-70">{BEAT[tell]}</span></p>
+        {clash && (
+          <p className="mt-0.5 truncate text-xs font-semibold opacity-80">
+            {clash.you} {clash.dealt > 0 ? `−${clash.dealt}` : ""} · {clash.them} {clash.taken > 0 ? `−${clash.taken}` : ""}
+          </p>
         )}
       </div>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold tracking-widest text-muted">ENERGY {energy}/10</p>
+        <p className="t-label text-muted">Energy <span className="t-num text-fg">{energy}/10</span></p>
         <div className="flex gap-1" aria-hidden="true">
           {Array.from({ length: 10 }, (_, index) => (
-            <span key={index} className={`h-2 w-2 rounded-full ${index < energy ? "bg-gold" : "bg-panel-2"}`} />
+            <span key={index} className={`h-2.5 w-2.5 rotate-45 rounded-[3px] transition-colors ${index < energy ? "bg-gold shadow-[0_0_6px_var(--color-gold)]" : "bg-panel-2"}`} />
           ))}
         </div>
       </div>
-      <p role="status" className="line-clamp-2 min-h-10 text-sm text-pretty text-gold">{log}</p>
+      <p role="status" className="line-clamp-2 min-h-10 text-sm font-semibold text-pretty text-gold">{log}</p>
       <div className="grid min-h-0 flex-1 content-start grid-cols-2 gap-2 overflow-y-auto">
         {fight.playerMoves.map((move) => {
           const key = keyOf(move);
@@ -235,39 +267,43 @@ export function Duel({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: num
               type="button"
               aria-pressed={last === key}
               onClick={() => swing(move)}
-              className={`min-h-14 rounded-2xl border px-3 py-2 text-left ${last === key ? "border-gold bg-panel-2" : answers ? "border-gold bg-panel" : "border-line bg-panel"} ${blocked ? "text-muted" : ""}`}
+              className={`card relative min-h-14 overflow-hidden px-3 py-2 pl-4 text-left ${last === key ? "!border-gold !bg-panel-2" : answers && !blocked ? "!border-gold/70 shadow-[0_0_16px_-6px_var(--color-gold)]" : ""} ${blocked ? "opacity-55" : ""}`}
             >
-              <span className="block truncate font-semibold text-fg">{move.name}</span>
-              <span className={`text-xs ${TONE[move.style]}`}>
+              <span className="absolute inset-y-0 left-0 w-1" style={{ background: HEX[move.style] }} />
+              {left > 0 && <span className="absolute inset-0 bg-ink/50" style={{ clipPath: `inset(${100 - Math.min(100, left * 33)}% 0 0 0)` }} />}
+              <span className="relative block truncate font-bold text-fg">{move.name}</span>
+              <span className={`relative text-xs font-semibold ${TONE[move.style]}`}>
                 {STYLE[move.style]}
                 {move.kind ? ` · ${KIND[move.kind]}` : ""}
                 {` · ${cost}e`}
                 {left > 0 ? ` · ${left}t` : ""}
               </span>
-              <span className="block truncate text-xs text-muted">{left > 0 ? "Cooling." : energy < cost ? "Not enough energy." : answers ? "Answers their tell." : (move.effect ?? move.blurb)}</span>
+              <span className="relative block truncate text-xs text-muted">{left > 0 ? "Cooling." : energy < cost ? "Not enough energy." : answers ? "Answers their tell." : (move.effect ?? move.blurb)}</span>
             </button>
           );
         })}
       </div>
-      <button type="button" aria-pressed={last === "breath"} onClick={recover} className={`min-h-12 shrink-0 rounded-2xl border text-sm font-semibold text-fg ${last === "breath" ? "border-gold bg-panel-2" : "border-line"}`}>
+      <button type="button" aria-pressed={last === "breath"} onClick={recover} className={`btn btn-ghost min-h-12 shrink-0 text-sm ${last === "breath" ? "!border-gold" : ""}`}>
         Catch a breath · +3 energy
       </button>
     </div>
   );
 }
 
-function Bar({ label, value, max, tone, hot, kick }: { label: string; value: number; max: number; tone: "cape" | "gold"; hot?: boolean; kick: number }) {
-  const width = `${Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100))}%`;
+function Bar({ label, value, max, tone, hot, kick, right = false }: { label: string; value: number; max: number; tone: "cape" | "gold"; hot?: boolean; kick: number; right?: boolean }) {
+  const pct = Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100));
+  const color = tone === "cape" ? "#ff5a4f" : "#ffcf4d";
   return (
-    <div>
-      <div className="flex justify-between gap-3 text-xs text-muted">
+    <div className="min-w-0">
+      <div className={`flex justify-between gap-2 text-xs font-bold text-muted ${right ? "flex-row-reverse" : ""}`}>
         <span className="truncate">{label}</span>
-        <span className="tabular-nums text-fg">
+        <span className="t-num text-fg">
           {value}/{max}
         </span>
       </div>
-      <div className="mt-1 h-3 overflow-hidden rounded-full bg-panel-2">
-        <div key={hot ? kick : "still"} className={`h-full rounded-full ${tone === "cape" ? "bg-cape" : "bg-gold"} ${hot ? "hp-flash" : ""}`} style={{ width }} />
+      <div className="stat-bar mt-1 !h-3.5" style={{ transform: right ? "scaleX(-1)" : undefined }}>
+        <div className="absolute inset-y-0 left-0 rounded-full bg-white/40 transition-[width] delay-300 duration-700" style={{ width: `${pct}%` }} />
+        <div key={hot ? kick : "still"} className={`stat-fill ${hot ? "hp-flash" : ""}`} style={{ width: `${pct}%`, "--fill": pct < 25 ? "#ff3b30" : color } as React.CSSProperties} />
       </div>
     </div>
   );

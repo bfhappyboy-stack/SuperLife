@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { fitById, type Fit } from "@/game/costume";
 import { HAIR, resolveLook, SKIN } from "@/game/look";
 import type { Look, Sex, Wardrobe } from "@/game/types";
@@ -9,6 +10,7 @@ export function Figure({
   look,
   wardrobe,
   mood = 60,
+  aura,
   className = "h-full w-full",
 }: {
   seed: number;
@@ -17,8 +19,11 @@ export function Figure({
   look?: Partial<Look> | null;
   wardrobe?: Wardrobe;
   mood?: number;
+  /** Power colour for the stage spotlight and rim glow. */
+  aura?: string;
   className?: string;
 }) {
+  const uid = useId().replace(/:/g, "");
   const face = resolveLook(seed, look);
   const h = seed || 1;
   const body: Sex = sex ?? ((h & 1) === 0 ? "female" : "male");
@@ -42,9 +47,31 @@ export function Figure({
   const frame = frameOf(broad, female);
 
   return (
-    <svg viewBox="40 70 240 490" preserveAspectRatio="xMidYMax meet" className={className} width="100%" height="100%" role="img" aria-label="Your hero, full length" style={{ display: "block" }}>
-      <Stage />
-      <g transform={`translate(160 600) scale(${scale}) translate(-160 -600)`}>
+    <svg viewBox="40 70 240 490" preserveAspectRatio="xMidYMax meet" className={className} width="100%" height="100%" role="img" aria-label="Your hero, full length" style={{ display: "block", overflow: "visible" }}>
+      <defs>
+        {/* Soft volume: blur the silhouette, light it from the upper left, multiply back over the flat fills. */}
+        <filter id={`vol-${uid}`} x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="blur" />
+          <feDiffuseLighting in="blur" surfaceScale="5" diffuseConstant="1.15" lightingColor="#ffffff" result="light">
+            <feDistantLight azimuth="235" elevation="48" />
+          </feDiffuseLighting>
+          <feComposite in="light" in2="SourceAlpha" operator="in" result="lit" />
+          <feBlend in="SourceGraphic" in2="lit" mode="multiply" result="shaded" />
+          <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#000" floodOpacity="0.28" />
+        </filter>
+        <radialGradient id={`spot-${uid}`} gradientUnits="userSpaceOnUse" cx="160" cy="300" r="260">
+          <stop offset="0%" stopColor={aura ?? "#ffd27a"} stopOpacity="0.55" />
+          <stop offset="60%" stopColor={aura ?? "#ffd27a"} stopOpacity="0.1" />
+          <stop offset="100%" stopColor={aura ?? "#ffd27a"} stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={`floor-${uid}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#000" stopOpacity="0.38" />
+          <stop offset="100%" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <Stage uid={uid} />
+      <g className="anim-float" style={{ transformBox: "fill-box", transformOrigin: "center bottom" }}>
+      <g filter={`url(#vol-${uid})`} transform={`translate(160 600) scale(${scale}) translate(-160 -600)`}>
         <Cape item={cape} frame={frame} />
         {cowl?.mask !== "hood" && cowl?.mask !== "cowl" && cowl?.mask !== "helm" && (
           <HairBack style={face.style} hair={hair} female={female} baby={baby} frame={frame} />
@@ -66,6 +93,7 @@ export function Figure({
           cowl={cowl}
           beard={!female && !baby && age >= 22 && (h & 4) === 0}
         />
+      </g>
       </g>
     </svg>
   );
@@ -89,11 +117,17 @@ function frameOf(broad: boolean, female: boolean): Frame {
     : { shoulder: 60, waist: 42, hip: 42, arm: 18 };
 }
 
-function Stage() {
+function Stage({ uid }: { uid: string }) {
   return (
     <g>
-      <rect width="320" height="640" className="fill-paper" />
-      <ellipse cx="160" cy="548" rx="100" ry="12" fill="#10141c" opacity="0.14" />
+      <rect x="-400" width="1120" height="640" className="fill-paper" />
+      <rect x="-400" width="1120" height="640" fill={`url(#spot-${uid})`} />
+      <g stroke="#10141c" strokeOpacity="0.07" strokeWidth="1.5">
+        {[120, 160, 200, 240, 280].map((r) => (
+          <ellipse key={r} cx="160" cy="550" rx={r} ry={r / 7} fill="none" />
+        ))}
+      </g>
+      <ellipse cx="160" cy="550" rx="110" ry="16" fill={`url(#floor-${uid})`} />
     </g>
   );
 }
