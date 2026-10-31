@@ -1,3 +1,4 @@
+import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
 import {
   CITIES,
   FEMALE_NAMES,
@@ -87,7 +88,7 @@ export interface NewLifeOpts {
   /** One catalog power. Empty means an ordinary life. */
   giftId?: string | null;
   seed?: number;
-  heir?: { fame: number; powerBias: PowerId | null; belief: number };
+  heir?: { fame: number; powerBias: PowerId | null; belief: number; trust?: number };
 }
 
 function roll(d: Game): number {
@@ -983,6 +984,13 @@ function openYear(d: Game): string[] {
   d.stats.money = clamp(d.stats.money + pay, -20000, 100_000_000);
   if (pay >= 800) banners.push(`The year clears ${money(pay)}.`);
   else if (pay <= -400) banners.push(`The year costs ${money(-pay)}.`);
+  {
+    const held = marketYear(d);
+    for (const e of held.effects) applyEffects(d, e, []);
+    if (held.legacy) d.legacy = (d.legacy ?? 0) + held.legacy;
+    d.stats.money = clamp(d.stats.money, -20000, 100_000_000);
+    banners.push(...held.banners);
+  }
 
   if (d.leagueRank === 0 && d.stats.fame > 22) {
     const fameBefore = d.stats.fame;
@@ -1152,6 +1160,7 @@ export function createGame(opts: NewLifeOpts): Game {
   if (upbringing.looks) d.stats.looks = clamp(d.stats.looks + upbringing.looks, 0, 100);
   d.stats.fame = clamp(d.stats.fame, 0, 28);
   if (!opts.heir && roll(d) < 0.07) d.flags.nullGene = 1;
+  if (opts.heir?.trust) d.flags.trust = Math.round(opts.heir.trust);
   const last = d.name.split(" ").slice(1).join(" ") || "Voss";
   const kin = familyPlan(upbringing.id);
   if (kin.count >= 1) addPerson(d, { role: "parent", closeness: upbringing.closeness, age: 29 + rollInt(d, 12), last, sex: "female", note: kin.note });
@@ -1782,6 +1791,7 @@ export function ageUp(game: Game): Game {
   } else {
     d.majorsLeft = 3;
     clearMonthFlags(d);
+    marketMonth(d);
     if (d.crew) {
       if ((d.crew.heat ?? 0) > 0) d.crew.heat = Math.max(0, (d.crew.heat ?? 0) - 3);
       if (d.crew.members.length) {
@@ -1888,7 +1898,8 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   const spec = d.minigame;
   if (!spec) return game;
   d.minigame = null;
-  const score = clamp(ratio, 0, 1);
+  const edge = marketEdge(d, spec.kind);
+  const score = clamp(ratio + edge.bonus, 0, 1);
   const win = score >= 0.66;
   const partial = !win && score >= 0.33;
   const deltas: Delta[] = [];
@@ -1919,7 +1930,8 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   if (spec.tag === "mission" && score >= 0.33) d.missions += 1;
   const banners: string[] = [];
   noteGrowth(before, d, banners);
-  const story = `${win ? spec.winText : partial ? spec.partialText : spec.loseText}${extra}${archLine}`;
+  const kit = edge.bonus > 0 ? ` Kit edge +${Math.round(edge.bonus * 100)}%.${edge.notes.length ? ` ${edge.notes.join(" ")}` : ""}` : "";
+  const story = `${win ? spec.winText : partial ? spec.partialText : spec.loseText}${extra}${archLine}${kit}`;
   if (special?.kind === "death") {
     kill(d, special.cause, story);
     return d;
@@ -2061,6 +2073,27 @@ export function act(game: Game, id: string): Game {
     }).slice(0, 6);
     fillLoadout(d);
     d.card = { ...d.card, banner: [`${slot.name} is what you bring.`] };
+    return d;
+  }
+  if (id.startsWith("buy|") || id.startsWith("sell|")) {
+    ensureMarket(d);
+    const res = id.startsWith("buy|") ? buyItem(d, id.slice(4)) : sellAsset(d, id.slice(5));
+    if (!res.ok) {
+      d.card = { ...d.card, banner: [res.line] };
+      return d;
+    }
+    const deltas: Delta[] = [];
+    applyEffects(d, res.effects, deltas);
+    if (res.heat) {
+      const heat = clamp((d.flags.heat ?? 0) + res.heat, 0, 40);
+      if (heat > 0) d.flags.heat = heat;
+      else delete d.flags.heat;
+    }
+    if (res.legacy) d.legacy = (d.legacy ?? 0) + res.legacy;
+    d.stats.money = clamp(d.stats.money, -20000, 100_000_000);
+    d.card = { kicker: whenLabel(d.age, d.month), banner: [res.line], body: d.card.body, deltas };
+    if (res.legacy) pushHistory(d, res.line, "major");
+    peaks(d);
     return d;
   }
   const power = powerById(d.powerId);
@@ -3674,7 +3707,7 @@ export function heirFrom(g: Game): NewLifeOpts | null {
     look: g.look,
     giftId: g.giftId ?? legacyComboId(g.powerId) ?? g.unlockedPowers?.[0] ?? null,
     seed: (g.rng ^ (oldest.age * 997 + 13)) >>> 0 || 1,
-    heir: { fame: g.peak.fame, powerBias: oldest.latentPower ?? g.powerId, belief: 78 },
+    heir: { fame: g.peak.fame, powerBias: oldest.latentPower ?? g.powerId, belief: 78, trust: g.flags.trust ?? 0 },
   };
 }
 

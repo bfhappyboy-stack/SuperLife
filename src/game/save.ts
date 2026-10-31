@@ -2,6 +2,7 @@ import { RANKS, UPBRINGINGS, powerById } from "./data";
 import { getPower, legacyComboId } from "./combo";
 import { ensureWardrobe } from "./costume";
 import { migrateChapters } from "./chapters";
+import { ensureMarket } from "./market";
 import { clamp } from "./format";
 import { mergeHeroes } from "./heroes";
 import { resolveLook } from "./look";
@@ -70,6 +71,7 @@ function migrate(game: Game): Game {
     if (next.mastery[id] == null) next.mastery[id] = 0;
   }
   migrateChapters(next);
+  ensureMarket(next);
   return next;
 }
 

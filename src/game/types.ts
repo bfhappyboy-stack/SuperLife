@@ -1,3 +1,4 @@
+import type { MarketState } from "./market";
 import type { Chapter, ChapterNotice } from "./chapters";
 export type PowerId =
   | "strength"
@@ -351,6 +352,8 @@ export interface Game {
   legacy?: number;
   /** A chapter title card / recap waiting to be shown. UI-only, cleared on dismiss. */
   chapterNotice?: ChapterNotice | null;
+  /** What you own and what the market remembers. Optional for old saves. */
+  market?: MarketState;
 }
 
 export interface ActionItem {
