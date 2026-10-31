@@ -29,8 +29,9 @@ import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardro
 import { resolveLook } from "./look";
 import { elementOfLegacy, elementOfPower } from "./elements";
 import { isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
-import { judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
-import { availableArcs, currentCase, type ArcStep } from "./arcs";
+import { BOND_DRIFT_FLOOR, bondStep, judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
+import { arcById, availableArcs, currentCase, type ArcStep } from "./arcs";
+import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
 import { migrateChapters, openChapter, turnChapter } from "./chapters";
@@ -100,6 +101,43 @@ function roll(d: Game): number {
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
   d.rng = a >>> 0;
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+/** Raise (or lower) a hero bond through the yearly soft cap. Returns the change applied. */
+function raiseBond(d: Game, hero: { id: string; relationship: number }, raw: number): number {
+  const key = `bond:${hero.id}`;
+  const yearKey = `bondAge:${hero.id}`;
+  if (d.flags[yearKey] !== d.age) {
+    d.flags[yearKey] = d.age;
+    d.flags[key] = 0;
+  }
+  const delta = bondStep(hero.relationship, raw, d.flags[key] ?? 0, roll(d));
+  hero.relationship = clamp(hero.relationship + delta, 0, 100);
+  if (delta > 0) d.flags[key] = (d.flags[key] ?? 0) + delta;
+  d.flags[`bondSeen:${hero.id}`] = d.age;
+  return delta;
+}
+
+/** A met hero you did nothing with all year drifts a little, never below the drift floor. */
+function driftBonds(d: Game) {
+  for (const hero of d.heroes ?? []) {
+    if (!hero.met || hero.relationship <= BOND_DRIFT_FLOOR) continue;
+    const seen = d.flags[`bondSeen:${hero.id}`];
+    if (seen == null) {
+      d.flags[`bondSeen:${hero.id}`] = d.age;
+      continue;
+    }
+    if (seen >= d.age - 1) continue;
+    hero.relationship = Math.max(BOND_DRIFT_FLOOR, hero.relationship - 2);
+  }
+}
+
+/** A phase-keyed prompt line that never repeats the last one shown for this key. */
+function promptLine(d: Game, key: PromptKey, vars: Record<string, string> = {}): string {
+  const flag = `prompt:${key}`;
+  const picked = pickPrompt(key, d.age, roll(d), d.flags[flag], { city: cityById(d.cityId).name, ...vars });
+  d.flags[flag] = picked.index;
+  return picked.text;
 }
 
 function rollInt(d: Game, n: number): number {
@@ -646,7 +684,7 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
       hero.met = true;
       hero.relationship = Math.max(hero.relationship, 18);
     } else {
-      hero.relationship = clamp(hero.relationship + 4, 0, 100);
+      raiseBond(d, hero, 4);
     }
     const bases = teachableBases(hero.unlocked, d.unlockedPowers ?? []);
     for (const power of bases) discoverPower(d, power.id);
@@ -658,7 +696,7 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     if (!hero) return "";
     hero.exp += special.exp;
     const before = hero.level;
-    hero.relationship = clamp(hero.relationship + special.bond, 0, 100);
+    raiseBond(d, hero, special.bond);
     settleHeroLevel(hero);
     const taught = special.teach ? unlockCombo(d, special.teach) : "";
     const drilled = special.masteryId && special.masteryExp ? grantMastery(d, special.masteryId, special.masteryExp) : "";
@@ -911,6 +949,7 @@ function openYear(d: Game): string[] {
   d.age += 1;
   d.majorsLeft = 3;
   clearMonthFlags(d);
+  driftBonds(d);
   for (const person of d.relationships) {
     if (!person.alive) continue;
     person.age += 1;
@@ -1572,7 +1611,12 @@ function heldDrill(d: Game, step: ArcStep): string | null {
 
 function drillReady(d: Game, step: ArcStep): boolean {
   const need = step.needMastery ?? 1;
-  return stepPowers(step).some((id) => {
+  const ids = stepPowers(step);
+  if (!ids.length) {
+    const focus = heldDrill(d, step);
+    return !!focus && masteryLevel(d.mastery?.[focus] ?? 0, getPower(focus)?.generation ?? 0) >= need;
+  }
+  return ids.some((id) => {
     if (!(d.unlockedPowers ?? []).includes(id)) return false;
     const gen = getPower(id)?.generation ?? 0;
     return masteryLevel(d.mastery?.[id] ?? 0, gen) >= need;
@@ -1590,7 +1634,9 @@ function finishStep(d: Game): string {
     d.story.cleared = [...(d.story.cleared ?? []).filter((id) => id !== current.arc.id), current.arc.id];
     d.story.active = null;
     delete d.story.progress[current.arc.id];
-    return `${drilled} ${current.arc.villain} is done. The case closes, and the ceiling on harder powers lifts.`;
+    const legacy = arcById(current.arc.id)?.legacy ?? 0;
+    if (legacy) d.legacy = (d.legacy ?? 0) + legacy;
+    return `${drilled} ${current.arc.villain} is done. The case closes, and the ceiling on harder powers lifts.${legacy ? ` Legacy +${legacy}: the city will tell this one for years.` : ""}`;
   }
   d.story.progress[current.arc.id] = next;
   const upcoming = current.arc.steps[next];
@@ -1650,7 +1696,7 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
       d,
       {
         id: "arch-month",
-        prompt: `${foe.name} sends a pin and the words "bring the good trick." The group chat is already taking bets.`,
+        prompt: promptLine(d, "archPin", { foe: foe.name }),
         choices: [
           { id: "fight", label: "Show up" },
           { id: "talk", label: "Try to talk" },
@@ -1689,7 +1735,7 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
         d,
         {
           id: `hero-${person.id}`,
-          prompt: `${person.note} (${firstName(person.name)}) finds you on purpose. "I've seen the month you had," they say. "Want a better one?"`,
+          prompt: promptLine(d, "capeVisit", { cape: `${person.note} (${firstName(person.name)})` }),
           choices: [
             { id: "train", label: "Train together" },
             { id: "coffee", label: "Just coffee" },
@@ -1714,7 +1760,7 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
       d,
       {
         id: `villain-${person.id}`,
-        prompt: `${foe.name} drops onto your week like a correction. "Posters," they say. "Let's edit them."`,
+        prompt: promptLine(d, "villainDrop", { foe: foe.name }),
         choices: [
           { id: "fight", label: "Fight" },
           { id: "talk", label: "Hear them out" },
@@ -2191,7 +2237,7 @@ export function act(game: Game, id: string): Game {
     if (d.age < 8 || noTime(d, true)) return game;
     openSpendChoice(d, {
       id: "gym",
-      prompt: "The gym, the block, or a room that does not advertise its address. How do you spend the body today?",
+      prompt: promptLine(d, "gym"),
       choices: [
         { id: "lift", label: "Lift until it counts" },
         { id: "run", label: "Run the city" },
@@ -2227,7 +2273,7 @@ export function act(game: Game, id: string): Game {
     const stolen = roll(d) < 0.4;
     openSpendChoice(d, {
       id: "books",
-      prompt: "The city is full of pages. Some of them are supposed to be in your hands.",
+      prompt: promptLine(d, "books"),
       choices: [
         { id: "library", label: "The library" },
         { id: "notes", label: "Someone else's notes" },
@@ -2251,7 +2297,7 @@ export function act(game: Game, id: string): Game {
     if (d.stats.money < cost) return game;
     openSpendChoice(d, {
       id: "out",
-      prompt: "The night is open. So is your wallet, if you let it be.",
+      prompt: promptLine(d, "nightOut"),
       choices: [
         { id: "club", label: "Somewhere loud" },
         { id: "quiet", label: "Somewhere with art" },
@@ -2631,7 +2677,7 @@ export function act(game: Game, id: string): Game {
       d,
       {
         id: "mission",
-        prompt: "A call comes in. Civilians, a timer, and a captain who says 'your show' like that isn't terrifying.",
+        prompt: promptLine(d, "league"),
         choices: [
           { id: "loud", label: "Go loud" },
           { id: "smart", label: "Go quiet and clever" },
@@ -2783,7 +2829,7 @@ export function act(game: Game, id: string): Game {
     }
     showChoice(d, {
       id: "patrol-street",
-      prompt: "The city is behaving just enough to make you choose a block.",
+      prompt: promptLine(d, "patrol"),
       choices: [
         { id: "bright", label: "The bright streets" },
         { id: "bad", label: "The bad blocks" },
@@ -3266,7 +3312,7 @@ export function act(game: Game, id: string): Game {
     if (!hero.unlocked.includes(power.id) || (d.unlockedPowers ?? []).includes(power.id)) return game;
     spend(d);
     const name = unlockCombo(d, power.id);
-    hero.relationship = clamp(hero.relationship + 5, 0, 100);
+    raiseBond(d, hero, 5);
     hero.exp += 18;
     const before = hero.level;
     settleHeroLevel(hero);
@@ -3305,7 +3351,7 @@ export function act(game: Game, id: string): Game {
     if (hero.unlocked.includes(power.id)) return game;
     spend(d);
     hero.unlocked.push(power.id);
-    hero.relationship = clamp(hero.relationship + 4, 0, 100);
+    raiseBond(d, hero, 4);
     hero.exp += 16;
     settleHeroLevel(hero);
     d.legacy = (d.legacy ?? 0) + 3;
@@ -3410,7 +3456,7 @@ export function act(game: Game, id: string): Game {
         return d;
       }
       spend(d);
-      hero.relationship = clamp(hero.relationship + 3, 0, 100);
+      raiseBond(d, hero, 3);
       hero.exp += 8;
       settleHeroLevel(hero);
       const extra = finishStep(d);
@@ -3465,7 +3511,7 @@ export function act(game: Game, id: string): Game {
         d,
         makeDuel(
           d,
-          { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.kind === "boss" ? 6.4 : 4.2, boss: step.kind === "boss" },
+          { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.foeLevel ?? (step.kind === "boss" ? 6.4 : 4.2), boss: step.kind === "boss" },
           {
             title: foeName,
             subtitle: `${step.brief} Your six moves.`,
@@ -3578,7 +3624,7 @@ export function applyHeroTalk(game: Game, heroId: string, line: string, reply: s
   const prior = d.flags[`talks:${hero.id}`] ?? 0;
   d.flags[`talks:${hero.id}`] = prior + 1;
   const delta = prior === 0 ? judged.delta : Math.sign(judged.delta) * Math.min(2, Math.abs(judged.delta));
-  hero.relationship = clamp(hero.relationship + delta, 0, 100);
+  raiseBond(d, hero, delta);
   hero.exp += 2;
   settleHeroLevel(hero);
   hero.memory.push({ role: "you", text: said.slice(0, 180) });
@@ -3649,9 +3695,10 @@ export function actionsFor(g: Game): ActionItem[] {
       if (!open.length) {
         items.push(item({ id: "cases-quiet", group: life, section: "Cases", label: "No open cases", detail: (g.story?.cleared?.length ?? 0) > 0 ? "You closed the ones in reach." : "Nothing on the board for this age.", disabled: "The city is between villains." }));
       }
-      for (const arc of open) {
+      // Three files at most, so a 50-year-old who skipped every case is not handed a wall of them.
+      for (const arc of open.slice(0, 3)) {
         const local = homeArc(g.cityId, arc.id);
-        items.push(item({ id: `arc-start|${arc.id}`, group: life, section: "Cases", label: arc.title, detail: `${local ? "This city. " : ""}${arc.villain}. ${arc.goal}. Favors ${arc.focus}.`, disabled: noTime(g, true), accent: local }));
+        items.push(item({ id: `arc-start|${arc.id}`, group: life, section: "Cases", label: arc.title, detail: `${local ? "This city. " : ""}${arc.era ? `${arc.era} case. ` : ""}${arc.villain}. ${arc.goal}. Favors ${arc.focus}.`, disabled: noTime(g, true), accent: local }));
       }
     }
   }
