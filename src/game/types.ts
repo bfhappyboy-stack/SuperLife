@@ -129,6 +129,10 @@ export interface DuelMove {
   energy?: number;
   effect?: string;
   cooldown?: number;
+  /** Element id for VFX and the card icon (see elements.ts). */
+  element?: string;
+  /** Move rank 1–5 for player moves. */
+  rank?: number;
 }
 
 export interface Look {
@@ -157,6 +161,13 @@ export interface DuelBoard {
   personId?: string;
   /** Percent of incoming damage shrugged off by the suit. */
   guard?: number;
+  /** Legacy power id of the foe, for its look and element. */
+  foePower?: string;
+  /** Seed for the foe's generated look. */
+  foeSeed?: number;
+  foeSex?: Sex;
+  /** Boss fights get a bigger entrance and a gold KO. */
+  boss?: boolean;
 }
 
 export interface Cape {
