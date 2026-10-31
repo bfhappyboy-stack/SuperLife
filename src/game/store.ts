@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { act, ageUp, applyHeroTalk, choose, createGame, freshen, heirFrom, resolveMini, type NewLifeOpts } from "./engine";
+import { act, ageUp, applyHeroTalk, choose, createGame, freshen, heirFrom, resolveMini, skipToBirthday, type NewLifeOpts } from "./engine";
 import { loadGame, loadScores, pushScore, saveGame, saveScores, type ScoreRow } from "./save";
+import { applyChapterText, type ChapterText } from "./chapters";
 import type { Game } from "./types";
 
 type Screen = "title" | "create" | "play";
@@ -15,6 +16,10 @@ interface Store {
   begin: (opts: NewLifeOpts) => void;
   resume: () => void;
   age: () => void;
+  skipYear: () => void;
+  dismissChapter: () => void;
+  showChapter: (index: number) => void;
+  patchChapter: (index: number, text: ChapterText | null) => void;
   pick: (id: string) => void;
   do: (id: string) => void;
   finishMini: (ratio: number, used?: string[]) => void;
@@ -59,6 +64,27 @@ export const useGame = create<Store>((set, get) => ({
     const game = get().game;
     if (!game) return;
     commit(set, get().scores, ageUp(freshen(game)));
+  },
+  skipYear: () => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get().scores, skipToBirthday(freshen(game)));
+  },
+  dismissChapter: () => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get().scores, { ...game, chapterNotice: null });
+  },
+  showChapter: (index) => {
+    const game = get().game;
+    if (!game) return;
+    set({ game: { ...game, chapterNotice: { open: index, recap: null } } });
+  },
+  patchChapter: (index, text) => {
+    const game = get().game;
+    if (!game) return;
+    const next = structuredClone(game);
+    commit(set, get().scores, applyChapterText(next, index, text));
   },
   pick: (id) => {
     const game = get().game;

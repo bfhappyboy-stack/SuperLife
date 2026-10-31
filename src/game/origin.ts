@@ -3,6 +3,7 @@
 import { getPower } from "./combo";
 import { upbringingById } from "./data";
 import { clamp } from "./format";
+import { masteryLevel } from "./mastery";
 import type { Effects, Game, TraitId, UpbringingId } from "./types";
 
 export interface OriginBrief {
@@ -43,7 +44,7 @@ export const DOSSIERS: CityDossier[] = [
     ],
     villains: ["Turnstile", "High Line"],
     heroes: ["juniper", "vesper", "wren", "nim"],
-    arcs: ["mile", "choir"],
+    arcs: ["mile", "choir", "understudy"],
     trouble: "Works the tunnels and the roofs.",
     travel: "New York takes your bag and does not offer a map. The noise is the map.",
   },
@@ -56,7 +57,7 @@ export const DOSSIERS: CityDossier[] = [
     ],
     villains: ["Brick", "The Tab"],
     heroes: ["marrow", "nim", "lark", "vesper"],
-    arcs: ["kiln", "lease"],
+    arcs: ["kiln", "lease", "heir"],
     trouble: "Collects on the block, not from a tower.",
     travel: "The Hood does not do welcomes. It does a once-over, and then it decides.",
   },
@@ -69,7 +70,7 @@ export const DOSSIERS: CityDossier[] = [
     ],
     villains: ["Yard Boss", "Badge Nine"],
     heroes: ["idris", "lark", "nim", "wren"],
-    arcs: ["choir", "lease"],
+    arcs: ["choir", "lease", "heir"],
     trouble: "Owns a shift, a debt, or both.",
     travel: "The Stacks smell like hot metal and rented air. Nothing glows that didn't have to.",
   },
@@ -82,7 +83,7 @@ export const DOSSIERS: CityDossier[] = [
     ],
     villains: ["Adspace", "Kiln Runner"],
     heroes: ["vesper", "juniper", "bolt"],
-    arcs: ["kiln", "mile"],
+    arcs: ["kiln", "mile", "deadair"],
     trouble: "Wants the clip more than the cash.",
     travel: "Metro City already printed a poster. It is not of you. Yet.",
   },
@@ -95,7 +96,7 @@ export const DOSSIERS: CityDossier[] = [
     ],
     villains: ["Pier Tax", "Fogbell"],
     heroes: ["pilar", "marrow", "nim"],
-    arcs: ["mile"],
+    arcs: ["mile", "winter"],
     trouble: "Bills the docks and the fog.",
     travel: "Harbor Bay puts a wet coat on you and calls it local.",
   },
@@ -108,7 +109,7 @@ export const DOSSIERS: CityDossier[] = [
     ],
     villains: ["Marquee", "Cover Charge"],
     heroes: ["kade", "bolt", "nim"],
-    arcs: ["choir"],
+    arcs: ["choir", "deadair"],
     trouble: "Sells the night twice.",
     travel: "Neon Spire hurts your eyes and then your wallet. In that order.",
   },
@@ -121,7 +122,7 @@ export const DOSSIERS: CityDossier[] = [
     ],
     villains: ["Mile Zero", "Dry Well"],
     heroes: ["pilar", "marrow", "wren"],
-    arcs: ["kiln"],
+    arcs: ["kiln", "winter"],
     trouble: "Knows every road because there aren't many.",
     travel: "Dustreach gives you a horizon and very little cover.",
   },
@@ -134,7 +135,7 @@ export const DOSSIERS: CityDossier[] = [
     ],
     villains: ["Old Money", "Gargoyle Fund"],
     heroes: ["kade", "idris", "lark"],
-    arcs: ["lease"],
+    arcs: ["lease", "understudy"],
     trouble: "Sends invoices, then people.",
     travel: "Crownbridge asks who your people are before it asks your name.",
   },
@@ -192,6 +193,12 @@ export const TRAITS: TraitDef[] = [
   { id: "pragmatic", title: "Pragmatic", blurb: "Results over speeches. The bar can live with a smudge.", slot: "drive", minAge: 0, smarts: 3, karma: -2, heroBias: { idris: 4, lark: 4 } },
   { id: "team", title: "Team player", blurb: "You look for the other cape before you look for the spotlight.", slot: "drive", minAge: 0, happiness: 1, heroBias: { juniper: 4, bolt: 4, vesper: 2 } },
   { id: "lone", title: "Lone wolf", blurb: "Backup is a complication. So is being known.", slot: "drive", minAge: 0, happiness: -1, heroBias: { nim: 6, marrow: 2 } },
+  { id: "curious", title: "Curious", blurb: "You want to know how it works, including the parts that bite.", slot: "drive", minAge: 0, smarts: 4, happiness: 1, heroBias: { idris: 6, wren: 2 } },
+  { id: "glory", title: "Glory hound", blurb: "Saving people is the job. Being seen saving them is the bonus you chase.", slot: "drive", minAge: 0, fame: 4, karma: -2, heroBias: { kade: 6, bolt: 4 } },
+  { id: "amends", title: "Making amends", blurb: "Someone got hurt because of you once. Every rescue is a payment on it.", slot: "drive", minAge: 0, karma: 4, happiness: -2, heroBias: { marrow: 4, pilar: 6 } },
+  { id: "duty", title: "Duty-bound", blurb: "Someone has to stand the watch. You never ask why it is always you.", slot: "drive", minAge: 0, reputation: 3, happiness: -1, heroBias: { vesper: 6, idris: 2 } },
+  { id: "thrill", title: "Thrill-seeker", blurb: "The rooftop jump is the point. The rescue at the bottom is a nice extra.", slot: "drive", minAge: 0, health: 2, karma: -1, heroBias: { bolt: 6, nim: 2 } },
+  { id: "family", title: "Family first", blurb: "The city is big. Your people are not. You keep that order.", slot: "drive", minAge: 0, happiness: 3, heroBias: { juniper: 6, pilar: 2 } },
   { id: "millionaire", title: "Millionaire", blurb: "The accounts start answering. Travel and toys get cheaper, not free.", slot: "earned", minAge: 18, money: 6000, fame: 3, heroBias: { kade: 4, lark: 2 } },
   { id: "sorcerer", title: "Sorcerer", blurb: "A working you learned. It sits in the braid book beside whatever you were born with.", slot: "earned", minAge: 14, smarts: 2, heroBias: { wren: 4, idris: 4 } },
   { id: "inventor", title: "Tech genius", blurb: "You build the trick if the body won't give it to you.", slot: "earned", minAge: 14, smarts: 3, heroBias: { idris: 6 } },
@@ -256,8 +263,17 @@ const UP_BIAS: Record<UpbringingId, Record<string, number>> = {
   isolated: { pilar: 6, nim: 4 },
 };
 
+/**
+ * Trait and origin bias: a small head start, capped at bond 32. It only nudges toward that cap and never
+ * pulls a bond that was earned in play back down to it (earned traits arrive years in).
+ */
 function bump(hero: { relationship: number }, amount: number) {
   if (!amount) return;
+  if (amount < 0) {
+    hero.relationship = clamp(hero.relationship + amount, 0, 100);
+    return;
+  }
+  if (hero.relationship >= 32) return;
   hero.relationship = clamp(Math.min(32, hero.relationship + amount), 0, 100);
 }
 
@@ -335,11 +351,7 @@ export function earnBlock(game: Game, id: TraitId): string | null {
 
 function masteryLevelSafe(game: Game, powerId: string): number {
   const power = getPower(powerId);
-  const exp = game.mastery?.[powerId] ?? 0;
-  const steps = power?.generation === 2 ? [0, 140, 320, 580, 920] : power?.generation === 1 ? [0, 80, 200, 380, 620] : [0, 36, 96, 190, 320];
-  let level = 1;
-  for (let i = 0; i < steps.length; i++) if (exp >= (steps[i] ?? 0)) level = i + 1;
-  return level;
+  return masteryLevel(game.mastery?.[powerId] ?? 0, power?.generation ?? 0);
 }
 
 export function visibleEarned(game: Game): { def: TraitDef; block: string | null }[] {
@@ -368,6 +380,12 @@ export function walkEffects(game: Game): Effects {
   if (hasTrait(game, "reluctant")) return { happiness: 2 };
   if (hasTrait(game, "team")) return { happiness: 1, reputation: 1 };
   if (hasTrait(game, "lone")) return { happiness: 1 };
+  if (hasTrait(game, "curious")) return { smarts: 1, happiness: 1 };
+  if (hasTrait(game, "glory")) return { fame: 1 };
+  if (hasTrait(game, "amends")) return { karma: 2 };
+  if (hasTrait(game, "duty")) return { reputation: 1 };
+  if (hasTrait(game, "thrill")) return { happiness: 2, health: -1 };
+  if (hasTrait(game, "family")) return { happiness: 2 };
   return { happiness: 1 };
 }
 

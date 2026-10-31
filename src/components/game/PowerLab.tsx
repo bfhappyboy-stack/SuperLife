@@ -1,12 +1,16 @@
+import type React from "react";
 import { useEffect, useState } from "react";
 import { Portrait } from "@/components/game/Portrait";
-import { arcsCleared, availableArcs, currentCase, plotFor } from "@/game/arcs";
+import { Award, Check, Dumbbell, MessageCircle, Search, Shield, Skull, Swords, type LucideIcon } from "lucide-react";
+import { ElementIcon } from "@/components/game/Vfx";
+import { arcsCleared, availableArcs, currentCase, plotFor, type ArcDef, type ArcStep } from "@/game/arcs";
+import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { getPower, mix, teachableBases, viewPowers } from "@/game/combo";
 import { mergeHeroes, replyLocally } from "@/game/heroes";
 import { askHero } from "@/game/hero-talk";
 import { masteryCap, masteryLevel, nextMasteryExp, powerRank } from "@/game/mastery";
-import { knownMoves, moveLevel } from "@/game/moves";
-import { dossier, talkBrief } from "@/game/origin";
+import { knownMoves, moveLevel, MOVESET_SIZE, STREET_MOVES } from "@/game/moves";
+import { dossier, homeArc, talkBrief } from "@/game/origin";
 import { hasGift } from "@/game/theme";
 import { useGame } from "@/game/store";
 import type { AiHero, Game } from "@/game/types";
@@ -98,7 +102,7 @@ export function PowerLab({
   return (
     <div className="flex flex-col gap-4">
       {notice && (
-        <p role="status" className="rounded-2xl border border-gold bg-panel px-4 py-3 text-sm font-semibold text-fg">
+        <p role="status" className="card anim-pop !border-gold/70 px-4 py-3 text-sm font-semibold text-fg">
           {notice}
         </p>
       )}
@@ -156,8 +160,8 @@ function TrainerCircle({
   onNote: (text: string) => void;
 }) {
   return (
-    <section className="rounded-2xl border border-line bg-panel px-4 py-3">
-      <h2 className="text-xs font-semibold tracking-widest text-muted">WHO WILL TEACH</h2>
+    <section className="card px-4 py-3">
+      <h2 className="t-label text-muted">WHO WILL TEACH</h2>
       <p className="mt-1 text-sm text-muted">Talk is free. A mission wants bond 22. A lesson wants 28. Training wants 36.</p>
       {met.length === 0 && <p className="mt-2 text-sm text-muted">From age 10, look for a sparring partner. They remember what you say.</p>}
       {unmet.length > 0 && (
@@ -188,7 +192,7 @@ function TrainerCircle({
           const offers = teachableBases(hero.unlocked, unlocked).slice(0, 2);
           const local = dossier(game.cityId).heroes.includes(hero.id);
           return (
-            <article key={hero.id} className={`rounded-2xl border px-3 py-3 ${local ? "border-gold bg-panel-2" : "border-line"}`}>
+            <article key={hero.id} className={`card px-3 py-3 ${local ? "!border-gold !bg-panel-2" : ""}`}>
               <div className="flex items-center gap-3">
                 <Portrait seed={hero.portrait} age={32} sex={hero.sex} className="h-12 w-12" />
                 <div className="min-w-0">
@@ -208,7 +212,7 @@ function TrainerCircle({
                     onNote(`Talking to ${hero.alias}.`);
                     onChat(hero.id);
                   }}
-                  className="min-h-11 rounded-2xl border border-gold text-sm font-semibold text-fg"
+                  className="btn btn-gold !min-h-11 text-sm"
                 >
                   Talk
                 </button>
@@ -227,7 +231,7 @@ function TrainerCircle({
                     onNote(`Mission with ${hero.alias} — sent.`);
                     onAct(`heromission|${hero.id}`);
                   }}
-                  className={`min-h-11 rounded-2xl border text-sm font-semibold ${moves && hero.relationship >= 22 ? "border-line text-fg" : "border-line text-muted"}`}
+                  className={`btn btn-ghost !min-h-11 text-sm ${moves && hero.relationship >= 22 ? "" : "opacity-60"}`}
                 >
                   Mission
                 </button>
@@ -246,7 +250,7 @@ function TrainerCircle({
                     onNote(`Training with ${hero.alias} — sent.`);
                     onAct(`herotrain|${hero.id}`);
                   }}
-                  className={`min-h-11 rounded-2xl border text-sm font-semibold ${moves && hero.relationship >= 36 ? "border-line text-fg" : "border-line text-muted"}`}
+                  className={`btn btn-ghost !min-h-11 text-sm ${moves && hero.relationship >= 36 ? "" : "opacity-60"}`}
                 >
                   Train
                 </button>
@@ -272,7 +276,7 @@ function TrainerCircle({
                           onNote(`Asked ${hero.alias} to teach ${power.name}.`);
                           onAct(`learn|${hero.id}|${power.id}`);
                         }}
-                        className={`min-h-11 rounded-2xl border px-3 text-left text-sm ${ready ? "border-gold text-fg" : "border-line text-muted"}`}
+                        className={`card min-h-11 px-3 py-2 text-left text-sm ${ready ? "!border-gold text-fg" : "text-muted"}`}
                       >
                         <span className="font-semibold">Learn {power.name}</span>
                         <span className="block text-muted">{hero.relationship < 28 ? "Bond 28 to take the lesson." : "A base power. It can braid with what you hold."}</span>
@@ -292,8 +296,8 @@ function TrainerCircle({
 function Dormant({ game }: { game: Game }) {
   const human = game.powerless;
   return (
-    <section className="rounded-2xl border border-line bg-panel px-4 py-5">
-      <h2 className="text-xs font-semibold tracking-widest text-muted">{human ? "NO GIFT ON FILE" : "NO POWER YET"}</h2>
+    <section className="card px-4 py-5">
+      <h2 className="t-label text-muted">{human ? "NO GIFT ON FILE" : "NO POWER YET"}</h2>
       <p className="mt-2 text-base text-fg">{human ? "The tests came back human. The book stays shut." : "The braid book and your moves stay shut until a power shows up."}</p>
       <p className="mt-2 text-sm text-muted">
         {human
@@ -327,8 +331,8 @@ function BraidBook({
 }) {
   const ready = owned.filter((power) => power.unlocked);
   return (
-    <section className="rounded-2xl border border-line bg-panel px-4 py-3">
-      <h2 className="text-xs font-semibold tracking-widest text-muted">BRAID BOOK</h2>
+    <section className="card px-4 py-3">
+      <h2 className="t-label text-muted">BRAID BOOK</h2>
       <p className="mt-1 text-sm text-muted">Two hands, then Mix. Tap a chosen power again to drop it. The name of a new braid stays hidden until it lands.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Slot label="Hand 1" id={left} />
@@ -345,7 +349,7 @@ function BraidBook({
               type="button"
               aria-pressed={!!slot}
               onClick={() => onPick(power.id)}
-              className={`min-h-12 rounded-2xl border px-3 text-left text-sm ${slot ? "border-gold bg-panel-2 text-fg" : "border-line bg-panel text-fg"}`}
+              className={`card min-h-12 px-3 py-2 text-left text-sm text-fg ${slot ? "!border-gold !bg-panel-2" : ""}`}
             >
               <span className="font-semibold">{power.name}</span>
               <span className="mt-0.5 block text-xs text-gold">{slot ? `In hand ${slot}` : `${power.tierName} · ${rank}`}</span>
@@ -353,7 +357,7 @@ function BraidBook({
           );
         })}
       </div>
-      <button type="button" disabled={!left || !right || !moves || !previewOk} onClick={onMix} className="mt-3 min-h-12 w-full rounded-2xl bg-cape px-4 font-semibold text-fg disabled:opacity-40">
+      <button type="button" disabled={!left || !right || !moves || !previewOk} onClick={onMix} className="btn btn-primary mt-3 min-h-12 w-full disabled:opacity-40">
         {!moves ? "No moves left this month" : !left || !right ? "Choose two powers" : previewOk ? "Mix these two" : "These two won't mix"}
       </button>
     </section>
@@ -363,41 +367,141 @@ function BraidBook({
 function Slot({ label, id }: { label: string; id: string | null }) {
   const power = id ? getPower(id) : null;
   return (
-    <div className={`min-h-16 rounded-2xl border px-3 py-2 ${power ? "border-gold bg-panel-2" : "border-line"}`}>
-      <p className="text-xs font-semibold tracking-widest text-muted">{label}</p>
+    <div className={`card min-h-16 px-3 py-2 ${power ? "!border-gold/70 !bg-panel-2" : "!border-dashed"}`}>
+      <p className="t-label text-muted">{label}</p>
       <p className="mt-1 text-sm font-semibold text-fg">{power?.name ?? "Empty"}</p>
     </div>
   );
 }
 
+const STEP_ICON: Record<ArcStep["kind"], LucideIcon> = {
+  talk: MessageCircle,
+  investigate: Search,
+  fight: Swords,
+  train: Dumbbell,
+  protect: Shield,
+  boss: Skull,
+};
+
+const STEP_VERB: Record<ArcStep["kind"], string> = {
+  talk: "Talk",
+  investigate: "Investigate",
+  fight: "Fight",
+  train: "Train",
+  protect: "Protect",
+  boss: "Boss",
+};
+
+/** The villain's element, read from the case's boss step, tints the whole file. */
+function caseTint(arc: ArcDef): string {
+  const boss = arc.steps.find((step) => step.kind === "boss") ?? arc.steps[arc.steps.length - 1];
+  return ELEMENTS[elementOfLegacy(boss?.foePower)].color;
+}
+
 export function CaseFile({ game }: { game: Game }) {
   const current = currentCase(game);
   const open = availableArcs(game);
-  return (
-    <section className="rounded-2xl border border-line bg-panel px-4 py-3">
-      <h2 className="text-xs font-semibold tracking-widest text-muted">CASE FILE</h2>
-      {current ? (
-        <>
-          <p className="mt-1 font-semibold text-fg">{current.arc.title}</p>
-          <p className="text-sm text-gold">
-            {current.arc.villain} · {current.arc.group}
-          </p>
-          <p className="mt-1 text-sm text-muted">{current.arc.goal}</p>
-          <ol className="mt-2 flex flex-col gap-1">
-            {current.arc.steps.map((step, index) => (
-              <li key={step.id} className={`text-sm ${index === current.index ? "font-semibold text-gold" : index < current.index ? "text-fg" : "text-muted"}`}>
-                {index + 1}. {step.title}
-                <span className="font-normal text-muted"> · {step.kind}</span>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-2 text-xs text-muted">The next step is a button on this desk. The teachers know {current.arc.villain}.</p>
-        </>
-      ) : (
+  const cleared = arcsCleared(game.story);
+  if (!current) {
+    return (
+      <section className="card px-4 py-3">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="t-label text-muted">CASE FILES</h2>
+          <span className="chip !min-h-0 px-2 py-0.5 text-[11px]">
+            <Award className="size-3.5 text-gold" aria-hidden /> {cleared} closed
+          </span>
+        </div>
         <p className="mt-2 text-sm text-muted">
-          {game.age < 12 ? "Cases open at 12. Until then, drills stay small on purpose." : open.length ? `${open.length} file${open.length === 1 ? "" : "s"} on this desk. This city puts its own villains first.` : "No open files. Finished cases still lift the mastery ceiling."}
+          {game.age < 12
+            ? "Cases open at 12. Until then, drills stay small on purpose."
+            : open.length
+              ? "Pick a file below to open it. This city puts its own villains first."
+              : "No open files right now. New cases arrive as you get older: some only find a hero in their thirties, forties and fifties."}
         </p>
-      )}
+        {open.length > 0 && (
+          <ul className="mt-3 flex flex-col gap-2">
+            {open.slice(0, 3).map((arc) => {
+              const tint = caseTint(arc);
+              const local = homeArc(game.cityId, arc.id);
+              return (
+                <li key={arc.id} className="flex items-center gap-3 rounded-xl border px-3 py-2" style={{ borderColor: `${tint}55`, backgroundImage: `linear-gradient(100deg, ${tint}1f, transparent 60%)` }}>
+                  <span className="ico-tile size-9 shrink-0" style={{ "--tile": tint } as React.CSSProperties}>
+                    <ElementIcon element={elementOfLegacy(arc.steps[arc.steps.length - 1]?.foePower)} className="size-4.5" style={{ color: "currentColor" }} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-fg">{arc.title}</span>
+                    <span className="block truncate text-xs text-muted">
+                      {arc.villain}
+                      {arc.era ? ` · ${arc.era}` : ""}
+                      {local ? " · this city" : ""}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    );
+  }
+  const { arc, step, index } = current;
+  const tint = caseTint(arc);
+  const StepIcon = STEP_ICON[step.kind];
+  const ceiling = cleared < 2 ? "Raises your mastery ceiling." : "";
+  const reward = [ceiling, arc.legacy ? `Legacy +${arc.legacy}.` : ""].filter(Boolean).join(" ");
+  return (
+    <section className="card relative overflow-hidden px-4 py-3" style={{ borderColor: `${tint}80`, backgroundImage: `radial-gradient(120% 70% at 100% 0%, ${tint}2e, transparent 60%)` }}>
+      <div className="flex items-start gap-3">
+        <span className="ico-tile size-12 shrink-0" style={{ "--tile": tint } as React.CSSProperties}>
+          <ElementIcon element={elementOfLegacy(arc.steps[arc.steps.length - 1]?.foePower)} className="size-6" style={{ color: "currentColor" }} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="t-label text-[10px] text-muted">
+            CASE FILE{arc.era ? ` · ${arc.era.toUpperCase()}` : ""} · {cleared} CLOSED
+          </p>
+          <p className="t-title truncate text-fg">{arc.title}</p>
+          <p className="truncate text-sm" style={{ color: tint }}>
+            {arc.villain} · {arc.group}
+          </p>
+        </div>
+      </div>
+      <p className="mt-2 text-sm text-muted">{arc.goal}.</p>
+
+      <ol className="mt-3 grid grid-cols-6 gap-1.5" aria-label={`Step ${index + 1} of ${arc.steps.length}`}>
+        {arc.steps.map((row, i) => {
+          const Icon = STEP_ICON[row.kind];
+          const done = i < index;
+          const now = i === index;
+          return (
+            <li key={row.id} className="flex flex-col items-center gap-1">
+              <span
+                className={`grid size-9 place-items-center rounded-full border-2 transition-transform ${now ? "scale-110" : ""}`}
+                style={{
+                  borderColor: done || now ? tint : "rgba(255,255,255,.14)",
+                  background: done ? tint : now ? `${tint}33` : "rgba(255,255,255,.04)",
+                  color: done ? "#0b0d14" : now ? tint : "rgba(255,255,255,.4)",
+                  boxShadow: now ? `0 0 14px ${tint}88` : undefined,
+                }}
+                title={row.title}
+              >
+                {done ? <Check className="size-4" aria-hidden /> : <Icon className="size-4" aria-hidden />}
+              </span>
+              <span className={`text-[9px] font-bold tracking-wide uppercase ${now ? "text-fg" : "text-muted"}`}>{STEP_VERB[row.kind]}</span>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-3 rounded-xl border px-3 py-2.5" style={{ borderColor: `${tint}55`, background: "rgba(0,0,0,.22)" }}>
+        <p className="t-label flex items-center gap-1.5 text-[10px]" style={{ color: tint }}>
+          <StepIcon className="size-3.5" aria-hidden /> NOW · STEP {index + 1} OF {arc.steps.length}
+        </p>
+        <p className="mt-0.5 font-semibold text-fg">{step.title}</p>
+        <p className="text-sm text-muted">{step.brief}</p>
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        Play this step from its card below. {reward ? `Closing the case: ${reward}` : `The teachers know ${arc.villain}.`}
+      </p>
     </section>
   );
 }
@@ -419,8 +523,8 @@ function MasteryBoard({
   const held = owned.filter((power) => power.unlocked);
   const pages = heard.filter((power) => !!power);
   return (
-    <section className="rounded-2xl border border-line bg-panel px-4 py-3">
-      <h2 className="text-xs font-semibold tracking-widest text-muted">MASTERY</h2>
+    <section className="card px-4 py-3">
+      <h2 className="t-label text-muted">MASTERY</h2>
       <p className="mt-1 text-sm text-muted">Each power has its own rank. Basics stop at S. Mixed and apex can reach X, late, after finished cases.</p>
       <div className="mt-3 flex flex-col gap-3">
         {held.map((power) => {
@@ -443,7 +547,7 @@ function MasteryBoard({
                     onAct(`focus|${power.id}`);
                     onNote(`${power.name} is the focus.`);
                   }}
-                  className={`min-h-11 rounded-2xl border px-3 text-sm font-semibold ${focused ? "border-gold bg-panel-2 text-fg" : "border-line text-fg"}`}
+                  className="seg"
                 >
                   {focused ? "Focused" : "Set focus"}
                 </button>
@@ -453,8 +557,8 @@ function MasteryBoard({
                 {next == null ? " · topped out" : ` · ${exp}/${next} to the next rank`}
                 {level >= cap ? " · soft wall" : ""}
               </p>
-              <div className="mt-1 h-2 overflow-hidden rounded-full bg-panel-2">
-                <div className="h-full rounded-full bg-gold" style={{ width }} />
+              <div className="stat-bar mt-1 !h-2">
+                <div className="stat-fill" style={{ width, "--fill": "var(--color-gold)" } as React.CSSProperties} />
               </div>
             </div>
           );
@@ -462,7 +566,7 @@ function MasteryBoard({
       </div>
       {pages.length > 0 && (
         <div className="mt-4">
-          <p className="text-xs font-semibold tracking-widest text-muted">HEARD OF</p>
+          <p className="t-label text-muted">HEARD OF</p>
           <ul className="mt-2 flex flex-col gap-1">
             {pages.slice(0, 8).map((power) => (
               <li key={power.id} className="text-sm text-muted">
@@ -511,24 +615,27 @@ function Loadout({ game, onAct, onNote }: { game: Game; onAct: (id: string) => v
   }
 
   return (
-    <section className="rounded-2xl border border-line bg-panel px-4 py-3">
-      <h2 className="text-xs font-semibold tracking-widest text-muted">SIX MOVES</h2>
+    <section className="card px-4 py-3">
+      <h2 className="t-label text-muted">SIX MOVES</h2>
       <p className="mt-1 text-sm text-muted">Tap a filled slot to drop it. Tap a move below to add it. Swapping is free. A locked move tells you the rank it wants.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        {Array.from({ length: 6 }, (_, index) => {
+        {Array.from({ length: MOVESET_SIZE }, (_, index) => {
           const id = equipped[index];
           const def = known.find((entry) => entry.def.id === id)?.def;
+          const filledCount = equipped.filter((slot) => known.some((entry) => entry.def.id === slot)).length;
+          const street = def ? null : STREET_MOVES[Math.max(0, index - filledCount)];
           return (
             <button
               key={`slot-${index}`}
               type="button"
               aria-pressed={!!def}
-              onClick={() => drop(id)}
-              className={`min-h-16 rounded-2xl border px-3 py-2 text-left ${def ? "border-gold bg-panel-2" : "border-line"}`}
+              disabled={!def}
+              onClick={() => def && drop(id)}
+              className={`card min-h-16 px-3 py-2 text-left ${def ? "!border-gold/70 !bg-panel-2" : "!border-dashed"}`}
             >
-              <p className="text-xs font-semibold tracking-widest text-muted">Slot {index + 1}</p>
-              <p className="text-sm font-semibold text-fg">{def?.name ?? "Empty"}</p>
-              <p className="text-xs text-muted">{def ? `${def.kind} · tap to drop` : "Open"}</p>
+              <p className="t-label text-muted">Slot {index + 1}</p>
+              <p className={`text-sm font-semibold ${def ? "text-fg" : "text-muted"}`}>{def?.name ?? street?.name ?? "Empty"}</p>
+              <p className="text-xs text-muted">{def ? `${def.kind} · tap to drop` : "street move · fills in fights"}</p>
             </button>
           );
         })}
@@ -544,7 +651,7 @@ function Loadout({ game, onAct, onNote }: { game: Game; onAct: (id: string) => v
                 setSaved(index);
                 onNote(`${set.name} remembers this six.`);
               }}
-              className="min-h-11 rounded-2xl border border-line text-sm font-semibold text-fg"
+              className="btn btn-ghost !min-h-11 text-sm"
             >
               Save {set.name}
             </button>
@@ -557,7 +664,7 @@ function Loadout({ game, onAct, onNote }: { game: Game; onAct: (id: string) => v
                 setSaved(index);
                 onNote(`${set.name} is what you bring.`);
               }}
-              className="min-h-11 rounded-2xl border border-gold text-sm font-semibold text-fg disabled:opacity-40"
+              className="btn btn-gold !min-h-11 text-sm disabled:opacity-40"
             >
               {set.moves.length === 0 ? `${set.name} is empty` : `Load ${set.name}`}
             </button>
@@ -575,7 +682,7 @@ function Loadout({ game, onAct, onNote }: { game: Game; onAct: (id: string) => v
               aria-pressed={on}
               aria-disabled={!unlocked}
               onClick={() => toggle(def.id, def.name, unlocked, need)}
-              className={`min-h-12 rounded-2xl border px-3 py-2 text-left text-sm ${on ? "border-gold bg-panel-2 text-fg" : unlocked ? "border-line bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+              className={`card min-h-12 px-3 py-2 text-left text-sm ${on ? "!border-gold !bg-panel-2 text-fg" : unlocked ? "text-fg" : "text-muted opacity-70"}`}
             >
               <span className="font-semibold">{def.name}</span>
               <span className="ml-2 text-xs text-gold">{on ? "In the six" : unlocked ? `Move ${moveLevel(game.moveExp?.[def.id] ?? 0)}` : `Needs ${need}`}</span>
@@ -649,15 +756,15 @@ export function HeroChat({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-ink">
-      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+      <div className="hud flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-display text-2xl text-fg">{hero.alias}</p>
+          <p className="t-display truncate text-fg">{hero.alias}</p>
           <p className="truncate text-xs text-muted">
             Bond {hero.relationship} · Lv {hero.level}
             {plot ? ` · ${plot.villain}` : ""}
           </p>
         </div>
-        <button type="button" onClick={onClose} className="min-h-11 rounded-2xl border border-line px-4 text-sm font-semibold text-fg">
+        <button type="button" onClick={onClose} className="btn btn-ghost !min-h-11 text-sm">
           Close
         </button>
       </div>
@@ -670,17 +777,23 @@ export function HeroChat({
             </p>
           )}
           {hero.memory.map((entry, index) => (
-            <p key={`${entry.role}-${index}`} className={`rounded-2xl px-3 py-2 text-sm ${entry.role === "you" ? "bg-panel text-fg" : "bg-paper text-paper-ink"}`}>
+            <p key={`${entry.role}-${index}`} className={`anim-rise max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow ${entry.role === "you" ? "self-end rounded-br-md bg-cape text-white" : "self-start rounded-bl-md bg-paper text-paper-ink"}`}>
               {entry.text}
             </p>
           ))}
-          {busy && <p className="text-sm text-gold">They're thinking...</p>}
+          {busy && (
+            <p className="flex items-center gap-1 self-start rounded-2xl rounded-bl-md bg-paper/80 px-3 py-2.5" aria-label="They're thinking">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="size-1.5 animate-bounce rounded-full bg-paper-ink/70" style={{ animationDelay: `${i * 120}ms` }} />
+              ))}
+            </p>
+          )}
         </div>
         {hero.relationship >= 70 && teachable.length > 0 && (
           <div className="mt-4 flex flex-col gap-2">
-            <p className="text-xs font-semibold tracking-widest text-muted">TEACH A BRAID</p>
+            <p className="t-label text-muted">TEACH A BRAID</p>
             {teachable.map((power) => (
-              <button key={power.id} type="button" onClick={() => onAct(`teach|${hero.id}|${power.id}`)} className="min-h-11 rounded-2xl border border-line px-3 text-left text-sm font-semibold text-fg">
+              <button key={power.id} type="button" onClick={() => onAct(`teach|${hero.id}|${power.id}`)} className="btn btn-ghost !min-h-11 !justify-start text-sm">
                 Show them {power.name}
               </button>
             ))}
@@ -688,7 +801,7 @@ export function HeroChat({
         )}
       </div>
       <form
-        className="flex shrink-0 gap-2 border-t border-line px-4 pt-3 pb-24"
+        className="flex shrink-0 gap-2 border-t border-white/10 bg-ink/80 px-4 pt-3 pb-24 backdrop-blur"
         onSubmit={(event) => {
           event.preventDefault();
           void send();
@@ -699,9 +812,9 @@ export function HeroChat({
           maxLength={240}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={`Talk to ${hero.alias}`}
-          className="min-h-12 w-full rounded-2xl border border-line bg-panel-2 px-4 text-fg"
+          className="min-h-12 w-full rounded-2xl border border-white/10 bg-black/30 px-4 text-fg shadow-[inset_0_1px_3px_rgba(0,0,0,.5)] focus:border-gold focus:outline-none"
         />
-        <button type="submit" disabled={busy || !draft.trim()} className="min-h-12 shrink-0 rounded-2xl bg-cape px-4 font-semibold text-fg disabled:opacity-40">
+        <button type="submit" disabled={busy || !draft.trim()} className="btn btn-primary min-h-12 shrink-0 disabled:opacity-40">
           Send
         </button>
       </form>

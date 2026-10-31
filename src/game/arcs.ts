@@ -23,6 +23,8 @@ export interface ArcStep {
   foeName?: string;
   foeTitle?: string;
   foePower?: PowerId;
+  /** Foe power level for fight/boss steps. Defaults to 4.2 (fight) and 6.4 (boss), tuned for teens. */
+  foeLevel?: number;
   choices?: ArcChoice[];
 }
 
@@ -37,6 +39,12 @@ export interface ArcDef {
   heroIds: string[];
   focus: string;
   maxKarma?: number;
+  /** Cases you must already have closed before this one shows up. */
+  minCleared?: number;
+  /** Legacy granted when the case closes (mid-life and later cases). */
+  legacy?: number;
+  /** Chapter phase this case was written for, for the case board label. */
+  era?: string;
   steps: ArcStep[];
 }
 
@@ -206,6 +214,182 @@ export const ARCS: ArcDef[] = [
       { id: "boss", title: "Face Payday", kind: "boss", brief: "The last collection is you.", foeName: "Payday", foeTitle: "The Lease", foePower: "strength", masteryExp: 50 },
     ],
   },
+  // Mid-life cases (2026-10-31 pm). Written for the rising, crisis and legacy chapters, with foes scaled
+  // to an adult power level, talk steps that want years of bond, and legacy when the case closes.
+  {
+    id: "understudy",
+    title: "The Understudy",
+    villain: "Second Skin",
+    group: "The Rehearsal",
+    goal: "Stop the copycat wearing your name",
+    blurb: "Someone is doing your job badly, in your colours, on camera. Kade says the walk is wrong.",
+    minAge: 28,
+    minCleared: 1,
+    legacy: 4,
+    era: "Rising",
+    heroIds: ["kade", "nim"],
+    focus: "Shape, stealth, reputation",
+    steps: [
+      { id: "ask", title: "Ask Kade about the walk", kind: "talk", brief: "Kade knows faces for a living. They will only say it to someone they trust.", heroId: "kade", minBond: 40, masteryExp: 16 },
+      {
+        id: "clips",
+        title: "Go through the clips",
+        kind: "investigate",
+        brief: "Eleven videos of you doing things you did not do.",
+        masteryExp: 20,
+        choices: [
+          { id: "frames", label: "Go frame by frame", text: "Frame 212: the copy blinks with the wrong eye first. Now you know what to look for.", advance: true, effects: { smarts: 3 } },
+          { id: "deny", label: "Deny it on air", text: "You go on the morning show and say it is not you. Half the city believes you.", advance: true, effects: { fame: 2, reputation: -1 } },
+          { id: "ride", label: "Let the clout ride", text: "The copy is trending, and so are you. Nobody asks who got hurt.", advance: false, effects: { fame: 3, karma: -4 } },
+        ],
+      },
+      { id: "encore", title: "Fight the stand-in", kind: "fight", brief: "Encore wears your silhouette and none of your restraint.", foeName: "Encore", foeTitle: "Rehearsal stand-in", foePower: "shapeshift", foeLevel: 7, masteryExp: 30 },
+      { id: "drill", title: "Drill your tell", kind: "train", brief: "Your focus power has to do one thing no copy can fake. Mastery 4.", needMastery: 4, masteryExp: 34 },
+      {
+        id: "signing",
+        title: "The signing in your name",
+        kind: "protect",
+        brief: "Second Skin booked a fan meet as you. The line is around the block.",
+        masteryExp: 24,
+        choices: [
+          { id: "unmask", label: "Walk in and unmask them", text: "Two of you, one table. The crowd works out which one stays to help with the crush.", advance: true, effects: { karma: 5, reputation: 3, fame: 2 } },
+          { id: "clear", label: "Clear the line quietly", text: "You move four hundred people without a photo. The copy signs for an empty room.", advance: true, effects: { karma: 6, happiness: 2 } },
+          { id: "sell", label: "Sell the real tickets", text: "You make money off your own forgery. The forger would be proud.", advance: false, effects: { money: 1500, karma: -6 } },
+        ],
+      },
+      { id: "boss", title: "Face Second Skin", kind: "boss", brief: "They have your face. They do not have your years.", foeName: "Second Skin", foeTitle: "The Rehearsal", foePower: "shapeshift", foeLevel: 8.6, masteryExp: 60 },
+    ],
+  },
+  {
+    id: "deadair",
+    title: "Dead Air",
+    villain: "Static Bishop",
+    group: "The Broadcast",
+    goal: "Take the city's screens back",
+    blurb: "Every screen in the city ran the same thirty seconds last night: the names of people you love. Parish thinks it was a test.",
+    minAge: 35,
+    legacy: 5,
+    era: "Crisis",
+    heroIds: ["bolt", "idris"],
+    focus: "Lightning, mind, information",
+    steps: [
+      { id: "ask", title: "Get Parish on the roof", kind: "talk", brief: "Parish can hear a carrier wave. They will not climb up for a stranger.", heroId: "bolt", minBond: 45, masteryExp: 18 },
+      {
+        id: "carrier",
+        title: "Trace the carrier",
+        kind: "investigate",
+        brief: "The signal hops towers like a kid hopping fences.",
+        masteryExp: 22,
+        choices: [
+          { id: "ride", label: "Ride the signal", text: "You chase it up four towers and one bad decision. It lands in a church with no congregation.", advance: true, effects: { smarts: 2, health: -3 } },
+          { id: "buy", label: "Buy a fixer's dossier", text: "Two thousand dollars for a floor plan and a name. Worth it.", advance: true, effects: { money: -2000, smarts: 1 } },
+          { id: "blackout", label: "Cut the district's power", text: "The screens go dark. So do the hospitals. The Bishop just moves.", advance: false, effects: { karma: -5, fame: 1 } },
+        ],
+      },
+      { id: "feedback", title: "Fight Feedback", kind: "fight", brief: "The Bishop's deacon turns every speaker into a weapon.", foeName: "Feedback", foeTitle: "Broadcast deacon", foePower: "lightning", foeLevel: 7.4, masteryExp: 32 },
+      { id: "drill", title: "Drill under noise", kind: "train", brief: "Hold your focus power steady while the city screams at you. Mastery 4.", needMastery: 4, masteryExp: 36 },
+      {
+        id: "names",
+        title: "The people on the broadcast",
+        kind: "protect",
+        brief: "Your people's names are public now. Tonight the Bishop sends visitors.",
+        masteryExp: 26,
+        choices: [
+          { id: "porch", label: "Stand on their porch", text: "You stand there in full colours until sunrise. The visitors drive past twice and keep going.", advance: true, effects: { fame: 3, reputation: 3, health: -4, karma: 4 } },
+          { id: "move", label: "Move them in the night", text: "Three addresses, one van, no lights. Nobody sleeps. Everybody wakes up.", advance: true, effects: { karma: 6, happiness: -2 } },
+          { id: "dark", label: "Go dark and hope", text: "You turn your phone off. That is not the same as being safe.", advance: false, effects: { happiness: -4, karma: -3 } },
+        ],
+      },
+      { id: "boss", title: "Face Static Bishop", kind: "boss", brief: "He wants one more broadcast, live, with you in it.", foeName: "Static Bishop", foeTitle: "The Broadcast", foePower: "lightning", foeLevel: 9, masteryExp: 64 },
+    ],
+  },
+  {
+    id: "winter",
+    title: "The Long Winter",
+    villain: "The Frost Warden",
+    group: "Coldframe",
+    goal: "Get the city through a winter someone is selling",
+    blurb: "The grid fails on schedule. Heat is sold by the block. Pilar says the cold has a signature.",
+    minAge: 44,
+    legacy: 6,
+    era: "Crisis",
+    heroIds: ["pilar", "marrow"],
+    focus: "Ice, durability, endurance",
+    steps: [
+      { id: "ask", title: "Walk with Pilar", kind: "talk", brief: "Pilar reads weather like handwriting. They want someone steady beside them.", heroId: "pilar", minBond: 50, masteryExp: 18 },
+      {
+        id: "blocks",
+        title: "Walk the cold blocks",
+        kind: "investigate",
+        brief: "Whole streets with frost on the inside of the windows.",
+        masteryExp: 22,
+        choices: [
+          { id: "doors", label: "Knock door to door", text: "You count the people who need heat and the ones who are already past it. You write both down.", advance: true, effects: { karma: 4, health: -3 } },
+          { id: "audit", label: "Audit the utility", text: "The outages line up with a shell company's invoices. Cold is a business plan.", advance: true, effects: { smarts: 3 } },
+          { id: "heaters", label: "Sell space heaters", text: "You make a winter's profit. The Warden makes a note of you.", advance: false, effects: { money: 1200, karma: -5 } },
+        ],
+      },
+      { id: "rime", title: "Fight Rime", kind: "fight", brief: "The Warden's foreman freezes pipes for a living.", foeName: "Rime", foeTitle: "Coldframe foreman", foePower: "ice", foeLevel: 8, masteryExp: 34 },
+      { id: "drill", title: "Drill for the long night", kind: "train", brief: "Your focus power has to last a whole night, not a round. Mastery 4.", needMastery: 4, masteryExp: 38 },
+      {
+        id: "shelter",
+        title: "The shelter that lost power",
+        kind: "protect",
+        brief: "Two hundred people, one gym, no heat, and nine hours until morning.",
+        masteryExp: 28,
+        choices: [
+          { id: "hold", label: "Keep it warm yourself", text: "You burn through the night so they do not. Morning finds you grey and everyone breathing.", advance: true, effects: { health: -7, karma: 8, reputation: 3 } },
+          { id: "convoy", label: "Run a generator convoy", text: "It costs a fortune and three favours. Every light in the gym comes back on.", advance: true, effects: { money: -3000, karma: 6, reputation: 2 } },
+          { id: "league", label: "Leave it to the League", text: "The League arrives at six. It was a long wait for the people inside.", advance: false, effects: { karma: -3, happiness: -2 } },
+        ],
+      },
+      { id: "boss", title: "Face the Frost Warden", kind: "boss", brief: "At the reservoir, where the cold starts.", foeName: "The Frost Warden", foeTitle: "Coldframe", foePower: "ice", foeLevel: 9.6, masteryExp: 68 },
+    ],
+  },
+  {
+    id: "heir",
+    title: "Old Debts",
+    villain: "The Heir",
+    group: "The Estate",
+    goal: "Stop the heir of a villain you beat",
+    blurb: "Someone you put away left a will. The beneficiary has your old case files and a grudge they were raised on.",
+    minAge: 54,
+    minCleared: 2,
+    legacy: 8,
+    era: "Legacy",
+    heroIds: ["wren", "lark"],
+    focus: "Everything you built",
+    steps: [
+      { id: "ask", title: "Sit with Wren again", kind: "talk", brief: "Wren remembers your first case. Ask what you got wrong.", heroId: "wren", minBond: 55, masteryExp: 18 },
+      {
+        id: "files",
+        title: "Reopen your own files",
+        kind: "investigate",
+        brief: "The Heir has copies. You should know what is in them.",
+        masteryExp: 22,
+        choices: [
+          { id: "honest", label: "Read them honestly", text: "Some of those nights were not your finest. The Heir knows which ones.", advance: true, effects: { smarts: 2, karma: 3, happiness: -2 } },
+          { id: "visit", label: "Visit the old villain", text: "Prison has made them small and patient. They tell you their kid's favourite trick.", advance: true, effects: { reputation: 1, smarts: 1 } },
+          { id: "burn", label: "Burn your copies", text: "Your copies. Not theirs.", advance: false, effects: { happiness: 1, karma: -2 } },
+        ],
+      },
+      { id: "probate", title: "Fight Probate", kind: "fight", brief: "The executor of the estate collects debts in person.", foeName: "Probate", foeTitle: "Estate executor", foePower: "forcefield", foeLevel: 8.4, masteryExp: 34 },
+      { id: "drill", title: "Show your work", kind: "train", brief: "Old hands still drill. Your focus power, mastery 4, in front of the rookies.", needMastery: 4, masteryExp: 38 },
+      {
+        id: "students",
+        title: "The rookies on the list",
+        kind: "protect",
+        brief: "The Heir is going after the people you trained.",
+        masteryExp: 28,
+        choices: [
+          { id: "stand", label: "Stand with them", text: "You fight beside your students for the first time. They are better than you were. You tell them so.", advance: true, effects: { karma: 6, reputation: 3, happiness: 4, health: -4 } },
+          { id: "hide", label: "Send them out of town", text: "They hate it. They live. That is the order you wanted.", advance: true, effects: { karma: 4, happiness: -2 } },
+          { id: "pay", label: "Pay off the debt", text: "You pay. The Heir takes the money and keeps the list.", advance: false, effects: { money: -5000, karma: -2 } },
+        ],
+      },
+      { id: "boss", title: "Face the Heir", kind: "boss", brief: "They fight like their parent, and like you, because they studied both.", foeName: "The Heir", foeTitle: "The Estate", foePower: "blasts", foeLevel: 9.8, masteryExp: 72 },
+    ],
+  },
 ];
 
 export function arcById(id: string | null | undefined): ArcDef | null {
@@ -224,6 +408,7 @@ export function availableArcs(game: Pick<Game, "age" | "stats" | "story" | "city
     if (cleared.has(arc.id)) return false;
     if (game.age < arc.minAge) return false;
     if (arc.maxKarma != null && karma > arc.maxKarma) return false;
+    if (arc.minCleared != null && cleared.size < arc.minCleared) return false;
     if (game.story?.active === arc.id) return false;
     return true;
   }).sort((a, b) => Number(homeArc(game.cityId, b.id)) - Number(homeArc(game.cityId, a.id)) || a.minAge - b.minAge);

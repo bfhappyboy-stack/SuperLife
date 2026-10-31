@@ -30,8 +30,42 @@ export function levelFor(exp: number): number {
   return Math.max(1, Math.min(8, level));
 }
 
+/** Bond points a hero can gain from you in one year of your life at bond 0. Shrinks as the bond deepens. */
+export const BOND_YEAR_CAP = 5;
+/** Above this, a year with no contact lets the bond drift down a little. */
+export const BOND_DRIFT_FLOOR = 40;
+
+/** How much more bond a hero will give this year: 5 for a stranger, 2 at 60, 1 from about 80. */
+export function bondYearRoom(relationship: number): number {
+  return Math.max(1, Math.round(BOND_YEAR_CAP * (1 - Math.max(0, relationship) / 100)));
+}
+
+/**
+ * Bonds are slow on purpose. Each gain shrinks as the bond deepens (soft cap), and a hero only gives so
+ * much of themselves per year, so talk being free cannot buy trust in an afternoon. Bond 60 takes most of
+ * a decade of showing up, 80 most of two, and 100 is a life.
+ */
+export function bondStep(relationship: number, raw: number, gainedThisYear: number, r: number): number {
+  if (raw <= 0) return raw;
+  const room = Math.max(0, bondYearRoom(relationship) - gainedThisYear);
+  if (!room) return 0;
+  const scaled = raw * Math.max(0.15, 1 - relationship / 105);
+  const whole = Math.floor(scaled) + (r < scaled - Math.floor(scaled) ? 1 : 0);
+  return Math.max(0, Math.min(room, whole, 100 - relationship));
+}
+
 export function heroLevelCap(relationship: number): number {
   return Math.max(1, Math.min(8, 1 + Math.floor(Math.max(0, relationship) / 12)));
+}
+
+/**
+ * Heroes level slowly: EXP earns the level, the bond caps it. A level already earned is never taken back
+ * when the bond dips; it just stops growing until the bond recovers.
+ */
+export function settleHeroLevel(hero: { exp: number; level: number; relationship: number }): number {
+  const earned = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship));
+  hero.level = Math.max(1, hero.level || 1, earned);
+  return hero.level;
 }
 
 export interface PlotBrief {

@@ -1,6 +1,8 @@
 import { getPower, allPowers } from "./combo";
 import { masteryLevel } from "./mastery";
 import { MOVE_BOOK, type MoveDef } from "./moves.catalog";
+import { AUTHORED, type AuthoredMove } from "./moves.authored";
+import { elementOfPower } from "./elements";
 import type { CatalogPower } from "./combo";
 import type { DuelMove, Game, MoveStyle } from "./types";
 
@@ -26,42 +28,111 @@ function kindFor(tags: string[], index: number): MoveDef["kind"] {
   return "burst";
 }
 
+const KIND_NOUN: Record<MoveDef["kind"], string> = {
+  burst: "Strike",
+  area: "Wave",
+  status: "Hex",
+  guard: "Ward",
+  dash: "Rush",
+};
+
+const KIND_EFFECT: Record<MoveDef["kind"], string> = {
+  burst: "One target, full weight.",
+  area: "Hits wide. A little extra on everything.",
+  status: "Their next swing arrives slowed.",
+  guard: "Takes the edge off what comes back.",
+  dash: "Hits harder when it answers their tell.",
+};
+
+/** Short, readable stem for a generated move: drops filler words, keeps up to two. */
+function stem(name: string): string {
+  const skip = new Set(["of", "the", "a", "an", "and", "with", "your", "you"]);
+  const words = name.replace(/[,.]/g, "").split(/\s+/).filter((word) => word && !skip.has(word.toLowerCase()));
+  return (words.length ? words : [name]).slice(0, 2).join(" ");
+}
+
+function dress(def: MoveDef, words: AuthoredMove | undefined): MoveDef {
+  if (!words) return def;
+  return {
+    ...def,
+    name: words.name,
+    blurb: words.blurb || def.blurb,
+    effect: words.effect || def.effect,
+    style: words.style ?? def.style,
+    kind: words.kind ?? def.kind,
+    element: words.element ?? def.element,
+  };
+}
+
 export function movesForPower(power: CatalogPower): MoveDef[] {
+  return rawMovesForPower(power).map((def) => (def.element ? def : { ...def, element: elementOfPower(def.powerId) }));
+}
+
+function rawMovesForPower(power: CatalogPower): MoveDef[] {
   const hand = HAND.get(power.id);
+  const words = AUTHORED[power.id];
+  const plain = generatedMoves(power);
+  const generated = [dress(plain[0]!, words?.a), dress(plain[1]!, words?.b)];
   if (hand?.length) {
-    const sorted = [...hand].sort((a, b) => a.minMastery - b.minMastery);
-    return sorted.map((entry, index) => (index === 0 ? { ...entry, minMastery: 1 } : entry));
+    const sorted = [...hand].sort((a, b) => a.minMastery - b.minMastery).map((entry, index) => (index === 0 ? { ...entry, minMastery: 1 } : entry));
+    // Every power owns at least two moves: a hand-authored one plus a generated signature if the book stops at one.
+    if (sorted.length >= 2) return sorted;
+    const extra = generated[1]!;
+    return [...sorted, { ...extra, name: sorted.some((entry) => entry.name === extra.name) ? `${extra.name} II` : extra.name }];
   }
+  return generated;
+}
+
+function generatedMoves(power: CatalogPower): MoveDef[] {
   const gen = power.generation;
-  const word = power.name.split(" ")[0] ?? power.name;
+  const word = stem(power.name);
+  const kindA = kindFor(power.tags, 0);
+  const kindB = kindFor(power.tags, 1);
+  const nounA = KIND_NOUN[kindA];
+  const nounB = gen === 2 ? "Verdict" : KIND_NOUN[kindB] === nounA ? "Shape" : KIND_NOUN[kindB];
   const base: MoveDef = {
     id: `${power.id}::a`,
-    name: `${word} Strike`,
+    name: `${word} ${nounA}`,
     powerId: power.id,
     blurb: power.description,
     minMastery: 1,
     power: gen === 0 ? 4 : gen === 1 ? 7 : 11,
     style: styleFor(power.tags, 0),
-    kind: kindFor(power.tags, 0),
+    kind: kindA,
     energy: 1 + Math.min(2, gen),
-    effect: gen === 0 ? "A basic hit. Mixed powers hit harder." : "A hybrid hit.",
+    effect: gen === 0 ? `${KIND_EFFECT[kindA]} Mixed powers hit harder.` : KIND_EFFECT[kindA],
     cooldown: gen === 2 ? 1 : 0,
   };
   const signature: MoveDef = {
     id: `${power.id}::b`,
-    name: gen === 2 ? `${word} Verdict` : `${word} Shape`,
+    name: `${word} ${nounB}`,
     powerId: power.id,
     blurb: gen === 2 ? "The version that ends a conversation." : "The version with a trick in it.",
     minMastery: gen === 0 ? 3 : gen === 1 ? 4 : 5,
     power: gen === 0 ? 6 : gen === 1 ? 10 : 15,
     style: styleFor(power.tags, 1),
-    kind: kindFor(power.tags, 1),
+    kind: kindB,
     energy: 2 + gen,
-    effect: gen === 0 ? "Still a basic, just meaner." : "The room feels it.",
+    effect: KIND_EFFECT[kindB],
     cooldown: Math.max(1, gen),
   };
   return [base, signature];
 }
+
+/**
+ * Unpowered street moves. They never take a saved slot; they only pad an unfinished six
+ * when a fight starts, so every battle is played with exactly six moves.
+ */
+export const STREET_MOVES: readonly DuelMove[] = [
+  { id: "street::haymaker", name: "Haymaker", blurb: "Ugly and sincere.", power: 4, style: "strike", kind: "burst", energy: 1, effect: "No power in it. Still counts.", cooldown: 0, element: "force" },
+  { id: "street::slip", name: "Slip", blurb: "Don't be where the hit lands.", power: 3, style: "trick", kind: "dash", energy: 1, effect: "Footwork, not a gift.", cooldown: 0, element: "speed" },
+  { id: "street::brace", name: "Brace", blurb: "Take the ugly one on purpose.", power: 3, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "shield" },
+  { id: "street::shove", name: "Shove", blurb: "Space, rudely made.", power: 3, style: "strike", kind: "status", energy: 1, effect: "Their next swing arrives slowed.", cooldown: 1, element: "force" },
+  { id: "street::feint", name: "Feint", blurb: "Look left. Be right.", power: 3, style: "trick", kind: "burst", energy: 1, effect: "Cheap, and it works once.", cooldown: 1, element: "shadow" },
+  { id: "street::cover", name: "Cover Up", blurb: "Elbows in, chin down.", power: 2, style: "guard", kind: "guard", energy: 0, effect: "Free to use. Buys a breath.", cooldown: 1, element: "shield" },
+];
+
+export const MOVESET_SIZE = 6;
 
 export function allMoveDefs(): MoveDef[] {
   const out: MoveDef[] = [];
@@ -141,8 +212,10 @@ export function toDuel(def: MoveDef, level = 1): DuelMove {
     style: def.style,
     kind: def.kind,
     energy: def.energy,
-    effect: `${def.effect} · move ${rank}`,
+    effect: def.effect,
     cooldown: def.cooldown,
+    element: def.element ?? elementOfPower(def.powerId),
+    rank,
   };
 }
 
@@ -151,19 +224,30 @@ export function equippedMoves(game: Pick<Game, "loadout" | "unlockedPowers" | "m
   return picked.slice(0, 6).map((def) => toDuel(def, moveLevel(game.moveExp?.[def.id] ?? 0)));
 }
 
+/** The six a fight actually uses: the equipped moves, padded with street moves so it is always exactly six. */
+export function battleMoves(game: Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp">): DuelMove[] {
+  const picked = equippedMoves(game).slice(0, MOVESET_SIZE);
+  for (const move of STREET_MOVES) {
+    if (picked.length >= MOVESET_SIZE) break;
+    picked.push({ ...move });
+  }
+  return picked;
+}
+
 export function fillLoadout(game: Game): void {
   if (!Array.isArray(game.loadout)) game.loadout = [];
   const have = new Set(game.loadout);
   for (const entry of knownMoves(game)) {
-    if (game.loadout.length >= 6) break;
+    if (game.loadout.length >= MOVESET_SIZE) break;
     if (!entry.unlocked || have.has(entry.def.id)) continue;
     game.loadout.push(entry.def.id);
     have.add(entry.def.id);
   }
-  game.loadout = game.loadout.filter((id) => {
+  game.loadout = game.loadout.filter((id, index, list) => {
+    if (list.indexOf(id) !== index) return false;
     const def = moveById(id);
     return !!def && moveUnlocked(game, def);
-  }).slice(0, 6);
+  }).slice(0, MOVESET_SIZE);
 }
 
 export function toggleLoadout(game: Game, moveId: string): string {
@@ -178,7 +262,7 @@ export function toggleLoadout(game: Game, moveId: string): string {
     game.loadout = game.loadout.filter((id) => id !== moveId);
     return `${def.name} leaves the six.`;
   }
-  if (game.loadout.length >= 6) return "Six moves already. Drop one first.";
+  if (game.loadout.length >= MOVESET_SIZE) return "Six moves already. Drop one first.";
   game.loadout = [...game.loadout, moveId];
   return `${def.name} takes a slot.`;
 }

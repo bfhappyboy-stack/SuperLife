@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { fitById, type Fit } from "@/game/costume";
 import { HAIR, resolveLook, SKIN } from "@/game/look";
 import type { Look, Sex, Wardrobe } from "@/game/types";
@@ -9,7 +10,12 @@ export function Figure({
   look,
   wardrobe,
   mood = 60,
+  aura,
   className = "h-full w-full",
+  pose = "stand",
+  bare = false,
+  tint,
+  label = "Your hero, full length",
 }: {
   seed: number;
   age: number;
@@ -17,8 +23,18 @@ export function Figure({
   look?: Partial<Look> | null;
   wardrobe?: Wardrobe;
   mood?: number;
+  /** Power colour for the stage spotlight and rim glow. */
+  aura?: string;
   className?: string;
+  /** Fight poses for the duel; "stand" is the closet/creation pose. */
+  pose?: Pose;
+  /** No paper stage and no idle float: for drawing over another scene. */
+  bare?: boolean;
+  /** Colour/kit override for generated characters (villains, sparring partners). */
+  tint?: { suit: string; trim: string; cape?: string; capeKind?: Fit["cape"]; mask?: Fit["mask"]; maskColor?: string; glove?: string };
+  label?: string;
 }) {
+  const uid = useId().replace(/:/g, "");
   const face = resolveLook(seed, look);
   const h = seed || 1;
   const body: Sex = sex ?? ((h & 1) === 0 ? "female" : "male");
@@ -28,12 +44,12 @@ export function Figure({
   const baby = age < 4;
   const kid = age < 13;
   const broad = face.build === 1 && !baby && !kid;
-  const smile = mood >= 55;
+  const smile = mood >= 55 && pose !== "hit" && pose !== "ko";
   const worn = wardrobe?.worn ?? {};
-  const cowl = fitById(worn.cowl);
-  const chest = fitById(worn.chest);
-  const cape = fitById(worn.cape);
-  const gloves = fitById(worn.gloves);
+  const cowl = tint?.mask ? ({ ...(fitById("domino") as Fit), mask: tint.mask, cloth: tint.maskColor ?? tint.suit, trim: tint.trim }) : fitById(worn.cowl);
+  const chest = tint ? ({ ...(fitById("training-suit") as Fit), cloth: tint.suit, trim: tint.trim }) : fitById(worn.chest);
+  const cape = tint?.capeKind ? ({ ...(fitById("long-cape") as Fit), cape: tint.capeKind, cloth: tint.cape ?? tint.suit, trim: tint.trim }) : tint ? null : fitById(worn.cape);
+  const gloves = tint?.glove ? ({ ...(fitById("patrol-gloves") as Fit), cloth: tint.glove }) : fitById(worn.gloves);
   const boots = fitById(worn.boots);
   const emblem = fitById(worn.emblem);
   const suit = chest?.cloth ?? "#3a4258";
@@ -42,17 +58,41 @@ export function Figure({
   const frame = frameOf(broad, female);
 
   return (
-    <svg viewBox="40 70 240 490" preserveAspectRatio="xMidYMax meet" className={className} width="100%" height="100%" role="img" aria-label="Your hero, full length" style={{ display: "block" }}>
-      <Stage />
-      <g transform={`translate(160 600) scale(${scale}) translate(-160 -600)`}>
+    <svg viewBox="40 70 240 490" preserveAspectRatio="xMidYMax meet" className={className} width="100%" height="100%" role="img" aria-label={label} style={{ display: "block", overflow: "visible" }}>
+      <defs>
+        {/* Soft volume: blur the silhouette, light it from the upper left, multiply back over the flat fills. */}
+        <filter id={`vol-${uid}`} x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="blur" />
+          <feDiffuseLighting in="blur" surfaceScale="5" diffuseConstant="1.15" lightingColor="#ffffff" result="light">
+            <feDistantLight azimuth="235" elevation="48" />
+          </feDiffuseLighting>
+          <feComposite in="light" in2="SourceAlpha" operator="in" result="lit" />
+          <feBlend in="SourceGraphic" in2="lit" mode="multiply" result="shaded" />
+          <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#000" floodOpacity="0.28" />
+        </filter>
+        <radialGradient id={`spot-${uid}`} gradientUnits="userSpaceOnUse" cx="160" cy="300" r="260">
+          <stop offset="0%" stopColor={aura ?? "#ffd27a"} stopOpacity="0.55" />
+          <stop offset="60%" stopColor={aura ?? "#ffd27a"} stopOpacity="0.1" />
+          <stop offset="100%" stopColor={aura ?? "#ffd27a"} stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={`floor-${uid}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#000" stopOpacity="0.38" />
+          <stop offset="100%" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {!bare && <Stage uid={uid} />}
+      {bare && <ellipse cx="160" cy="552" rx={pose === "ko" ? 170 : 96} ry="14" fill={`url(#floor-${uid})`} />}
+      <g className={bare ? undefined : "anim-float"} style={{ transformBox: "fill-box", transformOrigin: "center bottom" }}>
+      <g style={{ transform: POSE_BODY[pose], transformOrigin: "160px 548px", transition: "transform 160ms cubic-bezier(.2,.9,.3,1.2)" }}>
+      <g filter={`url(#vol-${uid})`} transform={`translate(160 600) scale(${scale}) translate(-160 -600)`}>
         <Cape item={cape} frame={frame} />
         {cowl?.mask !== "hood" && cowl?.mask !== "cowl" && cowl?.mask !== "helm" && (
           <HairBack style={face.style} hair={hair} female={female} baby={baby} frame={frame} />
         )}
-        <Legs suit={suit} frame={frame} />
-        <Boots item={boots} frame={frame} />
-        <Arm suit={suit} glove={gloves} skin={skin} frame={frame} side="left" />
-        <Arm suit={suit} glove={gloves} skin={skin} frame={frame} side="right" />
+        <Legs suit={suit} frame={frame} pose={pose} />
+        <Boots item={boots} frame={frame} pose={pose} />
+        {pose !== "guard" && <Arm suit={suit} glove={gloves} skin={skin} frame={frame} side="left" pose={pose} />}
+        {pose !== "guard" && pose !== "attack" && <Arm suit={suit} glove={gloves} skin={skin} frame={frame} side="right" pose={pose} />}
         <Torso suit={suit} trim={trim} kind={chest?.chest ?? "jacket"} frame={frame} skin={skin} />
         <Mark item={emblem} />
         <Head
@@ -66,10 +106,28 @@ export function Figure({
           cowl={cowl}
           beard={!female && !baby && age >= 22 && (h & 4) === 0}
         />
+        {pose === "attack" && <Arm suit={suit} glove={gloves} skin={skin} frame={frame} side="right" pose={pose} />}
+        {pose === "guard" && (
+          <>
+            <Arm suit={suit} glove={gloves} skin={skin} frame={frame} side="left" pose={pose} />
+            <Arm suit={suit} glove={gloves} skin={skin} frame={frame} side="right" pose={pose} />
+          </>
+        )}
+      </g>
+      </g>
       </g>
     </svg>
   );
 }
+
+const POSE_BODY: Record<Pose, string> = {
+  stand: "none",
+  idle: "rotate(3deg)",
+  attack: "translateX(26px) rotate(9deg)",
+  guard: "translateY(10px) scaleY(0.97)",
+  hit: "translateX(-22px) rotate(-11deg)",
+  ko: "translate(-30px, 6px) rotate(-82deg)",
+};
 
 interface Frame {
   shoulder: number;
@@ -89,11 +147,17 @@ function frameOf(broad: boolean, female: boolean): Frame {
     : { shoulder: 60, waist: 42, hip: 42, arm: 18 };
 }
 
-function Stage() {
+function Stage({ uid }: { uid: string }) {
   return (
     <g>
-      <rect width="320" height="640" className="fill-paper" />
-      <ellipse cx="160" cy="548" rx="100" ry="12" fill="#10141c" opacity="0.14" />
+      <rect x="-400" width="1120" height="640" className="fill-paper" />
+      <rect x="-400" width="1120" height="640" fill={`url(#spot-${uid})`} />
+      <g stroke="#10141c" strokeOpacity="0.07" strokeWidth="1.5">
+        {[120, 160, 200, 240, 280].map((r) => (
+          <ellipse key={r} cx="160" cy="550" rx={r} ry={r / 7} fill="none" />
+        ))}
+      </g>
+      <ellipse cx="160" cy="550" rx="110" ry="16" fill={`url(#floor-${uid})`} />
     </g>
   );
 }
@@ -146,25 +210,27 @@ function Cape({ item, frame }: { item: Fit | null; frame: Frame }) {
   );
 }
 
-function Legs({ suit, frame }: { suit: string; frame: Frame }) {
+function Legs({ suit, frame, pose = "stand" }: { suit: string; frame: Frame; pose?: Pose }) {
+  const spread = pose === "stand" || pose === "ko" ? 0 : pose === "attack" ? 22 : 14;
   const left = 160 - Math.round(frame.hip * 0.42);
   const right = 160 + Math.round(frame.hip * 0.42);
   const width = Math.max(22, Math.round(frame.hip * 0.55));
   return (
     <g fill="none" stroke={suit} strokeWidth={width} strokeLinecap="round">
-      <path d={`M${left} 348 C${left - 10} 420 ${left - 6} 470 ${left - 4} 508`} />
-      <path d={`M${right} 348 C${right + 10} 420 ${right + 6} 470 ${right + 4} 508`} />
+      <path d={`M${left} 348 C${left - 10 - spread} 420 ${left - 6 - spread * 1.4} 470 ${left - 4 - spread * 1.6} 508`} />
+      <path d={`M${right} 348 C${right + 10 + spread} 420 ${right + 6 + spread * 1.4} 470 ${right + 4 + spread * 1.6} 508`} />
     </g>
   );
 }
 
-function Boots({ item, frame }: { item: Fit | null; frame: Frame }) {
+function Boots({ item, frame, pose = "stand" }: { item: Fit | null; frame: Frame; pose?: Pose }) {
+  const spread = Math.round((pose === "stand" || pose === "ko" ? 0 : pose === "attack" ? 22 : 14) * 1.6);
   const cloth = item?.cloth ?? "#2a241c";
   const trim = item?.trim ?? "#f4ead6";
   const kind = item?.boot ?? "sneaker";
   const tall = kind === "rocket" ? 78 : kind === "boot" || kind === "tread" ? 64 : 46;
-  const ankleL = 160 - Math.round(frame.hip * 0.42) - 4;
-  const ankleR = 160 + Math.round(frame.hip * 0.42) + 4;
+  const ankleL = 160 - Math.round(frame.hip * 0.42) - 4 - spread;
+  const ankleR = 160 + Math.round(frame.hip * 0.42) + 4 + spread;
   const y = 500 - (tall - 46);
   return (
     <g stroke="#10141c" strokeWidth="3">
@@ -181,43 +247,58 @@ function Boots({ item, frame }: { item: Fit | null; frame: Frame }) {
   );
 }
 
+export type Pose = "stand" | "idle" | "attack" | "guard" | "hit" | "ko";
+
+/** Hand and elbow-control points per pose. `dir` is -1 for the left arm, 1 for the right (the side facing the foe). */
+function armPath(pose: Pose, frame: Frame, dir: number): { cx: number; cy: number; hx: number; hy: number } {
+  const s = frame.shoulder;
+  switch (pose) {
+    case "idle":
+      return dir > 0 ? { cx: 160 + s + 46, cy: 300, hx: 160 + s + 18, hy: 222 } : { cx: 160 - s - 30, cy: 300, hx: 160 - 26, hy: 214 };
+    case "attack":
+      return dir > 0 ? { cx: 160 + s + 70, cy: 212, hx: 160 + s + 156, hy: 206 } : { cx: 160 - s - 24, cy: 292, hx: 160 - 22, hy: 200 };
+    case "guard":
+      return { cx: 160 + dir * (s + 16), cy: 262, hx: 160 - dir * 16, hy: 150 };
+    case "hit":
+      return { cx: 160 + dir * (s + 54), cy: 196, hx: 160 + dir * (s + 70), hy: 150 };
+    default:
+      return { cx: 160 + dir * (s + 36), cy: 310, hx: 160 + dir * (s + 32), hy: 408 };
+  }
+}
+
 function Arm({
   suit,
   glove,
   skin,
   frame,
   side,
+  pose = "stand",
 }: {
   suit: string;
   glove: Fit | null;
   skin: string;
   frame: Frame;
   side: "left" | "right";
+  pose?: Pose;
 }) {
   const dir = side === "left" ? -1 : 1;
   const sx = 160 + dir * (frame.shoulder - 4);
-  const hx = 160 + dir * (frame.shoulder + 36);
+  const { cx, cy, hx, hy } = armPath(pose, frame, dir);
   const hand = glove && glove.glove !== "none" ? glove.cloth : skin;
+  const r = frame.arm * (pose === "stand" || pose === "ko" ? 0.55 : 0.68);
   return (
     <g>
-      <path d={`M${sx} 220 Q${hx} 310 ${hx - dir * 4} 408`} fill="none" stroke={suit} strokeWidth={frame.arm} strokeLinecap="round" />
-      <circle cx={hx - dir * 4} cy="408" r={frame.arm * 0.55} fill={hand} stroke="#10141c" strokeWidth="3" />
+      <path d={`M${sx} 220 Q${cx} ${cy} ${hx} ${hy}`} fill="none" stroke={suit} strokeWidth={frame.arm} strokeLinecap="round" />
+      <circle cx={hx} cy={hy} r={r} fill={hand} stroke="#10141c" strokeWidth="3" />
       {glove?.glove === "wraps" && (
-        <path d={`M${hx - dir * 16} 398 H${hx + dir * 8} M${hx - dir * 16} 410 H${hx + dir * 8}`} stroke={glove.trim} strokeWidth="3" />
+        <path d={`M${hx - 12} ${hy - 8} H${hx + 12} M${hx - 12} ${hy + 4} H${hx + 12}`} stroke={glove.trim} strokeWidth="3" />
       )}
-      {glove?.glove === "gauntlet" && (
-        <rect x={hx - dir * 4 - 16} y="384" width="32" height="24" rx="6" fill={glove.trim} stroke="#10141c" strokeWidth="3" />
-      )}
+      {glove?.glove === "gauntlet" && <rect x={hx - 16} y={hy - 24} width="32" height="24" rx="6" fill={glove.trim} stroke="#10141c" strokeWidth="3" />}
       {glove?.glove === "claws" && (
-        <path
-          d={`M${hx - dir * 14} 418 L${hx - dir * 22} 444 M${hx - dir * 4} 420 L${hx - dir * 4} 448 M${hx + dir * 6} 418 L${hx + dir * 14} 444`}
-          stroke={glove.trim}
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
+        <path d={`M${hx - 10} ${hy + 10} L${hx - 18} ${hy + 36} M${hx} ${hy + 12} L${hx} ${hy + 40} M${hx + 10} ${hy + 10} L${hx + 18} ${hy + 36}`} stroke={glove.trim} strokeWidth="3" strokeLinecap="round" />
       )}
       {glove?.glove === "medic" && (
-        <path d={`M${hx - dir * 8} 400 H${hx + dir * 2} V416 H${hx - dir * 8} Z M${hx - dir * 14} 404 H${hx + dir * 6} V410 H${hx - dir * 14} Z`} fill={glove.trim} />
+        <path d={`M${hx - 4} ${hy - 8} H${hx + 6} V${hy + 8} H${hx - 4} Z M${hx - 10} ${hy - 4} H${hx + 12} V${hy + 2} H${hx - 10} Z`} fill={glove.trim} />
       )}
     </g>
   );

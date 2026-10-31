@@ -1,3 +1,4 @@
+import type { ElementId } from "./elements";
 import type { MoveStyle } from "./types";
 
 export type MoveKind = "burst" | "area" | "status" | "guard" | "dash";
@@ -14,6 +15,8 @@ export interface MoveDef {
   energy: number;
   effect: string;
   cooldown: number;
+  /** Look of the move in a fight; defaults to the power's element. */
+  element?: ElementId;
 }
 
 function move(partial: MoveDef): MoveDef {
