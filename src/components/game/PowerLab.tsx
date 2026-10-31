@@ -1,13 +1,16 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Portrait } from "@/components/game/Portrait";
-import { arcsCleared, availableArcs, currentCase, plotFor } from "@/game/arcs";
+import { Award, Check, Dumbbell, MessageCircle, Search, Shield, Skull, Swords, type LucideIcon } from "lucide-react";
+import { ElementIcon } from "@/components/game/Vfx";
+import { arcsCleared, availableArcs, currentCase, plotFor, type ArcDef, type ArcStep } from "@/game/arcs";
+import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { getPower, mix, teachableBases, viewPowers } from "@/game/combo";
 import { mergeHeroes, replyLocally } from "@/game/heroes";
 import { askHero } from "@/game/hero-talk";
 import { masteryCap, masteryLevel, nextMasteryExp, powerRank } from "@/game/mastery";
 import { knownMoves, moveLevel, MOVESET_SIZE, STREET_MOVES } from "@/game/moves";
-import { dossier, talkBrief } from "@/game/origin";
+import { dossier, homeArc, talkBrief } from "@/game/origin";
 import { hasGift } from "@/game/theme";
 import { useGame } from "@/game/store";
 import type { AiHero, Game } from "@/game/types";
@@ -371,34 +374,134 @@ function Slot({ label, id }: { label: string; id: string | null }) {
   );
 }
 
+const STEP_ICON: Record<ArcStep["kind"], LucideIcon> = {
+  talk: MessageCircle,
+  investigate: Search,
+  fight: Swords,
+  train: Dumbbell,
+  protect: Shield,
+  boss: Skull,
+};
+
+const STEP_VERB: Record<ArcStep["kind"], string> = {
+  talk: "Talk",
+  investigate: "Investigate",
+  fight: "Fight",
+  train: "Train",
+  protect: "Protect",
+  boss: "Boss",
+};
+
+/** The villain's element, read from the case's boss step, tints the whole file. */
+function caseTint(arc: ArcDef): string {
+  const boss = arc.steps.find((step) => step.kind === "boss") ?? arc.steps[arc.steps.length - 1];
+  return ELEMENTS[elementOfLegacy(boss?.foePower)].color;
+}
+
 export function CaseFile({ game }: { game: Game }) {
   const current = currentCase(game);
   const open = availableArcs(game);
-  return (
-    <section className="card px-4 py-3">
-      <h2 className="t-label text-muted">CASE FILE</h2>
-      {current ? (
-        <>
-          <p className="mt-1 font-semibold text-fg">{current.arc.title}</p>
-          <p className="text-sm text-gold">
-            {current.arc.villain} · {current.arc.group}
-          </p>
-          <p className="mt-1 text-sm text-muted">{current.arc.goal}</p>
-          <ol className="mt-2 flex flex-col gap-1">
-            {current.arc.steps.map((step, index) => (
-              <li key={step.id} className={`text-sm ${index === current.index ? "font-semibold text-gold" : index < current.index ? "text-fg" : "text-muted"}`}>
-                {index + 1}. {step.title}
-                <span className="font-normal text-muted"> · {step.kind}</span>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-2 text-xs text-muted">The next step is a button on this desk. The teachers know {current.arc.villain}.</p>
-        </>
-      ) : (
+  const cleared = arcsCleared(game.story);
+  if (!current) {
+    return (
+      <section className="card px-4 py-3">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="t-label text-muted">CASE FILES</h2>
+          <span className="chip !min-h-0 px-2 py-0.5 text-[11px]">
+            <Award className="size-3.5 text-gold" aria-hidden /> {cleared} closed
+          </span>
+        </div>
         <p className="mt-2 text-sm text-muted">
-          {game.age < 12 ? "Cases open at 12. Until then, drills stay small on purpose." : open.length ? `${open.length} file${open.length === 1 ? "" : "s"} on this desk. This city puts its own villains first.` : "No open files. Finished cases still lift the mastery ceiling."}
+          {game.age < 12
+            ? "Cases open at 12. Until then, drills stay small on purpose."
+            : open.length
+              ? "Pick a file below to open it. This city puts its own villains first."
+              : "No open files right now. New cases arrive as you get older: some only find a hero in their thirties, forties and fifties."}
         </p>
-      )}
+        {open.length > 0 && (
+          <ul className="mt-3 flex flex-col gap-2">
+            {open.slice(0, 3).map((arc) => {
+              const tint = caseTint(arc);
+              const local = homeArc(game.cityId, arc.id);
+              return (
+                <li key={arc.id} className="flex items-center gap-3 rounded-xl border px-3 py-2" style={{ borderColor: `${tint}55`, backgroundImage: `linear-gradient(100deg, ${tint}1f, transparent 60%)` }}>
+                  <span className="ico-tile size-9 shrink-0" style={{ "--tile": tint } as React.CSSProperties}>
+                    <ElementIcon element={elementOfLegacy(arc.steps[arc.steps.length - 1]?.foePower)} className="size-4.5" style={{ color: "currentColor" }} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-fg">{arc.title}</span>
+                    <span className="block truncate text-xs text-muted">
+                      {arc.villain}
+                      {arc.era ? ` · ${arc.era}` : ""}
+                      {local ? " · this city" : ""}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    );
+  }
+  const { arc, step, index } = current;
+  const tint = caseTint(arc);
+  const StepIcon = STEP_ICON[step.kind];
+  const ceiling = cleared < 2 ? "Raises your mastery ceiling." : "";
+  const reward = [ceiling, arc.legacy ? `Legacy +${arc.legacy}.` : ""].filter(Boolean).join(" ");
+  return (
+    <section className="card relative overflow-hidden px-4 py-3" style={{ borderColor: `${tint}80`, backgroundImage: `radial-gradient(120% 70% at 100% 0%, ${tint}2e, transparent 60%)` }}>
+      <div className="flex items-start gap-3">
+        <span className="ico-tile size-12 shrink-0" style={{ "--tile": tint } as React.CSSProperties}>
+          <ElementIcon element={elementOfLegacy(arc.steps[arc.steps.length - 1]?.foePower)} className="size-6" style={{ color: "currentColor" }} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="t-label text-[10px] text-muted">
+            CASE FILE{arc.era ? ` · ${arc.era.toUpperCase()}` : ""} · {cleared} CLOSED
+          </p>
+          <p className="t-title truncate text-fg">{arc.title}</p>
+          <p className="truncate text-sm" style={{ color: tint }}>
+            {arc.villain} · {arc.group}
+          </p>
+        </div>
+      </div>
+      <p className="mt-2 text-sm text-muted">{arc.goal}.</p>
+
+      <ol className="mt-3 grid grid-cols-6 gap-1.5" aria-label={`Step ${index + 1} of ${arc.steps.length}`}>
+        {arc.steps.map((row, i) => {
+          const Icon = STEP_ICON[row.kind];
+          const done = i < index;
+          const now = i === index;
+          return (
+            <li key={row.id} className="flex flex-col items-center gap-1">
+              <span
+                className={`grid size-9 place-items-center rounded-full border-2 transition-transform ${now ? "scale-110" : ""}`}
+                style={{
+                  borderColor: done || now ? tint : "rgba(255,255,255,.14)",
+                  background: done ? tint : now ? `${tint}33` : "rgba(255,255,255,.04)",
+                  color: done ? "#0b0d14" : now ? tint : "rgba(255,255,255,.4)",
+                  boxShadow: now ? `0 0 14px ${tint}88` : undefined,
+                }}
+                title={row.title}
+              >
+                {done ? <Check className="size-4" aria-hidden /> : <Icon className="size-4" aria-hidden />}
+              </span>
+              <span className={`text-[9px] font-bold tracking-wide uppercase ${now ? "text-fg" : "text-muted"}`}>{STEP_VERB[row.kind]}</span>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-3 rounded-xl border px-3 py-2.5" style={{ borderColor: `${tint}55`, background: "rgba(0,0,0,.22)" }}>
+        <p className="t-label flex items-center gap-1.5 text-[10px]" style={{ color: tint }}>
+          <StepIcon className="size-3.5" aria-hidden /> NOW · STEP {index + 1} OF {arc.steps.length}
+        </p>
+        <p className="mt-0.5 font-semibold text-fg">{step.title}</p>
+        <p className="text-sm text-muted">{step.brief}</p>
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        Play this step from its card below. {reward ? `Closing the case: ${reward}` : `The teachers know ${arc.villain}.`}
+      </p>
     </section>
   );
 }
