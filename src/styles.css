@@ -450,6 +450,10 @@
 
 .anim-rise { animation: rise 360ms var(--ease-snappy) both; }
 .anim-pop { animation: pop 420ms var(--ease-out-back) both; }
+/* First Move mini: the ring shrinks as a spark fades; hits float up. */
+@keyframes fm-shrink { 0% { transform: scale(1.6); opacity: 0.9; } 100% { transform: scale(1); opacity: 0.25; } }
+@keyframes fm-float { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-44px) scale(1.2); } }
+.fm-pop { animation: fm-float 600ms var(--ease-snappy, ease-out) forwards; }
 .anim-float { animation: float-y 3.2s ease-in-out infinite; }
 .anim-glow { animation: glow-pulse 2.6s ease-in-out infinite; }
 .scene-arena {
