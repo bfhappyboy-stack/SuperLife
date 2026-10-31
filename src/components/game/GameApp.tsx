@@ -1,8 +1,11 @@
-import { Briefcase, Heart, Menu, ScrollText, Swords, Users, X, Zap } from "lucide-react";
+import { Banknote, ChevronRight, FastForward, Home, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChapterOverlay, ChapterStrip } from "@/components/game/Chapters";
 import { Closet } from "@/components/game/Closet";
 import { Figure } from "@/components/game/Figure";
+import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
+import { Market } from "@/components/game/Market";
+import { CityScene, TitleArt } from "@/components/game/Scene";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
 import { Minigame } from "@/components/game/Minigame";
@@ -17,6 +20,7 @@ import { saveGame } from "@/game/save";
 import { capeTheme } from "@/game/theme";
 import { useGame } from "@/game/store";
 import type { ActionItem, Delta, Game, Look, Person, Sex, TraitId, UpbringingId } from "@/game/types";
+import type { CSSProperties } from "react";
 
 export function GameApp() {
   const screen = useGame((s) => s.screen);
@@ -59,44 +63,54 @@ function TitleScreen() {
   const openCreate = useGame((s) => s.openCreate);
   const resume = useGame((s) => s.resume);
   return (
-    <main className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-8">
-        <p className="text-xs font-semibold tracking-widest text-gold">A LIFE IN CAPES</p>
-        <h1 className="mt-2 font-display text-6xl leading-none text-fg">SUPERLIFE</h1>
-        <p className="mt-3 max-w-xs text-pretty text-base text-muted">
-          One gift. A face you can restyle. A closet that changes how you hit.
+    <main className="relative flex h-full min-h-0 flex-col overflow-hidden">
+      <TitleArt className="anim-drift pointer-events-none absolute inset-0 size-full object-cover" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink/30 via-ink/10 to-ink" />
+      <div className="relative min-h-0 flex-1 overflow-y-auto px-5 pt-10">
+        <p className="anim-rise t-label text-gold drop-shadow">A LIFE IN CAPES</p>
+        <h1 className="t-hero anim-pop mt-1 text-fg drop-shadow-[0_4px_18px_rgba(0,0,0,0.7)]">SUPER<span className="text-gold">LIFE</span></h1>
+        <p className="anim-rise mt-2 max-w-[17rem] text-pretty text-base font-semibold text-fg/90 drop-shadow">
+          Be born. Find your gift. Live every decade — hero, villain, or something in between.
         </p>
-        <div className="mt-6 flex gap-3">
-          <Portrait seed={11} age={17} powerId="flight" rank={2} sex="female" className="h-20 w-20" />
-          <Portrait seed={42} age={34} powerId="fire" rank={4} mood={80} sex="male" className="h-20 w-20" />
-          <Portrait seed={77} age={71} powerId="intellect" rank={6} mood={40} sex="female" className="h-20 w-20" />
+        <div className="stagger mt-6 flex gap-3">
+          {[
+            { seed: 11, age: 17, powerId: "flight" as const, rank: 2, sex: "female" as const },
+            { seed: 42, age: 34, powerId: "fire" as const, rank: 4, mood: 80, sex: "male" as const },
+            { seed: 77, age: 71, powerId: "intellect" as const, rank: 6, mood: 40, sex: "female" as const },
+          ].map((p) => (
+            <span key={p.seed} className="avatar-ring">
+              <Portrait {...p} className="block h-16 w-16" />
+            </span>
+          ))}
         </div>
         {scores.length > 0 && (
-          <section className="mt-8 pb-4">
-            <h2 className="text-xs font-semibold tracking-widest text-muted">BEST LIVES</h2>
-            <ol className="mt-3 flex flex-col gap-2">
-              {scores.slice(0, 5).map((row) => (
-                <li key={row.at} className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
-                  <span className="min-w-0">
-                    <span className="block truncate font-semibold text-fg">{row.name}</span>
-                    <span className="text-xs text-muted">{row.detail}</span>
+          <section className="card-glass anim-rise mt-[34vh] mb-4 px-4 py-3">
+            <h2 className="t-label text-gold">Best lives</h2>
+            <ol className="mt-2 flex flex-col gap-2">
+              {scores.slice(0, 5).map((row, index) => (
+                <li key={row.at} className="flex items-center justify-between gap-3 border-b border-white/10 pb-2 last:border-0 last:pb-0">
+                  <span className="t-num w-5 text-sm text-muted">{index + 1}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-bold text-fg">{row.name}</span>
+                    <span className="block truncate text-xs text-muted">{row.detail}</span>
                   </span>
-                  <span className="tabular-nums font-semibold text-gold">{row.score}</span>
+                  <span className="t-num font-extrabold text-gold">{row.score}</span>
                 </li>
               ))}
             </ol>
           </section>
         )}
       </div>
-      <div className="flex shrink-0 flex-col gap-3 border-t border-line px-5 pt-3 pb-24">
-        <button type="button" onClick={openCreate} className="min-h-12 rounded-2xl bg-cape px-4 text-base font-semibold text-fg">
-          New life
-        </button>
+      <div className="relative flex shrink-0 flex-col gap-3 px-5 pt-3 pb-24">
         {hydrated && game && (
-          <button type="button" onClick={resume} className="min-h-12 rounded-2xl border border-line bg-panel px-4 text-left text-base font-semibold text-fg">
-            {game.phase === "dead" ? "Read the obituary" : `Continue ${firstName(game.name)}, age ${game.age}`}
+          <button type="button" onClick={resume} className="btn btn-gold min-h-14 flex-col !gap-0 text-lg">
+            <span>{game.phase === "dead" ? "Read the obituary" : `Continue ${firstName(game.name)}`}</span>
+            {game.phase !== "dead" && <span className="text-[11px] font-extrabold tracking-[0.14em] opacity-75">AGE {game.age} · {game.city.toUpperCase()}</span>}
           </button>
         )}
+        <button type="button" onClick={openCreate} className={`btn ${hydrated && game ? "btn-ghost" : "btn-primary"} min-h-14 text-lg`}>
+          New life
+        </button>
       </div>
     </main>
   );
@@ -321,115 +335,114 @@ function Life({ game }: { game: Game }) {
     scroller.current?.scrollTo({ top: 0 });
   }, [desk, activeShelf]);
 
+  const chapterNo = game.chapters?.length ?? 1;
+  const phase = game.chapters?.[game.chapters.length - 1]?.phase ?? null;
+  const family = capeTheme(game).cape;
+  const showTabs = !choosing && game.phase !== "mini";
+  const pickDesk = (id: Desk) => {
+    setDesk(id);
+    setShelf(null);
+    setAck(`${DESKS.find((item) => item.id === id)?.label ?? id} — pressed.`);
+  };
+
   return (
     <div className="relative flex h-full min-h-0 flex-col">
-      <header className={`shrink-0 border-b border-line px-3 ${game.phase === "mini" ? "py-3" : "py-2"}`}>
+      <CityScene cityId={game.cityId} phase={phase} />
+      <header className="hud relative z-10 shrink-0">
         {game.phase === "mini" ? (
-          <div className="flex items-baseline justify-between gap-3 px-1">
+          <div className="flex items-center justify-between gap-3 px-1 py-1">
             <p className="font-display text-xl tracking-wide text-fg">SUPERLIFE</p>
-            <p className="truncate text-sm text-muted">{game.name}</p>
+            <p className="truncate text-sm font-semibold text-muted">{game.name} · {game.age}</p>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <button type="button" aria-label="Open the closet" onClick={() => setCloset(true)} className="shrink-0 rounded-xl">
-              <Portrait seed={game.portrait} age={game.age} powerId={game.powerId} rank={game.leagueRank} mood={game.stats.happiness} sex={game.sex} look={game.look} className="h-11 w-11" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-semibold text-fg">{game.name}</h1>
-              <p className="truncate text-xs text-muted">{whenLabel(game.age, game.month ?? 0)} · {game.city}</p>
-              <p className="truncate text-xs text-gold">
-                {fusion ? fusion : power ? power.name : game.powerless ? "Unpowered" : "No power yet"}
-                {power ? ` · ${tierLabel(game.stats.powerLevel)} ${game.stats.powerLevel.toFixed(1)}` : ""}
-                {" · "}
-                {RANKS[game.leagueRank]}
-                {" · "}
-                {money(game.stats.money)}
-                {" · "}
-                {karmaLabel(game.stats.karma ?? 0)}
-              </p>
+          <>
+            <div className="flex items-center gap-3">
+              <button type="button" aria-label="Open the closet" onClick={() => setCloset(true)} className="avatar-ring shrink-0">
+                <Portrait seed={game.portrait} age={game.age} powerId={game.powerId} rank={game.leagueRank} mood={game.stats.happiness} sex={game.sex} look={game.look} className="block h-12 w-12" />
+                {game.leagueRank > 0 && <span className="absolute -right-1.5 -bottom-1.5 grid size-5 place-items-center rounded-full bg-gold text-[10px] font-black text-paper-ink shadow">{game.leagueRank}</span>}
+              </button>
+              <div className="min-w-0 flex-1">
+                <h1 className="truncate text-[17px] leading-tight font-extrabold text-fg">{game.name}</h1>
+                <p className="truncate text-xs font-semibold text-muted">
+                  Age {game.age} · {MONTHS[game.month ?? 0]} · <span className="text-gold">Ch {chapterNo}</span> · {game.city}
+                </p>
+              </div>
+              <span className="chip shrink-0 text-fg" aria-label={`Money ${money(game.stats.money)}`}>
+                <Banknote className="size-3.5" style={{ color: STAT_COLOR.money }} />
+                <span className="t-num">{money(game.stats.money)}</span>
+              </span>
+              <button type="button" aria-label="Menu" onClick={() => setSheet("menu")} className="btn btn-ghost !min-h-11 !w-11 !p-0">
+                <Menu className="size-5" />
+              </button>
             </div>
-            <button type="button" aria-label="Menu" onClick={() => setSheet("menu")} className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-line bg-panel text-fg">
-              <Menu className="size-5" />
-            </button>
-          </div>
-        )}
-        {game.phase !== "mini" && (
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            <Bar label="HP" value={game.stats.health} />
-            <Bar label="Joy" value={game.stats.happiness} />
-            <Bar label="Mind" value={game.stats.smarts} />
-            <Bar label="Look" value={game.stats.looks} />
-          </div>
+            <div className="mt-2.5 grid grid-cols-4 gap-2">
+              <Bar label="HP" stat="health" value={game.stats.health} />
+              <Bar label="Joy" stat="happiness" value={game.stats.happiness} />
+              <Bar label="Mind" stat="smarts" value={game.stats.smarts} />
+              <Bar label="Look" stat="looks" value={game.stats.looks} />
+            </div>
+            <div className="-mx-3 mt-2 flex gap-1.5 overflow-x-auto px-3 [scrollbar-width:none]">
+              <span className="chip shrink-0 text-fg">
+                <FamilyGlyph family={family} className="size-3.5" style={{ color: family ? FAMILY_COLOR[family] : undefined }} />
+                {fusion ? fusion : power ? power.name : game.powerless ? "Unpowered" : "No power yet"}
+                {power ? <span className="t-num text-gold">{` ${tierLabel(game.stats.powerLevel)} ${game.stats.powerLevel.toFixed(1)}`}</span> : null}
+              </span>
+              <span className="chip shrink-0 text-fg"><Star className="size-3.5" style={{ color: STAT_COLOR.fame }} /><span className="t-num">{Math.round(game.stats.fame)}</span> Fame</span>
+              <span className="chip shrink-0 text-fg"><Shield className="size-3.5" style={{ color: STAT_COLOR.reputation }} />{RANKS[game.leagueRank]}</span>
+              <span className="chip shrink-0 text-fg">{karmaLabel(game.stats.karma ?? 0)}</span>
+            </div>
+          </>
         )}
       </header>
 
       {game.phase === "mini" && game.minigame ? (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} />
         </div>
       ) : (
         <>
-          {!choosing && (
-            <>
-              <nav aria-label="Desks" className="flex shrink-0 gap-1 overflow-x-auto px-3 pt-2">
-                {DESKS.map((item) => (
-                  <DeskButton
-                    key={item.id}
-                    current={desk}
-                    id={item.id}
-                    label={item.label}
-                    hot={placed.some((row) => row.desk === item.id && row.action.accent && !row.action.disabled)}
-                    icon={DESK_ICON[item.id]}
-                    onPick={(id) => {
-                      setDesk(id);
-                      setShelf(null);
-                      setAck(`${item.label} — pressed.`);
-                    }}
-                  />
-                ))}
-              </nav>
-              {shelves.length > 1 && (
-                <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pt-2" role="tablist" aria-label={DESK_LINE[desk]}>
-                  {shelves.map((name) => (
-                    <button
-                      key={name}
-                      type="button"
-                      role="tab"
-                      aria-selected={name === activeShelf}
-                      aria-pressed={name === activeShelf}
-                      onClick={() => {
-                        setShelf(name);
-                        setAck(`${name} — pressed.`);
-                      }}
-                      className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-semibold ${name === activeShelf ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
-                    >
-                      {name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
+          {!choosing && shelves.length > 1 && (
+            <div className="relative z-10 flex shrink-0 gap-2 overflow-x-auto px-4 pt-2.5 pb-0.5 [scrollbar-width:none]" role="tablist" aria-label={DESK_LINE[desk]}>
+              {shelves.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  role="tab"
+                  aria-selected={name === activeShelf}
+                  onClick={() => {
+                    setShelf(name);
+                    setAck(`${name} — pressed.`);
+                  }}
+                  className="seg"
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
           )}
 
-          <div ref={scroller} data-desk={desk} className="desk min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
-            <article className="rounded-2xl border-l-4 border-cape bg-paper px-4 py-3 text-paper-ink">
+          <div ref={scroller} data-desk={desk} className="desk relative z-10 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
+            <article key={`${game.card.kicker}-${game.card.body.length}`} className="card-paper anim-rise relative overflow-hidden px-4 py-3.5">
+              <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-gold to-cape" />
               <div className="flex items-start justify-between gap-3">
-                <p className="font-display text-xl tracking-wide">{game.card.kicker}</p>
+                <div className="min-w-0">
+                  <p className="t-label opacity-60">{game.city}</p>
+                  <p className="t-title mt-0.5">{game.card.kicker}</p>
+                </div>
                 {!choosing && (
-                  <button type="button" onClick={() => setFolded((open) => !open)} className="min-h-11 shrink-0 rounded-2xl border border-paper-ink/20 px-3 text-sm font-semibold">
-                    {folded ? "Open card" : "Fold card"}
+                  <button type="button" onClick={() => setFolded((open) => !open)} className="min-h-11 shrink-0 rounded-xl bg-black/5 px-3 text-xs font-extrabold tracking-wide uppercase">
+                    {folded ? "Read" : "Fold"}
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs font-semibold">{game.city}</p>
               {game.card.banner.map((line) => (
-                <p key={line} className="mt-2 text-sm font-semibold">
+                <p key={line} className="mt-2 text-sm font-bold">
                   {line}
                 </p>
               ))}
-              <p className={`mt-2 text-pretty whitespace-pre-wrap text-sm leading-relaxed ${choosing || !folded ? "" : desk === "life" ? "line-clamp-2" : "hidden"}`}>{game.card.body}</p>
-              {(choosing || !folded) && game.card.deltas.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
+              <p className={`mt-2 text-pretty whitespace-pre-wrap text-[15px] leading-relaxed ${choosing || !folded ? "" : desk === "life" ? "line-clamp-2" : "hidden"}`}>{game.card.body}</p>
+              {(choosing || !folded || desk === "life") && game.card.deltas.length > 0 && (
+                <div className="stagger mt-3 flex flex-wrap gap-1.5">
                   {game.card.deltas.map((delta, index) => (
                     <DeltaChip key={`${delta.stat}-${index}`} delta={delta} />
                   ))}
@@ -437,8 +450,8 @@ function Life({ game }: { game: Game }) {
               )}
             </article>
             {!choosing && desk === "life" && <ChapterStrip game={game} />}
-            {!choosing && <p className="desk-accent mt-3 text-sm font-semibold">{DESK_LINE[desk]}</p>}
-            {!choosing && desk === "work" && (
+            {!choosing && <p className="desk-accent t-label mt-4">{DESK_LINE[desk]}</p>}
+            {!choosing && desk === "work" && activeShelf !== "Market" && (
               <p className="mt-2 text-sm text-muted">
                 {school ? school.name : "No hero school"}
                 {" · "}
@@ -447,6 +460,7 @@ function Life({ game }: { game: Game }) {
                 {team ? team.name : "No team"}
               </p>
             )}
+            {!choosing && desk === "work" && activeShelf === "Market" && <Market game={game} onAct={act} />}
             {!choosing && desk === "people" && activeShelf === "Crew" && game.crew && (
               <p className="mt-2 text-sm text-muted">
                 {game.crew.name}
@@ -456,18 +470,30 @@ function Life({ game }: { game: Game }) {
               </p>
             )}
             {!choosing && desk === "gift" && activeShelf === "Book" && (power || fusion) && (
-              <section className="mt-3 rounded-2xl border border-line bg-panel px-4 py-3">
-                <p className="font-display text-2xl tracking-wide text-gold">{fusion ?? power?.name}</p>
-                {power && <p className="mt-1 text-sm text-muted">{power.tagline}</p>}
+              <section className="card mt-3 overflow-hidden px-4 py-4">
+                <div className="pointer-events-none absolute -top-10 -right-8 size-36 rounded-full opacity-50 blur-2xl" style={{ background: `radial-gradient(circle, ${family ? FAMILY_COLOR[family] : "var(--color-gold)"}, transparent 70%)` }} />
+                <div className="flex items-center gap-3">
+                  <IconTile color={family ? FAMILY_COLOR[family] : "#e6b34d"} size="size-12">
+                    <FamilyGlyph family={family} className="size-7" />
+                  </IconTile>
+                  <div className="min-w-0">
+                    <p className="t-label text-muted">Your gift</p>
+                    <p className="t-display text-gold">{fusion ?? power?.name}</p>
+                  </div>
+                </div>
+                {power && <p className="mt-2 text-sm text-muted">{power.tagline}</p>}
                 {power && <p className="mt-2 text-sm text-fg">{power.strength}</p>}
                 {power && <p className="mt-1 text-sm text-muted">Weakness: {power.weakness}</p>}
                 {second && <p className="mt-2 text-sm text-gold">Braided with {second.name}. {second.tagline}</p>}
                 {ownedTricks.length > 0 && (
-                  <ul className="mt-3 flex flex-col gap-1">
+                  <ul className="mt-3 flex flex-col gap-1.5">
                     {ownedTricks.slice(0, 4).map((trick) => (
-                      <li key={trick.name} className="text-sm text-fg">
-                        <span className="font-semibold text-gold">{trick.name}</span>
-                        <span className="text-muted"> · {trick.blurb}</span>
+                      <li key={trick.name} className="flex gap-2 text-sm text-fg">
+                        <Sparkles className="mt-0.5 size-3.5 shrink-0 text-gold" />
+                        <span>
+                          <span className="font-bold text-gold">{trick.name}</span>
+                          <span className="text-muted"> · {trick.blurb}</span>
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -475,16 +501,16 @@ function Life({ game }: { game: Game }) {
               </section>
             )}
             {!choosing && desk === "cases" && activeShelf === "Files" && <div className="mt-3"><CaseFile game={game} /></div>}
-            {!choosing && desk === "board" && <div className="mt-3"><Roster game={game} /></div>}
+            {!choosing && desk === "cases" && activeShelf === "Board" && <div className="mt-3"><Roster game={game} /></div>}
             {!choosing && desk === "people" && activeShelf === "Circle" && (
               <PeopleStack game={game} actions={visible} onPress={(action) => { setAck(`${action.label} — pressed.`); act(action.id); }} />
             )}
-            {!choosing && !(desk === "board") && !(desk === "people" && activeShelf === "Circle") && (
+            {!choosing && !(desk === "cases" && activeShelf === "Board") && !(desk === "work" && activeShelf === "Market") && !(desk === "people" && activeShelf === "Circle") && (
               <div className="mt-3 flex flex-col gap-4">
                 {sections.map((section) => (
                   <section key={section.title}>
-                    {sections.length > 1 && <h2 className="text-xs font-semibold tracking-widest text-muted">{section.title.toUpperCase()}</h2>}
-                    <div className={`flex flex-col gap-2 ${sections.length > 1 ? "mt-2" : ""}`}>
+                    {sections.length > 1 && <h2 className="t-label text-muted">{section.title}</h2>}
+                    <div className={`stagger flex flex-col gap-2 ${sections.length > 1 ? "mt-2" : ""}`}>
                       {section.items.map((action) => (
                         <ActionRow
                           key={action.id}
@@ -502,14 +528,14 @@ function Life({ game }: { game: Game }) {
                 {desk === "gift" && (activeShelf === "Book" || activeShelf === "Moves" || activeShelf === "Teachers") && (
                   <PowerLab game={game} pane={activeShelf === "Moves" ? "moves" : activeShelf === "Teachers" ? "teachers" : "book"} onAct={act} onChat={setChat} />
                 )}
-                {sections.length === 0 && !(desk === "gift" && (activeShelf === "Book" || activeShelf === "Teachers")) && !(desk === "cases" && activeShelf === "Files") && (
-                  <div>
+                {sections.length === 0 && !(desk === "gift" && (activeShelf === "Book" || activeShelf === "Teachers" || activeShelf === "Moves")) && !(desk === "cases" && activeShelf === "Files") && (
+                  <div className="card px-4 py-4">
                     <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? "Out of moves this month. Tap Next month, or skip ahead to your next birthday." : EMPTY[desk]}</p>
                     {elsewhere.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <p className="w-full text-sm font-semibold text-fg">Things you can do right now:</p>
+                        <p className="t-label w-full text-fg">Things you can do right now</p>
                         {elsewhere.map((item) => (
-                          <button key={item.id} type="button" onClick={() => setDesk(item.id)} className="min-h-11 rounded-2xl border border-gold/60 px-4 text-sm font-semibold text-fg">
+                          <button key={item.id} type="button" onClick={() => pickDesk(item.id)} className="btn btn-ghost !min-h-11 text-sm">
                             {item.label} →
                           </button>
                         ))}
@@ -521,23 +547,26 @@ function Life({ game }: { game: Game }) {
             )}
           </div>
           {game.phase === "live" && (
-            <div className="shrink-0 border-t border-line px-4 pt-2 pb-3">
+            <div className="relative z-10 shrink-0 px-4 pt-2 pb-2">
               <p role="status" className="sr-only">
                 {ack}
               </p>
-              <p className="mb-2 text-center text-xs font-semibold tracking-wide text-muted">
-                {game.majorsLeft > 0 ? `${game.majorsLeft} MOVE${game.majorsLeft === 1 ? "" : "S"} LEFT` : "OUT OF MOVES"}
-              </p>
-              <div className="flex gap-2">
+              <div className="flex items-stretch gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     setAck(game.month === 11 ? "New year — pressed." : "Next month — pressed.");
                     age();
                   }}
-                  className="min-h-14 flex-1 rounded-2xl bg-cape text-lg font-semibold text-fg"
+                  className="btn btn-primary min-h-14 flex-1 flex-col !gap-0 text-lg"
                 >
-                  {game.month === 11 ? `New year · age ${game.age + 1}` : "Next month"}
+                  <span>{game.month === 11 ? `New year · age ${game.age + 1}` : "Next month"}</span>
+                  <span className="flex items-center gap-1 text-[10px] font-extrabold tracking-[0.14em] opacity-85" aria-label={game.majorsLeft > 0 ? `${game.majorsLeft} moves left` : "Out of moves"}>
+                    {[0, 1, 2].map((i) => (
+                      <span key={i} className={`inline-block size-1.5 rounded-full ${i < game.majorsLeft ? "bg-white" : "bg-white/25"}`} />
+                    ))}
+                    <span className="ml-1">{game.majorsLeft > 0 ? `${game.majorsLeft} MOVE${game.majorsLeft === 1 ? "" : "S"} LEFT` : "OUT OF MOVES"}</span>
+                  </span>
                 </button>
                 {game.month !== 11 && (
                   <button
@@ -547,20 +576,22 @@ function Life({ game }: { game: Game }) {
                       skipYear();
                     }}
                     aria-label={`Skip ahead to age ${game.age + 1}. Stops if something needs you.`}
-                    className="min-h-14 w-24 rounded-2xl border border-line bg-panel text-sm font-semibold text-fg"
+                    className="btn btn-ghost min-h-14 w-[5.5rem] flex-col !gap-0 !px-2 text-sm"
                   >
-                    {`To ${game.age + 1} ⏭`}
+                    <FastForward className="size-4" />
+                    <span>To {game.age + 1}</span>
                   </button>
                 )}
               </div>
             </div>
           )}
           {game.phase === "choice" && game.pending && (
-            <div className="shrink-0 flex flex-col gap-2 border-t border-line px-4 pt-2 pb-3">
+            <div className="stagger relative z-10 flex shrink-0 flex-col gap-2 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <p role="status" className="sr-only">
                 {ack}
               </p>
-              {game.pending.choices.map((choice) => (
+              <p className="t-label text-center text-gold">Your call</p>
+              {game.pending.choices.map((choice, index) => (
                 <button
                   key={choice.id}
                   type="button"
@@ -568,12 +599,30 @@ function Life({ game }: { game: Game }) {
                     setAck(`${choice.label} — pressed.`);
                     pick(choice.id);
                   }}
-                  className="min-h-12 rounded-2xl bg-cape px-4 text-left text-base font-semibold text-fg"
+                  className={`btn ${index === 0 ? "btn-primary" : "btn-ghost"} !justify-start text-left text-base`}
                 >
                   {choice.label}
                 </button>
               ))}
             </div>
+          )}
+          {showTabs && (
+            <nav aria-label="Desks" className="tabbar relative z-20 shrink-0">
+              {DESKS.map((item) => {
+                const Icon = TAB_ICON[item.id];
+                const on = item.id === desk;
+                const hot = placed.some((row) => row.desk === item.id && row.action.accent && !row.action.disabled);
+                return (
+                  <button key={item.id} type="button" className="tab" aria-current={on ? "page" : undefined} aria-label={item.label} onClick={() => pickDesk(item.id)}>
+                    <span className="tab-ico">
+                      <Icon className="size-[1.15rem]" strokeWidth={on ? 2.5 : 2} />
+                    </span>
+                    {item.label}
+                    {hot && !on && <span className="tab-dot" />}
+                  </button>
+                );
+              })}
+            </nav>
           )}
         </>
       )}
@@ -582,32 +631,33 @@ function Life({ game }: { game: Game }) {
       {chat && <HeroChat game={game} heroId={chat} onClose={() => setChat(null)} onAct={act} />}
       <ChapterOverlay game={game} />
       {sheet && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/80 px-4 pb-24" role="dialog" aria-modal="true">
-          <div className="max-h-[75%] w-full overflow-y-auto rounded-2xl border border-gold bg-panel px-4 py-4">
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm" role="dialog" aria-modal="true" onClick={(event) => event.target === event.currentTarget && setSheet(null)}>
+          <div className="card-glass anim-rise max-h-[78%] w-full max-w-[28rem] overflow-y-auto px-4 py-4">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" />
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl text-fg">{sheet === "log" ? "LIFE LOG" : "MENU"}</h2>
-              <button type="button" aria-label="Close" onClick={() => setSheet(null)} className="flex size-11 items-center justify-center rounded-2xl border border-line text-fg">
+              <h2 className="t-display text-fg">{sheet === "log" ? "LIFE LOG" : "MENU"}</h2>
+              <button type="button" aria-label="Close" onClick={() => setSheet(null)} className="btn btn-ghost !min-h-11 !w-11 !p-0">
                 <X className="size-5" />
               </button>
             </div>
             {sheet === "menu" ? (
-              <div className="mt-4 flex flex-col gap-2">
-                <button type="button" onClick={() => { setSheet(null); setCloset(true); }} className="min-h-12 rounded-2xl border border-line px-4 text-left font-semibold text-fg">
-                  Open the closet
+              <div className="stagger mt-4 flex flex-col gap-2">
+                <button type="button" onClick={() => { setSheet(null); setCloset(true); }} className="btn btn-ghost !justify-start">
+                  <Shirt className="size-5 text-gold" /> Open the closet
                 </button>
-                <button type="button" onClick={() => setSheet("log")} className="min-h-12 rounded-2xl border border-line px-4 text-left font-semibold text-fg">
-                  Read the life log
+                <button type="button" onClick={() => setSheet("log")} className="btn btn-ghost !justify-start">
+                  <ScrollText className="size-5 text-gold" /> Read the life log
                 </button>
-                <button type="button" onClick={toTitle} className="min-h-12 rounded-2xl border border-line px-4 text-left font-semibold text-fg">
-                  Main menu
+                <button type="button" onClick={toTitle} className="btn btn-ghost !justify-start">
+                  <Home className="size-5 text-gold" /> Main menu
                 </button>
-                <p className="text-sm text-muted">This life saves itself on this device.</p>
+                <p className="mt-1 text-center text-xs text-muted">This life saves itself on this device.</p>
               </div>
             ) : (
               <ol className="mt-4 flex flex-col gap-3">
                 {[...game.history].reverse().slice(0, 40).map((entry, index) => (
-                  <li key={`${entry.age}-${index}`} className="border-b border-line pb-2">
-                    <span className="text-xs font-semibold text-gold">
+                  <li key={`${entry.age}-${index}`} className="border-b border-white/10 pb-2">
+                    <span className="t-label text-gold">
                       Age {entry.age}
                       {entry.month != null ? ` · ${MONTHS[entry.month] ?? ""}` : ""}
                     </span>
@@ -706,16 +756,34 @@ function Roster({ game }: { game: Game }) {
   );
 }
 
-function Bar({ label, value }: { label: string; value: number }) {
+function Bar({ label, stat, value }: { label: string; stat: string; value: number }) {
+  const Icon = STAT_ICON[stat];
+  const color = STAT_COLOR[stat] ?? "var(--color-gold)";
+  const prev = useRef(value);
+  const [pulse, setPulse] = useState<{ key: number; delta: number } | null>(null);
+  useEffect(() => {
+    const delta = Math.round(value - prev.current);
+    prev.current = value;
+    if (delta) setPulse({ key: Date.now(), delta });
+  }, [value]);
+  const low = value < 25;
   return (
-    <div>
-      <div className="flex justify-between text-xs text-muted">
-        <span>{label}</span>
-        <span className="tabular-nums text-fg">{Math.round(value)}</span>
+    <div className="relative min-w-0" aria-label={`${label} ${Math.round(value)}`}>
+      <div className="flex items-center justify-between gap-1 text-[11px] font-bold">
+        <span className="flex items-center gap-1 text-muted">
+          {Icon && <Icon className={`size-3 ${low ? "animate-pulse" : ""}`} style={{ color }} />}
+          {label}
+        </span>
+        <span className={`t-num ${low ? "text-bad" : "text-fg"}`}>{Math.round(value)}</span>
       </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-panel-2">
-        <div className="motion-safe h-full rounded-full bg-cape" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+      <div className="stat-bar mt-1">
+        <div className="stat-fill" style={{ width: `${Math.max(0, Math.min(100, value))}%`, "--fill": color } as CSSProperties} />
       </div>
+      {pulse && (
+        <span key={pulse.key} className={`anim-float-up pointer-events-none absolute -top-1 right-0 text-xs font-black ${pulse.delta > 0 ? "text-good" : "text-bad"}`}>
+          {pulse.delta > 0 ? `+${pulse.delta}` : pulse.delta}
+        </span>
+      )}
     </div>
   );
 }
@@ -726,42 +794,41 @@ function DeltaChip({ delta }: { delta: Delta }) {
   const amount = digits ? Number(delta.amount.toFixed(1)) : Math.round(delta.amount);
   if (!amount) return null;
   const shown = delta.stat === "Money" ? `${amount > 0 ? "+" : "−"}${money(Math.abs(amount)).replace("-", "")}` : `${amount > 0 ? "+" : ""}${amount} ${delta.stat}`;
-  return <span className={`rounded-full px-2 py-1 text-xs font-semibold text-paper-ink ${positive ? "bg-good/30" : "bg-bad/30"}`}>{shown}</span>;
+  return <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${positive ? "bg-good/25 text-[#0d4d33]" : "bg-bad/20 text-[#7a1d17]"}`}>{shown}</span>;
 }
 
-type Desk = "life" | "gift" | "cases" | "people" | "work" | "board";
+type Desk = "life" | "gift" | "cases" | "people" | "work";
 
+/** Five primary tabs. The old Board tab lives under Cases; the Market lives under Work. */
 const DESKS: { id: Desk; label: string }[] = [
   { id: "life", label: "Life" },
-  { id: "gift", label: "Gift" },
+  { id: "gift", label: "Powers" },
   { id: "cases", label: "Cases" },
   { id: "people", label: "People" },
   { id: "work", label: "Work" },
-  { id: "board", label: "Board" },
 ];
 
 const ALWAYS_SHELF: Partial<Record<Desk, string[]>> = {
   gift: ["Book", "Moves", "Teachers"],
-  cases: ["Files"],
+  cases: ["Files", "Board"],
   people: ["Circle"],
+  work: ["Market"],
 };
 
 const SHELF_ORDER: Record<Desk, string[]> = {
   life: ["Today", "City", "Become", "Shadow"],
   gift: ["Book", "Moves", "Drill", "Fight", "Teachers"],
-  cases: ["Files", "League", "Street"],
+  cases: ["Files", "League", "Street", "Board"],
   people: ["Circle", "Meet", "Family", "Crew"],
-  work: ["School", "Job"],
-  board: [],
+  work: ["Market", "School", "Job"],
 };
 
 const DESK_LINE: Record<Desk, string> = {
   life: "The block, the month, and the private choices.",
   gift: "The book, the six moves, the drill, the teachers.",
-  cases: "Open files, League calls, and the street.",
+  cases: "Open files, League calls, the street, and who is loose.",
   people: "The names that know yours.",
-  work: "A seat in class, or a paycheck.",
-  board: "Who is loose in the city this month.",
+  work: "The market, a seat in class, or a paycheck.",
 };
 
 const EMPTY: Record<Desk, string> = {
@@ -770,17 +837,8 @@ const EMPTY: Record<Desk, string> = {
   cases: "This desk is between calls.",
   people: "Nobody in this room yet.",
   work: "No seat and no shift on this shelf.",
-  board: "The board is blank. Give it a month.",
 };
 
-const DESK_ICON: Record<Desk, ReactNode> = {
-  life: <Heart className="size-4" />,
-  gift: <Zap className="size-4" />,
-  cases: <ScrollText className="size-4" />,
-  people: <Users className="size-4" />,
-  work: <Briefcase className="size-4" />,
-  board: <Swords className="size-4" />,
-};
 
 function place(action: ActionItem): { desk: Desk; shelf: string } {
   const id = action.id;
@@ -810,47 +868,44 @@ function place(action: ActionItem): { desk: Desk; shelf: string } {
   return { desk: "work", shelf: "Job" };
 }
 
-function DeskButton({
-  current,
-  id,
-  label,
-  icon,
-  hot,
-  onPick,
-}: {
-  current: Desk;
-  id: Desk;
-  label: string;
-  icon: ReactNode;
-  hot: boolean;
-  onPick: (id: Desk) => void;
-}) {
-  const on = current === id;
-  return (
-    <button type="button" aria-pressed={on} onClick={() => onPick(id)} className={`relative flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl px-3 text-sm font-semibold ${on ? "bg-cape text-fg" : "text-muted"}`}>
-      {icon}
-      {label}
-      {hot && !on && <span className="size-1.5 rounded-full bg-gold" />}
-    </button>
-  );
-}
+const GROUP_COLOR: Record<ActionItem["group"], string> = {
+  life: "#ffb35c",
+  power: "#a59bff",
+  career: "#5fe08f",
+  people: "#3fe0c5",
+};
 
 function ActionRow({ action, file, onPress }: { action: ActionItem; file?: boolean; onPress: () => void }) {
   const paper = !!file && !action.disabled;
+  const Icon = actionIcon(action.id, action.section);
+  if (paper) {
+    return (
+      <button type="button" onClick={onPress} className="card-paper relative min-h-14 overflow-hidden px-4 py-3 pl-5 text-left">
+        <span className="absolute inset-y-0 left-0 w-1.5 bg-cape" />
+        <span className="t-label opacity-60">Case file</span>
+        <span className="block font-extrabold">{action.label}</span>
+        <span className="text-sm opacity-80">{action.detail}</span>
+      </button>
+    );
+  }
   return (
     <button
       type="button"
       disabled={!!action.disabled}
       onClick={onPress}
-      className={
-        paper
-          ? "min-h-12 rounded-2xl border-y border-r border-line border-l-4 border-l-cape bg-paper px-4 py-3 text-left text-paper-ink disabled:opacity-45"
-          : `min-h-12 rounded-2xl border px-4 py-3 text-left disabled:opacity-45 ${action.accent ? "border-gold bg-panel" : "border-line bg-panel"}`
-      }
+      className={`card group flex min-h-14 items-center gap-3 px-3 py-2.5 text-left disabled:opacity-50 ${action.accent && !action.disabled ? "!border-gold/70 shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-gold)_30%,transparent),0_8px_24px_-12px_var(--color-gold)]" : ""}`}
     >
-      {paper && <span className="text-xs font-semibold tracking-widest">FILE</span>}
-      <span className={`block font-semibold ${paper ? "" : "text-fg"}`}>{action.label}</span>
-      <span className={`text-sm ${paper ? "" : "text-muted"}`}>{action.disabled ?? action.detail}</span>
+      <IconTile color={action.disabled ? "#4b5366" : GROUP_COLOR[action.group]} size="size-10">
+        {action.disabled ? <Lock className="size-4" /> : <Icon className="size-5" />}
+      </IconTile>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 font-bold text-fg">
+          {action.label}
+          {action.accent && !action.disabled && <span className="rounded-full bg-gold px-1.5 py-px text-[9px] font-black tracking-wider text-paper-ink">NEW</span>}
+        </span>
+        <span className="line-clamp-2 text-[13px] leading-snug text-muted">{action.disabled ?? action.detail}</span>
+      </span>
+      {!action.disabled && <ChevronRight className="size-4 shrink-0 text-muted transition-transform group-active:translate-x-0.5" />}
     </button>
   );
 }
