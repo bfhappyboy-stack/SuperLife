@@ -16,20 +16,21 @@
      - **property** (a safehouse, a gym or a mentor school, giving monthly legacy and income);
      - **tech** (unlock tiers by decade).
    - Chapter goals can then ask for a purchase ("own a safehouse").
-3. **Combat depth.**
+3. **Combat depth.** *Presentation and hand-written moves shipped 2026-10-31 (illustrated duel, element VFX, K.O. screen, authored moves).* Still open: villain gimmick phases and fight injuries.
    - Duels are ~20% of minis and always the same shape.
    - Add villain gimmick phases, combo-power signature moves (hand-author the 106 generated movesets) and a "fight injuries" link to the new collapse system, so fights carry long-term risk.
 4. **Repetition.**
    - The League mission prompt (~330×/life) and villain pins (~200× per villain) need 4–6 variants each, keyed to chapter phase.
-5. **Fame/rep writes bypassing the soft ceiling.** Jobs, schools and openYear still `clamp(+x)` directly. Route them through `applyEffects`.
+5. **Fixed 2026-10-31.** **Fame/rep writes bypassing the soft ceiling.** Jobs, schools and openYear still `clamp(+x)` directly. Route them through `applyEffects`.
 6. **Chapter depth.**
    - A mid-chapter beat at about year 5: a chapter-specific event drawn from the thread (nemesis, family, body).
    - A per-chapter "signature choice" with a lasting flag.
 7. **Desk tab row overflows at 390px.** **Fixed 2026-10-31** with a 5-tab bottom bar. "Work" and "Board" are off-screen; consider icons only or merging Board into Cases.
 
-8. **Art.** Backdrops exist for NYC, the Hood, the Stacks and the title. Add Metro, Harbor, Neon, Dustreach, Crownbridge and per-chapter-phase art (same pipeline, ~20–30KB each).
-9. **Economy tuning.** With the market on, hero lives end with ~$0.4M cash but ~$2.5M in holdings at 70. Watch whether influence (the top spend) is too strong a fame lever, and why crook lives get shorter with the market on (75 vs 81 median).
+8. **Art. Shipped 2026-10-31:** all 8 cities have backdrops, and chapter cards have per-phase accents and motifs. Open: regenerate Neon without pseudo-text signage; move art to real `.webp` files when git push is available. Original note: Backdrops exist for NYC, the Hood, the Stacks and the title. Add Metro, Harbor, Neon, Dustreach, Crownbridge and per-chapter-phase art (same pipeline, ~20–30KB each).
+9. **Economy tuning. Done 2026-10-31:** influence fatigue + fame fade; the crook lifespan gap was sampling noise (N=12: 81 with market vs 78 without). Original note: With the market on, hero lives end with ~$0.4M cash but ~$2.5M in holdings at 70. Watch whether influence (the top spend) is too strong a fame lever, and why crook lives get shorter with the market on (75 vs 81 median).
 10. **Haptics.** `navigator.vibrate` on hits and wins is still not wired.
+11. **Creation, next.** More hair cuts and face features need new SVG in `Figure.tsx` and `Portrait.tsx`. Eye colour and a third "face" (urban legend) are candidates.
 
 ## AUDIT (2026-10-30)
 

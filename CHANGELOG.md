@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026-10-31 — duel, moves, balance, art and new-life stepper (`devbot/2026-10-31-chapters`)
+
+### Duel presentation (`Duel.tsx`, `Vfx.tsx`, `duelKit.ts`, `Figure.tsx`)
+
+- Fighters are full illustrated figures: your hero in your look, wardrobe and cape colour; foes get a suit, mask and cape kit from their power (Pyro, Cryo, Storm, Mentalist, Brute… or a street kit).
+- Poses (stance, attack, hit, guard, KO) on a timeline: hit, swap, counter, rest. A KO cancels the counter.
+- Every move has an element with its own projectile (orb, beam, bolt, ripple, streak) and impact burst (flames, shards, lightning, rings, smoke, implode…).
+- Big hits shake the arena and flash. "FIGHT!"/"BOSS!" intro stamp.
+- Move cards show element, style, energy cost, cooldown, rank, and a one-line mechanic ("area +12%", "guard cuts 20%").
+- K.O. result screen: stamp with rays, both fighters, Dealt/Taken/Turns/Best hit, reward chips and Move XP.
+- All new motion switches off under `prefers-reduced-motion`.
+
+### Hand-written moves (`elements.ts`, `moves.authored.ts`)
+
+- 16 elements. Every power and every move resolves to one; street and legacy moves too.
+- 115 authored movesets replace generated "Stem Noun" names for the combo powers (Light Speed is light, Lightning Strikes is lightning).
+- New `moves.test.ts`: no generated names, no placeholders, valid elements.
+
+### Balance (`engine.ts`, `market.ts`)
+
+- Job, school, suit and promotion fame/rep now go through the soft cap. The cap is steeper near the top.
+- News-cycle fade: fame over 75 slips by 1–2 a year.
+- Bought fame tires: each influence buy in a year is worth 25% less ("The city has seen a lot of you lately"), recovering yearly.
+- Result: hero fame settles around 94 instead of pinning at 100; crooks no longer gain +10 fame from the market. See `PLAYTEST.md`.
+
+### Art
+
+- Painted backdrops for Metro City, Harbor Bay, Neon Spire, Dustreach and Crownbridge (540×960 WebP, 15–43KB, lazy chunks). Every city now has art.
+- Chapter cards and the chapter strip take a per-phase accent, icon and a quiet motif (sparks, rising motes, window grid, spotlights, rain, laurel, stars, moon).
+
+### New-life stepper (`CreateScreen.tsx`)
+
+- Five steps with a progress bar: Look → Origin → City → Trait → Gift. Tap any step to jump; "Roll" re-rolls only the current step.
+- Look: large figure preview, 12 skin tones and 14 hair colours as swatches (fantasy shades included), cut, build, face, name dice.
+- Origin: 16 childhoods with cash, family, belief and stat chips.
+- City: big live backdrop preview plus a thumbnail grid of all 8 cities.
+- Trait: face (secret/loud) and 13 drives — 6 new: Curious, Glory hound, Making amends, Duty-bound, Thrill-seeker, Family first — each with stat chips.
+- Gift: tier tabs with counts, a highlighted card for the chosen gift (element icon, tier, description), and a searchable grid of all 126 gifts.
+- The footer always shows your portrait and the life so far.
+- Random looks still roll from the original palettes, so existing NPC faces don't change. New `create.test.ts`.
+
 ## 2026-10-31 — nav, markets, makeover and graphics (`devbot/2026-10-31-chapters`)
 
 ### Navigation

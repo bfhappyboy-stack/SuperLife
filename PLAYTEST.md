@@ -67,3 +67,21 @@ Harness: `playtest/life.ts` + `econ.ts` (not in the repo). `MARKET=1` lets the p
 - Nobody goes broke: medians stay positive and lifespans are about the same (hero lives run slightly longer thanks to supplies and property perks).
 - Hero spend per life: influence $1.27M, property $1.04M, legacy $738k, intel $463k, gear $364k.
 - **Watch:** crooks die younger with the market on (median 75 vs 81 without). Likely cause: they spend on gear and influence instead of keeping a cash cushion for hospital bills. Not tuned yet; see BACKLOG item 9.
+
+## Balance pass (scripted sims, 12 lives per policy)
+
+Harness: `playtest/fame.ts` (not in the repo). Fame is the median at ages 30/50/70.
+
+| Policy | Death, no market | Fame, no market | Death, market | Fame, market | Legacy, market |
+|---|---|---|---|---|---|
+| hero | 83 | 94/95/94 | 81 | 94/96/96 | 68 |
+| social | 77 | 83/85/84 | 78 | 87/88/88 | 77 |
+| crook | 80 | 66/67/65 | 78 | 69/69/68 | — |
+
+- Before: hero fame pinned at 100 every decade, and the market gave crooks +10 fame.
+- Crook lifespan with the market is within noise at N=12 (the 75-vs-81 gap from 8 lives did not reproduce).
+
+## New-life stepper and city art (Playwright, 390×844)
+
+- A full run (violet hair, Neon Spire, Curious drive, a Mixed gift) starts a life with those choices saved; no console errors.
+- Screens: `/workspace/superlife-screens/b2/create-*.png`, `b2/city-*.png` (before: `b2-before/`).

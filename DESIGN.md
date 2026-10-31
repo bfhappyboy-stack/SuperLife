@@ -129,6 +129,27 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - Motion: `anim-pop`, `anim-fade`, `anim-drift`, `anim-float`; all switch off under `prefers-reduced-motion`.
 - **Art pipeline:** backdrops are generated, saved as 540×960 WebP (quality ~62), and stored as data-URI modules in `src/assets/art/`. `index.ts` lazy-loads each one as its own chunk (`useArt(key)` in `Scene.tsx`), so the first load stays small. Data-URI modules are used because the repo is pushed as text. To add a city, add a module and a `LOADERS` entry; cities without art fall back to the gradient scene.
 - Portraits, figures, duel fighters and VFX are SVG/CSS, so they cost no downloads.
+- Every city has a backdrop (NYC, Hood, Stacks, Metro, Harbor, Neon, Dustreach, Crownbridge). Keep generated art free of readable text, logos and existing characters.
+- **Chapter phases** each have an accent colour, icon and motif (`components/game/phaseStyle.ts`), used on the chapter strip and card. Keep it subtle: tint, border and one motif layer.
+
+## 12. Duel presentation and elements
+
+- 16 elements (`game/elements.ts`) each with a colour, glow and travel type (orb, beam, bolt, ripple, streak). Every power and move resolves to an element; unknown falls back to force.
+- Moves are hand-authored in `moves.authored.ts`; the generator only fills gaps and never uses "Stem Noun" names.
+- A turn reads in about a second: hit (230ms), swap (520ms), counter (760ms), rest (1040ms). Big hits (≥10 or 20% max HP) shake and flash. A KO ends the turn.
+- Foe looks come from `duelKit.ts` (villain/hero kit per legacy power, street fallback).
+
+## 13. Fame curve
+
+- All fame/rep writes go through `applyEffects`, with a soft cap `max(0.03, 1 − |value|/102)`.
+- Fame above 75 fades by 1 (2 above 90) each year: staying famous takes upkeep.
+- Market influence has fatigue (`buzz`): −25% per buy in the same year, minimum 25%.
+
+## 14. New-life stepper
+
+- Look → Origin → City → Trait → Gift, one decision per screen, always with a preview and a footer summary.
+- Pools: 12 skins, 14 hair colours, 6 cuts, 2 builds, 4 faces; 16 childhoods; 8 cities; 2 faces × 13 drives; 126 gifts (20 basic, 54 mixed, 52 apex) or none.
+- To add a drive: add a `TraitDef` (slot "drive") in `origin.ts`, its id to `TraitId`, and a `walkEffects` line.
 
 ## Existing extras (built, not in the original design)
 
