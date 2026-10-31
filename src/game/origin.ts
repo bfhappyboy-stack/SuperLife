@@ -193,6 +193,12 @@ export const TRAITS: TraitDef[] = [
   { id: "pragmatic", title: "Pragmatic", blurb: "Results over speeches. The bar can live with a smudge.", slot: "drive", minAge: 0, smarts: 3, karma: -2, heroBias: { idris: 4, lark: 4 } },
   { id: "team", title: "Team player", blurb: "You look for the other cape before you look for the spotlight.", slot: "drive", minAge: 0, happiness: 1, heroBias: { juniper: 4, bolt: 4, vesper: 2 } },
   { id: "lone", title: "Lone wolf", blurb: "Backup is a complication. So is being known.", slot: "drive", minAge: 0, happiness: -1, heroBias: { nim: 6, marrow: 2 } },
+  { id: "curious", title: "Curious", blurb: "You want to know how it works, including the parts that bite.", slot: "drive", minAge: 0, smarts: 4, happiness: 1, heroBias: { idris: 6, wren: 2 } },
+  { id: "glory", title: "Glory hound", blurb: "Saving people is the job. Being seen saving them is the bonus you chase.", slot: "drive", minAge: 0, fame: 4, karma: -2, heroBias: { kade: 6, bolt: 4 } },
+  { id: "amends", title: "Making amends", blurb: "Someone got hurt because of you once. Every rescue is a payment on it.", slot: "drive", minAge: 0, karma: 4, happiness: -2, heroBias: { marrow: 4, pilar: 6 } },
+  { id: "duty", title: "Duty-bound", blurb: "Someone has to stand the watch. You never ask why it is always you.", slot: "drive", minAge: 0, reputation: 3, happiness: -1, heroBias: { vesper: 6, idris: 2 } },
+  { id: "thrill", title: "Thrill-seeker", blurb: "The rooftop jump is the point. The rescue at the bottom is a nice extra.", slot: "drive", minAge: 0, health: 2, karma: -1, heroBias: { bolt: 6, nim: 2 } },
+  { id: "family", title: "Family first", blurb: "The city is big. Your people are not. You keep that order.", slot: "drive", minAge: 0, happiness: 3, heroBias: { juniper: 6, pilar: 2 } },
   { id: "millionaire", title: "Millionaire", blurb: "The accounts start answering. Travel and toys get cheaper, not free.", slot: "earned", minAge: 18, money: 6000, fame: 3, heroBias: { kade: 4, lark: 2 } },
   { id: "sorcerer", title: "Sorcerer", blurb: "A working you learned. It sits in the braid book beside whatever you were born with.", slot: "earned", minAge: 14, smarts: 2, heroBias: { wren: 4, idris: 4 } },
   { id: "inventor", title: "Tech genius", blurb: "You build the trick if the body won't give it to you.", slot: "earned", minAge: 14, smarts: 3, heroBias: { idris: 6 } },
@@ -374,6 +380,12 @@ export function walkEffects(game: Game): Effects {
   if (hasTrait(game, "reluctant")) return { happiness: 2 };
   if (hasTrait(game, "team")) return { happiness: 1, reputation: 1 };
   if (hasTrait(game, "lone")) return { happiness: 1 };
+  if (hasTrait(game, "curious")) return { smarts: 1, happiness: 1 };
+  if (hasTrait(game, "glory")) return { fame: 1 };
+  if (hasTrait(game, "amends")) return { karma: 2 };
+  if (hasTrait(game, "duty")) return { reputation: 1 };
+  if (hasTrait(game, "thrill")) return { happiness: 2, health: -1 };
+  if (hasTrait(game, "family")) return { happiness: 2 };
   return { happiness: 1 };
 }
 
