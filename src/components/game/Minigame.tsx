@@ -1,7 +1,7 @@
 import type React from "react";
 import { Eye, Flame, Shield, Star, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Duel } from "@/components/game/Duel";
+import { Duel, type DuelHero } from "@/components/game/Duel";
 import { HitBurst } from "@/components/game/Vfx";
 import type { MinigameSpec } from "@/game/types";
 
@@ -25,8 +25,8 @@ function DrillHeader({ title, subtitle }: { title: string; subtitle?: string }) 
 
 type Grade = "perfect" | "good" | "miss";
 
-export function Minigame({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void }) {
-  if (spec.kind === "duel" && spec.duel) return <Duel spec={spec} onDone={onDone} />;
+export function Minigame({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
+  if (spec.kind === "duel" && spec.duel) return <Duel spec={spec} onDone={onDone} hero={hero} />;
   if (spec.kind === "pattern") return <Pattern spec={spec} onDone={onDone} />;
   return <Timing spec={spec} onDone={onDone} />;
 }
