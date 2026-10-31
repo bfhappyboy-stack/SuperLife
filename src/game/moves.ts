@@ -1,6 +1,8 @@
 import { getPower, allPowers } from "./combo";
 import { masteryLevel } from "./mastery";
 import { MOVE_BOOK, type MoveDef } from "./moves.catalog";
+import { AUTHORED, type AuthoredMove } from "./moves.authored";
+import { elementOfPower } from "./elements";
 import type { CatalogPower } from "./combo";
 import type { DuelMove, Game, MoveStyle } from "./types";
 
@@ -49,9 +51,28 @@ function stem(name: string): string {
   return (words.length ? words : [name]).slice(0, 2).join(" ");
 }
 
+function dress(def: MoveDef, words: AuthoredMove | undefined): MoveDef {
+  if (!words) return def;
+  return {
+    ...def,
+    name: words.name,
+    blurb: words.blurb || def.blurb,
+    effect: words.effect || def.effect,
+    style: words.style ?? def.style,
+    kind: words.kind ?? def.kind,
+    element: words.element ?? def.element,
+  };
+}
+
 export function movesForPower(power: CatalogPower): MoveDef[] {
+  return rawMovesForPower(power).map((def) => (def.element ? def : { ...def, element: elementOfPower(def.powerId) }));
+}
+
+function rawMovesForPower(power: CatalogPower): MoveDef[] {
   const hand = HAND.get(power.id);
-  const generated = generatedMoves(power);
+  const words = AUTHORED[power.id];
+  const plain = generatedMoves(power);
+  const generated = [dress(plain[0]!, words?.a), dress(plain[1]!, words?.b)];
   if (hand?.length) {
     const sorted = [...hand].sort((a, b) => a.minMastery - b.minMastery).map((entry, index) => (index === 0 ? { ...entry, minMastery: 1 } : entry));
     // Every power owns at least two moves: a hand-authored one plus a generated signature if the book stops at one.
@@ -103,12 +124,12 @@ function generatedMoves(power: CatalogPower): MoveDef[] {
  * when a fight starts, so every battle is played with exactly six moves.
  */
 export const STREET_MOVES: readonly DuelMove[] = [
-  { id: "street::haymaker", name: "Haymaker", blurb: "Ugly and sincere.", power: 4, style: "strike", kind: "burst", energy: 1, effect: "No power in it. Still counts.", cooldown: 0 },
-  { id: "street::slip", name: "Slip", blurb: "Don't be where the hit lands.", power: 3, style: "trick", kind: "dash", energy: 1, effect: "Footwork, not a gift.", cooldown: 0 },
-  { id: "street::brace", name: "Brace", blurb: "Take the ugly one on purpose.", power: 3, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0 },
-  { id: "street::shove", name: "Shove", blurb: "Space, rudely made.", power: 3, style: "strike", kind: "status", energy: 1, effect: "Their next swing arrives slowed.", cooldown: 1 },
-  { id: "street::feint", name: "Feint", blurb: "Look left. Be right.", power: 3, style: "trick", kind: "burst", energy: 1, effect: "Cheap, and it works once.", cooldown: 1 },
-  { id: "street::cover", name: "Cover Up", blurb: "Elbows in, chin down.", power: 2, style: "guard", kind: "guard", energy: 0, effect: "Free to use. Buys a breath.", cooldown: 1 },
+  { id: "street::haymaker", name: "Haymaker", blurb: "Ugly and sincere.", power: 4, style: "strike", kind: "burst", energy: 1, effect: "No power in it. Still counts.", cooldown: 0, element: "force" },
+  { id: "street::slip", name: "Slip", blurb: "Don't be where the hit lands.", power: 3, style: "trick", kind: "dash", energy: 1, effect: "Footwork, not a gift.", cooldown: 0, element: "speed" },
+  { id: "street::brace", name: "Brace", blurb: "Take the ugly one on purpose.", power: 3, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "shield" },
+  { id: "street::shove", name: "Shove", blurb: "Space, rudely made.", power: 3, style: "strike", kind: "status", energy: 1, effect: "Their next swing arrives slowed.", cooldown: 1, element: "force" },
+  { id: "street::feint", name: "Feint", blurb: "Look left. Be right.", power: 3, style: "trick", kind: "burst", energy: 1, effect: "Cheap, and it works once.", cooldown: 1, element: "shadow" },
+  { id: "street::cover", name: "Cover Up", blurb: "Elbows in, chin down.", power: 2, style: "guard", kind: "guard", energy: 0, effect: "Free to use. Buys a breath.", cooldown: 1, element: "shield" },
 ];
 
 export const MOVESET_SIZE = 6;
@@ -191,8 +212,10 @@ export function toDuel(def: MoveDef, level = 1): DuelMove {
     style: def.style,
     kind: def.kind,
     energy: def.energy,
-    effect: `${def.effect} · move ${rank}`,
+    effect: def.effect,
     cooldown: def.cooldown,
+    element: def.element ?? elementOfPower(def.powerId),
+    rank,
   };
 }
 

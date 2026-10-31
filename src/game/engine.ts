@@ -27,6 +27,7 @@ import { clamp, firstName, money, whenLabel } from "./format";
 import { getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
+import { elementOfLegacy } from "./elements";
 import { judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { availableArcs, currentCase, type ArcStep } from "./arcs";
 import { arcsCleared } from "./arcs";
@@ -1251,11 +1252,13 @@ function movesFrom(powerId: PowerId | null, level: number): DuelMove[] {
         { name: "Slip", blurb: "Don't be where the hit lands.", at: 0 },
         { name: "Brace", blurb: "Take the ugly one on purpose.", at: 0 },
       ];
+  const element = power ? elementOfLegacy(power.id) : "force";
   return source.slice(0, 4).map((ability, index) => ({
     name: ability.name,
     blurb: ability.blurb,
     power: 4 + index * 2 + Math.round(level),
     style: styleAt(index),
+    element,
   }));
 }
 
@@ -1269,9 +1272,18 @@ function playerMoves(d: Game): DuelMove[] {
   return [...legacy, ...padding].slice(0, MOVESET_SIZE);
 }
 
+/** Seed and body for the foe's figure: the person's or roster cape's own portrait when we know them. */
+function foeLook(d: Game, foe: { name: string; personId?: string }): { foeSeed: number; foeSex?: Sex } {
+  const person = foe.personId ? d.relationships.find((r) => r.id === foe.personId) : undefined;
+  const cape = d.roster.find((row) => row.alias === foe.name || (foe.personId && row.id === foe.personId));
+  let h = 2166136261;
+  for (let i = 0; i < foe.name.length; i += 1) h = Math.imul(h ^ foe.name.charCodeAt(i), 16777619);
+  return { foeSeed: person?.portrait ?? cape?.portrait ?? ((h >>> 0) % 1_000_000_000) + 1, foeSex: person?.sex ?? cape?.sex };
+}
+
 function makeDuel(
   d: Game,
-  foe: { name: string; title: string; side: "hero" | "villain"; powerId: PowerId; powerLevel: number; personId?: string },
+  foe: { name: string; title: string; side: "hero" | "villain"; powerId: PowerId; powerLevel: number; personId?: string; boss?: boolean },
   flavor: { title: string; subtitle: string; win: string; partial: string; lose: string; tag: "duel" | "relic"; winEffects: Effects; loseEffects: Effects; partialEffects: Effects; specialWin?: Special },
 ): MinigameSpec {
   const pl = foe.powerLevel;
@@ -1302,6 +1314,9 @@ function makeDuel(
       foeMoves: movesFrom(foe.powerId, pl),
       personId: foe.personId,
       guard: suit.guard,
+      foePower: foe.powerId,
+      ...foeLook(d, foe),
+      boss: foe.boss || undefined,
     } satisfies DuelBoard,
   };
 }
@@ -3371,7 +3386,7 @@ export function act(game: Game, id: string): Game {
         d,
         makeDuel(
           d,
-          { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.kind === "boss" ? 6.4 : 4.2 },
+          { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.kind === "boss" ? 6.4 : 4.2, boss: step.kind === "boss" },
           {
             title: foeName,
             subtitle: `${step.brief} Your six moves.`,
