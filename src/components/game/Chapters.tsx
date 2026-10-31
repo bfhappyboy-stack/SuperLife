@@ -1,4 +1,6 @@
-import { BookOpen } from "lucide-react";
+import type React from "react";
+import { BookOpen, Sparkles } from "lucide-react";
+import { ChapterArt } from "@/components/game/Scene";
 import { useEffect, useMemo, useState } from "react";
 import { generateChapterText } from "@/game/chapter-ai";
 import { chapterBrief, currentChapter, goalProgress, phaseForAge, snapshot, type Chapter } from "@/game/chapters";
@@ -16,19 +18,38 @@ export function ChapterStrip({ game }: { game: Game }) {
     <button
       type="button"
       onClick={() => showChapter(chapter.index)}
-      className="mt-3 flex min-h-12 w-full items-center gap-3 rounded-2xl border border-gold/60 bg-panel px-3 py-2 text-left"
+      className="card mt-3 flex min-h-14 w-full items-center gap-3 !border-gold/50 px-3 py-2.5 text-left"
     >
-      <BookOpen className="size-5 shrink-0 text-gold" aria-hidden />
+      <span className="ico-tile size-10 shrink-0" style={{ "--tile": "#e6b34d" } as React.CSSProperties}>
+        <BookOpen className="size-5" aria-hidden />
+      </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[11px] font-semibold tracking-wide text-muted">
+        <span className="t-label block truncate text-[10px] text-muted">
           CHAPTER {chapter.index + 1} · {phaseForAge(chapter.startAge).name.toUpperCase()} · AGES {chapter.startAge}–{chapter.endAge}
         </span>
-        <span className="block truncate font-semibold text-fg">{chapter.title}</span>
+        <span className="flex items-center gap-1.5 font-bold text-fg">
+          <span className="truncate">{chapter.title}</span>
+          {chapter.source === "ai" && <AiChip />}
+        </span>
       </span>
-      <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs font-semibold text-fg">
-        {done}/{chapter.goals.length}
+      <span className="relative grid size-10 shrink-0 place-items-center">
+        <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
+          <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="3.5" />
+          <circle cx="18" cy="18" r="15" fill="none" stroke="var(--color-gold)" strokeWidth="3.5" strokeLinecap="round" strokeDasharray={`${(done / Math.max(1, chapter.goals.length)) * 94.2} 94.2`} className="transition-[stroke-dasharray] duration-700" />
+        </svg>
+        <span className="t-num text-xs text-fg">{done}/{chapter.goals.length}</span>
       </span>
     </button>
+  );
+}
+
+/** Tiny, quiet marker: this chapter's prose was rewritten by the AI pass. */
+function AiChip() {
+  return (
+    <span title="Chapter text written by AI" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-gold/40 bg-gold/10 px-1.5 py-px text-[9px] font-extrabold tracking-wider text-gold uppercase">
+      <Sparkles className="size-2.5" aria-hidden />
+      AI-written
+    </span>
   );
 }
 
@@ -39,13 +60,13 @@ function Goals({ chapter, game }: { chapter: Chapter; game: Game }) {
       {chapter.goals.map((goal, i) => {
         const p = goalProgress(goal, snap);
         return (
-          <li key={goal.id} className="rounded-xl border border-line px-3 py-2">
+          <li key={goal.id} className={`rounded-2xl border px-3 py-2.5 ${p.met ? "border-gold/60 bg-gold/10" : "border-white/10 bg-white/[0.03]"}`}>
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-semibold text-fg">{goal.label}</span>
-              <span className={`text-xs font-semibold ${p.met ? "text-gold" : "text-muted"}`}>{p.met ? "Done" : `${Math.round(p.ratio * 100)}%`}</span>
+              <span className={`t-num text-xs ${p.met ? "text-gold" : "text-muted"}`}>{p.met ? "✓ Done" : `${Math.round(p.ratio * 100)}%`}</span>
             </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-ink">
-              <div className="h-full rounded-full bg-gold" style={{ width: `${Math.round(p.ratio * 100)}%` }} />
+            <div className="stat-bar mt-1.5">
+              <div className="stat-fill" style={{ width: `${Math.round(p.ratio * 100)}%`, "--fill": "var(--color-gold)" } as React.CSSProperties} />
             </div>
             <p className="mt-1 text-xs text-muted">{chapter.beats[i] ?? goal.hint}</p>
           </li>
@@ -87,17 +108,23 @@ export function ChapterOverlay({ game }: { game: Game }) {
   const past = chapters.filter((c) => c.recap && c.index !== recapOf?.index);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/90 px-4" role="dialog" aria-modal="true" aria-label={step === "recap" ? "Chapter recap" : "New chapter"}>
-      <div className="max-h-[88%] w-full max-w-[380px] overflow-y-auto rounded-3xl border border-gold bg-panel px-5 py-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/85 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={step === "recap" ? "Chapter recap" : "New chapter"}>
+      <div key={step} className="card-glass anim-pop max-h-[90%] w-full max-w-[380px] overflow-y-auto !border-gold/60 px-5 pb-5">
+        <div className="-mx-5 mb-4">
+          <ChapterArt index={(step === "recap" && recapOf ? recapOf : chapter).index} phase={(step === "recap" && recapOf ? recapOf : chapter).phase} cityId={game.cityId} className="h-32" />
+        </div>
         {step === "recap" && recapOf?.recap ? (
           <>
-            <p className="text-xs font-semibold tracking-widest text-muted">
+            <p className="t-label text-[10px] text-muted">
               CHAPTER {recapOf.index + 1} · RECAP · AGES {recapOf.startAge}–{recapOf.endAge}
             </p>
-            <h2 className="mt-1 font-display text-3xl leading-tight text-fg">{recapOf.title}</h2>
-            <p className="mt-2 text-sm font-semibold text-gold">
-              {recapOf.recap.met} of {recapOf.recap.total} goals
-            </p>
+            <h2 className="mt-1 t-display !text-[2rem] text-fg">{recapOf.title}</h2>
+            <div className="mt-2 flex items-center gap-1.5">
+              {Array.from({ length: recapOf.recap.total }, (_, i) => (
+                <span key={i} className={`anim-pop text-2xl ${i < recapOf.recap!.met ? "text-gold drop-shadow-[0_0_8px_var(--color-gold)]" : "text-white/15"}`} style={{ animationDelay: `${200 + i * 160}ms` }}>★</span>
+              ))}
+              <span className="ml-1 text-sm font-bold text-gold">{recapOf.recap.met} of {recapOf.recap.total} goals</span>
+            </div>
             <ul className="mt-3 flex flex-col gap-1.5">
               {recapOf.recap.lines.map((line) => (
                 <li key={line} className={`text-sm ${line.startsWith("✓") ? "text-fg" : "text-muted"}`}>
@@ -105,20 +132,21 @@ export function ChapterOverlay({ game }: { game: Game }) {
                 </li>
               ))}
             </ul>
-            <p className="mt-3 rounded-xl border border-line px-3 py-2 text-sm text-fg">{recapOf.recap.consequence}</p>
+            <p className="card-paper mt-3 px-3 py-2.5 text-sm font-semibold">{recapOf.recap.consequence}</p>
             <p className="mt-2 text-xs text-muted">Legacy now {game.legacy ?? 0}.</p>
-            <button type="button" onClick={() => setStep("open")} className="mt-4 min-h-14 w-full rounded-2xl bg-cape text-lg font-semibold text-fg">
+            <button type="button" onClick={() => setStep("open")} className="btn btn-primary mt-4 min-h-14 w-full text-lg">
               Turn the page
             </button>
           </>
         ) : (
           <>
-            <p className="text-xs font-semibold tracking-widest text-muted">
+            <p className="t-label flex flex-wrap items-center gap-x-2 text-[10px] text-muted">
               CHAPTER {chapter.index + 1} · {phaseForAge(chapter.startAge).name.toUpperCase()} · AGES {chapter.startAge}–{chapter.endAge}
+              {chapter.source === "ai" && <AiChip />}
             </p>
-            <h2 className="mt-1 font-display text-3xl leading-tight text-fg">{chapter.title}</h2>
+            <h2 className="mt-1 t-display !text-[2rem] text-fg">{chapter.title}</h2>
             <p className="mt-2 text-pretty text-sm leading-relaxed text-fg">{chapter.premise}</p>
-            <p className="mt-4 text-xs font-semibold tracking-widest text-muted">THIS CHAPTER</p>
+            <p className="t-label mt-4 text-gold">This chapter</p>
             <Goals chapter={chapter} game={game} />
             {past.length > 0 && (
               <div className="mt-3">
@@ -136,7 +164,7 @@ export function ChapterOverlay({ game }: { game: Game }) {
                 )}
               </div>
             )}
-            <button type="button" onClick={dismiss} className="mt-4 min-h-14 w-full rounded-2xl bg-cape text-lg font-semibold text-fg">
+            <button type="button" onClick={dismiss} className="btn btn-primary mt-4 min-h-14 w-full text-lg">
               {notice.recap !== null || game.age === chapter.startAge ? "Begin chapter" : "Back to life"}
             </button>
           </>
