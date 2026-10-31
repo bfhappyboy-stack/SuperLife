@@ -5,7 +5,7 @@ import { hasTrait } from "./origin";
 import type { Effects, Game, PowerId, Special } from "./types";
 
 export interface MiniTemplate {
-  kind: "timing" | "pattern";
+  kind: import("./minis").SkillKind;
   title: string;
   subtitle: string;
   difficulty: number;

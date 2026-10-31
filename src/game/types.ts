@@ -1,4 +1,5 @@
 import type { MarketState } from "./market";
+import type { MiniKind, MiniVerb, SkillKind } from "./minis";
 import type { Chapter, ChapterNotice } from "./chapters";
 export type PowerId =
   | "strength"
@@ -240,7 +241,15 @@ export interface Delta {
 }
 
 export interface MinigameSpec {
-  kind: "timing" | "pattern" | "duel";
+  kind: MiniKind;
+  /** Seeds per-game content (press questions, rescue layout). */
+  seed?: number;
+  /** Element id of the hero's signature power: tints the arena. */
+  skin?: string;
+  /** Engine-only hints, consumed when the mini opens: re-roll kind and title from this verb's pool. */
+  verb?: MiniVerb;
+  vars?: Record<string, string>;
+  only?: SkillKind[];
   title: string;
   subtitle: string;
   difficulty: number;
