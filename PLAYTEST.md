@@ -33,7 +33,8 @@
   - God picks were silently pruned on reload by the old starter-bundle migration. Fixed, with a regression test.
   - The reveal title overlapped on multi-power legends. It now shows one name and "+ power" chips.
   - Lock chips squeezed goal titles. Moved under the title.
-- **Balance note:** seeker policies still end lives owning about 130 powers (mentor and mix glut). This predates tonight and is in the backlog.
+- **Balance (fixed later tonight):** seeker policies used to end lives owning about 130 powers. With the braid-book room, myst2/Spider-Man/Iron Man/Hulk seekers end with 21–27 (`night.ts`, 3 seeds each).
+- **Rogues sim (`rogues.ts`, every preset):** zero generic villains. Every rival, visit and arch-enemy was the hero's own rogue. 10–14 canon beats per life, an ending on every life (mostly canon, some break), deaths at 72–86.
 
 
 How it was tested:

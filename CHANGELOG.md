@@ -31,6 +31,33 @@
   - The Gen 2 cap, the six-move loadout and the Fire + Speed → Light Speed (+ Strength → Lightning Strikes) chain all still apply.
 - Everything is offline data; no `XAI_API_KEY` is needed.
 
+### Legends keep their own rogues (`presets.ts`, `engine.ts`)
+
+- In a legend life every arch-enemy, rival, villain visit, "trouble in the city" and cape introduction now comes from that hero's own rogues gallery. Generic villains (Taxman and friends) never appear.
+  - Rogues debut at a sensible age (`villainDebut`: an explicit `from`, else their first canon beat).
+  - If nobody new has debuted, an already-met rogue returns; there is no fallback to strangers.
+- **New rogues, each with 4 authored moves:**
+  - Spider-Man: Kraven, Mysterio, Vulture.
+  - Batman: Riddler, Scarecrow, Penguin.
+  - Iron Man: Justin Hammer.
+  - Hulk: Red Hulk, The Maestro (a level-10 late-life boss).
+
+### Life after 60 (`presets.ts`, `arcs.ts`, `engine.ts`)
+
+- **Legends get 4 late beats each, from 58 to 73:** successors (Miles-style heir, the Bat-family, Ironheart, Skaar), final showdowns (Kraven's last hunt, the Joker's last laugh, Ultron reborn, the Maestro) and a closing beat.
+- **Variant endings:** the closing beat ends the saga by your dominant path (canon, bend or break). Each ending names your Earth. If you die first, the ending is written into your death story instead.
+- **Regular lives get two late cases:**
+  - *The Reunion Tour* (63+): the old team, one last tour, and Encore.
+  - *The Lighthouse* (71+): a quiet coast town, The Undertow, and a final Riptide fight.
+
+### The braid book has room (`library.ts`, `engine.ts`, `PowerLab.tsx`)
+
+- Seekers used to own ~130 powers by 80. Now the book holds **4 + age÷4 pages** (6 at 8, 14 at 40, 24 at 80) up to **30**.
+- **Diminishing returns:** 3 new pages a year under 8 powers, 2 under 16, then 1. The count resets on each birthday.
+- Mixes, mentor lessons, sparks and grants respect the room. Story powers (the reveal, canon grants, God Mode picks, the starting gift) never count against it. The Gen 2 ceiling is unchanged.
+- Powers ▸ Book shows a pages meter ("12/12 pages · 2/2 this year") and the honest reason when it's full. Mix and Learn are disabled instead of silently failing, and no month is spent.
+- **Sims:** seeker policies now end lives with 21–27 powers (was ~130).
+
 ### Clearer chapter goals (`chapters.ts`, `Chapters.tsx`)
 
 - Every goal shows its exact path (tab ▸ section ▸ button) with a tap icon, plus an x/y progress count.
