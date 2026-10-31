@@ -1,5 +1,6 @@
 import { Briefcase, Heart, Menu, ScrollText, Swords, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ChapterOverlay, ChapterStrip } from "@/components/game/Chapters";
 import { Closet } from "@/components/game/Closet";
 import { Figure } from "@/components/game/Figure";
 import { Portrait } from "@/components/game/Portrait";
@@ -283,6 +284,7 @@ function PlayScreen() {
 
 function Life({ game }: { game: Game }) {
   const age = useGame((s) => s.age);
+  const skipYear = useGame((s) => s.skipYear);
   const pick = useGame((s) => s.pick);
   const act = useGame((s) => s.do);
   const finishMini = useGame((s) => s.finishMini);
@@ -304,6 +306,7 @@ function Life({ game }: { game: Game }) {
   const activeShelf = shelves.includes(shelf ?? "") ? (shelf ?? "") : (shelves[0] ?? "");
   const visible = onDesk.filter((row) => row.shelf === activeShelf).map((row) => row.action);
   const sections = useMemo(() => group(visible), [visible]);
+  const elsewhere = game.majorsLeft > 0 ? DESKS.filter((item) => item.id !== desk && placed.some((row) => row.desk === item.id && !row.action.disabled)) : [];
   const team = teamById(game.teamId);
   const school = schoolById(game.schoolId);
   const job = jobById(game.jobId);
@@ -433,6 +436,7 @@ function Life({ game }: { game: Game }) {
                 </div>
               )}
             </article>
+            {!choosing && desk === "life" && <ChapterStrip game={game} />}
             {!choosing && <p className="desk-accent mt-3 text-sm font-semibold">{DESK_LINE[desk]}</p>}
             {!choosing && desk === "work" && (
               <p className="mt-2 text-sm text-muted">
@@ -499,7 +503,19 @@ function Life({ game }: { game: Game }) {
                   <PowerLab game={game} pane={activeShelf === "Moves" ? "moves" : activeShelf === "Teachers" ? "teachers" : "book"} onAct={act} onChat={setChat} />
                 )}
                 {sections.length === 0 && !(desk === "gift" && (activeShelf === "Book" || activeShelf === "Teachers")) && !(desk === "cases" && activeShelf === "Files") && (
-                  <p className="text-sm text-muted">{EMPTY[desk]}</p>
+                  <div>
+                    <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? "Out of moves this month. Tap Next month, or skip ahead to your next birthday." : EMPTY[desk]}</p>
+                    {elsewhere.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <p className="w-full text-sm font-semibold text-fg">Things you can do right now:</p>
+                        {elsewhere.map((item) => (
+                          <button key={item.id} type="button" onClick={() => setDesk(item.id)} className="min-h-11 rounded-2xl border border-gold/60 px-4 text-sm font-semibold text-fg">
+                            {item.label} →
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -512,16 +528,31 @@ function Life({ game }: { game: Game }) {
               <p className="mb-2 text-center text-xs font-semibold tracking-wide text-muted">
                 {game.majorsLeft > 0 ? `${game.majorsLeft} MOVE${game.majorsLeft === 1 ? "" : "S"} LEFT` : "OUT OF MOVES"}
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setAck(game.month === 11 ? "New year — pressed." : "Next month — pressed.");
-                  age();
-                }}
-                className="min-h-14 w-full rounded-2xl bg-cape text-lg font-semibold text-fg"
-              >
-                {game.month === 11 ? `New year · age ${game.age + 1}` : "Next month"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAck(game.month === 11 ? "New year — pressed." : "Next month — pressed.");
+                    age();
+                  }}
+                  className="min-h-14 flex-1 rounded-2xl bg-cape text-lg font-semibold text-fg"
+                >
+                  {game.month === 11 ? `New year · age ${game.age + 1}` : "Next month"}
+                </button>
+                {game.month !== 11 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAck(`Skip to age ${game.age + 1} — pressed.`);
+                      skipYear();
+                    }}
+                    aria-label={`Skip ahead to age ${game.age + 1}. Stops if something needs you.`}
+                    className="min-h-14 w-24 rounded-2xl border border-line bg-panel text-sm font-semibold text-fg"
+                  >
+                    {`To ${game.age + 1} ⏭`}
+                  </button>
+                )}
+              </div>
             </div>
           )}
           {game.phase === "choice" && game.pending && (
@@ -549,6 +580,7 @@ function Life({ game }: { game: Game }) {
 
       {closet && <Closet game={game} onAct={act} onClose={() => setCloset(false)} />}
       {chat && <HeroChat game={game} heroId={chat} onClose={() => setChat(null)} onAct={act} />}
+      <ChapterOverlay game={game} />
       {sheet && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/80 px-4 pb-24" role="dialog" aria-modal="true">
           <div className="max-h-[75%] w-full overflow-y-auto rounded-2xl border border-gold bg-panel px-4 py-4">

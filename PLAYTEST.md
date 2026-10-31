@@ -1,0 +1,54 @@
+# SuperLife — Playtest (2026-10-31)
+
+How it was tested:
+- **Engine sims:** `/workspace/playtest/*.ts` (outside the repo) drive `createGame/act/choose/resolveMini/ageUp` directly.
+  - Three contrasting policies, 20 seeds each, to age 120 or death.
+  - **Hero:** Stacks, street kid, secret, protector, Fire Control. Trains, patrols, missions, League.
+  - **Social:** NYC, wealthy, loud, idealistic, Telepathy. School, jobs, dating, family, stunts.
+  - **Crook:** Hood, tragic, lone wolf, vengeful, Super Strength. Crime, crews, heists, brawls.
+  - Plus a random-action policy for money and health attribution.
+- **Browser:** Playwright at 390×844, touch, DPR 2, against the dev server.
+  - Fresh onboarding → birth → first months.
+  - Injected saves at 9y11m and 59y11m to see decade turns, the low-HP warning and a collapse.
+  - Screenshots: `/workspace/superlife-screens/playtest-*.png`.
+
+## Playability blockers (fixed on this branch)
+
+| # | Blocker | Evidence (before) | Fix | After |
+|---|---|---|---|---|
+| 1 | **Lives end at 15–27.** Health 0 = instant death, with no warning and no regen. | All 60 focused sims died at 15–27. Drills cost ~4.5 HP each, and HP 8 at 14 had no warning. | Health 0 is now a **collapse** (hospital, bill, 18-month "critical" window). A second collapse in that window can kill an adult. Passive monthly regen (age-scaled). A banner below 25 HP says "Rest or see a doctor". | Careful players: median death **78–82**, range 71–94 in all three styles. Players who ignore warnings still die young (social median 37). |
+| 2 | **~960 "Next month" taps** per life. Ages 0–5 have almost nothing to do. | The age-0 Life desk said "Nothing in reach" for 72 straight months. | **"To N+1 ⏭"** next to Next month skips to the next birthday. It stops on any choice, minigame, chapter card or death. Empty shelves now point to the desks that have moves, or say "Out of moves, tap Next month". | 0→10 takes about 10 taps plus choices. |
+| 3 | **Economy runaway.** | Hero path: $1M by 23 and $17M by 80. `shift` was unlimited (+$869k in random sims). | Heavy shift is once a month. League stipend lowered from 12k–200k to 8k–75k a year. Fame bonus cut from fame×380 to fame×150. | Hero ≈ $8.6M by 80 (League rank 6 for 50 years). Social ≈ $3M, crook ≈ $0.65M. Still needs sinks (see BACKLOG: markets). |
+| 4 | **Too many powers too early.** | 13–23 powers by 18. "Look for a teacher" patrol and "notes" books handed out unlimited random sparks. | Random sparks are capped at one every 2 years. Free yearly offers cut from 62/48/36% to 34/28/20%, halved again at 10+ powers. | About 6–13 by 20 and 20 by 50. Growth is spread across decades. |
+| 5 | **Fame and reputation pinned at ±100 by about 18.** | Every policy saturated, so later decades had nothing to chase. | Soft ceiling: gains toward an extreme scale by `max(0.12, 1 − |x|/105)`, with stochastic rounding. | Social and crook now sit around 60–90 through mid-life. A hero who grinds 500+ missions still reaches 100 by 40. More direct `clamp(+fame)` writes in jobs and schools still bypass this (backlog). |
+
+## Life length and pacing (careful policy, after fixes)
+
+| Decade | What happens | Notes |
+|---|---|---|
+| 0–9 | 3–5 meaningful actions (rest, confide, time/gift with parents). Books/walks from 6, drill from 7. | This was the biggest tap sink. Skip-year plus the origin chapter goals now give the decade a shape. |
+| 10–19 | Powers, teachers, school, first League tryout. The densest decade. | Most powers used to arrive here. Now about half. |
+| 20–39 | Job and League rank climb, arcs, partner, kids. | Money climbs fast on the League path. Fame plateaus. |
+| 40–59 | Before: the same verbs as in the 20s. Now: the crisis and legacy chapters give goals. | Still thin on new verbs. Markets and property are the missing layer. |
+| 60–90 | Before: death at 66–80 with nothing new to do. Now: mentor action, legacy goals, and a slower health toll with legacy ≥ 20. | Ends by old age at 71–94. |
+
+## Repetition (top repeated prompts per life, hero policy)
+
+- "The gym, the block, or a room that does not advertise…" (gym prompt): ~560× in a heavy-training life.
+- "A call comes in. Civilians, a timer, and a captain…" (League mission): ~330×.
+- "<Villain> sends a pin and the words 'bring the good trick'": ~150–240× per villain.
+- "The city is behaving just enough to make you choose a block." (patrol): ~190×.
+- Minigames: `timing` makes up 70–80% of all minis, duels most of the rest, and `pattern` almost never appears.
+
+## What's fun
+
+- Building powers (braid book, teachers) and the 6-move duel.
+- Villain pins and arcs give the mid-game a spine.
+- The chapter title card plus 3 goals gives every decade a "why", and each goal names the desk to use.
+
+## Mobile confusion (390×844)
+
+- Age 0: the Life desk is empty while People has the actions. **Fixed** with "things you can do right now" desk buttons.
+- "Out of moves" is shown only as a small caption, and the shelf said "Nothing in reach". **Fixed**: the shelf now says what to tap.
+- The desk tab row scrolls horizontally, so "Work/Board" are off-screen at 390px. Not fixed: needs a design call (5 tabs, or icons only).
+- The header still shows the legacy power name/fusion title, not the combo book name (open since 2026-10-30).
