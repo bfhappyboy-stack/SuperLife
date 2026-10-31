@@ -397,7 +397,7 @@ function Life({ game }: { game: Game }) {
 
       {game.phase === "mini" && game.minigame ? (
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-          <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} />
+          <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })() }} />
         </div>
       ) : (
         <>
