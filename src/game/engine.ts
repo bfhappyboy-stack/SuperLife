@@ -192,7 +192,7 @@ function applyEffects(d: Game, e: Effects | undefined, deltas: Delta[]) {
     let step = delta;
     // Fame and reputation get harder to push toward the extremes, so they stay meaningful across decades.
     if ((key === "fame" || key === "reputation") && Math.sign(delta) === Math.sign(before || delta)) {
-      const scaled = Math.abs(delta) * Math.max(0.12, 1 - Math.abs(before) / 105);
+      const scaled = Math.abs(delta) * Math.max(0.03, 1 - Math.abs(before) / 102);
       const whole = Math.floor(scaled);
       step = Math.sign(delta) * (whole + (roll(d) < scaled - whole ? 1 : 0));
     }
@@ -929,8 +929,8 @@ function openYear(d: Game): string[] {
       pay += Math.round(job.pay * mult * (d.age < 18 ? 0.5 : 1));
       if (job.id === "influencer") pay += Math.round(d.stats.fame * 420);
       d.stats.happiness = clamp(d.stats.happiness + job.stress, 0, 100);
-      d.stats.fame = clamp(d.stats.fame + job.fame, 0, 100);
-      d.stats.reputation = clamp(d.stats.reputation + job.rep, -100, 100);
+      // Through applyEffects so the soft ceiling on fame/rep applies to salaried fame too.
+      applyEffects(d, { fame: job.fame || undefined, reputation: job.rep || undefined }, []);
       d.jobYears += 1;
     }
   }
@@ -946,7 +946,7 @@ function openYear(d: Game): string[] {
     if (school && d.age > school.maxAge) {
       banners.push(`You graduate ${school.name}. The photo is official and unflattering.`);
       d.stats.smarts = clamp(d.stats.smarts + 4, 0, 100);
-      d.stats.fame = clamp(d.stats.fame + school.tier, 0, 100);
+      applyEffects(d, { fame: school.tier }, []);
       d.stats.powerLevel = clamp(Math.round((d.stats.powerLevel + 0.08) * 100) / 100, 0, powerLevelCap(d.age));
       d.schoolId = null;
       pushHistory(d, `Graduated ${school.name}.`, "major");
@@ -958,9 +958,8 @@ function openYear(d: Game): string[] {
         pay -= school.tuition;
         d.stats.smarts = clamp(d.stats.smarts + (school.yearly.smarts ?? 0), 0, 100);
         d.stats.powerLevel = clamp(Math.round((d.stats.powerLevel + (school.yearly.powerLevel ?? 0)) * 100) / 100, 0, powerLevelCap(d.age));
-        d.stats.fame = clamp(d.stats.fame + (school.yearly.fame ?? 0), 0, 100);
+        applyEffects(d, { fame: school.yearly.fame || undefined, reputation: school.yearly.reputation || undefined }, []);
         d.stats.happiness = clamp(d.stats.happiness + (school.yearly.happiness ?? 0), 0, 100);
-        d.stats.reputation = clamp(d.stats.reputation + (school.yearly.reputation ?? 0), -100, 100);
         d.schoolYears += 1;
       }
     }
@@ -978,7 +977,7 @@ function openYear(d: Game): string[] {
   if (suit.cash && pay > 0) pay = Math.round(pay * (1 + suit.cash / 100));
   if (suit.fame > 0) {
     const beforeFame = d.stats.fame;
-    d.stats.fame = clamp(d.stats.fame + suit.fame, 0, 100);
+    applyEffects(d, { fame: suit.fame }, []);
     if (d.stats.fame > beforeFame) banners.push(`The suit still gets you recognized. Fame +${d.stats.fame - beforeFame}.`);
   }
 
@@ -993,6 +992,8 @@ function openYear(d: Game): string[] {
     banners.push(...held.banners);
   }
 
+  // The news cycle: past the top quarter, fame needs fresh feats to hold, or it slides a little each year.
+  if (d.stats.fame > 75) d.stats.fame = clamp(d.stats.fame - (d.stats.fame > 90 ? 2 : 1), 0, 100);
   if (d.leagueRank === 0 && d.stats.fame > 22) {
     const fameBefore = d.stats.fame;
     d.stats.fame = clamp(d.stats.fame - 2, 0, 100);
@@ -1025,7 +1026,7 @@ function openYear(d: Game): string[] {
     else if (d.missions >= (needM[d.leagueRank] ?? 99) && d.stats.powerLevel >= (needPl[d.leagueRank] ?? 99) && d.stats.reputation >= (needRep[d.leagueRank] ?? 99)) {
       d.leagueRank += 1;
       d.missions = 0;
-      d.stats.fame = clamp(d.stats.fame + 6, 0, 100);
+      applyEffects(d, { fame: 6 }, []);
       banners.push(`Promotion: ${RANKS[d.leagueRank]}. The badge gets heavier.`);
       pushHistory(d, `Rose to ${RANKS[d.leagueRank]}.`, "major");
     }

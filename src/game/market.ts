@@ -79,6 +79,8 @@ export interface MarketState {
   lastNet: number;
   /** Legacy purchases made, for diminishing returns. */
   gifts?: number;
+  /** Paid-attention fatigue: recent fame purchases. Each one makes the next land softer; cools by one a year. */
+  buzz?: number;
 }
 
 export const CAT_META: Record<MarketCat, { label: string; short: string; line: string }> = {
@@ -363,7 +365,18 @@ export function buyItem(g: Game, itemId: string): MarketResult {
     legacy = Math.max(1, Math.round(legacy * Math.max(0.25, 1 - (m.gifts - 1) / 8)));
   }
   if (item.trust) g.flags.trust = (g.flags.trust ?? 0) + Math.round(price * item.trust);
-  return { ok: true, line: buyLine(item), effects: item.buy, heat: item.heat, legacy };
+  let effects = item.buy;
+  let line = buyLine(item);
+  if (effects?.fame && effects.fame > 0) {
+    // Bought fame fades: the city tunes out a face it sees in every ad break.
+    const fatigue = Math.max(0.25, 1 - (m.buzz ?? 0) * 0.25);
+    m.buzz = (m.buzz ?? 0) + 1;
+    if (fatigue < 1) {
+      effects = { ...effects, fame: Math.max(1, Math.round(effects.fame * fatigue)) };
+      line += " The city has seen a lot of you lately.";
+    }
+  }
+  return { ok: true, line, effects, heat: item.heat, legacy };
 }
 
 function buyLine(item: MarketItem): string {
@@ -433,7 +446,10 @@ export function marketEdge(g: Game, kind: MiniKind): { bonus: number; notes: str
 export function marketYear(g: Game): { effects: Effects[]; banners: string[]; legacy: number } {
   const m = g.market;
   const out = { effects: [] as Effects[], banners: [] as string[], legacy: 0 };
-  if (m) m.bought = {};
+  if (m) {
+    m.bought = {};
+    if (m.buzz) m.buzz = Math.max(0, m.buzz - 1);
+  }
   if (g.age === 18 && (g.flags.trust ?? 0) > 0) {
     const sum = g.flags.trust ?? 0;
     g.stats.money += sum;
