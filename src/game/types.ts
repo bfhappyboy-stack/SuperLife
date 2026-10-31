@@ -1,3 +1,6 @@
+import type { MarketState } from "./market";
+import type { MiniKind, MiniVerb, SkillKind } from "./minis";
+import type { Chapter, ChapterNotice } from "./chapters";
 export type PowerId =
   | "strength"
   | "flight"
@@ -43,6 +46,12 @@ export type TraitId =
   | "pragmatic"
   | "team"
   | "lone"
+  | "curious"
+  | "glory"
+  | "amends"
+  | "duty"
+  | "thrill"
+  | "family"
   | "millionaire"
   | "sorcerer"
   | "inventor"
@@ -127,6 +136,10 @@ export interface DuelMove {
   energy?: number;
   effect?: string;
   cooldown?: number;
+  /** Element id for VFX and the card icon (see elements.ts). */
+  element?: string;
+  /** Move rank 1–5 for player moves. */
+  rank?: number;
 }
 
 export interface Look {
@@ -155,6 +168,13 @@ export interface DuelBoard {
   personId?: string;
   /** Percent of incoming damage shrugged off by the suit. */
   guard?: number;
+  /** Legacy power id of the foe, for its look and element. */
+  foePower?: string;
+  /** Seed for the foe's generated look. */
+  foeSeed?: number;
+  foeSex?: Sex;
+  /** Boss fights get a bigger entrance and a gold KO. */
+  boss?: boolean;
 }
 
 export interface Cape {
@@ -221,7 +241,15 @@ export interface Delta {
 }
 
 export interface MinigameSpec {
-  kind: "timing" | "pattern" | "duel";
+  kind: MiniKind;
+  /** Seeds per-game content (press questions, rescue layout). */
+  seed?: number;
+  /** Element id of the hero's signature power: tints the arena. */
+  skin?: string;
+  /** Engine-only hints, consumed when the mini opens: re-roll kind and title from this verb's pool. */
+  verb?: MiniVerb;
+  vars?: Record<string, string>;
+  only?: SkillKind[];
   title: string;
   subtitle: string;
   difficulty: number;
@@ -344,6 +372,14 @@ export interface Game {
   death: DeathReport | null;
   lastEvent: string;
   peak: { fame: number; power: number; rank: number; money: number; rep: number };
+  /** Decade chapters, oldest first. The last one is running. Optional for old saves (see migrateChapters). */
+  chapters?: Chapter[];
+  /** Late-life purpose: mentoring, teaching, family and finished chapters. Softens aging. */
+  legacy?: number;
+  /** A chapter title card / recap waiting to be shown. UI-only, cleared on dismiss. */
+  chapterNotice?: ChapterNotice | null;
+  /** What you own and what the market remembers. Optional for old saves. */
+  market?: MarketState;
 }
 
 export interface ActionItem {

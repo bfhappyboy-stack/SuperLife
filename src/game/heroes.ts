@@ -34,6 +34,16 @@ export function heroLevelCap(relationship: number): number {
   return Math.max(1, Math.min(8, 1 + Math.floor(Math.max(0, relationship) / 12)));
 }
 
+/**
+ * Heroes level slowly: EXP earns the level, the bond caps it. A level already earned is never taken back
+ * when the bond dips; it just stops growing until the bond recovers.
+ */
+export function settleHeroLevel(hero: { exp: number; level: number; relationship: number }): number {
+  const earned = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship));
+  hero.level = Math.max(1, hero.level || 1, earned);
+  return hero.level;
+}
+
 export interface PlotBrief {
   villain: string;
   arcTitle: string;

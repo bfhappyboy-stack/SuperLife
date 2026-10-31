@@ -53,10 +53,19 @@ function pairKey(a: string, b: string): string {
   return [a, b].sort().join("|");
 }
 
-function ceilingGeneration(parentA: 0 | 1 | 2, parentB: 0 | 1 | 2): 1 | 2 {
-  if (parentA === 2 && parentB === 2) return 2;
+/** Hard ceiling from the design: Generation 2. Nothing is ever Generation 3. */
+export const MAX_GENERATION = 2;
+
+/** Design rule: generation = max(parent generations) + 1. Returns null when that would pass the ceiling. */
+export function childGeneration(parentA: 0 | 1 | 2, parentB: 0 | 1 | 2): 1 | 2 | null {
   const raw = Math.max(parentA, parentB) + 1;
-  return raw >= 2 ? 2 : 1;
+  if (raw > MAX_GENERATION) return null;
+  return raw as 1 | 2;
+}
+
+/** Only for reading old saves that braided past the ceiling before the cap was enforced. */
+function legacyGeneration(parentA: 0 | 1 | 2, parentB: 0 | 1 | 2): 1 | 2 {
+  return childGeneration(parentA, parentB) ?? MAX_GENERATION;
 }
 
 function stampTier(power: CatalogPower) {
@@ -98,8 +107,7 @@ function buildBook(): Map<string, CatalogPower> {
       if (!left || !right) continue;
       if (left.ingredients.length && left.generation === 0 && left.ingredients.length === 2) continue;
       if (right.ingredients.length && right.generation === 0 && right.ingredients.length === 2) continue;
-      const generation = ceilingGeneration(left.generation, right.generation);
-      power.generation = generation;
+      power.generation = legacyGeneration(left.generation, right.generation);
       pending.splice(i, 1);
     }
   }
@@ -163,7 +171,7 @@ function resolvePower(id: string, depth = 0): CatalogPower | null {
   const left = resolvePower(pair[0], depth + 1);
   const right = resolvePower(pair[1], depth + 1);
   if (!left || !right) return null;
-  const generation = ceilingGeneration(left.generation, right.generation);
+  const generation = legacyGeneration(left.generation, right.generation);
   const salt = hashPair(left.id, right.id);
   const power: CatalogPower = {
     id,
@@ -215,7 +223,8 @@ export function basePowers(): CatalogPower[] {
 
 /**
  * Mix two unlocked powers. Named braids win when the book has them.
- * Any other pair still mixes. The result stays at generation 2. There is no generation 3.
+ * Any other pair of Gen 0/Gen 1 powers still mixes into a generated "weave".
+ * Generation = max(parents) + 1 with a hard ceiling of 2, so a Gen 2 power is final: it never braids again.
  * Order does not matter. A power cannot pair with itself.
  */
 export function mix(idA: string, idB: string, unlocked: readonly string[]): MixResult {
@@ -226,6 +235,10 @@ export function mix(idA: string, idB: string, unlocked: readonly string[]): MixR
   if (!left || !right) return { ok: false, reason: "One of those isn't a power you hold." };
   const owned = new Set(unlocked);
   if (!owned.has(idA) || !owned.has(idB)) return { ok: false, reason: "You don't hold both of those yet." };
+  const apex = left.generation >= MAX_GENERATION ? left : right.generation >= MAX_GENERATION ? right : null;
+  if (apex || childGeneration(left.generation, right.generation) === null) {
+    return { ok: false, reason: `${(apex ?? left).name} is Generation 2, the ceiling. It is finished; it can't braid into anything else.` };
+  }
   const named = BY_PAIR.get(pairKey(idA, idB));
   const result = named ?? resolvePower(weaveId(idA, idB));
   if (!result) return { ok: false, reason: "Those two refuse to sit in the same hand." };
@@ -324,11 +337,8 @@ export function selfCheck(): string[] {
   const mid = first.ok ? [...starters, first.power.id] : starters;
   const second = mix("light-speed", "super-strength", mid);
   if (!second.ok || second.power.id !== "lightning-strikes" || second.power.generation !== 2) errors.push("chain step 2 failed");
-  const withWeather = second.ok ? [...mid, second.power.id, "weather"] : mid;
-  const third = mix("lightning-strikes", "weather", withWeather);
-  if (!third.ok || third.power.id !== "cataclysm-storm" || third.power.generation !== 2) errors.push("lightning strikes mix failed");
-  const blocked = mix("lightning-strikes", "cataclysm-storm", third.ok ? [...withWeather, third.power.id] : withWeather);
-  if (!blocked.ok || blocked.power.generation !== 2 || !blocked.power.id.startsWith("w:")) errors.push("apex pair should mix under the ceiling");
+  const capped = mix("lightning-strikes", "weather", second.ok ? [...mid, second.power.id, "weather"] : mid);
+  if (capped.ok) errors.push("a Gen 2 power braided past the ceiling");
   const gapOwned = [...starters, "sorcery"];
   const gap = mix("sorcery", "super-strength", gapOwned);
   if (!gap.ok || !gap.power.id.startsWith("w:") || gap.power.tier !== 2) errors.push("gap pair failed");
@@ -340,7 +350,11 @@ export function selfCheck(): string[] {
   if (!swapped.ok || swapped.power.id !== "light-speed") errors.push("order mattered");
   if (possibleMixes(starters).length < 3) errors.push("starters should offer several mixes");
   for (const power of BOOK.values()) {
-    if (power.generation > 2) errors.push(`gen overflow ${power.id}`);
+    if (power.generation > MAX_GENERATION) errors.push(`gen overflow ${power.id}`);
+    if (power.ingredients.length === 2) {
+      const gens = power.ingredients.map((id) => BOOK.get(id)?.generation ?? 0) as [0 | 1 | 2, 0 | 1 | 2];
+      if (childGeneration(gens[0], gens[1]) !== power.generation) errors.push(`gen math ${power.id}`);
+    }
     if (power.ingredients.length === 2 && power.generation === 0) errors.push(`unresolved ${power.id}`);
   }
   return errors;

@@ -1,3 +1,4 @@
+import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
 import {
   CITIES,
   FEMALE_NAMES,
@@ -26,11 +27,14 @@ import { clamp, firstName, money, whenLabel } from "./format";
 import { getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
-import { judgeTalk, heroLevelCap, levelFor, mergeHeroes, seedHeroes } from "./heroes";
+import { elementOfLegacy, elementOfPower } from "./elements";
+import { isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
+import { judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { availableArcs, currentCase, type ArcStep } from "./arcs";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
-import { equippedMoves, fillLoadout, grantMoveExp, moveById, toggleLoadout } from "./moves";
+import { migrateChapters, openChapter, turnChapter } from "./chapters";
+import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
   asFace,
@@ -86,7 +90,7 @@ export interface NewLifeOpts {
   /** One catalog power. Empty means an ordinary life. */
   giftId?: string | null;
   seed?: number;
-  heir?: { fame: number; powerBias: PowerId | null; belief: number };
+  heir?: { fame: number; powerBias: PowerId | null; belief: number; trust?: number };
 }
 
 function roll(d: Game): number {
@@ -163,6 +167,18 @@ const STAT_LABEL: Record<string, string> = {
   karma: "Karma",
 };
 
+/** Gain multiplier for joy/mind/karma: 1 up to 50, easing to 0.08 at 100. */
+export function gentleCap(value: number): number {
+  if (value <= 50) return 1;
+  return Math.max(0.08, 1 - ((value - 50) / 50) * 0.92);
+}
+
+function softStep(d: Game, delta: number, factor: number): number {
+  const scaled = delta * factor;
+  const whole = Math.floor(scaled);
+  return whole + (roll(d) < scaled - whole ? 1 : 0);
+}
+
 function applyEffects(d: Game, e: Effects | undefined, deltas: Delta[]) {
   if (!e) return;
   const s = d.stats;
@@ -186,7 +202,20 @@ function applyEffects(d: Game, e: Effects | undefined, deltas: Delta[]) {
     if (delta == null) continue;
     const [lo, hi] = ranges[key];
     const before = s[key];
-    s[key] = clamp(Math.round(before + delta), lo, hi);
+    let step = delta;
+    // Fame and reputation get harder to push toward the extremes, so they stay meaningful across decades.
+    if ((key === "fame" || key === "reputation") && Math.sign(delta) === Math.sign(before || delta)) {
+      // A secret identity keeps half the spotlight: the mask takes the credit.
+      const masked = key === "fame" && delta > 0 && d.traits.includes("secret") ? 0.5 : 1;
+      const scaled = Math.abs(delta) * masked * Math.max(0.03, 1 - Math.abs(before) / 102);
+      const whole = Math.floor(scaled);
+      step = Math.sign(delta) * (whole + (roll(d) < scaled - whole ? 1 : 0));
+    } else if ((key === "happiness" || key === "smarts" || key === "karma") && delta > 0 && before > 0) {
+      // Joy, mind and karma climb freely through the middle and slow near the top, so a life can't
+      // pin them at 100 by twenty and coast. Losses are never softened.
+      step = softStep(d, delta, gentleCap(before));
+    }
+    s[key] = clamp(Math.round(before + step), lo, hi);
     touch(STAT_LABEL[key] ?? key, before, s[key]);
   }
   if (e.money != null) {
@@ -279,10 +308,44 @@ function scoreOf(d: Game): { score: number; rows: { label: string; points: numbe
 
 function deadCause(d: Game): string {
   if (d.age >= 90) return "Old age, which does not take meetings.";
+  if (d.age >= 70 && d.stats.health >= 20) return "A long life that finally asked to sit down.";
   if (d.stats.reputation <= -40) return "A grudge that stopped being theoretical.";
   if (d.powerId) return "A gift that asked for more than the body had.";
   if (d.stats.health < 20) return "A heart that punched out after a long shift.";
   return "An ending the paperwork will describe as natural.";
+}
+
+/**
+ * Health hitting zero is a collapse, not automatically a funeral. The first collapse in a stretch
+ * (and every collapse before 18) is a hospital stay with a real bill and a "critical" window.
+ * A second collapse inside that window can kill an adult. Explicit death outcomes still kill.
+ * Returns true when the hero survived.
+ */
+function collapse(d: Game, story: string): boolean {
+  const critical = (d.flags.critical ?? 0) > 0;
+  if (critical && d.age >= 18) {
+    kill(d, deadCause(d), story);
+    return false;
+  }
+  const bill = Math.min(Math.max(0, d.stats.money), 250 + d.age * 25);
+  const deltas: Delta[] = [];
+  d.stats.health = 30;
+  applyEffects(d, { money: -bill, happiness: -6 }, deltas);
+  deltas.unshift({ stat: "Health", amount: 30 });
+  d.flags.critical = 18;
+  d.flags.collapses = (d.flags.collapses ?? 0) + 1;
+  d.phase = "live";
+  d.pending = null;
+  d.minigame = null;
+  pushHistory(d, `Collapsed at ${d.age} and woke up in a hospital.`, "major");
+  setStory(
+    d,
+    `${story}\n\nYou wake up in a hospital bed with a wristband and a bill${bill ? ` for ${money(bill)}` : ""}. Close call. For the next year and a half your body is on probation: drop to zero again and it may not be a hospital.`,
+    deltas,
+    ["Close call. Rest, see a doctor, and go easy on drills for a while."],
+    "major",
+  );
+  return true;
 }
 
 function kill(d: Game, cause: string, story: string) {
@@ -560,6 +623,11 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     return grantSecondGift(d, deltas);
   }
   if (special.kind === "grant") {
+    // Stray sparks (no specific recipe offered) are rare: at most one every two years, so powers stay an event.
+    if (!special.comboId && d.flags.lastGrantAge !== undefined && d.age - d.flags.lastGrantAge < 2) {
+      return " Something sparks in your palm and goes out. Not yet. You are still learning the last one.";
+    }
+    if (!special.comboId) d.flags.lastGrantAge = d.age;
     const id = special.comboId ?? randomMissingBase(d.unlockedPowers ?? [], roll(d))?.id ?? null;
     const name = unlockCombo(d, id);
     if (!name) return " The spark fizzles. You already hold that page.";
@@ -590,9 +658,8 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     if (!hero) return "";
     hero.exp += special.exp;
     const before = hero.level;
-    hero.level = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship + special.bond));
     hero.relationship = clamp(hero.relationship + special.bond, 0, 100);
-    hero.level = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship));
+    settleHeroLevel(hero);
     const taught = special.teach ? unlockCombo(d, special.teach) : "";
     const drilled = special.masteryId && special.masteryExp ? grantMastery(d, special.masteryId, special.masteryExp) : "";
     const grew = hero.level > before ? ` ${hero.alias} hits level ${hero.level}. Slowly.` : "";
@@ -617,7 +684,7 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     return advanceArc(d, deltas);
   }
   if (special.kind === "trait") {
-    return grantTrait(d, special.traitId) ? ` ${special.traitId} sticks.` : "";
+    return grantTrait(d, special.traitId) ? ` ${traitById(special.traitId)?.title ?? "The new reputation"} sticks.` : "";
   }
   if (special.kind === "dropTrait") {
     dropTrait(d, special.traitId);
@@ -819,9 +886,22 @@ function grief(d: Game, person: Person, banners: string[]) {
   pushHistory(d, `${person.name} died.`, "major");
 }
 
+/** The body recovers a little every month, less with age. Low health always says what to do about it. */
+function monthlyBody(d: Game, banners: string[]) {
+  if ((d.flags.critical ?? 0) > 0) d.flags.critical = Math.max(0, (d.flags.critical ?? 0) - 1);
+  const ceiling = d.age < 40 ? 70 : d.age < 60 ? 55 : 40;
+  if (d.stats.health < ceiling) {
+    const regen = d.age < 25 ? 2 : d.age < 60 ? 1 : 0;
+    d.stats.health = clamp(d.stats.health + regen, 0, 100);
+  }
+  if (d.stats.health < 25 && d.age >= 7) banners.push(`Health ${d.stats.health}. Rest or see a doctor before you drill or fight.`);
+  // Joy settles: the higher it sits, the more likely a month takes a point back. Staying happy is a habit, not a trophy.
+  if (d.stats.happiness > 70 && roll(d) < (d.stats.happiness - 70) / 24) d.stats.happiness -= 1;
+}
+
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (key === "rested" || key === "mentored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
   }
 }
 
@@ -870,8 +950,8 @@ function openYear(d: Game): string[] {
       pay += Math.round(job.pay * mult * (d.age < 18 ? 0.5 : 1));
       if (job.id === "influencer") pay += Math.round(d.stats.fame * 420);
       d.stats.happiness = clamp(d.stats.happiness + job.stress, 0, 100);
-      d.stats.fame = clamp(d.stats.fame + job.fame, 0, 100);
-      d.stats.reputation = clamp(d.stats.reputation + job.rep, -100, 100);
+      // Through applyEffects so the soft ceiling on fame/rep applies to salaried fame too.
+      applyEffects(d, { fame: job.fame || undefined, reputation: job.rep || undefined }, []);
       d.jobYears += 1;
     }
   }
@@ -880,14 +960,13 @@ function openYear(d: Game): string[] {
     pay += 14000;
     d.stats.reputation = clamp(d.stats.reputation - 2, -100, 100);
   }
-  if (d.stats.fame > 45 && d.leagueRank >= 1) pay += Math.round(d.stats.fame * 380);
+  if (d.stats.fame > 45 && d.leagueRank >= 1) pay += Math.round(d.stats.fame * 150);
 
   if (d.schoolId) {
     const school = schoolById(d.schoolId);
     if (school && d.age > school.maxAge) {
       banners.push(`You graduate ${school.name}. The photo is official and unflattering.`);
-      d.stats.smarts = clamp(d.stats.smarts + 4, 0, 100);
-      d.stats.fame = clamp(d.stats.fame + school.tier, 0, 100);
+      applyEffects(d, { smarts: 4, fame: school.tier }, []);
       d.stats.powerLevel = clamp(Math.round((d.stats.powerLevel + 0.08) * 100) / 100, 0, powerLevelCap(d.age));
       d.schoolId = null;
       pushHistory(d, `Graduated ${school.name}.`, "major");
@@ -897,11 +976,10 @@ function openYear(d: Game): string[] {
         d.schoolId = null;
       } else {
         pay -= school.tuition;
-        d.stats.smarts = clamp(d.stats.smarts + (school.yearly.smarts ?? 0), 0, 100);
+        applyEffects(d, { smarts: school.yearly.smarts || undefined }, []);
         d.stats.powerLevel = clamp(Math.round((d.stats.powerLevel + (school.yearly.powerLevel ?? 0)) * 100) / 100, 0, powerLevelCap(d.age));
-        d.stats.fame = clamp(d.stats.fame + (school.yearly.fame ?? 0), 0, 100);
-        d.stats.happiness = clamp(d.stats.happiness + (school.yearly.happiness ?? 0), 0, 100);
-        d.stats.reputation = clamp(d.stats.reputation + (school.yearly.reputation ?? 0), -100, 100);
+        applyEffects(d, { fame: school.yearly.fame || undefined, reputation: school.yearly.reputation || undefined }, []);
+        applyEffects(d, { happiness: school.yearly.happiness || undefined }, []);
         d.schoolYears += 1;
       }
     }
@@ -919,14 +997,23 @@ function openYear(d: Game): string[] {
   if (suit.cash && pay > 0) pay = Math.round(pay * (1 + suit.cash / 100));
   if (suit.fame > 0) {
     const beforeFame = d.stats.fame;
-    d.stats.fame = clamp(d.stats.fame + suit.fame, 0, 100);
+    applyEffects(d, { fame: suit.fame }, []);
     if (d.stats.fame > beforeFame) banners.push(`The suit still gets you recognized. Fame +${d.stats.fame - beforeFame}.`);
   }
 
   d.stats.money = clamp(d.stats.money + pay, -20000, 100_000_000);
   if (pay >= 800) banners.push(`The year clears ${money(pay)}.`);
   else if (pay <= -400) banners.push(`The year costs ${money(-pay)}.`);
+  {
+    const held = marketYear(d);
+    for (const e of held.effects) applyEffects(d, e, []);
+    if (held.legacy) d.legacy = (d.legacy ?? 0) + held.legacy;
+    d.stats.money = clamp(d.stats.money, -20000, 100_000_000);
+    banners.push(...held.banners);
+  }
 
+  // The news cycle: past the top quarter, fame needs fresh feats to hold, or it slides a little each year.
+  if (d.stats.fame > 75) d.stats.fame = clamp(d.stats.fame - (d.stats.fame > 90 ? 2 : 1), 0, 100);
   if (d.leagueRank === 0 && d.stats.fame > 22) {
     const fameBefore = d.stats.fame;
     d.stats.fame = clamp(d.stats.fame - 2, 0, 100);
@@ -934,7 +1021,11 @@ function openYear(d: Game): string[] {
   }
 
   let healthDelta = 0;
-  if (d.age > 58) healthDelta -= Math.floor((d.age - 58) / 5);
+  if (d.age > 58) {
+    // Purpose keeps you upright: a real legacy halves the yearly toll of age.
+    const toll = Math.floor((d.age - 58) / 5);
+    healthDelta -= (d.legacy ?? 0) >= 20 ? Math.ceil(toll / 2) : toll;
+  }
   if (d.stats.happiness < 28) healthDelta -= 2;
   if (d.stats.happiness > 80) healthDelta += 1;
   if (d.age < 18) healthDelta += 1;
@@ -945,6 +1036,10 @@ function openYear(d: Game): string[] {
   if (d.age >= 16 && d.age <= 28 && roll(d) < 0.35) d.stats.looks = clamp(d.stats.looks + 1, 0, 100);
   if (d.age > 64) d.stats.looks = clamp(d.stats.looks - 1, 0, 100);
   d.stats.happiness = clamp(d.stats.happiness + (roll(d) < 0.5 ? -1 : 1), 0, 100);
+  // Hedonic adaptation: a great year becomes the new normal, so joy has to be renewed.
+  if (d.stats.happiness > 80) d.stats.happiness -= 2;
+  // Mentoring has diminishing returns inside a year.
+  delete d.flags.mentorRun;
   if (d.stats.health < 28 && d.age > 45) banners.push("You feel the year in your knees and your patience.");
 
   const needM = [0, 2, 3, 4, 5, 6, 8];
@@ -955,7 +1050,7 @@ function openYear(d: Game): string[] {
     else if (d.missions >= (needM[d.leagueRank] ?? 99) && d.stats.powerLevel >= (needPl[d.leagueRank] ?? 99) && d.stats.reputation >= (needRep[d.leagueRank] ?? 99)) {
       d.leagueRank += 1;
       d.missions = 0;
-      d.stats.fame = clamp(d.stats.fame + 6, 0, 100);
+      applyEffects(d, { fame: 6 }, []);
       banners.push(`Promotion: ${RANKS[d.leagueRank]}. The badge gets heavier.`);
       pushHistory(d, `Rose to ${RANKS[d.leagueRank]}.`, "major");
     }
@@ -967,7 +1062,8 @@ function openYear(d: Game): string[] {
 
 function offerYearPower(d: Game, banners: string[]): boolean {
   if (d.age < 13) return false;
-  const chance = d.age < 18 ? 0.62 : d.age < 30 ? 0.48 : 0.36;
+  const owned = (d.unlockedPowers ?? []).length;
+  const chance = (d.age < 18 ? 0.34 : d.age < 30 ? 0.28 : 0.2) * (owned >= 10 ? 0.5 : 1);
   if (roll(d) >= chance) return false;
   const offer = offerPower(d.unlockedPowers ?? [], d.age, roll(d));
   if (!offer) return false;
@@ -1090,6 +1186,7 @@ export function createGame(opts: NewLifeOpts): Game {
   if (upbringing.looks) d.stats.looks = clamp(d.stats.looks + upbringing.looks, 0, 100);
   d.stats.fame = clamp(d.stats.fame, 0, 28);
   if (!opts.heir && roll(d) < 0.07) d.flags.nullGene = 1;
+  if (opts.heir?.trust) d.flags.trust = Math.round(opts.heir.trust);
   const last = d.name.split(" ").slice(1).join(" ") || "Voss";
   const kin = familyPlan(upbringing.id);
   if (kin.count >= 1) addPerson(d, { role: "parent", closeness: upbringing.closeness, age: 29 + rollInt(d, 12), last, sex: "female", note: kin.note });
@@ -1139,6 +1236,8 @@ export function createGame(opts: NewLifeOpts): Game {
   peaks(d);
   seedRoster(d);
   ensureProgress(d);
+  d.legacy = 0;
+  openChapter(d);
   return d;
 }
 
@@ -1178,24 +1277,38 @@ function movesFrom(powerId: PowerId | null, level: number): DuelMove[] {
         { name: "Slip", blurb: "Don't be where the hit lands.", at: 0 },
         { name: "Brace", blurb: "Take the ugly one on purpose.", at: 0 },
       ];
+  const element = power ? elementOfLegacy(power.id) : "force";
   return source.slice(0, 4).map((ability, index) => ({
     name: ability.name,
     blurb: ability.blurb,
     power: 4 + index * 2 + Math.round(level),
     style: styleAt(index),
+    element,
   }));
 }
 
 function playerMoves(d: Game): DuelMove[] {
   fillLoadout(d);
-  const equipped = equippedMoves(d);
-  if (equipped.length) return equipped.slice(0, 6);
-  return movesFrom(d.powerId, d.stats.powerLevel).slice(0, 4);
+  if (equippedMoves(d).length) return battleMoves(d);
+  // Unpowered life: the legacy street kit, still padded to the full six.
+  const legacy = movesFrom(d.powerId, d.stats.powerLevel).slice(0, 4);
+  const names = new Set(legacy.map((move) => move.name));
+  const padding = STREET_MOVES.filter((move) => !names.has(move.name)).map((move) => ({ ...move }));
+  return [...legacy, ...padding].slice(0, MOVESET_SIZE);
+}
+
+/** Seed and body for the foe's figure: the person's or roster cape's own portrait when we know them. */
+function foeLook(d: Game, foe: { name: string; personId?: string }): { foeSeed: number; foeSex?: Sex } {
+  const person = foe.personId ? d.relationships.find((r) => r.id === foe.personId) : undefined;
+  const cape = d.roster.find((row) => row.alias === foe.name || (foe.personId && row.id === foe.personId));
+  let h = 2166136261;
+  for (let i = 0; i < foe.name.length; i += 1) h = Math.imul(h ^ foe.name.charCodeAt(i), 16777619);
+  return { foeSeed: person?.portrait ?? cape?.portrait ?? ((h >>> 0) % 1_000_000_000) + 1, foeSex: person?.sex ?? cape?.sex };
 }
 
 function makeDuel(
   d: Game,
-  foe: { name: string; title: string; side: "hero" | "villain"; powerId: PowerId; powerLevel: number; personId?: string },
+  foe: { name: string; title: string; side: "hero" | "villain"; powerId: PowerId; powerLevel: number; personId?: string; boss?: boolean },
   flavor: { title: string; subtitle: string; win: string; partial: string; lose: string; tag: "duel" | "relic"; winEffects: Effects; loseEffects: Effects; partialEffects: Effects; specialWin?: Special },
 ): MinigameSpec {
   const pl = foe.powerLevel;
@@ -1226,6 +1339,9 @@ function makeDuel(
       foeMoves: movesFrom(foe.powerId, pl),
       personId: foe.personId,
       guard: suit.guard,
+      foePower: foe.powerId,
+      ...foeLook(d, foe),
+      boss: foe.boss || undefined,
     } satisfies DuelBoard,
   };
 }
@@ -1421,7 +1537,8 @@ function ensureProgress(game: Game) {
   fillLoadout(game);
 }
 
-function focusId(d: Game): string {
+/** The hero's signature power: the chosen focus, else the legacy combo, else the first unlocked. */
+export function focusId(d: Game): string {
   if (d.focusPower && (d.unlockedPowers ?? []).includes(d.focusPower)) return d.focusPower;
   return legacyComboId(d.powerId) ?? d.unlockedPowers?.[0] ?? "";
 }
@@ -1670,6 +1787,17 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
   return false;
 }
 
+/**
+ * Fast-forward: advance month by month until the next birthday, stopping early the moment the game
+ * needs the player (a choice, a minigame, a chapter card, or death). Cuts the ~960 taps of a long life.
+ */
+export function skipToBirthday(game: Game): Game {
+  let g = ageUp(game);
+  let guard = 0;
+  while (g.phase === "live" && g.month !== 0 && guard++ < 12) g = ageUp(g);
+  return g;
+}
+
 export function ageUp(game: Game): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
@@ -1678,13 +1806,14 @@ export function ageUp(game: Game): Game {
   let banners: string[] = [];
   if (birthday) {
     banners = openYear(d);
+    if (turnChapter(d)) banners.push(`Chapter ${(d.chapters?.length ?? 1)} begins: ${d.chapters?.[d.chapters.length - 1]?.title ?? "a new decade"}.`);
     if (d.stats.health <= 0) {
-      kill(d, deadCause(d), "Your health gives out before the year can even pick a fight.");
+      collapse(d, "Your health gives out before the year can even pick a fight.");
       return d;
     }
     let deathChance = 0;
     if (d.age >= 100) deathChance = clamp(0.5 + (d.age - 100) * 0.15, 0, 0.95);
-    else if (d.age >= 66) deathChance = (d.age - 64) * 0.018 * (1.4 - d.stats.health / 120);
+    else if (d.age >= 70) deathChance = (d.age - 68) * 0.013 * (1.4 - d.stats.health / 120);
     else if (d.stats.health < 8 && d.age > 35) deathChance = 0.3;
     if (deathChance > 0 && roll(d) < deathChance) {
       const cause = d.age >= 78 ? "Old age, which does not take meetings." : deadCause(d);
@@ -1703,6 +1832,7 @@ export function ageUp(game: Game): Game {
   } else {
     d.majorsLeft = 3;
     clearMonthFlags(d);
+    marketMonth(d);
     if (d.crew) {
       if ((d.crew.heat ?? 0) > 0) d.crew.heat = Math.max(0, (d.crew.heat ?? 0) - 3);
       if (d.crew.members.length) {
@@ -1717,6 +1847,11 @@ export function ageUp(game: Game): Game {
     }
   }
   banners.push(...tickRoster(d));
+  if (d.phase === "live") monthlyBody(d, banners);
+  if (d.phase === "live" && d.stats.health <= 0) {
+    collapse(d, "Your legs file a complaint and the floor accepts it.");
+    return d;
+  }
   if (birthday && tryManifest(d, banners)) {
     peaks(d);
     return d;
@@ -1763,7 +1898,7 @@ function resolveOutcome(d: Game, outcome: Outcome) {
     }
   }
   if (outcome.minigame) {
-    d.minigame = outcome.minigame;
+    d.minigame = vary(d, outcome.minigame);
     d.phase = "mini";
     d.pending = null;
     d.card = { kicker: whenLabel(d.age, d.month), banner: d.card.banner, body: outcome.text, deltas: [] };
@@ -1776,8 +1911,12 @@ function resolveOutcome(d: Game, outcome: Outcome) {
   const banners: string[] = [];
   noteGrowth(before, d, banners);
   const story = `${outcome.text}${extra}`;
-  if (outcome.special?.kind === "death" || d.stats.health <= 0) {
-    kill(d, outcome.special?.kind === "death" ? outcome.special.cause : deadCause(d), story);
+  if (outcome.special?.kind === "death") {
+    kill(d, outcome.special.cause, story);
+    return;
+  }
+  if (d.stats.health <= 0) {
+    collapse(d, story);
     return;
   }
   setStory(d, story, deltas, banners, outcome.special ? "major" : undefined);
@@ -1800,7 +1939,8 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   const spec = d.minigame;
   if (!spec) return game;
   d.minigame = null;
-  const score = clamp(ratio, 0, 1);
+  const edge = marketEdge(d, spec.kind);
+  const score = clamp(ratio + edge.bonus, 0, 1);
   const win = score >= 0.66;
   const partial = !win && score >= 0.33;
   const deltas: Delta[] = [];
@@ -1831,9 +1971,14 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   if (spec.tag === "mission" && score >= 0.33) d.missions += 1;
   const banners: string[] = [];
   noteGrowth(before, d, banners);
-  const story = `${win ? spec.winText : partial ? spec.partialText : spec.loseText}${extra}${archLine}`;
-  if (d.stats.health <= 0 || special?.kind === "death") {
-    kill(d, special?.kind === "death" ? special.cause : deadCause(d), story);
+  const kit = edge.bonus > 0 ? ` Kit edge +${Math.round(edge.bonus * 100)}%.${edge.notes.length ? ` ${edge.notes.join(" ")}` : ""}` : "";
+  const story = `${win ? spec.winText : partial ? spec.partialText : spec.loseText}${extra}${archLine}${kit}`;
+  if (special?.kind === "death") {
+    kill(d, special.cause, story);
+    return d;
+  }
+  if (d.stats.health <= 0) {
+    collapse(d, story);
     return d;
   }
   setStory(d, story, deltas, banners, spec.tag ? "major" : undefined);
@@ -1863,12 +2008,50 @@ function relocate(d: Game, cityId: string): string {
   return "";
 }
 
+/**
+ * Finalize a minigame as it opens: give it a seed and the hero's element skin, and if it names a verb,
+ * draw its kind and title from that verb's pool (see minis.ts) so the same action plays differently.
+ */
+export function vary(d: Game, spec: MinigameSpec): MinigameSpec {
+  const out = { ...spec };
+  if (out.seed == null) out.seed = Math.floor(roll(d) * 1_000_000_000);
+  const sig = getPower(focusId(d));
+  if (!out.skin && sig) out.skin = elementOfPower(sig.id);
+  if (out.verb && out.kind !== "duel") {
+    const lastIndex = d.flags.lastMini;
+    const last = lastIndex != null ? (SKILL_KIND_IDS[lastIndex] ?? null) : null;
+    const pick = pickMini(out.verb, () => roll(d), { last, tags: sig?.tags, vars: out.vars, only: out.only });
+    out.kind = pick.kind;
+    out.title = pick.title;
+    out.subtitle = pick.subtitle || out.subtitle;
+    if (pick.winText) out.winText = pick.winText;
+    if (pick.partialText) out.partialText = pick.partialText;
+    if (pick.loseText) out.loseText = pick.loseText;
+  }
+  if (isSkillKind(out.kind)) d.flags.lastMini = SKILL_KIND_IDS.indexOf(out.kind);
+  delete out.verb;
+  delete out.vars;
+  delete out.only;
+  return out;
+}
+
 function openMini(d: Game, spec: MinigameSpec, blurb: string) {
   spend(d);
-  d.minigame = spec;
+  d.minigame = vary(d, spec);
   d.phase = "mini";
   d.pending = null;
   d.card = { kicker: whenLabel(d.age, d.month), banner: [], body: blurb, deltas: [] };
+}
+
+/**
+ * Legacy from one mentoring session: each extra rookie in the same year is worth 60% of the last,
+ * and a big legacy grows slower still. Stochastic rounding keeps small values meaningful.
+ */
+export function mentorLegacy(d: Game, good: boolean): number {
+  const run = d.flags.mentorRun ?? 0;
+  d.flags.mentorRun = run + 1;
+  const base = (good ? 3 : 2) * Math.pow(0.6, run) * Math.max(0.2, 1 - (d.legacy ?? 0) / 220);
+  return softStep(d, base, 1);
 }
 
 function tryoutBlock(d: Game): string | null {
@@ -1895,6 +2078,7 @@ function powerOffer(hero: AiHero, unlocked: readonly string[], discovered: reado
 
 export function freshen(game: Game): Game {
   game.heroes = mergeHeroes(game.heroes);
+  migrateChapters(game);
   if (game.crew) {
     if (typeof game.crew.heat !== "number") game.crew.heat = 15;
     if (typeof game.crew.loyalty !== "number") game.crew.loyalty = 55;
@@ -1970,6 +2154,27 @@ export function act(game: Game, id: string): Game {
     d.card = { ...d.card, banner: [`${slot.name} is what you bring.`] };
     return d;
   }
+  if (id.startsWith("buy|") || id.startsWith("sell|")) {
+    ensureMarket(d);
+    const res = id.startsWith("buy|") ? buyItem(d, id.slice(4)) : sellAsset(d, id.slice(5));
+    if (!res.ok) {
+      d.card = { ...d.card, banner: [res.line] };
+      return d;
+    }
+    const deltas: Delta[] = [];
+    applyEffects(d, res.effects, deltas);
+    if (res.heat) {
+      const heat = clamp((d.flags.heat ?? 0) + res.heat, 0, 40);
+      if (heat > 0) d.flags.heat = heat;
+      else delete d.flags.heat;
+    }
+    if (res.legacy) d.legacy = (d.legacy ?? 0) + res.legacy;
+    d.stats.money = clamp(d.stats.money, -20000, 100_000_000);
+    d.card = { kicker: whenLabel(d.age, d.month), banner: [res.line], body: d.card.body, deltas };
+    if (res.legacy) pushHistory(d, res.line, "major");
+    peaks(d);
+    return d;
+  }
   const power = powerById(d.powerId);
 
   if (id === "rest") {
@@ -1999,6 +2204,7 @@ export function act(game: Game, id: string): Game {
           text: "No posters. A circle of people who paid to see someone else lose.",
           minigame: {
             kind: "timing",
+            verb: "bout",
             title: "Underground bout",
             subtitle: "Three beats. The crowd wants blood or a story.",
             difficulty: 2,
@@ -2138,6 +2344,8 @@ export function act(game: Game, id: string): Game {
       d,
       {
         kind: "timing",
+        verb: "drill",
+        vars: { power: trained.name, level: String(level), cap: String(cap) },
         title: `Drill ${trained.name}`,
         subtitle: `Mastery ${level}/${cap}. Small gains. The wall is real.`,
         difficulty: clamp(level, 1, 3),
@@ -2162,6 +2370,7 @@ export function act(game: Game, id: string): Game {
       d,
       {
         kind: "timing",
+        verb: "stunt",
         title: "Public stunt",
         subtitle: "Stick it. The phones are already up.",
         difficulty: d.stats.powerLevel > 6 ? 2 : 3,
@@ -2240,6 +2449,7 @@ export function act(game: Game, id: string): Game {
       d,
       {
         kind: "timing",
+        verb: "spar",
         title: "Campus spar",
         subtitle: "Coach is watching. So is the kid who wants your spot.",
         difficulty: clamp(school.tier, 1, 3),
@@ -2300,8 +2510,9 @@ export function act(game: Game, id: string): Game {
 
   if (id === "shift") {
     const job = jobById(d.jobId);
-    if (!job || noTime(d, true)) return game;
+    if (!job || d.flags.shifted || noTime(d, true)) return game;
     spend(d);
+    d.flags.shifted = 1;
     const bonus = Math.round(job.pay * 0.08 * ([1, 1.1, 1.2, 1.35, 1.5][d.jobRank] ?? 1));
     const deltas: Delta[] = [];
     applyEffects(d, { money: bonus, happiness: -1 }, deltas);
@@ -2371,6 +2582,8 @@ export function act(game: Game, id: string): Game {
       d,
       {
         kind: d.powerId ? "timing" : "pattern",
+        verb: "tryout",
+        only: d.powerId ? undefined : ["pattern", "press", "rescue"],
         title: "League tryout",
         subtitle: d.powerId ? "Show them the gift, not the nerves." : "No powers. Show them the plan.",
         difficulty: 2,
@@ -2395,7 +2608,8 @@ export function act(game: Game, id: string): Game {
       openMini(
         d,
         {
-          kind: roll(d) < 0.55 ? "timing" : "pattern",
+          kind: "timing",
+          verb: "dispatch",
           title: "Dispatch",
           subtitle: syn ? `${team?.name ?? "Your team"} moves like you practiced this.` : "You are slightly out of position. Improvise.",
           difficulty: clamp(2 + Math.floor(d.leagueRank / 2), 2, 3),
@@ -2428,6 +2642,7 @@ export function act(game: Game, id: string): Game {
             text: "You announce yourself. Subtlety leaves the chat.",
             minigame: {
               kind: "timing",
+              verb: "loud",
               title: "Go loud",
               subtitle: "Three beats. Don't miss the one that matters.",
               difficulty: 3,
@@ -3010,6 +3225,8 @@ export function act(game: Game, id: string): Game {
           kind: "timing",
           title: `Spar ${hero.alias}`,
           subtitle: withHero ? "They match the power you're focused on." : "Bond isn't deep enough for this generation. The reps stay small.",
+          verb: "herospar",
+          vars: { hero: hero.alias, note: withHero ? "They match the power you're focused on." : "Bond isn't deep enough for this generation. The reps stay small." },
           difficulty: clamp(2 + focusGen, 1, 3),
           winText: "You tag them. They look proud and annoyed, which is their love language.",
           partialText: "You split the hour. Both of you pretend that was the plan.",
@@ -3052,9 +3269,30 @@ export function act(game: Game, id: string): Game {
     hero.relationship = clamp(hero.relationship + 5, 0, 100);
     hero.exp += 18;
     const before = hero.level;
-    hero.level = levelFor(hero.exp);
+    settleHeroLevel(hero);
     const grew = hero.level > before ? ` They hit level ${hero.level}.` : "";
     setStory(d, `${hero.alias} teaches you ${name || power.name}. It is yours now, which means it can braid.${grew}`, [], [`Learned ${power.name}`], "major");
+    peaks(d);
+    return d;
+  }
+
+  if (id === "mentor") {
+    if (d.age < 45 || d.flags.mentored || noTime(d, true)) return game;
+    spend(d);
+    d.flags.mentored = 1;
+    const deltas: Delta[] = [];
+    const good = roll(d) < 0.25 + Math.min(0.5, d.stats.reputation / 200 + (d.legacy ?? 0) / 200);
+    const gain = mentorLegacy(d, good);
+    d.legacy = (d.legacy ?? 0) + gain;
+    applyEffects(d, { happiness: good ? 4 : 2, reputation: d.stats.reputation >= 0 ? 1 : 0, karma: 1 }, deltas);
+    if (gain > 0) deltas.unshift({ stat: "Legacy", amount: gain });
+    const tired = (d.flags.mentorRun ?? 0) >= 4;
+    const line = good
+      ? "The rookie gets it on the third try and looks at you like you invented gravity. You did not. You let them think it a while."
+      : tired
+        ? "Another rookie, another afternoon. They learn. You notice you are repeating yourself, which is its own lesson."
+        : "You spend an afternoon on footwork and bad habits. The rookie is slow. So were you.";
+    setStory(d, line, deltas, [], undefined);
     peaks(d);
     return d;
   }
@@ -3069,7 +3307,8 @@ export function act(game: Game, id: string): Game {
     hero.unlocked.push(power.id);
     hero.relationship = clamp(hero.relationship + 4, 0, 100);
     hero.exp += 16;
-    hero.level = levelFor(hero.exp);
+    settleHeroLevel(hero);
+    d.legacy = (d.legacy ?? 0) + 3;
     setStory(d, `You walk ${hero.alias} through ${power.name}. They get it faster than you did, which you allow them to notice.`, [], [], "major");
     peaks(d);
     return d;
@@ -3173,7 +3412,7 @@ export function act(game: Game, id: string): Game {
       spend(d);
       hero.relationship = clamp(hero.relationship + 3, 0, 100);
       hero.exp += 8;
-      hero.level = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship));
+      settleHeroLevel(hero);
       const extra = finishStep(d);
       setStory(d, `${hero.alias} gives you the page about ${current.arc.villain}. ${step.brief}${extra}`, [], [], "major");
       peaks(d);
@@ -3226,7 +3465,7 @@ export function act(game: Game, id: string): Game {
         d,
         makeDuel(
           d,
-          { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.kind === "boss" ? 6.4 : 4.2 },
+          { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.kind === "boss" ? 6.4 : 4.2, boss: step.kind === "boss" },
           {
             title: foeName,
             subtitle: `${step.brief} Your six moves.`,
@@ -3341,7 +3580,7 @@ export function applyHeroTalk(game: Game, heroId: string, line: string, reply: s
   const delta = prior === 0 ? judged.delta : Math.sign(judged.delta) * Math.min(2, Math.abs(judged.delta));
   hero.relationship = clamp(hero.relationship + delta, 0, 100);
   hero.exp += 2;
-  hero.level = Math.min(levelFor(hero.exp), heroLevelCap(hero.relationship));
+  settleHeroLevel(hero);
   hero.memory.push({ role: "you", text: said.slice(0, 180) });
   hero.memory.push({ role: "them", text: heard.slice(0, 280) });
   if (hero.memory.length > 8) hero.memory.splice(0, hero.memory.length - 8);
@@ -3376,6 +3615,7 @@ export function actionsFor(g: Game): ActionItem[] {
 
   if (g.age >= 1) {
     items.push(item({ id: "rest", group: life, section: "This month", label: "Rest", detail: "Health and a little peace. Once a month.", disabled: g.flags.rested ? "You already rested." : undefined }));
+    if (g.age >= 45) items.push(item({ id: "mentor", group: life, section: "This month", label: "Mentor a rookie", detail: "Legacy and a little joy. Once a month.", disabled: g.flags.mentored ? "One rookie a month is plenty." : noTime(g, true), accent: g.age >= 60 && !g.flags.mentored }));
   }
   if (g.age >= 8) items.push(item({ id: "gym", group: life, section: "This month", label: "Hit the gym", detail: "Lift, run, or an underground bout.", disabled: noTime(g, true) }));
   if (g.age >= 6) items.push(item({ id: "books", group: life, section: "This month", label: "Hit the books", detail: "Library, stolen notes, or the cape columns.", disabled: noTime(g, true) }));
@@ -3484,7 +3724,7 @@ export function actionsFor(g: Game): ActionItem[] {
   if (g.jobId) {
     const job = jobById(g.jobId);
     const title = JOB_TITLES[g.jobRank] ?? "Staff";
-    items.push(item({ id: "shift", group: career, section: job?.name ?? "Work", label: "Work a heavy shift", detail: `${title}. Extra cash, less joy.`, disabled: noTime(g, true) }));
+    items.push(item({ id: "shift", group: career, section: job?.name ?? "Work", label: "Work a heavy shift", detail: `${title}. Extra cash, less joy.`, disabled: g.flags.shifted ? "Once a month. Your back says so." : noTime(g, true) }));
     items.push(item({ id: "promote", group: career, section: job?.name ?? "Work", label: "Ask for a promotion", detail: title, disabled: noTime(g, true) }));
     items.push(item({ id: "quit", group: career, section: job?.name ?? "Work", label: "Quit", detail: "Freedom has a receipt." }));
   } else if (g.age >= 15) {
@@ -3561,7 +3801,7 @@ export function heirFrom(g: Game): NewLifeOpts | null {
     look: g.look,
     giftId: g.giftId ?? legacyComboId(g.powerId) ?? g.unlockedPowers?.[0] ?? null,
     seed: (g.rng ^ (oldest.age * 997 + 13)) >>> 0 || 1,
-    heir: { fame: g.peak.fame, powerBias: oldest.latentPower ?? g.powerId, belief: 78 },
+    heir: { fame: g.peak.fame, powerBias: oldest.latentPower ?? g.powerId, belief: 78, trust: g.flags.trust ?? 0 },
   };
 }
 
