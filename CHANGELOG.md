@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026-10-31 (night): Mystery Life, God Mode legends, clearer chapter goals (`devbot/2026-10-31-night`)
+
+### Mystery Life is now the main mode (`mystery.ts`, `engine.ts`, `Legends.tsx`)
+
+- New lives start on a mode screen. **Mystery Life** is marked Recommended. **God Mode** is the sandbox.
+- In a Mystery Life the power is sealed at birth (`hiddenGift`). It wakes on a random birthday from 7 to 15.
+  - Upbringing and traits tilt which power it is. About 1 life in 8 gets a braided Gen 1 gift.
+- **The reveal:** a full-screen overlay with element-coloured rays, a flash, bursts, the power name and a story line. It only closes after the animation has finished.
+- **Before the reveal:**
+  - Drills, mixes, teachers, year powers, sparks and grants are all locked (`giftsSealed`).
+  - Powers ▸ Your gift shows a "Sealed power" card instead.
+- **Childhood stays playful:**
+  - From age 4, Life ▸ Today ▸ *Chase the strange feeling* finds one omen a month. Omens are element-flavoured and framed by your home (Joy +2, Mind +1).
+  - Mystery lives also get birthday omen banners.
+  - After two omens you can **Call it** (Powers ▸ Call it). Call it right and the reveal adds +0.25 power and says so.
+- The reveal adds a bonus "drill your new power" goal to the current chapter.
+
+### God Mode legends (`presets.ts`, `engine.ts`, `Legends.tsx`, `src/assets/art/hero-*.ts`)
+
+- **Four legends, using real names for now:** Spider-Man (Earth-3145), Batman (Earth-3939), Iron Man / Tony Stark (Earth-6380) and Hulk (Earth-1962).
+  - Each is a multiverse variant with its own twist, a portrait, themed decade chapters, a canon family and signature villains with authored movesets. Tony's villains include Ultron.
+- **Canon beats** arrive on set birthdays as choices: follow, bend or break. Results are tracked (`canonKept`, `canonBent`, `canonBroken`) and shown on the chapter card as an Earth badge.
+  - Fight choices become boss duels against the canon villain.
+  - Canon losses (Uncle Ben; Thomas and Martha Wayne; Howard and Maria Stark) really happen unless you break canon.
+- **Powers:**
+  - Legend powers wake at their canon age: the Bite at 15, the Cave at 24, the gamma blast at 28.
+  - Batman takes a human vow: no powers ever, with gadget and training goals instead.
+- **Build your own:** pick up to 3 powers (at most one Apex), any city, upbringing and look, plus up to 2 earned traits from day one.
+  - The Gen 2 cap, the six-move loadout and the Fire + Speed → Light Speed (+ Strength → Lightning Strikes) chain all still apply.
+- Everything is offline data; no `XAI_API_KEY` is needed.
+
+### Clearer chapter goals (`chapters.ts`, `Chapters.tsx`)
+
+- Every goal shows its exact path (tab ▸ section ▸ button) with a tap icon, plus an x/y progress count.
+- Goals you can't work on yet are greyed out with a lock tag: "Unlocks at N", or "Unlocks when your power wakes".
+- **Reachability:** power goals are only picked for a chapter if the power can wake at least 2 years before it ends. Omen goals only appear in Mystery lives.
+
+### Fixes
+
+- **Save loading:** the old starter-bundle cleanup no longer strips God Mode picks or Mystery/legend powers.
+
 ## 2026-10-31 (pm): mid-life case files, a real bond curve, fewer repeats (`devbot/2026-10-31-pm`)
 
 ### Story arcs (`arcs.ts`, `origin.ts`, `engine.ts`)

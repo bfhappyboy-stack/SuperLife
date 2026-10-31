@@ -1,5 +1,41 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-10-31 night): Mystery Life, God Mode, goal clarity
+
+**How it was tested**
+- **Engine sims:** `/workspace/playtest/night.ts` + `night-pol.ts`.
+  - Two Mystery seekers (supportive/protector, rural/thrill) and the four legends, 3 seeds each, to death.
+- **Browser:** Playwright at 390×844, touch.
+  - Fresh mode select → God picker → Begin as Spider-Man.
+  - Build your own (Fire + Speed).
+  - Mystery start.
+  - Injected saves: age 6 dormant, age 10 chapter, the reveal birthday, Spidey's Bite, Batman's Joker beat, Tony's 20s chapter.
+  - No console errors.
+  - Screenshots: `/workspace/superlife-shots/night/*.png`.
+
+**Before (main)**
+- Goals said what to do, not where. Several goals were picked that a life could not reach in its chapter.
+- 6 policies × 4 seeds: `partner 3/18`, `fame 0/5`, `quietfame 1/12`, `infamy 0/8`.
+- There was no hidden-power mode and no legends.
+
+**After**
+- **Mystery seekers:**
+  - The power woke at 8–13, every life on a birthday, with a reveal every time.
+  - The omen goal was hit 4/4. A child never got a power action before the reveal (see the tests).
+- **Legends:**
+  - The canon goal was hit 66/66.
+  - Each life had 8–10 canon beats with a real mix: e.g. Spider-Man kept 5 / bent 4 / broke 1.
+  - Batman stayed human for life (0 powers, 0 moves). Tony and Hulk wake at 24 and 28, and no power goal appears before that.
+- **Still low (policy artefacts, checked by hand):**
+  - `partner`: a targeted check found a partner at 16 on every seed.
+  - `quietfame` and `standing`.
+- **Found:**
+  - God picks were silently pruned on reload by the old starter-bundle migration. Fixed, with a regression test.
+  - The reveal title overlapped on multi-power legends. It now shows one name and "+ power" chips.
+  - Lock chips squeezed goal titles. Moved under the title.
+- **Balance note:** seeker policies still end lives owning about 130 powers (mentor and mix glut). This predates tonight and is in the backlog.
+
+
 How it was tested:
 - **Engine sims:** `/workspace/playtest/*.ts` (outside the repo) drive `createGame/act/choose/resolveMini/ageUp` directly.
   - Three contrasting policies, 20 seeds each, to age 120 or death.

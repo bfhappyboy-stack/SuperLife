@@ -1,5 +1,22 @@
 # SuperLife — Backlog
 
+## From the 2026-10-31 night pass
+
+1. **Legends polish.**
+   - Real names are placeholders until you decide: keep them, or rename them to parody variants.
+   - More canon beats per decade (60s+ are thin).
+   - Arch-enemy picks in a legend life can still name a generic villain (e.g. Taxman) next to "files it under canon". These should prefer the legend's rogues.
+2. **Batman's vow.**
+   - Today the human vow forbids all powers.
+   - An option to let a "bend canon" choice break the vow: decide.
+3. **God Mode limits.**
+   - 3 powers, 1 Apex and 2 earned traits. Revisit after feedback.
+4. **Power glut.** Seekers own ~130 powers by 80 through mentors and mixes. Cap learn/mix per year, or raise mix costs with the count owned.
+5. **Reveal extras.**
+   - A haptic and sound hook.
+   - A shareable reveal card.
+   - A "first move" mini right after Embrace it.
+
 ## NEXT (from the 2026-10-31 playtest)
 
 1. **Minigames.** **Shipped 2026-10-31 (am):** Crack, Rescue, Press and Hold, plus verb pools and a shared frame. Timing fell from about 85% to about 30% of celeb minis. Still open:
