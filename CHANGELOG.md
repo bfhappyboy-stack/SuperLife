@@ -1,5 +1,43 @@
 # Changelog
 
+## 2026-10-31 (pm): mid-life case files, a real bond curve, fewer repeats (`devbot/2026-10-31-pm`)
+
+### Story arcs (`arcs.ts`, `origin.ts`, `engine.ts`)
+
+- Four new six-step cases carry the story through the 30s, 40s and 50s:
+  - **The Understudy** (Second Skin, from 28, needs 1 closed case, Legacy +4);
+  - **Dead Air** (Static Bishop, from 35, Legacy +5);
+  - **The Long Winter** (The Frost Warden, from 44, Legacy +6);
+  - **Old Debts** (The Heir, from 54, needs 2 closed cases, Legacy +8).
+- Each city's dossier now lists one of them as a local case.
+- New data fields: `foeLevel` (mid-life foes hit harder than the teen 4.2/6.4 defaults), `minCleared`, `legacy` and `era`.
+- Closing a case with `legacy` grants it and says so.
+- Drill steps that name no power now check your focus power's mastery.
+- The Cases action list shows at most 3 open files, labelled by era.
+
+### Hero bonds (`heroes.ts`, `engine.ts`)
+
+- Every bond gain goes through one curve, `bondStep`: gains shrink as the bond rises, and each hero has a yearly room (5 points at bond 0, 1 near 100).
+- Bonds above 40 drift down 2 a year when you don't see that hero, never below 40.
+- Why: bonds stalled at about 32, so the "trust" goal never fired. Once talk counted, they shot to 100 by 20. The curve now gives about 53 at 20, 72 at 30, 82 at 40 and 92 at 50.
+
+### Repetition (`prompts.ts`)
+
+- New phase-keyed prompt pools (young, prime, crisis, late) for the gym, books, patrol, League call, villain pins, a villain dropping in, a night out and a cape visiting you. The same line never shows twice in a row.
+- The cape-visit line ("finds you on purpose") was the top repeat at 50–80 times a life. It now rotates through 3–4 lines per phase.
+
+### Case file UI (`PowerLab.tsx`)
+
+- The case file is now a dossier card:
+  - a header tinted by the villain's element, with the era and how many cases you've closed;
+  - a six-node step track with an icon for each step kind, ticks for finished steps and a glow on the current one;
+  - a "Now" panel with the step brief and what closing the case pays.
+- With no case open, the card lists up to 3 open files with element tiles, era and a "this city" tag.
+
+### Tests
+
+- `arcs.test.ts`: checks that cases are well formed (6 steps, a boss at the end, real heroes, legacy foe powers), that dossiers name real cases, mid-life gating, the bond curve, and that prompts don't repeat.
+
 ## 2026-10-31 (am): minigame variety, reachable chapter goals, soft caps (`devbot/2026-10-31-am`)
 
 ### Minigames (`minis.ts`, `Minigame.tsx`, `MiniKit.tsx`, `MiniGames.tsx`, `miniUtil.ts`, `haptics.ts`)

@@ -44,6 +44,11 @@ This is the owner's design, written down as faithfully as possible. Where the co
 
 - There are **multiple story arcs** with villains, quests, and hero reactions (`arcs.ts`, `origin.ts` dossiers).
 
+### Mid-life cases and bonds (2026-10-31 pm)
+
+- Cases are written for a chapter era. Mid-life cases unlock by age and by closed cases (`minCleared`), use harder foes (`foeLevel`), and pay Legacy when closed.
+- Hero bonds follow one diminishing curve: gains shrink as the bond rises, each hero has a yearly room (5 points at bond 0, 1 near 100), and a bond above 40 drifts down 2 a year without contact. A close bond takes decades of grinding.
+
 ## 5. Cities
 
 - **New York City**

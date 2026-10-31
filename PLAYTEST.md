@@ -128,3 +128,22 @@ Mobile screenshots at 390×844: `/workspace/superlife-shots/2026-10-31-am/`.
   - Arcs run out by 30.
   - Prompt repetition.
   - Property upkeep of $58k a year by 87 is a slow drain, which is fine.
+
+
+# 2026-10-31 (pm): scholar-hero, Neon Spire, telekinesis
+
+Played Noor Haddad, a studious Neon Spire hero with Telekinesis, with a new "sci" policy: books, hero training, League missions, cases, and talking to heroes every 4 months. 4 seeds, lives of 73–93 years. I also looked at the Cases desk at 31 and 46 on a 390px screen.
+
+## Before
+
+- The harness never picked hero actions, so bonds looked frozen. Fixed in the harness. With them counted, bonds hit 100 by about 20, because talk is free.
+- Every case was closed by 30. From 30 to 90 the Cases desk said "No open cases".
+- Top repeat: "<cape> finds you on purpose" 50–80 times a life, then the gym, the books and the League lines.
+- The case file was a plain numbered list.
+
+## After
+
+- Bonds by decade: 53 at 20, 72 at 30, 82 at 40, 92 at 50, and 100 from about 60. The trust goal is now reachable in the 30s.
+- Cases closed: 7–8 per life, with the last one (Old Debts) in the 50s.
+- The cape-visit line is gone from the top repeats. The books lines are now the top repeats (47–94 times each) even with 4–5 variants, because this policy reads about 500 times a life.
+- Still open: no case for the 60s and 70s, and few mid-life verbs.

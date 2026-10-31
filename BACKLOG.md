@@ -37,10 +37,12 @@
 8. **Art. Shipped 2026-10-31:** all 8 cities have backdrops, and chapter cards have per-phase accents and motifs. Open: regenerate Neon without pseudo-text signage; move art to real `.webp` files when git push is available. Original note: Backdrops exist for NYC, the Hood, the Stacks and the title. Add Metro, Harbor, Neon, Dustreach, Crownbridge and per-chapter-phase art (same pipeline, ~20–30KB each).
 9. **Economy tuning. Done 2026-10-31:** influence fatigue + fame fade; the crook lifespan gap was sampling noise (N=12: 81 with market vs 78 without). Original note: With the market on, hero lives end with ~$0.4M cash but ~$2.5M in holdings at 70. Watch whether influence (the top spend) is too strong a fame lever, and why crook lives get shorter with the market on (75 vs 81 median).
 10. **Haptics.** **Shipped 2026-10-31 (am)** for the skill minis. Open: the duel and a settings toggle.
-12. **Story arcs run out by 30** (2026-10-31 am playtest). Only 4 arcs exist. Add mid-life arcs (crisis and legacy phases) so the arc goal and the story carry past 30.
-13. **Hero bonds stall at about 32**, so the trust goal is never met (0/29). Hero talk and spar need a bond curve that can reach 60 by the 30s.
+12. **Shipped 2026-10-31 (pm):** four mid-life cases (28–54+), so sims now close 7–8 cases by the 50s. Next: a case for the 60s/70s (mentor and final phases), and villain gimmick phases in the bosses. Original: **Story arcs run out by 30** (2026-10-31 am playtest). Only 4 arcs exist. Add mid-life arcs (crisis and legacy phases) so the arc goal and the story carry past 30.
+13. **Fixed 2026-10-31 (pm):** a diminishing bond curve with yearly room and drift (53 at 20, 72 at 30, 92 at 50). Original: **Hero bonds stall at about 32**, so the trust goal is never met (0/29). Hero talk and spar need a bond curve that can reach 60 by the 30s.
 14. **Mind saturates** at 100 by about 30 for studious heroes. Consider ageing decay after 60 or a "wisdom" reframe.
-15. **Repeat prompt variants.** Night out (503×), the League call (293×) and villain pins (about 190× each) need 4–6 phase-keyed variants.
+15. **Shipped 2026-10-31 (pm):** `prompts.ts` pools for 8 prompts. Still open: books lines repeat about 50–90 times in a heavy-study life even across 4–5 variants, so books may need a mini or a shorter cooldown. Original: **Repeat prompt variants.** Night out (503×), the League call (293×) and villain pins (about 190× each) need 4–6 phase-keyed variants.
+16. **Mid-life verbs** (2026-10-31 pm playtest). From 40 a studious life is mostly books, hero training and League missions. Add verbs for the 40s–60s: running a team, a public inquiry, raising a sidekick, a comeback fight.
+17. **Fight injuries.** Boss fights in the 40s and 50s should risk a lasting injury that links to the collapse system.
 11. **Creation, next.** More hair cuts and face features need new SVG in `Figure.tsx` and `Portrait.tsx`. Eye colour and a third "face" (urban legend) are candidates.
 
 ## AUDIT (2026-10-30)
