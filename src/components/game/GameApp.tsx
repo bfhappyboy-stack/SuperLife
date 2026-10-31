@@ -1,4 +1,4 @@
-import { Banknote, ChevronRight, FastForward, Home, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, X } from "lucide-react";
+import { Banknote, ChevronRight, Heart, FastForward, Home, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChapterOverlay, ChapterStrip } from "@/components/game/Chapters";
 import { Closet } from "@/components/game/Closet";
@@ -149,18 +149,18 @@ function CreateScreen() {
   return (
     <main className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-6 pb-4">
-      <button type="button" onClick={toTitle} className="self-start text-sm font-semibold text-muted">
+      <button type="button" onClick={toTitle} className="btn btn-ghost !min-h-10 self-start !px-3 text-sm">
         Back
       </button>
-      <h1 className="mt-3 font-display text-4xl text-fg">NEW LIFE</h1>
+      <h1 className="t-hero anim-pop mt-2 !text-5xl text-fg">NEW <span className="text-gold">LIFE</span></h1>
       <p className="mt-2 text-sm text-muted">A face, a suit, and one gift. Everything after that has to be learned.</p>
       {existing && <p className="mt-3 text-sm text-gold">Starting over replaces the life you have saved.</p>}
-      <div className="mt-4 overflow-hidden rounded-2xl">
+      <div className="mt-4 overflow-hidden rounded-[1.5rem] border border-white/10 shadow-[0_18px_40px_-20px_rgba(0,0,0,.8)]">
         <div className="relative h-80">
           <Figure seed={portrait} age={16} sex={sex} look={look} wardrobe={starterWardrobe()} className="absolute inset-0 h-full w-full" />
         </div>
       </div>
-      <h2 className="mt-4 text-sm font-semibold text-muted">You</h2>
+      <h2 className="t-label mt-5 text-gold">You</h2>
       <div className="mt-2 grid grid-cols-2 gap-2">
         {(["female", "male"] as const).map((option) => (
           <button
@@ -168,7 +168,7 @@ function CreateScreen() {
             type="button"
             aria-pressed={sex === option}
             onClick={() => chooseSex(option)}
-            className={`min-h-12 rounded-2xl border px-4 text-left font-semibold ${sex === option ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+            className={`card min-h-12 px-4 py-2.5 text-left font-semibold ${sex === option ? "!border-gold !bg-panel-2 text-fg shadow-[0_0_20px_-8px_var(--color-gold)]" : "text-muted"}`}
           >
             {option === "female" ? "Female" : "Male"}
           </button>
@@ -182,7 +182,7 @@ function CreateScreen() {
             setPortrait(next);
             setLook(resolveLook(next));
           }}
-          className="min-h-12 flex-1 rounded-2xl border border-line bg-panel px-4 font-semibold text-fg"
+          className="btn btn-ghost min-h-12 flex-1"
         >
           Reroll look
         </button>
@@ -192,7 +192,7 @@ function CreateScreen() {
       <LookRow title="Cut" names={STYLE_NAMES} value={look.style} onPick={(index) => setLook({ ...look, style: index })} />
       <LookRow title="Build" names={BUILD_NAMES} value={look.build} onPick={(index) => setLook({ ...look, build: index })} />
       <LookRow title="Face" names={FEATURE_NAMES} value={look.feature} onPick={(index) => setLook({ ...look, feature: index })} />
-      <label className="mt-5 text-sm font-semibold text-muted" htmlFor="hero-name">
+      <label className="t-label mt-6 text-gold" htmlFor="hero-name">
         Name
       </label>
       <div className="mt-2 flex gap-2">
@@ -204,13 +204,13 @@ function CreateScreen() {
             setName(event.target.value);
             setNameEdited(true);
           }}
-          className="min-h-12 w-full rounded-2xl border border-line bg-panel-2 px-4 text-fg"
+          className="min-h-12 w-full rounded-2xl border border-white/10 bg-black/30 px-4 font-bold text-fg shadow-[inset_0_1px_3px_rgba(0,0,0,.5)] focus:border-gold focus:outline-none"
         />
-        <button type="button" onClick={() => { setName(rollName(sex)); setNameEdited(false); }} className="min-h-12 shrink-0 rounded-2xl border border-line bg-panel px-4 font-semibold text-fg">
+        <button type="button" onClick={() => { setName(rollName(sex)); setNameEdited(false); }} className="btn btn-ghost min-h-12 shrink-0">
           Random
         </button>
       </div>
-      <h2 className="mt-5 text-sm font-semibold text-muted">City</h2>
+      <h2 className="t-label mt-6 text-gold">City</h2>
       <div className="mt-2 flex flex-col gap-2">
         {CITIES.map((item) => (
           <button
@@ -218,14 +218,14 @@ function CreateScreen() {
             type="button"
             aria-pressed={cityId === item.id}
             onClick={() => setCityId(item.id)}
-            className={`min-h-12 rounded-2xl border px-4 text-left ${cityId === item.id ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+            className={`card min-h-12 px-4 py-2.5 text-left ${cityId === item.id ? "!border-gold !bg-panel-2 text-fg shadow-[0_0_20px_-8px_var(--color-gold)]" : "text-muted"}`}
           >
             <span className="block font-semibold text-fg">{item.name}</span>
             <span className="text-sm">{item.flavor}</span>
           </button>
         ))}
       </div>
-      <h2 className="mt-5 text-sm font-semibold text-muted">Childhood</h2>
+      <h2 className="t-label mt-6 text-gold">Childhood</h2>
       <div className="mt-2 flex flex-col gap-2">
         {UPBRINGINGS.map((item) => (
           <button
@@ -233,14 +233,14 @@ function CreateScreen() {
             type="button"
             aria-pressed={upbringing === item.id}
             onClick={() => setUpbringing(item.id)}
-            className={`min-h-12 rounded-2xl border px-4 py-3 text-left ${upbringing === item.id ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+            className={`card min-h-12 px-4 py-3 text-left ${upbringing === item.id ? "!border-gold !bg-panel-2 text-fg shadow-[0_0_20px_-8px_var(--color-gold)]" : "text-muted"}`}
           >
             <span className="block font-semibold text-fg">{item.title}</span>
             <span className="text-sm">{item.detail}</span>
           </button>
         ))}
       </div>
-      <h2 className="mt-5 text-sm font-semibold text-muted">How the city sees you</h2>
+      <h2 className="t-label mt-6 text-gold">How the city sees you</h2>
       <div className="mt-2 flex flex-col gap-2">
         {FACE_TRAITS.map((item) => (
           <button
@@ -248,14 +248,14 @@ function CreateScreen() {
             type="button"
             aria-pressed={face === item.id}
             onClick={() => setFace(item.id)}
-            className={`min-h-12 rounded-2xl border px-4 py-3 text-left ${face === item.id ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+            className={`card min-h-12 px-4 py-3 text-left ${face === item.id ? "!border-gold !bg-panel-2 text-fg shadow-[0_0_20px_-8px_var(--color-gold)]" : "text-muted"}`}
           >
             <span className="block font-semibold text-fg">{item.title}</span>
             <span className="text-sm">{item.blurb}</span>
           </button>
         ))}
       </div>
-      <h2 className="mt-5 text-sm font-semibold text-muted">What drives you</h2>
+      <h2 className="t-label mt-6 text-gold">What drives you</h2>
       <div className="mt-2 flex flex-col gap-2">
         {DRIVE_TRAITS.map((item) => (
           <button
@@ -263,7 +263,7 @@ function CreateScreen() {
             type="button"
             aria-pressed={drive === item.id}
             onClick={() => setDrive(item.id)}
-            className={`min-h-12 rounded-2xl border px-4 py-3 text-left ${drive === item.id ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+            className={`card min-h-12 px-4 py-3 text-left ${drive === item.id ? "!border-gold !bg-panel-2 text-fg shadow-[0_0_20px_-8px_var(--color-gold)]" : "text-muted"}`}
           >
             <span className="block font-semibold text-fg">{item.title}</span>
             <span className="text-sm">{item.blurb}</span>
@@ -272,7 +272,7 @@ function CreateScreen() {
       </div>
       <GiftPicker tier={tier} giftId={giftId} onTier={setTier} onGift={setGiftId} />
       </div>
-      <div className="shrink-0 border-t border-line px-5 pt-3 pb-24">
+      <div className="shrink-0 border-t border-white/10 bg-ink/85 px-5 pt-3 pb-24 backdrop-blur">
         <p className="mb-2 text-sm text-muted">
           {house?.title} in {city?.name}. {faceTrait?.title}. {driveTrait?.title}. {giftId ? (allPowers().find((power) => power.id === giftId)?.name ?? "One gift") : "No gift"}.
         </p>
@@ -280,7 +280,7 @@ function CreateScreen() {
           type="button"
           disabled={!name.trim()}
           onClick={() => begin({ name: name.trim(), cityId: city?.id ?? "nyc", upbringing, portrait, sex, face, drive, look, giftId: giftId || null })}
-          className="min-h-12 w-full rounded-2xl bg-cape px-4 text-base font-semibold text-fg disabled:opacity-40"
+          className="btn btn-primary min-h-14 w-full text-lg disabled:opacity-40"
         >
           Begin at age 0
         </button>
@@ -688,43 +688,61 @@ function Obituary({ game }: { game: Game }) {
         : "Most people hear it from a notification and feel odd on the train.";
   const survived = game.relationships.filter((person) => person.alive && person.role !== "ex");
   return (
-    <main className="flex h-full min-h-0 flex-col overflow-y-auto px-5 pt-6 pb-24">
-      <p className="text-xs font-semibold tracking-widest text-gold">{game.city.toUpperCase()} HERALD</p>
-      <h1 className="mt-2 font-display text-5xl leading-none text-fg">{death.cause.toUpperCase()}</h1>
-      <div className="mt-4 flex items-center gap-3">
-        <Portrait seed={game.portrait} age={game.age} powerId={game.powerId} rank={game.leagueRank} mood={30} sex={game.sex} className="h-16 w-16 shrink-0" />
-        <p className="text-sm text-muted">
-          {game.name} · age {game.age} · {karmaLabel(game.stats.karma ?? 0)} · {tone}
-        </p>
-      </div>
-      <article className="mt-4 rounded-2xl bg-paper px-4 py-4 text-paper-ink">
-        <p className="text-pretty whitespace-pre-wrap leading-relaxed">{death.story}</p>
-        <p className="mt-3 text-sm">
-          Survived by {survived.length ? survived.map((person) => person.name).slice(0, 6).join(", ") : "the group chat"}.
-        </p>
-      </article>
-      <p className="mt-5 font-display text-5xl tabular-nums text-gold">{death.score}</p>
-      <p className="text-xs font-semibold tracking-widest text-muted">LIFE SCORE</p>
-      <ul className="mt-3 flex flex-col gap-1">
-        {death.rows.map((row) => (
-          <li key={row.label} className="flex justify-between text-sm">
-            <span className="text-muted">{row.label}</span>
-            <span className="tabular-nums text-fg">{row.points}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="mt-6 flex flex-col gap-2">
-        {kid && (
-          <button type="button" onClick={playHeir} className="min-h-12 rounded-2xl bg-cape px-4 text-left font-semibold text-fg">
-            Continue as {firstName(kid.name)}
+    <main className="relative flex h-full min-h-0 flex-col overflow-y-auto pb-24">
+      <CityScene cityId={game.cityId} phase="final" />
+      <div className="relative px-4 pt-6">
+        <article className="card-paper anim-rise overflow-hidden px-4 pt-4 pb-5">
+          <div className="flex items-center justify-between border-b-2 border-paper-ink/80 pb-1.5">
+            <p className="t-label text-[10px]">{game.city} Herald</p>
+            <p className="t-label text-[10px] opacity-60">Obituaries</p>
+          </div>
+          <h1 className="t-hero mt-3 !text-[2.6rem] !leading-[0.95]">{death.cause.toUpperCase()}</h1>
+          <div className="mt-3 flex items-center gap-3 border-y border-paper-ink/20 py-3">
+            <span className="shrink-0 rounded-2xl bg-paper-ink/90 p-0.5 grayscale-[35%]">
+              <Portrait seed={game.portrait} age={game.age} powerId={game.powerId} rank={game.leagueRank} mood={30} sex={game.sex} className="block h-16 w-16" />
+            </span>
+            <p className="text-sm">
+              <span className="block text-base font-extrabold">{game.name}</span>
+              Age {game.age} · {karmaLabel(game.stats.karma ?? 0)}
+              <span className="block opacity-70">{tone}</span>
+            </p>
+          </div>
+          <p className="mt-3 text-pretty whitespace-pre-wrap leading-relaxed first-letter:float-left first-letter:mr-1.5 first-letter:font-display first-letter:text-5xl first-letter:leading-[0.85]">{death.story}</p>
+          <p className="mt-3 text-sm italic opacity-80">
+            Survived by {survived.length ? survived.map((person) => person.name).slice(0, 6).join(", ") : "the group chat"}.
+          </p>
+        </article>
+        <section className="card-glass anim-rise mt-4 px-4 py-4" style={{ animationDelay: "160ms" }}>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="t-label text-muted">Life score</p>
+              <p className="anim-pop t-num font-display text-6xl leading-none text-gold drop-shadow-[0_0_18px_var(--color-gold)]">{death.score}</p>
+            </div>
+            <Star className="mb-2 size-9 text-gold" fill="currentColor" />
+          </div>
+          <ul className="stagger mt-3 flex flex-col gap-1.5">
+            {death.rows.map((row) => (
+              <li key={row.label} className="flex justify-between border-b border-white/5 pb-1.5 text-sm last:border-0">
+                <span className="text-muted">{row.label}</span>
+                <span className="t-num text-fg">{row.points}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+        <div className="mt-5 flex flex-col gap-2">
+          {kid && (
+            <button type="button" onClick={playHeir} className="btn btn-gold min-h-14 flex-col !gap-0 text-lg">
+              <span>Continue as {firstName(kid.name)}</span>
+              <span className="text-[11px] font-extrabold tracking-[0.14em] opacity-75">THE LEGACY CARRIES ON</span>
+            </button>
+          )}
+          <button type="button" onClick={openCreate} className={`btn ${kid ? "btn-ghost" : "btn-primary"} min-h-14 text-lg`}>
+            New life
           </button>
-        )}
-        <button type="button" onClick={openCreate} className="min-h-12 rounded-2xl border border-line bg-panel px-4 text-left font-semibold text-fg">
-          New life
-        </button>
-        <button type="button" onClick={toTitle} className="min-h-12 rounded-2xl px-4 text-left font-semibold text-muted">
-          Main menu
-        </button>
+          <button type="button" onClick={toTitle} className="btn btn-ghost !min-h-11 !border-transparent !bg-transparent !shadow-none text-muted">
+            Main menu
+          </button>
+        </div>
       </div>
     </main>
   );
@@ -738,16 +756,23 @@ function Roster({ game }: { game: Game }) {
       {rows.map((cape) => {
         const gift = powerById(cape.powerId);
         const you = cape.id === "you";
-        const tone = you ? "border-gold bg-panel-2" : cape.side === "villain" ? "border-bad bg-panel" : cape.side === "hero" ? "border-good bg-panel" : "border-line bg-panel";
+        const sideColor = you ? "#e6b34d" : cape.side === "villain" ? "#ff5a4f" : cape.side === "hero" ? "#5fe08f" : "#9aa3b8";
         return (
-          <article key={cape.id} className={`rounded-2xl border px-3 py-3 ${tone}`}>
-            <Portrait seed={cape.portrait} age={you ? game.age : 28} powerId={cape.powerId} rank={you ? game.leagueRank : 0} sex={you ? game.sex : cape.sex} className="h-12 w-12" />
-            <p className="mt-2 truncate font-semibold text-fg">
+          <article key={cape.id} className="card relative overflow-hidden px-3 py-3" style={{ borderColor: `${sideColor}aa` }}>
+            <div className="pointer-events-none absolute -top-8 -right-8 size-24 rounded-full opacity-40 blur-xl" style={{ background: sideColor }} />
+            <div className="flex items-start justify-between">
+              <Portrait seed={cape.portrait} age={you ? game.age : 28} powerId={cape.powerId} rank={you ? game.leagueRank : 0} sex={you ? game.sex : cape.sex} className="h-12 w-12" />
+              <span className="t-label rounded-full px-1.5 py-0.5 text-[9px]" style={{ background: `${sideColor}33`, color: sideColor }}>{cape.side === "villain" ? "Villain" : cape.side === "hero" ? "Hero" : "Rogue"}</span>
+            </div>
+            <p className="mt-2 truncate font-bold text-fg">
               {cape.alias}
               {you ? " · you" : ""}
             </p>
-            <p className="truncate text-xs text-gold">{cape.side === "villain" ? "Villain" : cape.side === "hero" ? "Hero" : "Rogue"}</p>
-            <p className="truncate text-xs text-muted">{gift?.name ?? "Unknown"} · heat {Math.round(cape.heat)}</p>
+            <p className="truncate text-xs text-muted">{gift?.name ?? "Unknown"}</p>
+            <div className="mt-1 flex items-center gap-1.5">
+              <span className="t-label text-[9px] text-muted">Heat</span>
+              <div className="stat-bar flex-1"><div className="stat-fill" style={{ width: `${Math.min(100, cape.heat)}%`, "--fill": sideColor } as CSSProperties} /></div>
+            </div>
             <p className="mt-1 line-clamp-2 text-xs text-muted">{cape.note}</p>
           </article>
         );
@@ -925,25 +950,32 @@ function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionIt
     <div className="mt-3 flex flex-col gap-3">
       {buckets.map((bucket) => {
         const person = bucket.person;
-        const tone = person?.arch || person?.role === "villain" || person?.role === "rival" ? "border-bad" : person?.role === "hero" ? "border-gold" : person?.role === "partner" || person?.role === "parent" ? "border-spark" : "border-line";
+        const tone = person?.arch || person?.role === "villain" || person?.role === "rival" ? "#ff5a4f" : person?.role === "hero" ? "#e6b34d" : person?.role === "partner" || person?.role === "parent" ? "#3fe0c5" : "#7d879c";
         return (
-          <article key={bucket.title} className={`rounded-2xl border bg-panel px-3 py-3 ${tone}`}>
-            <div className="flex items-center gap-3">
-              <Portrait seed={person?.portrait ?? bucket.title.length * 17} age={person?.age ?? 30} sex={person?.sex} className="h-12 w-12 shrink-0" />
+          <article key={bucket.title} className="card-glass relative overflow-hidden px-3 py-3" style={{ borderColor: `${tone}88` }}>
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-16 opacity-25" style={{ background: `linear-gradient(180deg, ${tone}, transparent)` }} />
+            <div className="relative flex items-center gap-3">
+              <span className="avatar-ring shrink-0" style={{ "--ring": tone } as CSSProperties}>
+                <Portrait seed={person?.portrait ?? bucket.title.length * 17} age={person?.age ?? 30} sex={person?.sex} className="block h-12 w-12" />
+              </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-fg">{bucket.title}</p>
+                <p className="truncate font-extrabold text-fg">{bucket.title}</p>
                 <p className="truncate text-xs text-muted">
                   {person?.arch ? "Arch-enemy" : person?.role ?? "Someone"}
                   {person?.note ? ` · ${person.note}` : ""}
                 </p>
                 {person && (
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-panel-2">
-                    <div className="h-full rounded-full bg-spark" style={{ width: `${Math.max(0, Math.min(100, person.closeness))}%` }} />
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <Heart className="size-3 shrink-0" style={{ color: tone }} fill="currentColor" />
+                    <div className="stat-bar flex-1">
+                      <div className="stat-fill" style={{ width: `${Math.max(0, Math.min(100, person.closeness))}%`, "--fill": tone } as CSSProperties} />
+                    </div>
+                    <span className="t-num text-[11px] text-muted">{Math.round(person.closeness)}</span>
                   </div>
                 )}
               </div>
             </div>
-            <div className="mt-3 flex flex-col gap-2">
+            <div className="relative mt-3 flex flex-col gap-2">
               {bucket.items.map((action) => (
                 <ActionRow key={action.id} action={action} onPress={() => onPress(action)} />
               ))}
@@ -989,7 +1021,7 @@ function LookRow({
             aria-pressed={value === index}
             aria-label={name}
             onClick={() => onPick(index)}
-            className={`flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-sm font-semibold ${value === index ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+            className={`card flex min-h-11 items-center gap-2 px-3 text-sm font-bold ${value === index ? "!border-gold !bg-panel-2 text-fg" : "text-muted"}`}
           >
             {swatch && <span className="swatch size-5 rounded-full" data-swatch={`${swatch}-${index}`} />}
             {name}
@@ -1038,7 +1070,8 @@ function GiftPicker({
                 if (next) onGift(next.id);
               }
             }}
-            className={`min-h-11 rounded-2xl border text-sm font-semibold ${tier === item.id ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+            aria-selected={tier === item.id}
+            className="seg !min-h-11 justify-center"
           >
             {item.label}
           </button>
@@ -1069,7 +1102,7 @@ function GiftPicker({
             type="button"
             aria-pressed={giftId === power.id}
             onClick={() => onGift(power.id)}
-            className={`min-h-11 rounded-2xl border px-3 text-left text-sm font-semibold ${giftId === power.id ? "border-gold bg-panel text-fg" : "border-line bg-panel text-muted"}`}
+            className={`card min-h-11 px-3 py-2 text-left text-sm font-bold ${giftId === power.id ? "!border-gold !bg-panel-2 text-fg shadow-[0_0_20px_-8px_var(--color-gold)]" : "text-muted"}`}
           >
             {power.name}
           </button>

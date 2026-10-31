@@ -168,7 +168,7 @@
     border: 1px solid color-mix(in srgb, var(--color-line) 80%, transparent);
     background: color-mix(in srgb, var(--color-panel) 70%, transparent);
   }
-  .seg[aria-selected="true"] {
+  .seg[aria-selected="true"], .seg[aria-pressed="true"] {
     color: #1c140e;
     border-color: transparent;
     background: linear-gradient(180deg, color-mix(in srgb, var(--color-gold) 75%, white), var(--color-gold));
@@ -208,7 +208,7 @@
   }
   .avatar-ring {
     position: relative; border-radius: 1.1rem; padding: 2px;
-    background: conic-gradient(from 200deg, var(--color-gold), var(--color-cape), var(--color-spark), var(--color-gold));
+    background: var(--ring, conic-gradient(from 200deg, var(--color-gold), var(--color-cape), var(--color-spark), var(--color-gold)));
     box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--color-cape) 80%, transparent);
   }
   .avatar-ring > * { border-radius: 1rem; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--color-panel-2) 80%, white 8%), var(--color-ink)); }
@@ -452,6 +452,18 @@
 .anim-pop { animation: pop 420ms var(--ease-out-back) both; }
 .anim-float { animation: float-y 3.2s ease-in-out infinite; }
 .anim-glow { animation: glow-pulse 2.6s ease-in-out infinite; }
+.scene-arena {
+  background:
+    radial-gradient(60% 80% at 25% 100%, color-mix(in srgb, var(--color-gold) 22%, transparent), transparent 70%),
+    radial-gradient(60% 80% at 75% 100%, color-mix(in srgb, var(--color-cape) 26%, transparent), transparent 70%),
+    linear-gradient(180deg, #121828 0%, #1c2338 60%, #0b0f18 100%);
+}
+.scene-arena::before {
+  content: "";
+  position: absolute; inset: auto 0 0 0; height: 46%;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 28px);
+  transform: perspective(160px) rotateX(55deg); transform-origin: bottom;
+}
 .anim-drift { animation: drift 40s ease-in-out infinite alternate; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 .anim-fade { animation: fade-in 600ms ease-out both; }
