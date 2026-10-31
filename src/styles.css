@@ -3,20 +3,29 @@
 @theme {
   --font-display: "Anton", system-ui, sans-serif;
   --font-sans: "Figtree", system-ui, sans-serif;
-  --color-ink: #10141c;
-  --color-panel: #1a2130;
-  --color-panel-2: #263044;
+  --color-ink: #0c1019;
+  --color-panel: #161d2b;
+  --color-panel-2: #232d42;
   --color-paper: #f4ead6;
   --color-paper-ink: #1c140e;
   --color-fg: #f4efe4;
   --color-muted: #a3adbd;
   --color-cape: #c42f2f;
   --color-gold: #e6b34d;
-  --color-line: #313a4d;
+  --color-line: #2e3850;
   --color-good: #3dba8c;
   --color-bad: #ef5d52;
   --color-spark: #3cb8b0;
   --radius-card: 1.25rem;
+  /* Design system: radii, elevation, motion. Colors above are re-themed per power family. */
+  --radius-sm: 0.625rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-snappy: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --animate-rise: rise 360ms var(--ease-snappy) both;
+  --animate-pop: pop 420ms var(--ease-out-back) both;
 }
 
 @layer base {
@@ -51,8 +60,8 @@
     filter: brightness(1.12);
   }
 
-  button[aria-pressed="true"] {
-    box-shadow: inset 4px 0 0 var(--color-gold);
+  button[aria-pressed="true"]:not(.tab):not(.seg):not(.chip) {
+    box-shadow: inset 3px 0 0 var(--color-gold), 0 0 0 1px color-mix(in srgb, var(--color-gold) 35%, transparent);
   }
 
   button:focus-visible,
@@ -65,6 +74,166 @@
 }
 
 @layer components {
+  /* ---------- Type scale ---------- */
+  .t-hero { font-family: var(--font-display); font-size: 3.25rem; line-height: 0.92; letter-spacing: 0.01em; }
+  .t-display { font-family: var(--font-display); font-size: 1.875rem; line-height: 1; letter-spacing: 0.02em; }
+  .t-title { font-family: var(--font-display); font-size: 1.25rem; line-height: 1.1; letter-spacing: 0.03em; }
+  .t-label { font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+  .t-num { font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+  /* ---------- Surfaces ---------- */
+  .card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--color-line) 80%, white 8%);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, white 5%, transparent), transparent 42%),
+      color-mix(in srgb, var(--color-panel) 92%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 7%, transparent), 0 6px 18px -8px rgb(0 0 0 / 0.55);
+  }
+  .card-glass {
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, white 10%, transparent);
+    background: color-mix(in srgb, var(--color-ink) 58%, transparent);
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 9%, transparent), 0 10px 30px -12px rgb(0 0 0 / 0.6);
+  }
+  .card-paper {
+    border-radius: var(--radius-lg);
+    color: var(--color-paper-ink);
+    background:
+      radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, white 35%, transparent), transparent 60%),
+      var(--color-paper);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06), 0 8px 22px -10px rgb(0 0 0 / 0.65);
+  }
+  .card-accent::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    background: linear-gradient(180deg, var(--color-gold), var(--color-cape));
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0 1.1rem;
+    border-radius: var(--radius-md);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-primary {
+    color: #fff;
+    text-shadow: 0 1px 0 rgb(0 0 0 / 0.35);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-cape) 70%, white 30%) 0%, var(--color-cape) 48%, color-mix(in srgb, var(--color-cape) 78%, black) 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.32), inset 0 -2px 0 rgb(0 0 0 / 0.18), 0 4px 0 color-mix(in srgb, var(--color-cape) 55%, black), 0 10px 22px -8px color-mix(in srgb, var(--color-cape) 70%, transparent);
+  }
+  .btn-gold {
+    color: #1c140e;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-gold) 70%, white 30%), var(--color-gold) 55%, color-mix(in srgb, var(--color-gold) 75%, black));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 4px 0 color-mix(in srgb, var(--color-gold) 45%, black), 0 10px 22px -10px color-mix(in srgb, var(--color-gold) 60%, transparent);
+  }
+  .btn-ghost {
+    color: var(--color-fg);
+    border: 1px solid color-mix(in srgb, var(--color-line) 70%, white 12%);
+    background: linear-gradient(180deg, color-mix(in srgb, white 6%, transparent), transparent), color-mix(in srgb, var(--color-panel) 85%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 8%, transparent), 0 3px 0 rgb(0 0 0 / 0.35);
+  }
+  .btn-primary:not(:disabled):active, .btn-gold:not(:disabled):active, .btn-ghost:not(:disabled):active {
+    transform: translateY(3px) scale(0.985);
+    filter: brightness(1.08);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 1px 0 rgb(0 0 0 / 0.4);
+  }
+  .btn:disabled { opacity: 0.45; filter: saturate(0.4); }
+
+  /* ---------- Chips & segmented tabs ---------- */
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    border-radius: 999px; padding: 0.25rem 0.6rem;
+    font-size: 0.75rem; font-weight: 700;
+    background: color-mix(in srgb, var(--color-panel-2) 80%, transparent);
+    border: 1px solid color-mix(in srgb, white 8%, transparent);
+  }
+  .seg {
+    min-height: 2.75rem; flex-shrink: 0; border-radius: 999px; padding: 0 1rem;
+    font-size: 0.875rem; font-weight: 700; color: var(--color-muted);
+    border: 1px solid color-mix(in srgb, var(--color-line) 80%, transparent);
+    background: color-mix(in srgb, var(--color-panel) 70%, transparent);
+  }
+  .seg[aria-selected="true"] {
+    color: #1c140e;
+    border-color: transparent;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-gold) 75%, white), var(--color-gold));
+    box-shadow: 0 4px 14px -6px color-mix(in srgb, var(--color-gold) 80%, transparent);
+  }
+
+  /* ---------- Bottom tab bar ---------- */
+  .tabbar {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.125rem;
+    padding: 0.375rem 0.5rem max(0.5rem, env(safe-area-inset-bottom));
+    border-top: 1px solid color-mix(in srgb, white 7%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-ink) 80%, transparent), var(--color-ink));
+    backdrop-filter: blur(12px);
+  }
+  .tab {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;
+    min-height: 3.25rem; border-radius: var(--radius-md);
+    font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.04em; color: var(--color-muted);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab .tab-ico { display: grid; place-items: center; width: 2.75rem; height: 1.75rem; border-radius: 999px; transition: background-color 200ms, transform 250ms var(--ease-out-back); }
+  .tab[aria-current="page"] { color: var(--color-fg); }
+  .tab[aria-current="page"] .tab-ico {
+    color: #1c140e;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-gold) 70%, white), var(--color-gold));
+    box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--color-gold) 75%, transparent);
+    transform: translateY(-1px);
+  }
+  .tab .tab-dot { position: absolute; top: 0.35rem; right: calc(50% - 1.3rem); width: 0.5rem; height: 0.5rem; border-radius: 999px; background: var(--color-cape); box-shadow: 0 0 0 2px var(--color-ink); }
+
+  /* ---------- HUD ---------- */
+  .hud {
+    position: relative;
+    padding: max(0.5rem, env(safe-area-inset-top)) 0.75rem 0.625rem;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-ink) 30%, transparent), color-mix(in srgb, var(--color-ink) 88%, transparent));
+    border-bottom: 1px solid color-mix(in srgb, white 7%, transparent);
+  }
+  .avatar-ring {
+    position: relative; border-radius: 1.1rem; padding: 2px;
+    background: conic-gradient(from 200deg, var(--color-gold), var(--color-cape), var(--color-spark), var(--color-gold));
+    box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--color-cape) 80%, transparent);
+  }
+  .avatar-ring > * { border-radius: 1rem; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--color-panel-2) 80%, white 8%), var(--color-ink)); }
+  .stat-bar { position: relative; height: 0.4rem; border-radius: 999px; overflow: hidden; background: rgb(0 0 0 / 0.38); box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.5); }
+  .stat-fill {
+    position: absolute; inset: 0 auto 0 0; border-radius: inherit;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--fill) 70%, black), var(--fill));
+    box-shadow: 0 0 10px -1px var(--fill);
+    transition: width 650ms var(--ease-snappy);
+  }
+  .stat-fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(255 255 255 / 0.35), transparent 60%); }
+
+  /* ---------- Icon tiles ---------- */
+  .ico-tile {
+    display: grid; place-items: center; flex-shrink: 0; border-radius: 0.8rem;
+    background: radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--tile, var(--color-gold)) 85%, white 15%), color-mix(in srgb, var(--tile, var(--color-gold)) 55%, black));
+    color: #fff; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 4px 10px -4px color-mix(in srgb, var(--tile, var(--color-gold)) 80%, transparent);
+  }
+
+  /* ---------- Backdrops ---------- */
+  .scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .scene img, .scene svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .scene::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--color-ink) 35%, transparent) 0%, color-mix(in srgb, var(--color-ink) 82%, transparent) 30%, var(--color-ink) 70%); }
+  .scene.scene-bright::after { background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--color-ink) 25%, transparent) 40%, color-mix(in srgb, var(--color-ink) 92%, transparent) 78%, var(--color-ink) 100%); }
+
   .phone-shell {
     width: min(100%, 28rem);
     background-color: var(--color-ink);
@@ -267,7 +436,53 @@
 
 .desk-accent { color: var(--desk-accent); }
 
+/* ---------- Motion ---------- */
+@keyframes rise { from { opacity: 0; transform: translate3d(0, 10px, 0); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { opacity: 0; transform: scale(0.7); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes shine { from { transform: translateX(-120%) skewX(-18deg); } to { transform: translateX(220%) skewX(-18deg); } }
+@keyframes glow-pulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.95; transform: scale(1.06); } }
+@keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes drift { from { transform: translate3d(0, 0, 0) scale(1.08); } to { transform: translate3d(-3%, -2%, 0) scale(1.12); } }
+@keyframes float-up { 0% { opacity: 0; transform: translate3d(0, 6px, 0) scale(0.9); } 15% { opacity: 1; transform: translate3d(0, 0, 0) scale(1.05); } 100% { opacity: 0; transform: translate3d(0, -26px, 0) scale(1); } }
+@keyframes burst { 0% { opacity: 1; transform: scale(0.2); } 70% { opacity: 0.9; } 100% { opacity: 0; transform: scale(1.6); } }
+@keyframes shake { 0%, 100% { transform: translate3d(0, 0, 0); } 20% { transform: translate3d(-5px, 2px, 0); } 40% { transform: translate3d(4px, -2px, 0); } 60% { transform: translate3d(-3px, 1px, 0); } 80% { transform: translate3d(2px, 0, 0); } }
+@keyframes spark-fly { 0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } 100% { opacity: 0; transform: translate3d(var(--dx, 20px), var(--dy, -20px), 0) scale(0.3); } }
+
+.anim-rise { animation: rise 360ms var(--ease-snappy) both; }
+.anim-pop { animation: pop 420ms var(--ease-out-back) both; }
+.anim-float { animation: float-y 3.2s ease-in-out infinite; }
+.anim-glow { animation: glow-pulse 2.6s ease-in-out infinite; }
+.anim-drift { animation: drift 40s ease-in-out infinite alternate; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.anim-fade { animation: fade-in 600ms ease-out both; }
+.anim-fade.anim-drift { animation: fade-in 600ms ease-out both, drift 40s ease-in-out infinite alternate; }
+.anim-shake { animation: shake 320ms ease-out; }
+.anim-burst { animation: burst 520ms ease-out forwards; }
+.anim-float-up { animation: float-up 1.4s ease-out forwards; }
+.spark { animation: spark-fly 600ms ease-out forwards; }
+.stagger > * { animation: rise 380ms var(--ease-snappy) both; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(n + 6) { animation-delay: 200ms; }
+.shine-once { position: relative; overflow: hidden; }
+.shine-once::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 40%; background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent); animation: shine 900ms 200ms ease-out both; pointer-events: none; }
+
+/* Global polish for older markup that still uses raw utilities. */
+.phone-shell .bg-panel { background-image: linear-gradient(180deg, color-mix(in srgb, white 4.5%, transparent), transparent 55%); }
+.phone-shell .rounded-2xl.border { box-shadow: inset 0 1px 0 color-mix(in srgb, white 6%, transparent), 0 4px 14px -8px rgb(0 0 0 / 0.6); }
+.phone-shell button.bg-cape {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--color-cape) 70%, white 30%) 0%, var(--color-cape) 48%, color-mix(in srgb, var(--color-cape) 78%, black) 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 4px 0 color-mix(in srgb, var(--color-cape) 55%, black), 0 10px 22px -10px color-mix(in srgb, var(--color-cape) 70%, transparent);
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.3);
+}
+.phone-shell button.bg-cape:not(:disabled):active { transform: translateY(3px) scale(0.985); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2), 0 1px 0 rgb(0 0 0 / 0.4); }
+.phone-shell .bg-paper { background-image: radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, white 30%, transparent), transparent 60%); }
+
 @media (prefers-reduced-motion: reduce) {
+  .anim-rise, .anim-pop, .anim-float, .anim-glow, .anim-drift, .anim-fade, .anim-shake, .anim-burst, .anim-float-up, .spark, .stagger > *, .shine-once::after, .stat-fill,
   .hp-flash,
   .fight-kick,
   .stamp-in,
