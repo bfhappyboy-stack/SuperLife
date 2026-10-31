@@ -166,6 +166,18 @@ const STAT_LABEL: Record<string, string> = {
   karma: "Karma",
 };
 
+/** Gain multiplier for joy/mind/karma: 1 up to 50, easing to 0.08 at 100. */
+export function gentleCap(value: number): number {
+  if (value <= 50) return 1;
+  return Math.max(0.08, 1 - ((value - 50) / 50) * 0.92);
+}
+
+function softStep(d: Game, delta: number, factor: number): number {
+  const scaled = delta * factor;
+  const whole = Math.floor(scaled);
+  return whole + (roll(d) < scaled - whole ? 1 : 0);
+}
+
 function applyEffects(d: Game, e: Effects | undefined, deltas: Delta[]) {
   if (!e) return;
   const s = d.stats;
@@ -192,9 +204,15 @@ function applyEffects(d: Game, e: Effects | undefined, deltas: Delta[]) {
     let step = delta;
     // Fame and reputation get harder to push toward the extremes, so they stay meaningful across decades.
     if ((key === "fame" || key === "reputation") && Math.sign(delta) === Math.sign(before || delta)) {
-      const scaled = Math.abs(delta) * Math.max(0.03, 1 - Math.abs(before) / 102);
+      // A secret identity keeps half the spotlight: the mask takes the credit.
+      const masked = key === "fame" && delta > 0 && d.traits.includes("secret") ? 0.5 : 1;
+      const scaled = Math.abs(delta) * masked * Math.max(0.03, 1 - Math.abs(before) / 102);
       const whole = Math.floor(scaled);
       step = Math.sign(delta) * (whole + (roll(d) < scaled - whole ? 1 : 0));
+    } else if ((key === "happiness" || key === "smarts" || key === "karma") && delta > 0 && before > 0) {
+      // Joy, mind and karma climb freely through the middle and slow near the top, so a life can't
+      // pin them at 100 by twenty and coast. Losses are never softened.
+      step = softStep(d, delta, gentleCap(before));
     }
     s[key] = clamp(Math.round(before + step), lo, hi);
     touch(STAT_LABEL[key] ?? key, before, s[key]);
@@ -876,6 +894,8 @@ function monthlyBody(d: Game, banners: string[]) {
     d.stats.health = clamp(d.stats.health + regen, 0, 100);
   }
   if (d.stats.health < 25 && d.age >= 7) banners.push(`Health ${d.stats.health}. Rest or see a doctor before you drill or fight.`);
+  // Joy settles: the higher it sits, the more likely a month takes a point back. Staying happy is a habit, not a trophy.
+  if (d.stats.happiness > 70 && roll(d) < (d.stats.happiness - 70) / 24) d.stats.happiness -= 1;
 }
 
 function clearMonthFlags(d: Game) {
@@ -945,8 +965,7 @@ function openYear(d: Game): string[] {
     const school = schoolById(d.schoolId);
     if (school && d.age > school.maxAge) {
       banners.push(`You graduate ${school.name}. The photo is official and unflattering.`);
-      d.stats.smarts = clamp(d.stats.smarts + 4, 0, 100);
-      applyEffects(d, { fame: school.tier }, []);
+      applyEffects(d, { smarts: 4, fame: school.tier }, []);
       d.stats.powerLevel = clamp(Math.round((d.stats.powerLevel + 0.08) * 100) / 100, 0, powerLevelCap(d.age));
       d.schoolId = null;
       pushHistory(d, `Graduated ${school.name}.`, "major");
@@ -956,10 +975,10 @@ function openYear(d: Game): string[] {
         d.schoolId = null;
       } else {
         pay -= school.tuition;
-        d.stats.smarts = clamp(d.stats.smarts + (school.yearly.smarts ?? 0), 0, 100);
+        applyEffects(d, { smarts: school.yearly.smarts || undefined }, []);
         d.stats.powerLevel = clamp(Math.round((d.stats.powerLevel + (school.yearly.powerLevel ?? 0)) * 100) / 100, 0, powerLevelCap(d.age));
         applyEffects(d, { fame: school.yearly.fame || undefined, reputation: school.yearly.reputation || undefined }, []);
-        d.stats.happiness = clamp(d.stats.happiness + (school.yearly.happiness ?? 0), 0, 100);
+        applyEffects(d, { happiness: school.yearly.happiness || undefined }, []);
         d.schoolYears += 1;
       }
     }
@@ -1016,6 +1035,10 @@ function openYear(d: Game): string[] {
   if (d.age >= 16 && d.age <= 28 && roll(d) < 0.35) d.stats.looks = clamp(d.stats.looks + 1, 0, 100);
   if (d.age > 64) d.stats.looks = clamp(d.stats.looks - 1, 0, 100);
   d.stats.happiness = clamp(d.stats.happiness + (roll(d) < 0.5 ? -1 : 1), 0, 100);
+  // Hedonic adaptation: a great year becomes the new normal, so joy has to be renewed.
+  if (d.stats.happiness > 80) d.stats.happiness -= 2;
+  // Mentoring has diminishing returns inside a year.
+  delete d.flags.mentorRun;
   if (d.stats.health < 28 && d.age > 45) banners.push("You feel the year in your knees and your patience.");
 
   const needM = [0, 2, 3, 4, 5, 6, 8];
@@ -1989,6 +2012,17 @@ function openMini(d: Game, spec: MinigameSpec, blurb: string) {
   d.phase = "mini";
   d.pending = null;
   d.card = { kicker: whenLabel(d.age, d.month), banner: [], body: blurb, deltas: [] };
+}
+
+/**
+ * Legacy from one mentoring session: each extra rookie in the same year is worth 60% of the last,
+ * and a big legacy grows slower still. Stochastic rounding keeps small values meaningful.
+ */
+export function mentorLegacy(d: Game, good: boolean): number {
+  const run = d.flags.mentorRun ?? 0;
+  d.flags.mentorRun = run + 1;
+  const base = (good ? 3 : 2) * Math.pow(0.6, run) * Math.max(0.2, 1 - (d.legacy ?? 0) / 220);
+  return softStep(d, base, 1);
 }
 
 function tryoutBlock(d: Game): string | null {
@@ -3208,12 +3242,16 @@ export function act(game: Game, id: string): Game {
     d.flags.mentored = 1;
     const deltas: Delta[] = [];
     const good = roll(d) < 0.25 + Math.min(0.5, d.stats.reputation / 200 + (d.legacy ?? 0) / 200);
-    d.legacy = (d.legacy ?? 0) + (good ? 3 : 2);
+    const gain = mentorLegacy(d, good);
+    d.legacy = (d.legacy ?? 0) + gain;
     applyEffects(d, { happiness: good ? 4 : 2, reputation: d.stats.reputation >= 0 ? 1 : 0, karma: 1 }, deltas);
-    deltas.unshift({ stat: "Legacy", amount: good ? 3 : 2 });
+    if (gain > 0) deltas.unshift({ stat: "Legacy", amount: gain });
+    const tired = (d.flags.mentorRun ?? 0) >= 4;
     const line = good
       ? "The rookie gets it on the third try and looks at you like you invented gravity. You did not. You let them think it a while."
-      : "You spend an afternoon on footwork and bad habits. The rookie is slow. So were you.";
+      : tired
+        ? "Another rookie, another afternoon. They learn. You notice you are repeating yourself, which is its own lesson."
+        : "You spend an afternoon on footwork and bad habits. The rookie is slow. So were you.";
     setStory(d, line, deltas, [], undefined);
     peaks(d);
     return d;

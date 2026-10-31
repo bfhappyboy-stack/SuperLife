@@ -8,7 +8,9 @@
  * rewrite the title/premise/beats text; goals and consequences always stay procedural so balance and
  * saves are stable.
  */
+import { availableArcs } from "./arcs";
 import { clamp } from "./format";
+import { holdings } from "./market";
 import type { Game } from "./types";
 
 export type ChapterPhaseId = "origin" | "coming" | "early" | "rising" | "crisis" | "legacy" | "mentor" | "final";
@@ -17,6 +19,8 @@ export interface ChapterSnap {
   fame: number;
   rep: number;
   money: number;
+  /** Cash plus what your property and tech would be worth: so buying a house isn't "going broke". */
+  worth: number;
   smarts: number;
   power: number;
   powers: number;
@@ -167,31 +171,33 @@ interface GoalDef {
 
 const villain = (g: Game) => g.stats.reputation < -20 || g.stats.karma < -30 || !!g.crew;
 const hasArch = (g: Game) => g.relationships.some((r) => r.arch && r.alive);
+/** A storyline can still be finished this chapter: one is running, or one is open to start. */
+const arcOpen = (g: Game) => !!g.story?.active || availableArcs({ ...g, age: g.age + 9 }).length > 0;
 
 export const CHAPTER_GOALS: GoalDef[] = [
-  { id: "smart", metric: "smarts", mode: "gain", target: () => 6, label: (t) => `Get sharper: Mind +${t}`, hint: "Life ▸ Books, or a seat at school (Work)." },
+  { id: "smart", metric: "smarts", mode: "gain", target: () => 6, when: (g) => g.stats.smarts <= 88, label: (t) => `Get sharper: Mind +${t}`, hint: "Life ▸ Books, or a seat at school (Work)." },
   { id: "friend", metric: "friends", mode: "gain", target: () => 1, label: () => "Find someone on your side", hint: "People ▸ Meet ▸ make a friend." },
   { id: "mood", metric: "happiness", mode: "atLeast", target: (g) => (g.age >= 60 ? 55 : 60), label: (t) => `End the chapter happy (Joy ${t}+)`, hint: "Rest, time with family, hobbies." },
   { id: "drill", metric: "mastery", mode: "gain", target: () => 2, label: () => "Make the gift obey on purpose", hint: "Gift ▸ Drill. Watch your health." },
   { id: "page", metric: "powers", mode: "gain", target: () => 1, label: () => "Learn a new power", hint: "Gift ▸ Teachers, or braid two you own." },
   { id: "teacher", metric: "heroesMet", mode: "gain", target: () => 1, when: (g) => (g.heroes ?? []).some((h) => !h.met), label: () => "Get a real hero to know your name", hint: "Gift ▸ Teachers ▸ Seek a hero, or patrol." },
   { id: "quietfame", metric: "fame", mode: "atMost", target: (_g, s) => Math.max(25, s.fame + 5), when: (g) => g.traits.includes("secret"), label: (t) => `Keep the mask on: Fame ${t} or less`, hint: "Skip stunts and loud fights." },
-  { id: "loudfame", metric: "fame", mode: "gain", target: () => 10, when: (g) => !g.traits.includes("secret"), label: (t) => `Get noticed: Fame +${t}`, hint: "Gift ▸ Stunt, Cases ▸ League calls." },
+  { id: "loudfame", metric: "fame", mode: "gain", target: () => 10, when: (g) => !g.traits.includes("secret") && g.stats.fame <= 70, label: (t) => `Get noticed: Fame +${t}`, hint: "Gift ▸ Stunt, Cases ▸ League calls." },
   { id: "darkkarma", metric: "karma", mode: "drop", target: () => 10, when: (g) => g.traits.includes("vengeful") || g.stats.karma < -10, label: () => "Find out what the bad blocks pay", hint: "Life ▸ Shadow. It costs you." },
   { id: "rank", metric: "rank", mode: "gain", target: () => 1, when: (g) => !villain(g) && g.leagueRank < 6, label: (_t, g) => (g.leagueRank === 0 ? "Make the League roster" : "Climb one League rank"), hint: "Work ▸ League tryout, then Cases." },
-  { id: "cushion", metric: "money", mode: "gain", target: (g) => (g.age >= 40 ? 20000 : 5000), label: (t) => `Build a cushion: +$${t.toLocaleString("en-US")}`, hint: "Work ▸ a job, and promotions." },
-  { id: "fortune", metric: "money", mode: "gain", target: () => 25000, label: (t) => `Leave something behind: +$${t.toLocaleString("en-US")}`, hint: "Work, endorsements, or the other road." },
+  { id: "cushion", metric: "worth", mode: "gain", target: (g) => (g.age >= 40 ? 20000 : 5000), label: (t) => `Build a cushion: +$${t.toLocaleString("en-US")}`, hint: "Work ▸ a job, and promotions." },
+  { id: "fortune", metric: "worth", mode: "gain", target: () => 25000, label: (t) => `Leave something behind: +$${t.toLocaleString("en-US")}`, hint: "Work, endorsements, or the other road." },
   { id: "cases", metric: "missions", mode: "gain", target: () => 5, when: (g) => !villain(g), label: (t) => `Close ${t} cases`, hint: "Cases ▸ League calls and Files." },
   { id: "partner", metric: "family", mode: "gain", target: () => 1, label: () => "Let someone in for keeps", hint: "People ▸ Meet ▸ Date, then propose." },
   { id: "family", metric: "family", mode: "atLeast", target: (_g, s) => Math.max(1, s.family), label: () => "Keep your people close", hint: "People ▸ Family ▸ spend time." },
   { id: "infamy", metric: "rep", mode: "drop", target: () => 15, when: villain, label: (t) => `Make the city whisper: Reputation −${t}`, hint: "Life ▸ Shadow, or your crew." },
-  { id: "fame", metric: "fame", mode: "gain", target: (_g, s) => (s.fame > 80 ? 3 : 12), label: (t) => `Be the name on the feeds: Fame +${t}`, hint: "Cases, stunts, the League." },
-  { id: "arc", metric: "arcs", mode: "gain", target: () => 1, label: (_t, g) => (hasArch(g) ? "End the story with your arch-enemy" : "Finish a storyline you started"), hint: "Cases ▸ Files ▸ next step." },
+  { id: "fame", metric: "fame", mode: "gain", target: (_g, s) => (s.fame > 80 ? 3 : 12), when: (g) => g.stats.fame <= 88, label: (t) => `Be the name on the feeds: Fame +${t}`, hint: "Cases, stunts, the League." },
+  { id: "arc", metric: "arcs", mode: "gain", target: () => 1, when: arcOpen, label: (_t, g) => (hasArch(g) ? "End the story with your arch-enemy" : "Finish a storyline you started"), hint: "Cases ▸ Files ▸ next step." },
   { id: "trust", metric: "bond", mode: "atLeast", target: (_g, s) => Math.min(95, Math.max(60, s.bond + 10)), when: (g) => (g.heroes ?? []).some((h) => h.met), label: (t) => `Earn a hero's trust (bond ${t}+)`, hint: "Gift ▸ Teachers ▸ train or talk." },
   { id: "mastery", metric: "mastery", mode: "gain", target: () => 6, label: (t) => `Master your craft: +${t} mastery`, hint: "Gift ▸ Drill, and fight with your moves." },
   { id: "standing", metric: "health", mode: "atLeast", target: (g) => (g.age >= 70 ? 35 : 50), label: (t) => `Come out standing (Health ${t}+)`, hint: "Rest, the doctor, fewer drills." },
   { id: "holdrep", metric: "rep", mode: "atLeast", target: (_g, s) => s.rep, label: () => "Hold your reputation through the storm", hint: "Pick fights you can explain." },
-  { id: "holdmoney", metric: "money", mode: "atLeast", target: (_g, s) => Math.max(0, s.money), label: () => "Don't go broke", hint: "Watch doctor bills and big buys." },
+  { id: "holdmoney", metric: "worth", mode: "atLeast", target: (_g, s) => Math.max(0, Math.round((s.worth * 0.6) / 1000) * 1000), label: (t) => (t > 0 ? `Don't go broke: keep $${t.toLocaleString("en-US")}+ in cash and property` : "Don't go broke"), hint: "Watch doctor bills and big buys." },
   { id: "legacy", metric: "legacy", mode: "gain", target: (g) => (g.age >= 70 ? 6 : 8), label: (t) => `Build legacy: +${t}`, hint: "Life ▸ Mentor a rookie, teach a hero, raise a family." },
 ];
 
@@ -208,6 +214,7 @@ export function snapshot(g: Game): ChapterSnap {
     fame: g.stats.fame,
     rep: g.stats.reputation,
     money: Math.round(g.stats.money),
+    worth: Math.round(g.stats.money + holdings(g).value),
     smarts: g.stats.smarts,
     power: g.stats.powerLevel,
     powers: (g.unlockedPowers ?? []).length,
