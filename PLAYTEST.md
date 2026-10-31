@@ -34,6 +34,7 @@
   - The reveal title overlapped on multi-power legends. It now shows one name and "+ power" chips.
   - Lock chips squeezed goal titles. Moved under the title.
 - **Balance (fixed later tonight):** seeker policies used to end lives owning about 130 powers. With the braid-book room, myst2/Spider-Man/Iron Man/Hulk seekers end with 21–27 (`night.ts`, 3 seeds each).
+- **Reveal juice (390×844, Playwright):** the share sheet draws the card in under a second for Spider-Man and a mystery life; the extras line and story box no longer overlap. First Move: 6/6 taps gave "Clean first move" and +20 drill; the banner shows on the next card. Found and fixed: test taps scrolled the reveal overlay sideways (now `overflow-clip`).
 - **Rogues sim (`rogues.ts`, every preset):** zero generic villains. Every rival, visit and arch-enemy was the hero's own rogue. 10–14 canon beats per life, an ending on every life (mostly canon, some break), deaths at 72–86.
 
 
