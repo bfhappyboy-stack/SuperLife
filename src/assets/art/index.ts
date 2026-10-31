@@ -9,6 +9,11 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   dust: () => import("./city-dust"),
   crown: () => import("./city-crown"),
   title: () => import("./title-keyart"),
+  // God Mode legends (see src/game/presets.ts). Rename the presets there; the art keys stay.
+  "hero-spider-man": () => import("./hero-spider-man"),
+  "hero-batman": () => import("./hero-batman"),
+  "hero-iron-man": () => import("./hero-iron-man"),
+  "hero-hulk": () => import("./hero-hulk"),
 };
 
 const cache = new Map<string, string>();
