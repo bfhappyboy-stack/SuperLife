@@ -1,4 +1,5 @@
 import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
+import { library, notePage } from "./library";
 import {
   CITIES,
   FEMALE_NAMES,
@@ -699,8 +700,9 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     }
     if (!special.comboId) d.flags.lastGrantAge = d.age;
     const id = special.comboId ?? randomMissingBase(d.unlockedPowers ?? [], roll(d))?.id ?? null;
+    const blocked = id && !(d.unlockedPowers ?? []).includes(id) ? library(d).block : null;
     const name = unlockCombo(d, id);
-    if (!name) return " The spark fizzles. You already hold that page.";
+    if (!name) return blocked ? " The spark settles in your palm, then fades. Your book has no room for it yet." : " The spark fizzles. You already hold that page.";
     const legacy = id ? legacyFromCombo(id) : null;
     if (!d.powerId && legacy) {
       d.powerId = legacy;
@@ -894,7 +896,7 @@ function awaken(d: Game, banners: string[], how: "age" | "push") {
   const picked = rollPower(roll(d), roll(d), d.powerBias);
   d.powerId = picked.id;
   d.powerless = false;
-  unlockCombo(d, legacyComboId(picked.id));
+  unlockCombo(d, legacyComboId(picked.id), true);
   const rarity = picked.rarity === "rare" ? 1 : picked.rarity === "uncommon" ? 0.4 : 0;
   let level = 1 + roll(d) * 1.7 + rarity;
   if (d.upbringing === "legacy") level += 0.55;
@@ -938,7 +940,7 @@ function wakeHidden(d: Game, banners: string[]): boolean {
   const head = ids[0] ?? d.hiddenGift;
   const before = abilityNames(d);
   d.hiddenGift = null;
-  for (const id of ids) unlockCombo(d, id);
+  for (const id of ids) unlockCombo(d, id, true);
   d.giftId = d.giftId ?? head;
   d.focusPower = head;
   d.powerId = legacyFor(head) ?? ids.map(legacyFor).find((id): id is PowerId => !!id) ?? "strength";
@@ -1032,7 +1034,7 @@ function settleCanon(d: Game, beatId: string, choiceId: string): void {
   const key = choice.path === "canon" ? "canonKept" : choice.path === "bend" ? "canonBent" : "canonBroken";
   d.flags[key] = (d.flags[key] ?? 0) + 1;
   if (choice.trait) grantTrait(d, choice.trait);
-  for (const id of choice.grant ?? []) unlockCombo(d, id);
+  for (const id of choice.grant ?? []) unlockCombo(d, id, true);
   for (const name of choice.loss ?? []) {
     const person = d.relationships.find((r) => r.name === name && r.alive);
     if (person) person.alive = false;
@@ -1462,10 +1464,10 @@ export function createGame(input: NewLifeOpts): Game {
     d.flags.manifestAge = pickWakeAge(roll(d));
     d.omenLog = [];
   } else if (chosen) {
-    for (const id of picks) unlockCombo(d, id);
+    for (const id of picks) unlockCombo(d, id, true);
   }
   if (chosen) {
-    unlockCombo(d, chosen);
+    unlockCombo(d, chosen, true);
     const legacy = legacyFromCombo(chosen);
     if (legacy) d.powerId = legacy;
     d.focusPower = chosen;
@@ -1835,7 +1837,11 @@ function discoverPower(d: Game, id: string | null | undefined) {
   if (!d.discovered.includes(id)) d.discovered.push(id);
 }
 
-function unlockCombo(d: Game, id: string | null | undefined): string {
+/**
+ * Add a power to the braid book. `force` is for story powers (the reveal, canon grants, God Mode picks,
+ * the starting gift) which never count against the book's room. Everything else is capped by `library()`.
+ */
+function unlockCombo(d: Game, id: string | null | undefined, force = false): string {
   if (!id) return "";
   // A sealed power blocks every other gift until it wakes: the reveal is the first power, always.
   // A powerless legend (Batman) keeps the human vow for life.
@@ -1845,6 +1851,10 @@ function unlockCombo(d: Game, id: string | null | undefined): string {
   discoverPower(d, id);
   if (!Array.isArray(d.unlockedPowers)) d.unlockedPowers = [];
   if (d.unlockedPowers.includes(id)) return "";
+  if (!force) {
+    if (library(d).block) return "";
+    notePage(d);
+  }
   d.unlockedPowers.push(id);
   if (!d.mastery) d.mastery = {};
   if (d.mastery[id] == null) d.mastery[id] = 0;
@@ -1956,7 +1966,7 @@ function grantSecondGift(d: Game, deltas: Delta[]): string {
     const picked = rollPower(roll(d), roll(d), d.powerBias);
     d.powerId = picked.id;
     d.powerless = false;
-    unlockCombo(d, legacyComboId(picked.id));
+    unlockCombo(d, legacyComboId(picked.id), true);
     const before = d.stats.powerLevel;
     d.stats.powerLevel = clamp(Math.max(before, 1.3), 0, powerLevelCap(d.age));
     deltas.push({ stat: "Power", amount: Math.round((d.stats.powerLevel - before) * 100) / 100 });
@@ -1965,7 +1975,7 @@ function grantSecondGift(d: Game, deltas: Delta[]): string {
   let next = rollPower(roll(d), roll(d), null);
   for (let i = 0; i < 6 && (next.id === d.powerId || next.id === d.secondaryId); i++) next = rollPower(roll(d), roll(d), null);
   d.secondaryId = next.id;
-  unlockCombo(d, legacyComboId(next.id));
+  unlockCombo(d, legacyComboId(next.id), true);
   const before = d.stats.powerLevel;
   d.stats.powerLevel = clamp(Math.round((before + 0.35) * 100) / 100, 0, powerLevelCap(d.age));
   deltas.push({ stat: "Power", amount: Math.round((d.stats.powerLevel - before) * 100) / 100 });
@@ -3239,6 +3249,7 @@ export function act(game: Game, id: string): Game {
     if (!left || !right || noTime(d, true)) return game;
     const attempt = mix(left, right, d.unlockedPowers ?? []);
     if (!attempt.ok) return game;
+    if (!(d.unlockedPowers ?? []).includes(attempt.power.id) && library(d).block) return game;
     spend(d);
     const name = unlockCombo(d, attempt.power.id);
     const deltas: Delta[] = [];
@@ -3665,6 +3676,7 @@ export function act(game: Game, id: string): Game {
     const power = getPower(powerId);
     if (!hero || !power || power.generation !== 0 || hero.relationship < 28 || d.hiddenGift || noTime(d, true)) return game;
     if (!hero.unlocked.includes(power.id) || (d.unlockedPowers ?? []).includes(power.id)) return game;
+    if (library(d).block) return game;
     spend(d);
     const name = unlockCombo(d, power.id);
     raiseBond(d, hero, 5);
