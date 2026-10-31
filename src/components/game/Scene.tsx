@@ -4,6 +4,7 @@
  */
 import { memo, useEffect, useState } from "react";
 import { cachedArt, hasArt, loadArt } from "@/assets/art";
+import { phaseStyle } from "@/components/game/phaseStyle";
 
 /** Resolves a key-art data URI lazily; undefined until loaded (callers fade it in). */
 export function useArt(key: string): string | undefined {
@@ -151,6 +152,7 @@ export function ChapterArt({ index, phase, cityId, className = "h-56" }: { index
         </g>
         <circle cx={sunX} cy={sunY} r="70" fill="url(#ch-sun)" className="anim-glow" style={{ transformOrigin: `${sunX}px ${sunY}px` }} />
         <circle cx={sunX} cy={sunY} r="16" fill={crisis ? "#ffb0a0" : "#fff6dc"} />
+        <PhaseMotif phase={phase} seed={index * 31 + 7} />
         <rect width="390" height="224" fill="url(#ch-fade)" />
         <text x="20" y="206" fontFamily="Anton, sans-serif" fontSize="120" fill="#fff" opacity="0.14">
           {String(index).padStart(2, "0")}
@@ -158,4 +160,31 @@ export function ChapterArt({ index, phase, cityId, className = "h-56" }: { index
       </svg>
     </div>
   );
+}
+
+/** A quiet, phase-specific layer over the chapter art (sparks, rising motes, window grid, spotlights, rain, laurel, stars, moon). */
+function PhaseMotif({ phase, seed }: { phase: string; seed: number }) {
+  const { accent, motif } = phaseStyle(phase);
+  const r = rand(seed);
+  const pts = Array.from({ length: 18 }, () => [r() * 390, r() * 224, r()] as const);
+  switch (motif) {
+    case "sparks":
+      return <g fill={accent}>{pts.map(([x, y, k], i) => <circle key={i} cx={x} cy={y * 0.8} r={0.8 + k * 1.6} opacity={0.25 + k * 0.45} className="anim-glow" style={{ animationDelay: `${(k * 2).toFixed(2)}s` }} />)}</g>;
+    case "rise":
+      return <g fill={accent}>{pts.map(([x, y, k], i) => <rect key={i} x={x} y={60 + y * 0.7} width="1.6" height={6 + k * 14} rx="0.8" opacity={0.15 + k * 0.35} />)}</g>;
+    case "grid":
+      return <g stroke={accent} strokeOpacity="0.14" strokeWidth="1">{Array.from({ length: 9 }, (_, i) => <line key={`v${i}`} x1={i * 48 + 6} y1="0" x2={i * 48 + 6} y2="224" />)}{Array.from({ length: 5 }, (_, i) => <line key={`h${i}`} x1="0" y1={i * 48 + 10} x2="390" y2={i * 48 + 10} />)}</g>;
+    case "beams":
+      return <g fill={accent} opacity="0.16">{[60, 200, 330].map((x, i) => <polygon key={i} points={`${x - 6},224 ${x + 6},224 ${x + 40 - i * 40},0 ${x + 10 - i * 40},0`} />)}</g>;
+    case "rain":
+      return <g stroke={accent} strokeOpacity="0.32" strokeWidth="1.2">{pts.concat(pts.map(([x, y, k]) => [(x + 97) % 390, (y + 53) % 224, k] as const)).map(([x, y, k], i) => <line key={i} x1={x} y1={y} x2={x - 5} y2={y + 12 + k * 10} />)}</g>;
+    case "laurel":
+      return <g fill={accent} opacity="0.22" transform="translate(330 40)">{Array.from({ length: 7 }, (_, i) => <ellipse key={i} cx={Math.cos(Math.PI * (0.55 + i * 0.13)) * 34} cy={Math.sin(Math.PI * (0.55 + i * 0.13)) * 34} rx="8" ry="3.4" transform={`rotate(${100 + i * 24} ${Math.cos(Math.PI * (0.55 + i * 0.13)) * 34} ${Math.sin(Math.PI * (0.55 + i * 0.13)) * 34})`} />)}</g>;
+    case "stars": {
+      const s = pts.slice(0, 7).map(([x, y]) => [x, y * 0.6] as const);
+      return <g stroke={accent} strokeOpacity="0.3" fill={accent}><polyline points={s.map((p) => p.join(",")).join(" ")} fill="none" />{s.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2" opacity="0.7" />)}</g>;
+    }
+    case "moon":
+      return <g><circle cx="320" cy="44" r="18" fill={accent} opacity="0.35" /><circle cx="328" cy="38" r="16" fill="#0b0f1a" opacity="0.55" />{pts.slice(0, 10).map(([x, y, k], i) => <circle key={i} cx={x} cy={y * 0.5} r={0.7 + k} fill="#fff" opacity={0.2 + k * 0.4} />)}</g>;
+  }
 }

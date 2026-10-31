@@ -3,6 +3,11 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   nyc: () => import("./city-nyc"),
   hood: () => import("./city-hood"),
   stacks: () => import("./city-stacks"),
+  metro: () => import("./city-metro"),
+  harbor: () => import("./city-harbor"),
+  neon: () => import("./city-neon"),
+  dust: () => import("./city-dust"),
+  crown: () => import("./city-crown"),
   title: () => import("./title-keyart"),
 };
 
