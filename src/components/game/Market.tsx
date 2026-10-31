@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, Lock, Minus, TrendingUp, Wallet } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CAT_COLOR, CAT_ICON, IconTile } from "@/components/game/icons";
 import { money } from "@/game/format";
 import { assetYear, CAT_META, CAT_ORDER, holdings, isBlackMarketOpen, itemById, marketOf, sellValue, shelfOf, type MarketCat, type MarketItem } from "@/game/market";
@@ -48,6 +48,13 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
   const [cat, setCat] = useState<MarketCat>(game.age >= 45 ? "legacy" : game.stats.health < 40 ? "supplies" : "gear");
   const [confirm, setConfirm] = useState<string | null>(null);
   const [flash, setFlash] = useState<{ key: number; text: string } | null>(null);
+  const rail = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = rail.current?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (el && rail.current) rail.current.scrollLeft = el.offsetLeft - 16;
+    // Only on first paint: later taps are already in view.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const shelf = useMemo(() => shelfOf(game, cat), [game, cat]);
   const held = holdings(game);
   const m = marketOf(game);
@@ -69,7 +76,7 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
             <p className="t-num relative text-3xl text-fg">
               {money(game.stats.money)}
               {flash && (
-                <span key={flash.key} className="anim-float-up absolute left-full ml-2 text-base text-bad">
+                <span key={flash.key} className={`anim-float-up absolute left-full ml-2 text-base ${flash.text.startsWith("+") ? "text-good" : "text-bad"}`}>
                   {flash.text}
                 </span>
               )}
@@ -86,7 +93,7 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
         </p>
       </div>
 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="tablist" aria-label="Market categories">
+      <div ref={rail} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" role="tablist" aria-label="Market categories">
         {CAT_ORDER.map((id) => {
           const Icon = CAT_ICON[id];
           const on = id === cat;
@@ -100,7 +107,7 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
                 setCat(id);
                 setConfirm(null);
               }}
-              className={`seg flex items-center gap-1.5 !px-3 ${on ? "" : ""}`}
+              className="seg flex items-center gap-1.5 !px-3"
             >
               <Icon className="size-4" style={on ? undefined : { color: CAT_COLOR[id] }} />
               {CAT_META[id].short}

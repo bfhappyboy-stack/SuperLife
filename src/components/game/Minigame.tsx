@@ -1,15 +1,27 @@
+import type React from "react";
 import { Eye, Flame, Shield, Star, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Duel } from "@/components/game/Duel";
+import { HitBurst } from "@/components/game/Vfx";
 import type { MinigameSpec } from "@/game/types";
 
 const ICONS = [
-  { id: "zap", label: "Bolt", Icon: Zap },
-  { id: "shield", label: "Shield", Icon: Shield },
-  { id: "flame", label: "Flame", Icon: Flame },
-  { id: "eye", label: "Eye", Icon: Eye },
-  { id: "star", label: "Star", Icon: Star },
+  { id: "zap", label: "Bolt", Icon: Zap, color: "#ffcf4d" },
+  { id: "shield", label: "Shield", Icon: Shield, color: "#3fe0c5" },
+  { id: "flame", label: "Flame", Icon: Flame, color: "#ff6a3d" },
+  { id: "eye", label: "Eye", Icon: Eye, color: "#a59bff" },
+  { id: "star", label: "Star", Icon: Star, color: "#ff7ac8" },
 ];
+
+function DrillHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="anim-rise">
+      <p className="t-label text-spark">Drill</p>
+      <p className="t-display truncate text-fg">{title}</p>
+      {subtitle && <p className="mt-0.5 text-sm text-muted">{subtitle}</p>}
+    </div>
+  );
+}
 
 type Grade = "perfect" | "good" | "miss";
 
@@ -133,38 +145,38 @@ function Timing({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number) 
       }}
       tabIndex={0}
     >
-      <div>
-        <p className="text-xs font-semibold tracking-widest text-muted">DRILL</p>
-        <p className="truncate font-display text-2xl tracking-wide text-fg">{spec.title}</p>
-        <p className="mt-1 text-sm text-muted">{spec.subtitle}</p>
-      </div>
+      <DrillHeader title={spec.title} subtitle={spec.subtitle} />
       <p role="status" className="text-sm font-semibold text-gold">{note}</p>
       <div className="flex gap-2" aria-hidden="true">
         {marks.map((mark, index) => (
           <span
             key={index}
-            className={`h-2 flex-1 rounded-full ${mark === "perfect" ? "bg-gold" : mark === "good" ? "bg-spark" : mark === "miss" ? "bg-bad" : index + 1 === round ? "bg-fg" : "bg-panel-2"}`}
+            className={`h-2.5 flex-1 rounded-full transition-colors ${mark === "perfect" ? "bg-gold shadow-[0_0_10px_var(--color-gold)]" : mark === "good" ? "bg-spark" : mark === "miss" ? "bg-bad" : index + 1 === round ? "animate-pulse bg-fg" : "bg-panel-2"}`}
           />
         ))}
       </div>
-      <div className="relative h-24 overflow-hidden rounded-3xl bg-panel-2">
-        <div className="absolute top-0 bottom-0 bg-gold/35" style={{ left: `${(0.5 - zone / 2) * 100}%`, width: `${zone * 100}%` }} />
-        <div className="absolute top-0 bottom-0 bg-gold" style={{ left: `${(0.5 - perfect / 2) * 100}%`, width: `${perfect * 100}%` }} />
-        <div
-          className={`absolute top-4 h-16 w-6 rounded-full border-2 border-ink ${flash === "miss" ? "bg-bad" : flash === "good" ? "bg-spark" : "bg-fg"}`}
-          style={{ left: `calc(${pos * 100}% - 0.75rem)` }}
-        />
+      <div className={`scene-arena relative h-32 overflow-hidden rounded-[1.5rem] border border-white/10 ${flash === "miss" ? "anim-shake" : ""}`} key={flash === "miss" ? `m${round}` : "track"}>
+        <div className="absolute inset-x-4 top-1/2 h-3 -translate-y-1/2 rounded-full bg-black/50 shadow-[inset_0_1px_2px_rgba(0,0,0,.7)]" />
+        <div className="absolute inset-x-4 inset-y-0">
+          <div className="absolute top-3 bottom-3 rounded-2xl border border-gold/50 bg-gold/20 shadow-[0_0_24px_-4px_var(--color-gold)]" style={{ left: `${(0.5 - zone / 2) * 100}%`, width: `${zone * 100}%` }} />
+          <div className="absolute top-5 bottom-5 rounded-xl bg-gradient-to-b from-[#fff3c4] to-gold shadow-[0_0_18px_var(--color-gold)]" style={{ left: `${(0.5 - perfect / 2) * 100}%`, width: `${perfect * 100}%` }} />
+          <div className="absolute top-1/2 size-9 -translate-y-1/2" style={{ left: `calc(${pos * 100}% - 1.125rem)` }}>
+            <div className={`size-full rounded-full border-2 border-white ${flash === "miss" ? "bg-bad" : flash === "good" ? "bg-spark" : flash === "perfect" ? "bg-gold" : "bg-gradient-to-br from-white to-[#9fb4ff]"}`} style={{ boxShadow: "0 0 18px 4px rgba(255,255,255,.55)" }} />
+            {flash && flash !== "miss" && <HitBurst key={`${round}-${flash}`} color={flash === "perfect" ? "#ffcf4d" : "#3fe0c5"} size={flash === "perfect" ? 90 : 60} count={flash === "perfect" ? 12 : 7} seed={round} />}
+          </div>
+        </div>
         {stamp && (
-          <p className="stamp-in pointer-events-none absolute inset-0 flex items-center justify-center">
-            <span className={`rounded-xl bg-paper px-3 py-1 font-display text-4xl tracking-wide ${flash === "miss" ? "text-bad" : "text-paper-ink"}`}>{stamp}</span>
+          <p className="stamp-in pointer-events-none absolute inset-x-0 top-1 flex justify-center">
+            <span className={`rounded-xl px-3 py-0.5 font-display text-3xl tracking-wide shadow-lg ${flash === "miss" ? "bg-bad text-white" : flash === "perfect" ? "bg-gold text-paper-ink" : "bg-paper text-paper-ink"}`}>{stamp}</span>
           </p>
         )}
       </div>
-      <p className="text-sm text-muted tabular-nums">
-        Round {round} / 3 · Score {score.toFixed(1)} / 3
-      </p>
-      <button type="button" onClick={strike} className="mt-auto min-h-14 rounded-2xl bg-cape px-4 text-lg font-semibold text-fg">
-        Strike
+      <div className="flex items-center justify-between">
+        <span className="chip text-fg">Round <span className="t-num">{round}/3</span></span>
+        <span className="chip text-gold">Score <span className="t-num">{score.toFixed(1)}/3</span></span>
+      </div>
+      <button type="button" onClick={strike} className="btn btn-primary mt-auto min-h-16 text-xl tracking-wide">
+        STRIKE
       </button>
     </div>
   );
@@ -256,11 +268,7 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden px-4 pt-3 pb-4">
-      <div>
-        <p className="text-xs font-semibold tracking-widest text-muted">DRILL</p>
-        <p className="truncate font-display text-2xl tracking-wide text-fg">{spec.title}</p>
-        <p className="mt-1 text-sm text-muted">{spec.subtitle}</p>
-      </div>
+      <DrillHeader title={spec.title} subtitle={spec.subtitle} />
       <p role="status" className="text-sm font-semibold text-gold">{note}</p>
       <div className="flex gap-1.5">
         {sequence.current.map((icon, index) => {
@@ -269,15 +277,26 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
           return (
             <span
               key={`${icon}-${index}`}
-              className={`flex h-9 min-w-0 flex-1 items-center justify-center rounded-xl border px-1 text-[11px] font-semibold ${index < cursor && phase === "go" ? "border-gold bg-panel-2 text-fg" : known && phase === "watch" ? "border-gold text-gold" : "border-line text-muted"}`}
+              className={`flex h-9 min-w-0 flex-1 items-center justify-center rounded-xl border px-1 text-[11px] font-bold transition-colors ${index < cursor && phase === "go" ? "border-gold bg-gold/20 text-fg" : known && phase === "watch" ? "border-white/30 bg-white/5" : "border-white/10 text-muted"}`}
+              style={known && ICONS[icon] ? { color: ICONS[icon]!.color } : undefined}
             >
-              {label}
+              {known && ICONS[icon] ? (() => {
+                const I = ICONS[icon]!.Icon;
+                return <I className="size-4" aria-label={label} />;
+              })() : label}
             </span>
           );
         })}
       </div>
-      <div className="flex h-20 items-center justify-center rounded-2xl bg-panel">
-        {StageIcon ? <StageIcon className="size-10 text-fg" /> : <p className="text-sm text-muted">{phase === "watch" ? "Memorize" : "Your move"}</p>}
+      <div className="scene-arena relative flex h-28 items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10">
+        {StageIcon && stage ? (
+          <span key={`${lit}-${shown}-${cursor}`} className="anim-pop relative grid size-20 place-items-center rounded-3xl" style={{ background: `radial-gradient(circle, ${stage.color}55, transparent 70%)` }}>
+            <StageIcon className="size-12" style={{ color: stage.color, filter: `drop-shadow(0 0 12px ${stage.color})` }} />
+            <HitBurst color={stage.color} size={70} count={8} seed={cursor + shown} />
+          </span>
+        ) : (
+          <p className="t-label text-muted">{phase === "watch" ? "Memorize" : "Your move"}</p>
+        )}
       </div>
       <div className="grid grid-cols-3 gap-2">
         {ICONS.map((icon, index) => {
@@ -292,9 +311,12 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
               aria-pressed={hot || called}
               disabled={phase !== "go" || done.current}
               onClick={() => tap(index)}
-              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl border text-sm font-semibold disabled:opacity-50 ${called ? "border-spark bg-panel-2 text-fg" : hot ? "border-gold bg-gold text-ink" : "border-line bg-panel text-fg"}`}
+              className={`card flex min-h-16 flex-col items-center justify-center gap-1 text-sm font-bold text-fg disabled:opacity-50 ${called ? "!border-spark" : hot ? "!bg-panel-2" : ""}`}
+              style={hot ? { borderColor: icon.color, boxShadow: `0 0 20px -4px ${icon.color}` } : undefined}
             >
-              <Icon className="size-5" />
+              <span className="ico-tile size-9" style={{ "--tile": icon.color } as React.CSSProperties}>
+                <Icon className="size-5" />
+              </span>
               {icon.label}
             </button>
           );
@@ -308,7 +330,7 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
             setNote("Once more. Then it's yours.");
             setPlay((value) => value + 1);
           }}
-          className="min-h-12 rounded-2xl border border-line px-4 font-semibold text-fg"
+          className="btn btn-ghost min-h-12"
         >
           Watch it again
         </button>
