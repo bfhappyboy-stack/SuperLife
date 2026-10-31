@@ -27,14 +27,16 @@ import { clamp, firstName, money, whenLabel } from "./format";
 import { getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
-import { elementOfLegacy, elementOfPower } from "./elements";
+import { ELEMENTS, elementOfLegacy, elementOfPower } from "./elements";
 import { isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
 import { BOND_DRIFT_FLOOR, bondStep, judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { arcById, availableArcs, currentCase, type ArcStep } from "./arcs";
 import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
-import { migrateChapters, openChapter, turnChapter } from "./chapters";
+import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
+import { canonAt, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat } from "./presets";
+import { guessOptions, omenFor, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
@@ -66,6 +68,7 @@ import type {
   DuelMove,
   Effects,
   Game,
+  GameMode,
   Look,
   MinigameSpec,
   MoveStyle,
@@ -88,8 +91,16 @@ export interface NewLifeOpts {
   face?: TraitId;
   drive?: TraitId;
   look?: Look;
-  /** One catalog power. Empty means an ordinary life. */
+  /** One catalog power. Empty means an ordinary life (or a sealed one in mystery mode). */
   giftId?: string | null;
+  /** "mystery" seals a random power until a birthday from 7 to 15. "god" lets you pick. Missing = classic. */
+  mode?: GameMode;
+  /** God Mode: several starting powers (max 3, at most one Apex). */
+  giftIds?: string[];
+  /** God Mode: earned traits picked at the start. */
+  extraTraits?: TraitId[];
+  /** God Mode legend (presets.ts). Overrides name, city, upbringing, traits and look. */
+  preset?: string | null;
   seed?: number;
   heir?: { fame: number; powerBias: PowerId | null; belief: number; trust?: number };
 }
@@ -602,6 +613,7 @@ function runHeist(d: Game, style: "smash" | "quiet" | "fear" | "spark", deltas: 
 
 function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): string {
   if (!special) return "";
+  if (special.kind === "swap" && giftsSealed(d)) return "";
   if (special.kind === "swap") {
     const current = d.powerId;
     let next = rollPower(roll(d), roll(d), null);
@@ -656,6 +668,11 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     const foe = markArch(d, special.personId);
     if (!foe) return " The rivalry fails to trend. Humiliating, in a quiet way.";
     return ` ${foe.note ?? firstName(foe.name)} is your arch-enemy. The city will print it that way.`;
+  }
+  if ((special.kind === "combine" || special.kind === "grant") && giftsSealed(d)) {
+    return d.hiddenGift
+      ? " Something stirs under your skin and goes quiet. Whatever is sealed in you isn't ready to share the room."
+      : " Something offers you a gift. You turn it down. You were always going to do this the human way.";
   }
   if (special.kind === "combine") {
     return grantSecondGift(d, deltas);
@@ -857,6 +874,7 @@ function manifestChoices(d: Game): Pending {
 }
 
 function awaken(d: Game, banners: string[], how: "age" | "push") {
+  if (giftsSealed(d)) return;
   const before = abilityNames(d);
   const picked = rollPower(roll(d), roll(d), d.powerBias);
   d.powerId = picked.id;
@@ -878,7 +896,148 @@ function awaken(d: Game, banners: string[], how: "age" | "push") {
   pushHistory(d, `Power manifested: ${picked.name}.`, "major");
 }
 
+/** True while no gift may land: a mystery power still sealed, or a powerless legend's human vow. */
+export function giftsSealed(g: Game): boolean {
+  return !!g.hiddenGift || !!g.flags.humanVow;
+}
+
+/** A legacy power id for a catalog power: its own, or its first parent's. Duels and jobs still read it. */
+function legacyFor(id: string | null | undefined): PowerId | null {
+  if (!id) return null;
+  const own = legacyFromCombo(id);
+  if (own) return own;
+  for (const parent of getPower(id)?.ingredients ?? []) {
+    const found = legacyFor(parent);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** The sealed power wakes: unlock it, play the reveal, and (in a mystery life) ask who finds out. */
+function wakeHidden(d: Game, banners: string[]): boolean {
+  if (!d.hiddenGift) return false;
+  const at = d.flags.manifestAge ?? WAKE_MAX;
+  if (d.age < at) return false;
+  const legend = presetById(d.preset);
+  const ids = legend?.powers.length ? legend.powers : [d.hiddenGift];
+  const head = ids[0] ?? d.hiddenGift;
+  const before = abilityNames(d);
+  d.hiddenGift = null;
+  for (const id of ids) unlockCombo(d, id);
+  d.giftId = d.giftId ?? head;
+  d.focusPower = head;
+  d.powerId = legacyFor(head) ?? ids.map(legacyFor).find((id): id is PowerId => !!id) ?? "strength";
+  d.powerless = false;
+  let level = 1.2 + roll(d) * 0.6;
+  if (d.upbringing === "legacy") level += 0.3;
+  if (legend) level += 0.4;
+  let guess: "right" | "wrong" | null = null;
+  if (d.flags.guess !== undefined) {
+    guess = ELEMENT_ORDER[d.flags.guess] === elementOfPower(head) ? "right" : "wrong";
+    if (guess === "right") level += 0.25;
+  }
+  d.stats.powerLevel = clamp(Math.round(Math.max(d.stats.powerLevel, level) * 100) / 100, 1, Math.min(4, powerLevelCap(d.age)));
+  noteGrowth(before, d, banners);
+  addWakeGoal(d);
+  const power = getPower(head);
+  const beat = legend ? canonAt(legend.id, d.age) : null;
+  const line = legend ? `${fillCanon(beat?.text ?? "", d)}` : revealLine(head, d.age);
+  d.reveal = { powers: ids, age: d.age, title: legend ? beat?.title ?? "Awakening" : "Your power wakes", line, guess };
+  if (guess === "right") {
+    d.stats.happiness = clamp(d.stats.happiness + 6, 0, 100);
+    banners.push("You called it. Years of squinting at the signs pay off: power +0.25, Joy +6.");
+  } else if (guess === "wrong") {
+    banners.push("Not what you guessed. Nobody ever guesses right the first time.");
+  }
+  pushHistory(d, legend ? `${beat?.title ?? "Awakening"}: ${ids.map((id) => getPower(id)?.name ?? id).join(", ")}.` : `Power awakened at ${d.age}: ${power?.name ?? head}.`, "major");
+  if (legend) return true;
+  const body = `${line}\n\n${power?.name ?? "A power"}. ${power?.description ?? ""}${guess === "right" ? "\n\nYou knew. You've known since the first strange sign." : ""}`;
+  d.card = { kicker: whenLabel(d.age, d.month), banner: banners, body, deltas: [{ stat: "Power", amount: d.stats.powerLevel }] };
+  d.pending = manifestChoices(d);
+  d.phase = "choice";
+  d.minigame = null;
+  d.lastEvent = "manifest";
+  return true;
+}
+
+function fillCanon(text: string, d: Game): string {
+  return text.replaceAll("{city}", d.city).replaceAll("{name}", firstName(d.name));
+}
+
+/** A God Mode legend's turning point for this birthday, if one is due. */
+function openCanon(d: Game, banners: string[]): boolean {
+  const legend = presetById(d.preset);
+  if (!legend) return false;
+  const beat = canonAt(legend.id, d.age);
+  if (!beat || d.flags[`canon:${beat.id}`]) return false;
+  d.flags[`canon:${beat.id}`] = 1;
+  d.flags.canon = (d.flags.canon ?? 0) + 1;
+  const prompt = fillCanon(beat.text, d);
+  const outcomes: Record<string, Outcome> = {};
+  for (const choice of beat.choices) outcomes[choice.id] = canonOutcome(d, beat, choice);
+  d.pending = { id: `canon|${beat.id}`, prompt, choices: beat.choices.map((choice) => ({ id: choice.id, label: choice.label })), outcomes };
+  d.phase = "choice";
+  d.minigame = null;
+  d.card = { kicker: `${legend.earth} · ${beat.title}`, banner: [...banners, `Canon beat. Follow it, bend it, or break it. ${legend.earth} remembers.`], body: prompt, deltas: [] };
+  d.lastEvent = "canon";
+  return true;
+}
+
+function canonOutcome(d: Game, beat: CanonBeat, choice: CanonBeat["choices"][number]): Outcome {
+  const text = fillCanon(choice.text, d);
+  const villain = choice.fight ? presetVillain(d.preset, choice.fight) : null;
+  if (!villain) return { text, effects: choice.effects };
+  return {
+    text,
+    minigame: makeDuel(d, { name: villain.alias, title: villain.title, side: "villain", powerId: villain.powerId, powerLevel: villain.level, boss: true }, {
+      title: villain.alias,
+      subtitle: `${beat.title}. ${villain.blurb}`,
+      win: `${villain.alias} goes down. ${beat.title} ends the way the stories say it should.`,
+      partial: `You and ${villain.alias} both walk away. This isn't over.`,
+      lose: `${villain.alias} wins this round. The universe takes note.`,
+      tag: "duel",
+      winEffects: { fame: 8, reputation: 6, happiness: 6, powerLevel: 0.2, ...choice.effects },
+      partialEffects: { fame: 3, health: -8 },
+      loseEffects: { health: -16, happiness: -6, fame: 2 },
+    }),
+  };
+}
+
+/** Bookkeeping for a canon choice: path tallies, traits, villains met, and canon losses. */
+function settleCanon(d: Game, beatId: string, choiceId: string): void {
+  const legend = presetById(d.preset);
+  const beat = legend?.beats.find((row) => row.id === beatId);
+  const choice = beat?.choices.find((row) => row.id === choiceId);
+  if (!legend || !beat || !choice) return;
+  const key = choice.path === "canon" ? "canonKept" : choice.path === "bend" ? "canonBent" : "canonBroken";
+  d.flags[key] = (d.flags[key] ?? 0) + 1;
+  if (choice.trait) grantTrait(d, choice.trait);
+  for (const id of choice.grant ?? []) unlockCombo(d, id);
+  for (const name of choice.loss ?? []) {
+    const person = d.relationships.find((r) => r.name === name && r.alive);
+    if (person) person.alive = false;
+  }
+  const villain = choice.meet ? presetVillain(legend.id, choice.meet) : null;
+  if (villain) {
+    let person = d.relationships.find((r) => r.note === villain.alias && r.alive);
+    if (!person) {
+      person = addPerson(d, { role: "villain", closeness: 12, age: Math.max(18, d.age + 8), name: villain.name, note: villain.alias, latentPower: villain.powerId, sex: villain.name === "Ultron" ? undefined : "male" });
+      if (!d.roster.some((cape) => cape.alias === villain.alias)) {
+        d.roster.push({ id: person.id, name: villain.name, alias: villain.alias, side: "villain", powerId: villain.powerId, powerLevel: villain.level, heat: 70, note: villain.title, portrait: person.portrait ?? 1, sex: person.sex });
+        trimRoster(d);
+      }
+    }
+    if (choice.arch) markArch(d, person.id);
+  }
+  pushHistory(d, `${beat.title}: ${choice.path === "canon" ? "followed canon" : choice.path === "bend" ? "bent canon" : "broke canon"}.`, "major");
+}
+
 function tryManifest(d: Game, banners: string[]): boolean {
+  if (d.hiddenGift) {
+    const woke = wakeHidden(d, banners);
+    if (woke && d.preset) return openCanon(d, banners) || woke;
+    return woke;
+  }
   if (d.powerId || d.powerless || (d.unlockedPowers?.length ?? 0) > 0) return false;
   if (d.age > 24) {
     d.powerless = true;
@@ -939,7 +1098,7 @@ function monthlyBody(d: Game, banners: string[]) {
 
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "mentored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (key === "rested" || key === "omened" || key === "mentored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
   }
 }
 
@@ -1100,7 +1259,7 @@ function openYear(d: Game): string[] {
 }
 
 function offerYearPower(d: Game, banners: string[]): boolean {
-  if (d.age < 13) return false;
+  if (d.age < 13 || d.hiddenGift) return false;
   const owned = (d.unlockedPowers ?? []).length;
   const chance = (d.age < 18 ? 0.34 : d.age < 30 ? 0.28 : 0.2) * (owned >= 10 ? 0.5 : 1);
   if (roll(d) >= chance) return false;
@@ -1150,7 +1309,27 @@ function yearEvent(d: Game, banners: string[]) {
   setStory(d, QUIET[rollInt(d, QUIET.length)] ?? QUIET[0]!, [], banners);
 }
 
-export function createGame(opts: NewLifeOpts): Game {
+/** God Mode picks: real catalog ids, max three, at most one Apex (Gen 2). */
+export function godPicks(ids: readonly string[] | undefined): string[] {
+  const out: string[] = [];
+  let apex = 0;
+  for (const id of ids ?? []) {
+    const power = getPower(id);
+    if (!power || out.includes(id) || out.length >= 3) continue;
+    if (power.generation === 2) {
+      if (apex >= 1) continue;
+      apex++;
+    }
+    out.push(id);
+  }
+  return out;
+}
+
+export function createGame(input: NewLifeOpts): Game {
+  const legend = presetById(input.preset);
+  const opts: NewLifeOpts = legend
+    ? { ...input, name: legend.name, cityId: legend.cityId, upbringing: legend.upbringing, face: legend.face, drive: legend.drive, sex: legend.sex, look: legend.look, portrait: legend.portrait, giftId: null, giftIds: [], mode: "god" }
+    : input;
   const city = cityById(opts.cityId);
   const upbringing = upbringingById(opts.upbringing);
   const seed = (opts.seed ?? 1) >>> 0 || 1;
@@ -1224,18 +1403,53 @@ export function createGame(opts: NewLifeOpts): Game {
   if (upbringing.health) d.stats.health = clamp(d.stats.health + upbringing.health, 0, 100);
   if (upbringing.looks) d.stats.looks = clamp(d.stats.looks + upbringing.looks, 0, 100);
   d.stats.fame = clamp(d.stats.fame, 0, 28);
-  if (!opts.heir && roll(d) < 0.07) d.flags.nullGene = 1;
+  if (!opts.heir && !opts.mode && roll(d) < 0.07) d.flags.nullGene = 1;
   if (opts.heir?.trust) d.flags.trust = Math.round(opts.heir.trust);
   const last = d.name.split(" ").slice(1).join(" ") || "Voss";
   const kin = familyPlan(upbringing.id);
   if (kin.count >= 1) addPerson(d, { role: "parent", closeness: upbringing.closeness, age: 29 + rollInt(d, 12), last, sex: "female", note: kin.note });
   if (kin.count === 2) addPerson(d, { role: "parent", closeness: clamp(upbringing.closeness - 8, 12, 100), age: 27 + rollInt(d, 14), last, sex: "male", note: kin.note });
+  if (legend) {
+    const parents = d.relationships.filter((r) => r.role === "parent");
+    legend.family.forEach((member, i) => {
+      const person = parents[i];
+      if (person) {
+        person.name = member.name;
+        person.note = member.note;
+        person.sex = member.sex;
+      } else {
+        addPerson(d, { role: "parent", closeness: 70, age: 28 + rollInt(d, 30), name: member.name, sex: member.sex, note: member.note });
+      }
+    });
+  }
   grantTrait(d, asFace(opts.face));
   grantTrait(d, asDrive(opts.drive));
   biasHeroes(d);
   d.stats.fame = clamp(d.stats.fame, 0, 28);
-  const chosen = opts.giftId && getPower(opts.giftId) ? opts.giftId : null;
+  if (opts.mode) d.mode = opts.mode;
+  for (const id of legend?.extra ?? []) grantTrait(d, id, "mark");
+  for (const id of (opts.extraTraits ?? []).slice(0, 2)) if (traitById(id)?.slot === "earned") grantTrait(d, id);
+  if (legend?.boost) applyEffects(d, legend.boost, []);
+  const picks = godPicks(opts.giftIds);
+  const chosen = opts.giftId && getPower(opts.giftId) ? opts.giftId : picks[0] ?? null;
   d.giftId = chosen;
+  if (legend) {
+    d.preset = legend.id;
+    const wake = wakeAge(legend.id);
+    if (legend.powers.length && wake != null) {
+      d.hiddenGift = legend.powers[0] ?? null;
+      d.flags.manifestAge = wake;
+    } else {
+      d.powerless = true;
+      d.flags.humanVow = 1;
+    }
+  } else if (opts.mode === "mystery" && !chosen) {
+    d.hiddenGift = pickHiddenGift(d.upbringing, d.traits, roll(d), roll(d));
+    d.flags.manifestAge = pickWakeAge(roll(d));
+    d.omenLog = [];
+  } else if (chosen) {
+    for (const id of picks) unlockCombo(d, id);
+  }
   if (chosen) {
     unlockCombo(d, chosen);
     const legacy = legacyFromCombo(chosen);
@@ -1243,7 +1457,7 @@ export function createGame(opts: NewLifeOpts): Game {
     d.focusPower = chosen;
     d.powerless = false;
     d.stats.powerLevel = 1.2;
-  } else {
+  } else if (!d.hiddenGift) {
     d.powerless = true;
     d.powerId = null;
     d.focusPower = null;
@@ -1252,7 +1466,13 @@ export function createGame(opts: NewLifeOpts): Game {
   const faceLine = traitById(asFace(opts.face))?.blurb ?? "";
   const driveLine = traitById(asDrive(opts.drive))?.blurb ?? "";
   const gift = chosen ? getPower(chosen) : null;
-  const giftLine = gift
+  const giftLine = legend
+    ? `\n\n${legend.earth}. ${legend.twist} ${legend.powers.length ? `Your powers are canon. They wake at ${wakeAge(legend.id)}.` : "No powers in this universe either. Just preparation."}`
+    : d.hiddenGift
+      ? "\n\nThe nurses find nothing unusual. Your mom swears the lights dimmed when you first cried. Something is sealed inside you, and it will wake on a birthday of its own choosing, somewhere between 7 and 15."
+      : picks.length > 1
+        ? `\n\nGod Mode. You are born with ${picks.map((id) => getPower(id)?.name ?? id).join(", ")}. The book starts full.`
+        : gift
     ? `\n\nYou are born with one gift: ${gift.name}. ${gift.description} The book starts there. A second power has to be taught, offered, or braided.`
     : "\n\nThe tests come back ordinary. No gift. The book stays shut.";
   const prompt = `You are born ${born} in ${city.name}. ${city.flavor}\n\n${upbringing.detail}${kin.line ? ` ${kin.line}` : ""}\n\n${faceLine} ${driveLine}${giftLine}`;
@@ -1271,7 +1491,7 @@ export function createGame(opts: NewLifeOpts): Game {
     },
   };
   d.card = { kicker: whenLabel(0, 0), banner: ["One choice. Then the months start. Three moves each."], body: prompt, deltas: [] };
-  d.history = [{ age: 0, month: 0, text: `Born ${born} in ${city.name}.${gift ? ` Gift: ${gift.name}.` : " No gift."}${kin.line ? ` ${kin.line}` : ""}`, tag: "major" }];
+  d.history = [{ age: 0, month: 0, text: `Born ${born} in ${city.name}.${legend ? ` ${legend.earth}: the ${legend.hero} variant.` : d.hiddenGift ? " Gift: sealed." : gift ? ` Gift: ${gift.name}.` : " No gift."}${kin.line ? ` ${kin.line}` : ""}`, tag: "major" }];
   peaks(d);
   seedRoster(d);
   ensureProgress(d);
@@ -1375,7 +1595,7 @@ function makeDuel(
       playerHp: 26 + Math.round(d.stats.health / 5) + Math.round(d.stats.powerLevel * 2) + (hasTrait(d, "martial") ? 6 : 0) + suit.hp,
       foeHp: 20 + Math.round(pl * 4),
       playerMoves: moves,
-      foeMoves: movesFrom(foe.powerId, pl),
+      foeMoves: signatureMoves(foe.name, pl) ?? movesFrom(foe.powerId, pl),
       personId: foe.personId,
       guard: suit.guard,
       foePower: foe.powerId,
@@ -1536,6 +1756,9 @@ function discoverPower(d: Game, id: string | null | undefined) {
 
 function unlockCombo(d: Game, id: string | null | undefined): string {
   if (!id) return "";
+  // A sealed power blocks every other gift until it wakes: the reveal is the first power, always.
+  // A powerless legend (Batman) keeps the human vow for life.
+  if (giftsSealed(d)) return "";
   const power = getPower(id);
   if (!power) return "";
   discoverPower(d, id);
@@ -1902,6 +2125,11 @@ export function ageUp(game: Game): Game {
     peaks(d);
     return d;
   }
+  if (birthday && openCanon(d, banners)) {
+    peaks(d);
+    return d;
+  }
+  if (birthday && d.hiddenGift && !d.preset && d.age >= 3) banners.push(`Strange: ${noteOmen(d)}`);
   if (maybeEncounter(d, banners)) {
     peaks(d);
     return d;
@@ -1933,7 +2161,10 @@ export function ageUp(game: Game): Game {
 function resolveOutcome(d: Game, outcome: Outcome) {
   if (outcome.flags) {
     for (const [key, value] of Object.entries(outcome.flags)) {
-      if (key === "missionCredit") d.missions += value;
+      if (key === "missionCredit") {
+        d.missions += value;
+        d.flags.missionsAll = (d.flags.missionsAll ?? 0) + value;
+      }
       else if (key === "dropSchool") d.schoolId = null;
       else if (key === "quitJob") {
         d.jobId = null;
@@ -1974,9 +2205,25 @@ export function choose(game: Game, choiceId: string): Game {
   const outcome = game.pending.outcomes[choiceId];
   if (!outcome) return game;
   const d = structuredClone(game);
+  const pendingId = game.pending.id;
   d.pending = null;
+  if (pendingId.startsWith("canon|")) settleCanon(d, pendingId.slice(6), choiceId);
   resolveOutcome(d, outcome);
   return d;
+}
+
+/** The reveal overlay has played. */
+export function dismissReveal(game: Game): Game {
+  if (!game.reveal) return game;
+  return { ...game, reveal: null };
+}
+
+/** Record one omen line for a sealed power and return it. */
+function noteOmen(d: Game): string {
+  const log = Array.isArray(d.omenLog) ? d.omenLog : [];
+  const line = omenFor(d.hiddenGift, d.upbringing, log.length, roll(d));
+  d.omenLog = [...log, line].slice(-8);
+  return line;
 }
 
 export function resolveMini(game: Game, ratio: number, used: readonly string[] = []): Game {
@@ -2014,7 +2261,10 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
     if (trained.length) extra += ` ${trained.join(". ")}.`;
   }
   if (spec.tag === "tryout" && score >= 0.33) extra += joinLeague(d);
-  if (spec.tag === "mission" && score >= 0.33) d.missions += 1;
+  if (spec.tag === "mission" && score >= 0.33) {
+    d.missions += 1;
+    d.flags.missionsAll = (d.flags.missionsAll ?? 0) + 1;
+  }
   const banners: string[] = [];
   noteGrowth(before, d, banners);
   const kit = edge.bonus > 0 ? ` Kit edge +${Math.round(edge.bonus * 100)}%.${edge.notes.length ? ` ${edge.notes.join(" ")}` : ""}` : "";
@@ -2223,6 +2473,27 @@ export function act(game: Game, id: string): Game {
   }
   const power = powerById(d.powerId);
 
+  if (id === "omen") {
+    if (!d.hiddenGift || d.preset || d.age < 4 || d.flags.omened) return game;
+    d.flags.omened = 1;
+    d.flags.omens = (d.flags.omens ?? 0) + 1;
+    const line = noteOmen(d);
+    const deltas: Delta[] = [];
+    applyEffects(d, { happiness: 2, smarts: 1 }, deltas);
+    const nudge = d.flags.omens === 2 ? ["Two signs. You could call it now: Powers ▸ Call it."] : [];
+    setStory(d, line, deltas, nudge);
+    peaks(d);
+    return d;
+  }
+
+  if (id.startsWith("guess|")) {
+    const index = Number(id.slice(6));
+    if (!d.hiddenGift || d.flags.guess !== undefined || (d.flags.omens ?? 0) < 2 || !ELEMENT_ORDER[index]) return game;
+    d.flags.guess = index;
+    setStory(d, `You decide it's ${ELEMENTS[ELEMENT_ORDER[index]!].label.toLowerCase()}. You don't tell anyone. You just start watching for it.`, [], []);
+    return d;
+  }
+
   if (id === "rest") {
     if (d.age < 1 || d.flags.rested) return game;
     d.flags.rested = 1;
@@ -2385,6 +2656,7 @@ export function act(game: Game, id: string): Game {
     }
     d.stats.health = clamp(d.stats.health - cost.health, 0, 100);
     d.stats.money -= cost.money;
+    d.flags.drills = (d.flags.drills ?? 0) + 1;
     const exp = trainExp({ level, generation: trained.generation, age: d.age, withHero: false, story: false, bond: 0 });
     openMini(
       d,
@@ -2462,7 +2734,7 @@ export function act(game: Game, id: string): Game {
   }
 
   if (id === "spark") {
-    if (d.powerId || d.powerless || d.age < 16 || d.age > 24 || noTime(d, true)) return game;
+    if (d.powerId || d.powerless || d.hiddenGift || d.age < 16 || d.age > 24 || noTime(d, true)) return game;
     spend(d);
     if (roll(d) < 0.2) {
       awaken(d, ["You refuse to let the year be ordinary."], "push");
@@ -3308,7 +3580,7 @@ export function act(game: Game, id: string): Game {
     const [, heroId, powerId] = id.split("|");
     const hero = d.heroes.find((item) => item.id === heroId && item.met);
     const power = getPower(powerId);
-    if (!hero || !power || power.generation !== 0 || hero.relationship < 28 || noTime(d, true)) return game;
+    if (!hero || !power || power.generation !== 0 || hero.relationship < 28 || d.hiddenGift || noTime(d, true)) return game;
     if (!hero.unlocked.includes(power.id) || (d.unlockedPowers ?? []).includes(power.id)) return game;
     spend(d);
     const name = unlockCombo(d, power.id);
@@ -3663,6 +3935,9 @@ export function actionsFor(g: Game): ActionItem[] {
     items.push(item({ id: "rest", group: life, section: "This month", label: "Rest", detail: "Health and a little peace. Once a month.", disabled: g.flags.rested ? "You already rested." : undefined }));
     if (g.age >= 45) items.push(item({ id: "mentor", group: life, section: "This month", label: "Mentor a rookie", detail: "Legacy and a little joy. Once a month.", disabled: g.flags.mentored ? "One rookie a month is plenty." : noTime(g, true), accent: g.age >= 60 && !g.flags.mentored }));
   }
+  if (g.hiddenGift && !g.preset && g.age >= 4) {
+    items.push(item({ id: "omen", group: life, section: "This month", label: "Chase the strange feeling", detail: "Something about you is not ordinary. Follow it. Once a month.", disabled: g.flags.omened ? "Already chased it this month." : undefined, accent: !g.flags.omened }));
+  }
   if (g.age >= 8) items.push(item({ id: "gym", group: life, section: "This month", label: "Hit the gym", detail: "Lift, run, or an underground bout.", disabled: noTime(g, true) }));
   if (g.age >= 6) items.push(item({ id: "books", group: life, section: "This month", label: "Hit the books", detail: "Library, stolen notes, or the cape columns.", disabled: noTime(g, true) }));
   if (g.age >= 13) items.push(item({ id: "out", group: life, section: "This month", label: "Go out", detail: `Loud, quiet, or the bad block. From ${money(25 + g.age * 3)}.`, disabled: noTime(g, true) ?? (g.stats.money < 25 + g.age * 3 ? "Too broke." : undefined) }));
@@ -3710,10 +3985,25 @@ export function actionsFor(g: Game): ActionItem[] {
     items.push(item({ id: "disband", group: life, section: g.crew.name, label: "Disband the crew", detail: "Burn the ledger, sell the name, or keep them.", disabled: noTime(g, true) }));
   }
 
-  if (!onFile(g) && g.age >= 7 && g.age <= 15 && !g.powerless) {
+  if (g.hiddenGift) {
+    const omens = g.flags.omens ?? 0;
+    const sign = g.omenLog?.[g.omenLog.length - 1];
+    items.push(item({ id: "sealed", group: power, section: "Your gift", label: "Sealed power", detail: g.preset ? `Canon says it wakes at ${g.flags.manifestAge ?? "?"}. Until then you are just ${firstName(g.name)}.` : `${omens ? `${omens} strange sign${omens === 1 ? "" : "s"} so far.${sign ? ` Latest: ${sign}` : ""}` : "Nothing yet. Chase the strange feeling in Life ▸ Today."} It wakes on a birthday between ${WAKE_MIN} and ${WAKE_MAX}.`, disabled: "It wakes when it's ready." }));
+    if (g.preset) {
+      // Legends know their canon: no guessing game.
+    } else if (g.flags.guess === undefined && omens >= 2) {
+      for (const element of guessOptions(g.hiddenGift, g.name.length * 31 + (g.flags.manifestAge ?? 0) * 7)) {
+        items.push(item({ id: `guess|${ELEMENT_ORDER.indexOf(element)}`, group: power, section: "Call it", label: `Call it: ${ELEMENTS[element].label}`, detail: "Bet on what the signs mean. Right at the reveal: power +0.25 and Joy." }));
+      }
+    } else if (g.flags.guess !== undefined) {
+      const called = ELEMENT_ORDER[g.flags.guess];
+      items.push(item({ id: "guessed", group: power, section: "Call it", label: `You called ${called ? ELEMENTS[called].label : "it"}`, detail: "The reveal will tell.", disabled: "Locked in." }));
+    }
+  }
+  if (!onFile(g) && !g.hiddenGift && g.age >= 7 && g.age <= 15 && !g.powerless) {
     items.push(item({ id: "waiting", group: power, section: "Your gift", label: "Wait for a spark", detail: "It shows up when it shows up.", disabled: "Keep aging." }));
   }
-  if (!onFile(g) && g.age >= 16 && g.age <= 24 && !g.powerless) {
+  if (!onFile(g) && !g.hiddenGift && g.age >= 16 && g.age <= 24 && !g.powerless) {
     items.push(item({ id: "spark", group: power, section: "Your gift", label: "Push for a spark", detail: "Late bloomers sometimes aren't kidding.", disabled: noTime(g, true) }));
   }
   if (g.powerless) {

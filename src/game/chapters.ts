@@ -11,6 +11,7 @@
 import { availableArcs } from "./arcs";
 import { clamp } from "./format";
 import { holdings } from "./market";
+import { canonBetween, presetDecade } from "./presets";
 import type { Game } from "./types";
 
 export type ChapterPhaseId = "origin" | "coming" | "early" | "rising" | "crisis" | "legacy" | "mentor" | "final";
@@ -36,6 +37,14 @@ export interface ChapterSnap {
   karma: number;
   happiness: number;
   health: number;
+  /** Drill attempts, lifetime. Clearer than raw mastery exp for "go drill" goals. */
+  drills: number;
+  /** League missions, lifetime (g.missions resets on every promotion). */
+  missionsAll: number;
+  /** Strange signs noticed before a hidden power wakes (mystery mode). */
+  omens: number;
+  /** Canon beats lived through in a God Mode legend. */
+  canon: number;
 }
 
 type Metric = keyof ChapterSnap;
@@ -50,6 +59,12 @@ export interface ChapterGoal {
   target: number;
   start: number;
   done?: boolean;
+  /** Exact path to the button: "Powers ▸ Drill ▸ Drill your power". Optional for old saves. */
+  how?: string;
+  /** Age the button first appears. */
+  opens?: number;
+  /** Needs a manifested power. */
+  power?: boolean;
 }
 
 export interface ChapterRecap {
@@ -99,7 +114,7 @@ export const CHAPTER_PHASES: PhaseDef[] = [
     name: "Origin",
     openers: ["{name} arrives in {city} with one gift and no instructions.", "{city} gets a new kid and does not notice the furniture shifting."],
     titles: ["Small Hands, Big Room", "Before Anyone Knew", "The {gift} Kid"],
-    goals: ["smart", "friend", "mood", "drill"],
+    goals: ["smart", "friend", "mood", "drill", "omens"],
   },
   {
     id: "coming",
@@ -167,7 +182,28 @@ interface GoalDef {
   target: (g: Game, s: ChapterSnap) => number;
   label: (target: number, g: Game) => string;
   hint: string;
+  /** Tab ▸ shelf ▸ button the player presses. */
+  how: string | ((g: Game) => string);
+  /** Age the button opens. Goals that open after the chapter ends are never offered. */
+  opens: number | ((g: Game) => number);
+  /** Needs a power on file. Mystery lives see it greyed out until the reveal. */
+  power?: boolean;
 }
+
+/** A hidden power that has not woken yet (mystery mode). */
+export function dormant(g: Pick<Game, "hiddenGift">): boolean {
+  return !!g.hiddenGift;
+}
+
+const hasPower = (g: Game) => !g.powerless && ((g.unlockedPowers ?? []).length > 0 || !!g.powerId || dormant(g));
+const focusName = (g: Game) => {
+  const id = g.focusPower ?? g.giftId ?? (g.unlockedPowers ?? [])[0];
+  if (!id || dormant(g)) return "your power";
+  return id
+    .split(/[-_]/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+};
 
 const villain = (g: Game) => g.stats.reputation < -20 || g.stats.karma < -30 || !!g.crew;
 const hasArch = (g: Game) => g.relationships.some((r) => r.arch && r.alive);
@@ -175,31 +211,80 @@ const hasArch = (g: Game) => g.relationships.some((r) => r.arch && r.alive);
 const arcOpen = (g: Game) => !!g.story?.active || availableArcs({ ...g, age: g.age + 9 }).length > 0;
 
 export const CHAPTER_GOALS: GoalDef[] = [
-  { id: "smart", metric: "smarts", mode: "gain", target: () => 6, when: (g) => g.stats.smarts <= 88, label: (t) => `Get sharper: Mind +${t}`, hint: "Life ▸ Books, or a seat at school (Work)." },
-  { id: "friend", metric: "friends", mode: "gain", target: () => 1, label: () => "Find someone on your side", hint: "People ▸ Meet ▸ make a friend." },
-  { id: "mood", metric: "happiness", mode: "atLeast", target: (g) => (g.age >= 60 ? 55 : 60), label: (t) => `End the chapter happy (Joy ${t}+)`, hint: "Rest, time with family, hobbies." },
-  { id: "drill", metric: "mastery", mode: "gain", target: () => 2, label: () => "Make the gift obey on purpose", hint: "Gift ▸ Drill. Watch your health." },
-  { id: "page", metric: "powers", mode: "gain", target: () => 1, label: () => "Learn a new power", hint: "Gift ▸ Teachers, or braid two you own." },
-  { id: "teacher", metric: "heroesMet", mode: "gain", target: () => 1, when: (g) => (g.heroes ?? []).some((h) => !h.met), label: () => "Get a real hero to know your name", hint: "Gift ▸ Teachers ▸ Seek a hero, or patrol." },
-  { id: "quietfame", metric: "fame", mode: "atMost", target: (_g, s) => Math.max(25, s.fame + 5), when: (g) => g.traits.includes("secret"), label: (t) => `Keep the mask on: Fame ${t} or less`, hint: "Skip stunts and loud fights." },
-  { id: "loudfame", metric: "fame", mode: "gain", target: () => 10, when: (g) => !g.traits.includes("secret") && g.stats.fame <= 70, label: (t) => `Get noticed: Fame +${t}`, hint: "Gift ▸ Stunt, Cases ▸ League calls." },
-  { id: "darkkarma", metric: "karma", mode: "drop", target: () => 10, when: (g) => g.traits.includes("vengeful") || g.stats.karma < -10, label: () => "Find out what the bad blocks pay", hint: "Life ▸ Shadow. It costs you." },
-  { id: "rank", metric: "rank", mode: "gain", target: () => 1, when: (g) => !villain(g) && g.leagueRank < 6, label: (_t, g) => (g.leagueRank === 0 ? "Make the League roster" : "Climb one League rank"), hint: "Work ▸ League tryout, then Cases." },
-  { id: "cushion", metric: "worth", mode: "gain", target: (g) => (g.age >= 40 ? 20000 : 5000), label: (t) => `Build a cushion: +$${t.toLocaleString("en-US")}`, hint: "Work ▸ a job, and promotions." },
-  { id: "fortune", metric: "worth", mode: "gain", target: () => 25000, label: (t) => `Leave something behind: +$${t.toLocaleString("en-US")}`, hint: "Work, endorsements, or the other road." },
-  { id: "cases", metric: "missions", mode: "gain", target: () => 5, when: (g) => !villain(g), label: (t) => `Close ${t} cases`, hint: "Cases ▸ League calls and Files." },
-  { id: "partner", metric: "family", mode: "gain", target: () => 1, label: () => "Let someone in for keeps", hint: "People ▸ Meet ▸ Date, then propose." },
-  { id: "family", metric: "family", mode: "atLeast", target: (_g, s) => Math.max(1, s.family), label: () => "Keep your people close", hint: "People ▸ Family ▸ spend time." },
-  { id: "infamy", metric: "rep", mode: "drop", target: () => 15, when: villain, label: (t) => `Make the city whisper: Reputation −${t}`, hint: "Life ▸ Shadow, or your crew." },
-  { id: "fame", metric: "fame", mode: "gain", target: (_g, s) => (s.fame > 80 ? 3 : 12), when: (g) => g.stats.fame <= 88, label: (t) => `Be the name on the feeds: Fame +${t}`, hint: "Cases, stunts, the League." },
-  { id: "arc", metric: "arcs", mode: "gain", target: () => 1, when: arcOpen, label: (_t, g) => (hasArch(g) ? "End the story with your arch-enemy" : "Finish a storyline you started"), hint: "Cases ▸ Files ▸ next step." },
-  { id: "trust", metric: "bond", mode: "atLeast", target: (_g, s) => Math.min(95, Math.max(60, s.bond + 10)), when: (g) => (g.heroes ?? []).some((h) => h.met), label: (t) => `Earn a hero's trust (bond ${t}+)`, hint: "Gift ▸ Teachers ▸ train or talk." },
-  { id: "mastery", metric: "mastery", mode: "gain", target: () => 6, label: (t) => `Master your craft: +${t} mastery`, hint: "Gift ▸ Drill, and fight with your moves." },
-  { id: "standing", metric: "health", mode: "atLeast", target: (g) => (g.age >= 70 ? 35 : 50), label: (t) => `Come out standing (Health ${t}+)`, hint: "Rest, the doctor, fewer drills." },
-  { id: "holdrep", metric: "rep", mode: "atLeast", target: (_g, s) => s.rep, label: () => "Hold your reputation through the storm", hint: "Pick fights you can explain." },
-  { id: "holdmoney", metric: "worth", mode: "atLeast", target: (_g, s) => Math.max(0, Math.round((s.worth * 0.6) / 1000) * 1000), label: (t) => (t > 0 ? `Don't go broke: keep $${t.toLocaleString("en-US")}+ in cash and property` : "Don't go broke"), hint: "Watch doctor bills and big buys." },
-  { id: "legacy", metric: "legacy", mode: "gain", target: (g) => (g.age >= 70 ? 6 : 8), label: (t) => `Build legacy: +${t}`, hint: "Life ▸ Mentor a rookie, teach a hero, raise a family." },
+  { id: "smart", metric: "smarts", mode: "gain", target: () => 6, when: (g) => g.stats.smarts <= 88, label: (t) => `Raise Mind by ${t}`, hint: "Books are cheap. School is faster.", how: "Life ▸ Today ▸ Hit the books", opens: 6 },
+  { id: "friend", metric: "friends", mode: "gain", target: () => 1, when: (g) => g.relationships.filter((r) => r.alive && r.role === "friend").length < 5, label: () => "Make 1 new friend", hint: "Spend time with them after, or they drift.", how: "People ▸ Meet ▸ Make a friend", opens: 6 },
+  { id: "mood", metric: "happiness", mode: "atLeast", target: (g) => (g.age >= 60 ? 55 : 60), label: (t) => `End the chapter with Joy ${t}+`, hint: "Joy slips if you only grind.", how: (g) => (g.age >= 8 ? "Life ▸ Today ▸ Rest or Pick up a hobby" : "Life ▸ Today ▸ Rest"), opens: 1 },
+  { id: "omens", metric: "omens", mode: "gain", target: () => 3, when: (g) => dormant(g) && !g.preset, label: (t) => `Notice ${t} strange signs`, hint: "Something in you is waking up. The signs point at what.", how: "Life ▸ Today ▸ Chase the strange feeling", opens: 4 },
+  { id: "drill", metric: "drills", mode: "gain", target: () => 3, when: hasPower, label: (t, g) => `Drill ${focusName(g)} ${t} times`, hint: "Each drill costs health. Rest between.", how: "Powers ▸ Drill ▸ Drill", opens: 7, power: true },
+  { id: "page", metric: "powers", mode: "gain", target: () => 1, when: hasPower, label: () => "Learn 1 new power", hint: "Train with a hero until they teach, or mix two you own.", how: "Powers ▸ Teachers ▸ Train together, or Powers ▸ Book ▸ Mix", opens: 10, power: true },
+  { id: "teacher", metric: "heroesMet", mode: "gain", target: () => 1, when: (g) => (g.heroes ?? []).some((h) => !h.met), label: () => "Meet 1 pro hero", hint: "Patrols turn them up too.", how: "Powers ▸ Teachers ▸ Look for a sparring partner", opens: 10 },
+  { id: "quietfame", metric: "fame", mode: "atMost", target: (_g, s) => Math.max(25, s.fame + 5), when: (g) => g.traits.includes("secret"), label: (t) => `Keep Fame at ${t} or less`, hint: "Loud fights and stunts make the feeds.", how: "Skip Powers ▸ Drill ▸ Public stunt", opens: 0 },
+  { id: "loudfame", metric: "fame", mode: "gain", target: () => 10, when: (g) => !g.traits.includes("secret") && g.stats.fame <= 70 && hasPower(g), label: (t) => `Raise Fame by ${t}`, hint: "Stunts are quick fame. Missions too, from 16.", how: "Powers ▸ Drill ▸ Public stunt", opens: 10, power: true },
+  { id: "darkkarma", metric: "karma", mode: "drop", target: () => 10, when: (g) => g.traits.includes("vengeful") || g.stats.karma < -10, label: (t) => `Slide the hero bar ${t} toward dark`, hint: "It costs you, and people notice.", how: "Life ▸ Shadow ▸ Pocket what isn't yours", opens: 12 },
+  { id: "rank", metric: "rank", mode: "gain", target: () => 1, when: (g) => !villain(g) && g.leagueRank < 6, label: (_t, g) => (g.leagueRank === 0 ? "Make the League roster" : "Climb 1 League rank"), hint: "Tryouts want power 1.5, or Mind 75 at 18.", how: (g) => (g.leagueRank === 0 ? "Cases ▸ League ▸ League tryout" : "Cases ▸ League ▸ Run a mission"), opens: 16 },
+  { id: "cushion", metric: "worth", mode: "gain", target: (g) => (g.age >= 40 ? 20000 : 5000), label: (t) => `Grow net worth by $${t.toLocaleString("en-US")}`, hint: "Cash plus property counts.", how: "Work ▸ Job ▸ take a job, then Work a heavy shift", opens: 15 },
+  { id: "fortune", metric: "worth", mode: "gain", target: () => 25000, label: (t) => `Grow net worth by $${t.toLocaleString("en-US")}`, hint: "Promotions, endorsements, or the other road.", how: "Work ▸ Job ▸ Ask for a promotion", opens: 15 },
+  { id: "cases", metric: "missionsAll", mode: "gain", target: () => 5, when: (g) => !villain(g) && g.leagueRank > 0, label: (t) => `Win ${t} League missions`, hint: "A partial win still counts.", how: "Cases ▸ League ▸ Run a mission", opens: 16 },
+  { id: "partner", metric: "family", mode: "gain", target: () => 1, label: () => "Find a partner", hint: "Date, then spend time until it sticks.", how: "People ▸ Meet ▸ Go on a date", opens: 16 },
+  { id: "family", metric: "family", mode: "atLeast", target: (_g, s) => Math.max(1, s.family), label: (t) => `Keep ${t === 1 ? "your partner or kid" : `${t} family`} close`, hint: "Neglect drifts people away.", how: "People ▸ Circle ▸ Spend time", opens: 0 },
+  { id: "infamy", metric: "rep", mode: "drop", target: () => 15, when: villain, label: (t) => `Drop Reputation by ${t}`, hint: "Your crew helps.", how: "Life ▸ Shadow ▸ Pull a real job", opens: 14 },
+  { id: "fame", metric: "fame", mode: "gain", target: (_g, s) => (s.fame > 80 ? 3 : 12), when: (g) => g.stats.fame <= 88, label: (t) => `Raise Fame by ${t}`, hint: "Stunts and missions make the feeds.", how: (g) => (g.leagueRank > 0 ? "Cases ▸ League ▸ Run a mission" : "Powers ▸ Drill ▸ Public stunt"), opens: 10 },
+  { id: "arc", metric: "arcs", mode: "gain", target: () => 1, when: arcOpen, label: (_t, g) => (hasArch(g) ? "Close the case on your arch-enemy" : "Close 1 case file"), hint: "Each step is a scene. Finish them all.", how: "Cases ▸ Files ▸ next step", opens: 12 },
+  { id: "trust", metric: "bond", mode: "atLeast", target: (_g, s) => Math.min(95, Math.max(60, s.bond + 10)), when: (g) => (g.heroes ?? []).some((h) => h.met), label: (t) => `Reach bond ${t} with a hero`, hint: "Talking is free. Training builds it faster.", how: "Powers ▸ Teachers ▸ Train together or Talk", opens: 10 },
+  { id: "mastery", metric: "mastery", mode: "gain", target: () => 6, when: (g) => (g.unlockedPowers ?? []).length > 0 && !g.powerless, label: (t) => `Earn ${t} mastery points`, hint: "A soft wall stops drills; a closed case lifts it.", how: "Powers ▸ Drill ▸ Drill", opens: 7, power: true },
+  { id: "standing", metric: "health", mode: "atLeast", target: (g) => (g.age >= 70 ? 35 : 50), label: (t) => `End the chapter with Health ${t}+`, hint: "Fewer drills and fights near the end.", how: (g) => (g.age >= 10 ? "Life ▸ Today ▸ Rest or See a doctor" : "Life ▸ Today ▸ Rest"), opens: 1 },
+  { id: "holdrep", metric: "rep", mode: "atLeast", target: (_g, s) => s.rep, label: (t, g) => (villain(g) ? `Keep Reputation at ${t} or lower` : `Keep Reputation at ${t}+`), hint: "Pick fights you can explain.", how: (g) => (villain(g) ? "Life ▸ Shadow" : "Life ▸ Today ▸ Volunteer"), opens: 10 },
+  { id: "holdmoney", metric: "worth", mode: "atLeast", target: (_g, s) => Math.max(0, Math.round((s.worth * 0.6) / 1000) * 1000), label: (t) => (t > 0 ? `Keep net worth at $${t.toLocaleString("en-US")}+` : "Stay out of debt"), hint: "Watch doctor bills and big buys.", how: "Work ▸ Job ▸ Work a heavy shift", opens: 15 },
+  { id: "legacy", metric: "legacy", mode: "gain", target: (g) => (g.age >= 70 ? 6 : 8), label: (t) => `Raise Legacy by ${t}`, hint: "Teaching heroes and raising kids count too.", how: "Life ▸ Today ▸ Mentor a rookie", opens: 45 },
+  { id: "canon", metric: "canon", mode: "gain", target: (g) => canonDue(g), when: (g) => canonDue(g) > 0, label: (t) => (t === 1 ? "Live this decade's turning point" : `Live ${t} turning points`), hint: "They arrive on their birthdays. Follow canon, bend it, or break it.", how: "Arrives on its own ▸ Life ▸ Today", opens: 0 },
 ];
+
+/** Canon beats a God Mode legend will live through before this chapter ends. */
+function canonDue(g: Game): number {
+  if (!g.preset) return 0;
+  const end = chapterIndexForAge(g.age) * 10 + 9;
+  return canonBetween(g.preset, g.age, end).filter((beat) => !g.flags[`canon:${beat.id}`]).length;
+}
+
+function resolveOpens(def: GoalDef, g: Game): number {
+  return typeof def.opens === "function" ? def.opens(g) : def.opens;
+}
+
+function resolveHow(def: GoalDef, g: Game): string {
+  return typeof def.how === "function" ? def.how(g) : def.how;
+}
+
+export function goalDef(id: string): GoalDef | undefined {
+  return CHAPTER_GOALS.find((goal) => goal.id === id);
+}
+
+/** Why a goal can't be worked on yet ("Unlocks at 7"), or null when its button is live. */
+export function goalLock(goal: ChapterGoal, g: Game): string | null {
+  const def = goalDef(goal.id);
+  const opens = goal.opens ?? (def ? resolveOpens(def, g) : 0);
+  const power = goal.power ?? def?.power ?? false;
+  if (g.age < opens) return `Unlocks at ${opens}`;
+  if (power && dormant(g)) return "Unlocks when your power wakes";
+  return null;
+}
+
+/** Where to press, for old saves too. */
+export function goalHow(goal: ChapterGoal, g: Game): string {
+  if (goal.how) return goal.how;
+  const def = goalDef(goal.id);
+  return def ? resolveHow(def, g) : goal.hint;
+}
+
+/** "2/3", "Joy 54/60", "$1,200/$5,000": the number the bar is measuring. */
+export function goalCount(goal: ChapterGoal, snap: ChapterSnap): string {
+  const cash = goal.metric === "worth" || goal.metric === "money";
+  const fmt = (n: number) => (cash ? `$${Math.round(n).toLocaleString("en-US")}` : `${Math.round(n * 100) / 100}`);
+  const now = snap[goal.metric];
+  if (goal.mode === "gain") return `${fmt(Math.max(0, now - goal.start))}/${fmt(goal.target)}`;
+  if (goal.mode === "drop") return `${fmt(Math.max(0, goal.start - now))}/${fmt(goal.target)}`;
+  if (goal.mode === "atLeast") return `${fmt(now)}/${fmt(goal.target)}`;
+  return `${fmt(now)} (max ${fmt(goal.target)})`;
+}
 
 // "holdrep" needs a per-hero mode; resolve it here so the table above can stay declarative.
 function goalMode(def: GoalDef, g: Game): GoalMode {
@@ -230,6 +315,10 @@ export function snapshot(g: Game): ChapterSnap {
     karma: g.stats.karma,
     happiness: g.stats.happiness,
     health: g.stats.health,
+    drills: g.flags.drills ?? 0,
+    missionsAll: g.flags.missionsAll ?? 0,
+    omens: g.flags.omens ?? 0,
+    canon: g.flags.canon ?? 0,
   };
 }
 
@@ -344,6 +433,47 @@ function threadFrom(g: Game, prev: Chapter | undefined): ChapterThread | null {
   return null;
 }
 
+const MYSTERY_OPENERS = [
+  "{name} arrives in {city} with something folded up inside, waiting for its birthday.",
+  "{city} gets a new kid. Nobody, including the kid, knows what is coming.",
+];
+const MYSTERY_TEEN_OPENERS = [
+  "At ten, {name} is still waiting. The strange signs are getting louder.",
+  "Every birthday in {city} feels like it might be the one. Not yet. Soon.",
+];
+
+/** A sealed power wakes with at least a year of this chapter left. Mystery lives never spoil the exact age. */
+function wakesInTime(g: Game, endAge: number): boolean {
+  if (g.preset) return (g.flags.manifestAge ?? 99) <= endAge - 2;
+  return endAge >= 17;
+}
+
+/**
+ * The power just woke mid-chapter: add a bonus drill goal so the reveal has something to chase right away.
+ * No-op when the chapter already has a power goal or ends within the year.
+ */
+export function addWakeGoal(g: Game): void {
+  const chapter = currentChapter(g);
+  if (!chapter || chapter.recap || chapter.endAge - g.age < 1) return;
+  if (chapter.goals.some((goal) => goal.power)) return;
+  const def = CHAPTER_GOALS.find((goal) => goal.id === "drill");
+  if (!def) return;
+  const snap = snapshot(g);
+  const target = def.target(g, snap);
+  chapter.goals.push({ id: def.id, label: def.label(target, g), hint: def.hint, metric: def.metric, mode: goalMode(def, g), target, start: snap[def.metric], how: resolveHow(def, g), opens: resolveOpens(def, g), power: true });
+  chapter.beats.push(def.hint);
+}
+
+function presetTitles(g: Game, index: number): string[] | null {
+  const decade = g.preset ? presetDecade(g.preset, index) : null;
+  return decade ? [decade.title] : null;
+}
+
+function presetOpener(g: Game, index: number): string | null {
+  const decade = g.preset ? presetDecade(g.preset, index) : null;
+  return decade?.premise ?? null;
+}
+
 /** Build the chapter that starts at this age. Pure and deterministic for a given hero state. */
 export function buildChapter(g: Game, prev?: Chapter): Chapter {
   const index = chapterIndexForAge(g.age);
@@ -353,13 +483,19 @@ export function buildChapter(g: Game, prev?: Chapter): Chapter {
   const snap = snapshot(g);
   const thread = threadFrom(g, prev);
 
+  const endAge = index * 10 + 9;
+  // Only offer what can be finished in this decade: the button must open before the chapter ends,
+  // and a hidden power is only promised once its window (7–15) closes inside the chapter.
+  const reachable = (goal: GoalDef) => resolveOpens(goal, g) <= endAge - 1 && (!goal.power || !dormant(g) || wakesInTime(g, endAge));
   const pool = phase.goals
     .map((id) => CHAPTER_GOALS.find((goal) => goal.id === id))
-    .filter((goal): goal is GoalDef => !!goal && (!goal.when || goal.when(g, snap)));
+    .filter((goal): goal is GoalDef => !!goal && (!goal.when || goal.when(g, snap)) && reachable(goal));
+  const canonGoal = CHAPTER_GOALS.find((goal) => goal.id === "canon")!;
   // Shuffle deterministically, then keep 3 with distinct metrics.
   const shuffled = pool.map((goal) => ({ goal, k: rand() })).sort((a, b) => a.k - b.k).map((row) => row.goal);
   if (thread === "drift" && !shuffled.some((goal) => goal.id === "mood")) shuffled.unshift(CHAPTER_GOALS.find((goal) => goal.id === "mood")!);
   if (thread === "body" && !shuffled.some((goal) => goal.id === "standing")) shuffled.unshift(CHAPTER_GOALS.find((goal) => goal.id === "standing")!);
+  if (canonGoal.when?.(g, snap)) shuffled.unshift(canonGoal);
   const chosen: GoalDef[] = [];
   for (const goal of shuffled) {
     if (chosen.length >= 3) break;
@@ -369,21 +505,22 @@ export function buildChapter(g: Game, prev?: Chapter): Chapter {
   const goals: ChapterGoal[] = chosen.map((def) => {
     const mode = goalMode(def, g);
     const target = def.target(g, snap);
-    return { id: def.id, label: def.label(target, g), hint: def.hint, metric: def.metric, mode, target, start: snap[def.metric] };
+    return { id: def.id, label: def.label(target, g), hint: def.hint, metric: def.metric, mode, target, start: snap[def.metric], how: resolveHow(def, g), opens: resolveOpens(def, g), power: def.power || undefined };
   });
 
   const used = new Set((g.chapters ?? []).map((c) => c.title));
   // Don't name a gift the hero has not manifested yet.
-  const titles = phase.titles.filter((t) => g.powerId || !t.includes("{gift}"));
+  const titles = presetTitles(g, index) ?? phase.titles.filter((t) => (g.powerId && !dormant(g)) || !t.includes("{gift}"));
   const fresh = titles.map((t) => fill(t, g)).filter((t) => !used.has(t));
   const title = fresh.length ? pick(fresh) : `${fill(pick(titles), g)}, Again`;
-  const premise = `${fill(pick(phase.openers), g)} ${personalLine(g, thread)}`;
+  const opener = presetOpener(g, index) ?? pick(dormant(g) && phase.id === "origin" ? MYSTERY_OPENERS : dormant(g) && phase.id === "coming" ? MYSTERY_TEEN_OPENERS : phase.openers);
+  const premise = `${fill(opener, g)} ${personalLine(g, thread)}`;
   const beats = goals.map((goal) => goal.hint);
   return {
     index,
     phase: phase.id,
     startAge: g.age,
-    endAge: index * 10 + 9,
+    endAge,
     title,
     premise,
     beats,
@@ -487,6 +624,17 @@ export function migrateChapters(g: Game): Game {
   if (typeof g.legacy !== "number") g.legacy = 0;
   if (!Array.isArray(g.chapters)) g.chapters = [];
   if (g.chapterNotice === undefined) g.chapterNotice = null;
+  for (const chapter of g.chapters) {
+    if (chapter.recap) continue;
+    for (const goal of chapter.goals) {
+      const def = goalDef(goal.id);
+      if (!def) continue;
+      if (def.metric === goal.metric) goal.label = def.label(goal.target, g);
+      goal.how ??= resolveHow(def, g);
+      goal.opens ??= resolveOpens(def, g);
+      if (def.power && goal.power === undefined) goal.power = true;
+    }
+  }
   if (!g.chapters.length && g.phase !== "dead") {
     const chapter = buildChapter(g);
     g.chapters = [chapter];
