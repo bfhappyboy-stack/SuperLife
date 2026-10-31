@@ -124,7 +124,7 @@ test("the braid chain still holds for legends: Fire + Speed = Light Speed, + Str
 test("every legend is valid data", () => {
   const cities = new Set(CITIES.map((c) => c.id));
   const ups = new Set(UPBRINGINGS.map((u) => u.id));
-  assert.equal(PRESETS.length, 4);
+  assert.equal(PRESETS.length, 8);
   for (const p of PRESETS) {
     assert.ok(cities.has(p.cityId), `${p.id} city`);
     assert.ok(ups.has(p.upbringing), `${p.id} upbringing`);
@@ -152,7 +152,7 @@ test("every legend is valid data", () => {
     assert.equal(p.powers.length ? wakeAge(p.id) != null : wakeAge(p.id) == null, true, `${p.id} wake beat matches powers`);
   }
   const names = PRESETS.map((p) => p.hero).join(" ");
-  for (const hero of ["Spider-Man", "Batman", "Iron Man", "Hulk"]) assert.ok(names.includes(hero));
+  for (const hero of ["Spider-Man", "Batman", "Iron Man", "Hulk", "Superman", "Wonder Woman", "Captain America", "Thor"]) assert.ok(names.includes(hero));
   const tony = PRESETS.find((p) => p.id === "iron-man")!;
   assert.ok(tony.villains.some((v) => v.alias === "Ultron"));
 });

@@ -14,7 +14,7 @@
  */
 import type { DuelMove, Effects, Look, PowerId, Sex, TraitId, UpbringingId } from "./types";
 
-export type PresetId = "spider-man" | "batman" | "iron-man" | "hulk";
+export type PresetId = "spider-man" | "batman" | "iron-man" | "hulk" | "superman" | "wonder-woman" | "captain-america" | "thor";
 export type CanonPath = "canon" | "bend" | "break";
 
 export interface PresetVillain {
@@ -651,6 +651,515 @@ export const PRESETS: HeroPreset[] = [
       { id: "leader", name: "Samuel Sterns", alias: "The Leader", title: "The gamma genius", powerId: "mind", level: 6, blurb: "Gamma gave you muscle. It gave him a mind the size of a planet.", moves: [mv("Gamma Intellect", "He saw this coming yesterday.", 5, "trick", "psychic", "status"), mv("Humanoid Swarm", "Rubber soldiers, a lot of them.", 6, "strike", "stretch", "area"), mv("Mind Snare", "Bruce feels the leash.", 6, "trick", "psychic"), mv("Contingency", "Plan C, D, and E.", 5, "guard", "shield", "guard")] },
       { id: "ross-red", name: "Thaddeus Ross", alias: "Red Hulk", title: "Your father-in-law, angrier", powerId: "strength", level: 7, from: 34, blurb: "The general who hunted you finally tries the cure he feared. It runs hot.", moves: [mv("Red Haymaker", "Military precision, gamma fury.", 8, "strike", "fire", "burst"), mv("Heat Surge", "The air bends around him.", 6, "strike", "fire", "area"), mv("Chain of Command", "Tanks behind him, too.", 5, "trick", "force", "status"), mv("Absorb the Gamma", "He drinks your rage.", 5, "guard", "energy", "guard")] },
       { id: "maestro", name: "The Maestro", alias: "The Maestro", title: "You, at the end of the worst timeline", powerId: "strength", level: 10, from: 67, blurb: "Every fight won, every friend gone, a throne made of the Avengers.", moves: [mv("Worst Punch", "The one you never threw.", 10, "strike", "force", "burst"), mv("Radiation Crown", "He soaked up a nuclear war.", 7, "guard", "energy", "guard"), mv("Your Own Voice", "He knows what you'll do.", 6, "trick", "psychic", "status"), mv("Thunderclap", "Hands like that.", 8, "strike", "force", "area")] },
+    ],
+  },
+  {
+    id: "superman",
+    hero: "Superman",
+    name: "Clark Kent",
+    earth: "Earth-3838",
+    twist: "The rocket lands on the Luthor farm first. Lex grows up as the boy next door who saw it.",
+    tagline: "Faster than a speeding bullet. Slower than the Luthor boy at keeping secrets.",
+    sex: "male",
+    cityId: "dust",
+    upbringing: "alien",
+    face: "secret",
+    drive: "idealistic",
+    family: [{ name: "Martha Kent", note: "Ma", sex: "female" }, { name: "Jonathan Kent", note: "Pa", sex: "male" }],
+    extra: [],
+    look: { skin: 0, hair: 0, style: 1, build: 1, feature: 0 },
+    portrait: 3838,
+    art: "hero-superman",
+    color: "#3b7dff",
+    powers: ["super-strength", "flight", "super-durability"],
+    decades: [
+      { title: "A Farm Outside {city}", premise: "{name} is a quiet kid with very good hearing. The barn has a locked cellar. Pa has the key." },
+      { title: "Smallville Nights", premise: "Teen years. {name} catches a tractor, then a falling star, then the eye of the Luthor boy." },
+      { title: "The Daily Planet", premise: "Twenties. Glasses, a press badge, and a city that needs someone to look up at." },
+      { title: "Man of Steel", premise: "Thirties. The world knows the cape. One reporter is starting to know the man." },
+      { title: "The Death and Return", premise: "Forty. Something called Doomsday. A funeral with every hero on Earth in the front row." },
+      { title: "The Last Son", premise: "Fifty. Kandor in a bottle, a son with heat vision, and Lex Luthor in the White House." },
+      { title: "All-Star", premise: "Sixty. The sun is finally catching up with {name}. He uses the time well." },
+      { title: "Fortress of Solitude", premise: "Late light over {city}. The farm, the Fortress, and the people who made a Kent out of a Kryptonian." },
+    ],
+    beats: [
+      {
+        id: "lex-boy", age: 9, title: "The Luthor Boy", text: "Lex Luthor lives on the next farm. He was there the night the rocket fell, and he has been asking questions ever since.",
+        choices: [
+          { id: "friend", label: "Be his friend anyway", path: "canon", text: "Best friends for a summer. He builds a lab in the silo. You pretend you can't see through the walls.", effects: { happiness: 6, smarts: 3 }, meet: "lex" },
+          { id: "avoid", label: "Keep your distance", path: "bend", text: "He notices you avoiding him. Lex Luthor never forgets being noticed.", effects: { smarts: 2 }, meet: "lex" },
+        ],
+      },
+      {
+        id: "barn", age: 13, wake: true, title: "The Barn", text: "A tractor rolls over Pa's leg. You lift it with one hand. That night, Pa unlocks the cellar and shows you the rocket.",
+        choices: [
+          { id: "hide", label: "Keep it in the family", path: "canon", text: "\"People are afraid of what they don't understand, son.\" You learn to hold back. You get very good at it.", effects: { karma: 6, happiness: -2 } },
+          { id: "tell", label: "Tell Lex", path: "break", text: "Lex's eyes go wide. He promises to help. In this universe, he means it, for a while.", effects: { happiness: 4, reputation: 2 }, meet: "lex" },
+        ],
+      },
+      {
+        id: "tornado", age: 18, title: "The Tornado", text: "A twister bears down on the farm. Pa goes back for the dog. He tells you to stay put.",
+        choices: [
+          { id: "stay", label: "Do as he says", path: "canon", text: "Pa raises a hand. The wind takes him. You never stop asking what you could have done.", effects: { happiness: -14, karma: 6 }, loss: ["Jonathan Kent"] },
+          { id: "go", label: "Fly in anyway", path: "break", text: "Everyone sees a boy fly. Pa lives. The secret doesn't.", effects: { fame: 14, happiness: 6 } },
+        ],
+      },
+      {
+        id: "planet", age: 24, title: "The Daily Planet", text: "A job at the Planet in {city}. Perry White yells. Lois Lane rewrites your lede and is right about it.",
+        choices: [
+          { id: "glasses", label: "Glasses and a slouch", path: "canon", text: "Clark is mild. Superman is not. It works, somehow.", effects: { smarts: 4, reputation: 4 } },
+          { id: "both", label: "Tell Lois the truth", path: "bend", text: "She already knew. She wants an exclusive.", effects: { happiness: 8, fame: 4 } },
+        ],
+      },
+      {
+        id: "zod", age: 28, title: "General Zod", text: "A Phantom Zone ship tears the sky open over {city}. General Zod demands the last son of Krypton surrender.",
+        choices: [
+          { id: "fight", label: "Meet him in the sky", path: "canon", text: "Two Kryptonians. One city. You keep the fight over the empty desert, mostly.", fight: "zod", meet: "zod" },
+          { id: "talk", label: "Offer him the farm", path: "break", text: "Zod laughs, then looks at the wheat for a long time.", effects: { karma: 6 }, meet: "zod" },
+        ],
+      },
+      {
+        id: "lex-armor", age: 33, title: "Luthor Rising", text: "Lex has a company, a city and a warsuit. He says you're an alien invasion of one.",
+        choices: [
+          { id: "fight", label: "Take the suit apart", path: "canon", text: "Green kryptonite in the gauntlets. You win anyway. He smiles like he planned that.", fight: "lex", meet: "lex", arch: true },
+          { id: "expose", label: "Expose him in print", path: "bend", text: "Clark Kent's byline does what Superman's fists can't.", effects: { reputation: 8, smarts: 4 }, meet: "lex", arch: true },
+        ],
+      },
+      {
+        id: "doomsday", age: 40, title: "Doomsday", text: "Something with bone spikes walks out of a crater and does not stop. Every hero who tries falls back.",
+        choices: [
+          { id: "fight", label: "Fight to the last breath", path: "canon", text: "The two of you fall together. The world wears black armbands. Then a heartbeat.", fight: "doomsday", meet: "doomsday", effects: { health: -20, fame: 16 } },
+          { id: "league", label: "Call the League first", path: "bend", text: "Nobody dies today. The cover of the Planet is a team photo.", effects: { reputation: 10 }, trait: "team", meet: "doomsday" },
+        ],
+      },
+      {
+        id: "brainiac", age: 47, title: "Brainiac", text: "A skull-shaped ship over {city}. Brainiac shrank Kandor once. Now it wants your city for its collection.",
+        choices: [
+          { id: "fight", label: "Break the bottle", path: "canon", text: "You free the city. You find Kandor in its hold, still alive.", fight: "brainiac", meet: "brainiac" },
+          { id: "trade", label: "Offer yourself instead", path: "break", text: "Brainiac studies you for a week. You study it back.", effects: { smarts: 8, health: -6 }, meet: "brainiac" },
+        ],
+      },
+      {
+        id: "jon", age: 58, title: "Superboy", text: "Your son Jon sets the kitchen on fire with his eyes. Lois says he gets that from you.",
+        choices: [
+          { id: "train", label: "Teach him to hold back", path: "canon", text: "The same lessons Pa gave you, in the same barn. The S fits him.", effects: { happiness: 10 }, trait: "family" },
+          { id: "free", label: "Let him be loud", path: "bend", text: "He saves a ferry on live TV at fourteen. You're proud and terrified.", effects: { fame: 8, happiness: 6 } },
+        ],
+      },
+      {
+        id: "last-zod", age: 63, title: "Kneel Before Zod", text: "Zod is back, older and angrier, with an army from the Phantom Zone. He has waited thirty years for a rematch.",
+        choices: [
+          { id: "fight", label: "One more time", path: "canon", text: "Older bones, same sky. This time you send him home.", fight: "zod", meet: "zod", effects: { fame: 10 } },
+          { id: "zone", label: "Seal the Zone forever", path: "bend", text: "A trick from the Fortress. No more ghosts from Krypton.", effects: { smarts: 6, karma: 6 }, meet: "zod" },
+        ],
+      },
+      {
+        id: "lex-end", age: 68, title: "Lex's Last Lecture", text: "Lex Luthor, old and sick, asks to see you. Not Superman. Clark.",
+        choices: [
+          { id: "visit", label: "Go as Clark", path: "canon", text: "He says he always knew. He says he'd do it all again. He holds your hand anyway.", effects: { happiness: 4, karma: 8 }, meet: "lex" },
+          { id: "cure", label: "Bring a cure from the Fortress", path: "break", text: "Lex lives. He doesn't thank you. He builds a hospital.", effects: { karma: 12, reputation: 6 }, meet: "lex" },
+        ],
+      },
+      {
+        id: "fortress", age: 72, title: "The Fortress", text: "Ice and crystal at the top of the world. Jon has the cape now. Ma's pie on the table.",
+        endings: {
+          canon: "Earth-3838 ends the way the legend should: a farm boy who was strong enough to be gentle, every single day.",
+          bend: "Earth-3838 bends brighter: the Kents, the League and a world that learned to look up without being afraid.",
+          break: "Earth-3838 ends off the map. No comic ever let Lex Luthor and Clark Kent grow old as friends.",
+        },
+        choices: [
+          { id: "farm", label: "Go home to the farm", path: "canon", text: "You fly low, slow, and you land in the wheat.", effects: { happiness: 12 } },
+          { id: "stars", label: "Visit Kandor", path: "bend", text: "A city of your people, full-size now, under a red sun. They throw a parade.", effects: { happiness: 10, fame: 6 } },
+        ],
+      },
+    ],
+    villains: [
+      { id: "lex", name: "Lex Luthor", alias: "Lex Luthor", title: "The boy next door", powerId: "intellect", level: 7, blurb: "The smartest man on Earth, and he has known you since you were nine.", moves: [mv("Kryptonite Gauntlet", "Green light, right where it hurts.", 8, "strike", "energy", "burst"), mv("Warsuit Barrier", "LexCorp plating.", 5, "guard", "shield", "guard"), mv("Press Conference", "The city turns on you.", 5, "trick", "psychic", "status"), mv("Orbital Strike", "He bought a satellite for this.", 7, "strike", "light", "area")] },
+      { id: "zod", name: "Dru-Zod", alias: "General Zod", title: "Krypton's last general", powerId: "strength", level: 8, blurb: "Every power you have, plus a soldier's training and no reason to hold back.", moves: [mv("Kneel", "A fist from orbit.", 9, "strike", "force", "burst"), mv("Heat Vision", "Red eyes, white heat.", 7, "strike", "fire", "area"), mv("Phantom Step", "Out of the Zone, behind you.", 5, "trick", "warp", "dash"), mv("Military Stance", "He was born for this.", 5, "guard", "shield", "guard")] },
+      { id: "doomsday", name: "Doomsday", alias: "Doomsday", title: "The thing that killed Superman", powerId: "strength", level: 9, blurb: "Built to adapt. Whatever kills it once never works again.", moves: [mv("Bone Spike", "Through the guard.", 9, "strike", "force", "burst"), mv("Adapt", "Yesterday's punch does nothing.", 6, "guard", "life", "guard"), mv("Rampage", "A city block, sideways.", 8, "strike", "force", "area"), mv("Unstoppable", "It just keeps walking.", 5, "trick", "gravity", "status")] },
+      { id: "brainiac", name: "Vril Dox", alias: "Brainiac", title: "The collector of cities", powerId: "mind", level: 8, from: 44, blurb: "A coluan mind with twelve levels of intellect and a shelf of bottled worlds.", moves: [mv("Shrink Ray", "Your city, pocket-sized.", 7, "trick", "warp", "status"), mv("Tendrils", "Cables from the skull ship.", 7, "strike", "energy", "area"), mv("Data Siphon", "It learns your moves.", 5, "trick", "psychic"), mv("Force Lattice", "A cage of light.", 5, "guard", "shield", "guard")] },
+    ],
+  },
+  {
+    id: "wonder-woman",
+    hero: "Wonder Woman",
+    name: "Diana of Themyscira",
+    earth: "Earth-1941",
+    twist: "Themyscira was never hidden. The island has a seat at the UN, and Diana is its ambassador at eighteen.",
+    tagline: "Truth, a lasso, and a very firm handshake.",
+    sex: "female",
+    cityId: "harbor",
+    upbringing: "legacy",
+    face: "loud",
+    drive: "idealistic",
+    family: [{ name: "Hippolyta", note: "Mother, Queen of the Amazons", sex: "female" }, { name: "Antiope", note: "Aunt and general", sex: "female" }],
+    extra: ["royalty"],
+    look: { skin: 1, hair: 0, style: 2, build: 1, feature: 0 },
+    portrait: 1941,
+    art: "hero-wonder-woman",
+    color: "#e2b13c",
+    powers: ["super-strength", "flight", "aegis-shell"],
+    decades: [
+      { title: "Clay and Lightning", premise: "{name} is the only child on an island of warriors. She was sculpted from clay, and something answered." },
+      { title: "The Contest", premise: "Teen years. Antiope trains {name} in secret. Hippolyta pretends not to know." },
+      { title: "Ambassador", premise: "Twenties. A plane in the sea, a man named Steve Trevor, and a seat at the table in {city}." },
+      { title: "Wonder Woman", premise: "Thirties. Gods, monsters and cameras. {name} would rather talk first." },
+      { title: "The God of War", premise: "Forty. Ares wants a war. {name} wants him to sit down." },
+      { title: "Queen of Two Worlds", premise: "Fifty. The island needs a queen. The world needs a hero. She has two hands." },
+      { title: "The Trinity", premise: "Sixty. The founders grow older together. Diana does not, quite." },
+      { title: "Paradise Island", premise: "Late light over the sea. The lasso hangs on the wall and still glows a little." },
+    ],
+    beats: [
+      {
+        id: "clay", age: 7, wake: true, title: "Clay and Lightning", text: "Hippolyta tells you the truth: you were shaped from clay and given life by the gods. That night your bracelets ring like bells.",
+        choices: [
+          { id: "accept", label: "Ask to train", path: "canon", text: "Your mother says no. Antiope says later. You wait about a day.", effects: { happiness: 4, health: 4 } },
+          { id: "question", label: "Ask which god", path: "bend", text: "Hippolyta goes quiet. The answer is a name she doesn't want to say.", effects: { smarts: 4 } },
+        ],
+      },
+      {
+        id: "contest", age: 17, title: "The Contest", text: "The Amazons hold a tournament to choose who goes to the world of men. Your mother forbids you to enter.",
+        choices: [
+          { id: "mask", label: "Enter in a mask", path: "canon", text: "You win. You take the mask off. Your mother's face does several things at once.", effects: { fame: 6, parentBelief: -4 } },
+          { id: "ask", label: "Ask her permission", path: "break", text: "She says yes. It's the hardest thing she's ever said.", effects: { happiness: 8, parentBelief: 6 } },
+        ],
+      },
+      {
+        id: "steve", age: 19, title: "Steve Trevor", text: "A plane crashes in the bay. A pilot named Steve Trevor washes ashore with news of a war and a city called {city}.",
+        choices: [
+          { id: "go", label: "Go with him", path: "canon", text: "You leave paradise for a world that doesn't know what an Amazon is. It learns.", effects: { happiness: 6, fame: 4 } },
+          { id: "un", label: "Take the UN seat", path: "bend", text: "The world comes to you instead. Ambassador Diana, eighteen, and nobody interrupts her twice.", effects: { reputation: 10 }, trait: "liaison" },
+        ],
+      },
+      {
+        id: "cheetah", age: 24, title: "Barbara Minerva", text: "An archaeologist befriends you at the museum. Then she finds an idol in the stacks and it gives her claws.",
+        choices: [
+          { id: "fight", label: "Stop the Cheetah", path: "canon", text: "She's fast. You're patient. She escapes, and you know she'll be back.", fight: "cheetah", meet: "cheetah" },
+          { id: "lasso", label: "Use the lasso on her", path: "bend", text: "The truth: she's lonely. You both cry. She still runs.", effects: { karma: 6 }, meet: "cheetah" },
+        ],
+      },
+      {
+        id: "circe", age: 29, title: "Circe", text: "The witch who turns men into pigs has turned {city}'s council into swine. She wants an audience with the clay princess.",
+        choices: [
+          { id: "fight", label: "Break her spell", path: "canon", text: "A storm of magic. Your bracelets catch every bolt.", fight: "circe", meet: "circe" },
+          { id: "bargain", label: "Bargain with her", path: "break", text: "Circe keeps one pig. The mayor, who deserved it.", effects: { karma: -2, happiness: 4 }, meet: "circe" },
+        ],
+      },
+      {
+        id: "antiope", age: 34, title: "Antiope", text: "An attack on Themyscira. Your aunt stands between the gate and the army.",
+        choices: [
+          { id: "honor", label: "Honor her stand", path: "canon", text: "She falls with her sword in her hand. The island sings for three days.", effects: { happiness: -12, health: 6 }, loss: ["Antiope"] },
+          { id: "save", label: "Fly to her side", path: "break", text: "Two swords at the gate. She lives to complain about your form.", effects: { happiness: 8, fame: 4 } },
+        ],
+      },
+      {
+        id: "ares", age: 40, title: "Ares", text: "The God of War has been whispering in generals' ears for decades. Now he walks into {city} in person.",
+        choices: [
+          { id: "fight", label: "Fight a god", path: "canon", text: "The lasso holds even him. He hates the truth more than he hates you.", fight: "ares", meet: "ares", arch: true },
+          { id: "truth", label: "Make him tell the truth", path: "bend", text: "In the lasso, Ares admits he's lonely too. The war stops for a week.", effects: { karma: 10 }, meet: "ares", arch: true },
+        ],
+      },
+      {
+        id: "medusa", age: 48, title: "Medusa", text: "The gorgon broadcasts her gaze over live television. Anyone who watches turns to stone.",
+        choices: [
+          { id: "fight", label: "Fight blindfolded", path: "canon", text: "Antiope taught you this when you were twelve. It works.", fight: "medusa", meet: "medusa" },
+          { id: "mirror", label: "Hold up a shield", path: "bend", text: "Old trick. Still works.", effects: { smarts: 4, fame: 6 }, meet: "medusa" },
+        ],
+      },
+      {
+        id: "donna", age: 58, title: "Donna Troy", text: "A girl made from your reflection, raised on the island, asks to carry your name.",
+        choices: [
+          { id: "sister", label: "Call her sister", path: "canon", text: "Wonder Girl, then something of her own. You train her on the same beach.", effects: { happiness: 10 }, trait: "family" },
+          { id: "queen", label: "Make her the island's champion", path: "bend", text: "She stays on Themyscira. The island has a hero; the world still has you.", effects: { reputation: 6 } },
+        ],
+      },
+      {
+        id: "last-hunt", age: 63, title: "The Last Hunt", text: "Barbara Minerva, grey in the fur now, wants one last chase through the museum where it began.",
+        choices: [
+          { id: "fight", label: "Give her the chase", path: "canon", text: "Old friends, old claws. You let her get close. Then you don't.", fight: "cheetah", meet: "cheetah" },
+          { id: "free", label: "Free her from the idol", path: "break", text: "The curse lifts. Barbara gets her life back and a job at the museum.", effects: { karma: 12 }, meet: "cheetah" },
+        ],
+      },
+      {
+        id: "war-again", age: 67, title: "War Returns", text: "Ares rises again. He says there's always a war, and he's always invited.",
+        choices: [
+          { id: "fight", label: "Send him back", path: "canon", text: "Older, slower, and better at this than he is.", fight: "ares", meet: "ares", effects: { fame: 10 } },
+          { id: "seat", label: "Give him a seat at the UN", path: "break", text: "He has to sit in committee meetings now. It's the cruelest thing you've ever done.", effects: { karma: 6, reputation: 8 }, meet: "ares" },
+        ],
+      },
+      {
+        id: "paradise", age: 72, title: "Paradise Island", text: "Home. Your mother's throne is yours if you want it. The sea is the same colour it was when you were seven.",
+        endings: {
+          canon: "Earth-1941 ends the way the legend should: a princess who left paradise, and made the world a little more like it.",
+          bend: "Earth-1941 bends wiser: an ambassador, a queen and a sister, and the island's doors open for good.",
+          break: "Earth-1941 ends off the map. No comic ever let Diana grow old at a table where the gods had to listen.",
+        },
+        choices: [
+          { id: "throne", label: "Take the throne", path: "canon", text: "Queen Diana. The Amazons cheer for an hour.", effects: { happiness: 10, reputation: 6 } },
+          { id: "world", label: "Stay in the world", path: "bend", text: "A small apartment in {city} with a view of the bay.", effects: { happiness: 10 } },
+        ],
+      },
+    ],
+    villains: [
+      { id: "cheetah", name: "Barbara Minerva", alias: "Cheetah", title: "The friend with claws", powerId: "speed", level: 7, blurb: "An archaeologist who found a god in a box and lost herself to it.", moves: [mv("Pounce", "From the shadows, all at once.", 8, "strike", "speed", "dash"), mv("Rake", "Claws like knives.", 7, "strike", "force", "burst"), mv("Hunter's Patience", "She waits. You blink.", 5, "trick", "shadow", "status"), mv("Prowl", "Too fast to pin.", 5, "guard", "speed", "guard")] },
+      { id: "circe", name: "Circe", alias: "Circe", title: "The witch of Aeaea", powerId: "mind", level: 7, blurb: "A sorceress older than the island, with a grudge against every Amazon.", moves: [mv("Swine Hex", "Oink.", 6, "trick", "arcane", "status"), mv("Witchfire", "Green flame that bites.", 7, "strike", "arcane", "area"), mv("Glamour", "She looks like your mother.", 5, "trick", "psychic"), mv("Ward of Aeaea", "Old magic, thick as walls.", 5, "guard", "shield", "guard")] },
+      { id: "ares", name: "Ares", alias: "Ares", title: "The God of War", powerId: "strength", level: 9, blurb: "Every war ever fought fed him. He is hungry.", moves: [mv("Spear of War", "It has killed gods.", 9, "strike", "force", "burst"), mv("Battle Cry", "Every soldier in the city hears it.", 6, "trick", "psychic", "status"), mv("Aegis of Bronze", "War-god armor.", 6, "guard", "shield", "guard"), mv("Rain of Blades", "The sky remembers every battle.", 8, "strike", "force", "area")] },
+      { id: "medusa", name: "Medusa", alias: "Medusa", title: "The gorgon", powerId: "mind", level: 8, from: 44, blurb: "Snakes for hair and a gaze that ends conversations.", moves: [mv("Stone Gaze", "Don't look.", 8, "trick", "arcane", "status"), mv("Serpent Lash", "A dozen bites at once.", 7, "strike", "life", "area"), mv("Coil", "She tightens.", 6, "strike", "force"), mv("Petrified Hide", "Skin like marble.", 5, "guard", "shield", "guard")] },
+    ],
+  },
+  {
+    id: "captain-america",
+    hero: "Captain America",
+    name: "Steve Rogers",
+    earth: "Earth-4101",
+    twist: "Peggy Carter takes the second dose of the serum. There are two Captains, and they don't always agree.",
+    tagline: "He can do this all day. He has, actually.",
+    sex: "male",
+    cityId: "nyc",
+    upbringing: "tragic",
+    face: "loud",
+    drive: "duty",
+    family: [{ name: "Sarah Rogers", note: "Mother, a nurse", sex: "female" }, { name: "Joseph Rogers", note: "Father", sex: "male" }],
+    extra: [],
+    look: { skin: 0, hair: 1, style: 1, build: 0, feature: 0 },
+    portrait: 4101,
+    art: "hero-captain-america",
+    color: "#3a6fd8",
+    boost: { karma: 10 },
+    powers: ["super-strength", "aegis-shell", "regeneration"],
+    decades: [
+      { title: "Brooklyn Kid", premise: "{name} is small, sick, and starts fights he can't win. His mother patches him up and tells him not to stop." },
+      { title: "Back Alleys", premise: "Teen years. Bucky Barnes keeps pulling {name} out of fights. {name} keeps going back in." },
+      { title: "Project Rebirth", premise: "Twenties. A recruiting office, a scientist with an accent, and a machine full of blue light." },
+      { title: "The First Avenger", premise: "Thirties. A shield, a team, and a world that wants a symbol more than a man." },
+      { title: "The Winter Soldier", premise: "Forty. The friend {name} lost comes back with a metal arm and no memory." },
+      { title: "Civil War", premise: "Fifty. The heroes split down the middle. {name} picks the side he can live with." },
+      { title: "The Shield Passes", premise: "Sixty. The serum slows the clock. It doesn't stop it." },
+      { title: "One Dance", premise: "Late light over {city}. A record player, an old uniform in a box, and somebody to dance with." },
+    ],
+    beats: [
+      {
+        id: "alley", age: 10, title: "The Alley", text: "Three bigger kids, one smaller kid, and you. You could walk away.",
+        choices: [
+          { id: "stand", label: "Step in", path: "canon", text: "You lose. You get up. You lose again. The smaller kid gets away. That's the point.", effects: { health: -6, karma: 8 } },
+          { id: "call", label: "Run for help", path: "bend", text: "Bucky comes running. You win together, which you'll learn is the trick.", effects: { happiness: 6 }, trait: "team" },
+        ],
+      },
+      {
+        id: "sarah", age: 17, title: "Sarah Rogers", text: "Your mother catches TB on the ward. She tells you she's fine. She isn't.",
+        choices: [
+          { id: "stay", label: "Stay by her bed", path: "canon", text: "She tells you she's proud of you. Bucky walks you home from the funeral.", effects: { happiness: -14, karma: 6 }, loss: ["Sarah Rogers"] },
+          { id: "doctor", label: "Find a doctor who'll try", path: "break", text: "A new drug, a long winter, and she pulls through. She lives to see what you become.", effects: { happiness: 8, money: -2000 } },
+        ],
+      },
+      {
+        id: "rebirth", age: 21, wake: true, title: "Project Rebirth", text: "Five rejections. Then Dr. Erskine picks you anyway. The machine glows. In this universe, Peggy Carter is next in line.",
+        choices: [
+          { id: "serum", label: "Step into the light", path: "canon", text: "It hurts. You walk out a foot taller. The scientist who believed in you is shot that afternoon.", effects: { health: 20, fame: 8 } },
+          { id: "both", label: "Insist Peggy goes too", path: "bend", text: "Two doses, two Captains. The papers can't decide which one to put on the cover.", effects: { reputation: 8, happiness: 6 }, trait: "team" },
+        ],
+      },
+      {
+        id: "skull", age: 23, title: "The Red Skull", text: "Johann Schmidt took a bad dose of the same serum. It burned his face off and left the rest of him worse.",
+        choices: [
+          { id: "fight", label: "Charge the bunker", path: "canon", text: "Shield up, through the door. He laughs at the stars on your chest. You knock the laugh out.", fight: "red-skull", meet: "red-skull", arch: true },
+          { id: "plan", label: "Plan the raid first", path: "bend", text: "Your Commandos take the base without a shot. Schmidt escapes, furious.", effects: { reputation: 8, smarts: 4 }, meet: "red-skull", arch: true },
+        ],
+      },
+      {
+        id: "train", age: 25, title: "The Train", text: "A mountain train. Bucky, on the outside, holding on. The rail is giving way.",
+        choices: [
+          { id: "reach", label: "Reach for him", path: "canon", text: "Your fingers miss by an inch. You'll see that inch for the rest of your life.", effects: { happiness: -12 }, meet: "winter" },
+          { id: "jump", label: "Jump after him", path: "break", text: "You both fall. You both live. Hydra never gets their Winter Soldier.", effects: { happiness: 8, health: -10 } },
+        ],
+      },
+      {
+        id: "ice", age: 29, title: "The Ice", text: "A bomber full of bombs, aimed at {city}. Nobody else can fly it.",
+        choices: [
+          { id: "down", label: "Put it in the ice", path: "canon", text: "Peggy's voice on the radio until it isn't. You wake up years later to a city you don't know.", effects: { health: -10, happiness: -8, fame: 10 } },
+          { id: "bail", label: "Bail at the last second", path: "bend", text: "You hit the water hard and swim for an hour. You make the dance with Peggy after all.", effects: { happiness: 12 } },
+        ],
+      },
+      {
+        id: "winter", age: 37, title: "The Winter Soldier", text: "An assassin with a metal arm takes down a S.H.I.E.L.D. convoy. When the mask comes off, it's Bucky.",
+        choices: [
+          { id: "fight", label: "Fight to reach him", path: "canon", text: "\"You're my mission.\" \"Then finish it.\" You drop the shield. He drags you out of the river.", fight: "winter", meet: "winter" },
+          { id: "talk", label: "Say his name", path: "bend", text: "He stops. He doesn't know why. It's a start.", effects: { karma: 10, happiness: 4 }, meet: "winter" },
+        ],
+      },
+      {
+        id: "zemo", age: 44, title: "Baron Zemo", text: "Helmut Zemo lost his family in your last battle. He doesn't want to beat you. He wants to break your team.",
+        choices: [
+          { id: "fight", label: "Hunt him down", path: "canon", text: "You find him. You beat him. Half your friends still aren't speaking to you.", fight: "zemo", meet: "zemo" },
+          { id: "accords", label: "Sign the Accords", path: "break", text: "The team holds together. Zemo watches the signing ceremony and walks away.", effects: { reputation: 10 }, trait: "liaison", meet: "zemo" },
+        ],
+      },
+      {
+        id: "sam", age: 58, title: "The Shield", text: "Sam Wilson has flown at your side for twenty years. The serum is slowing down. The shield is heavy.",
+        choices: [
+          { id: "pass", label: "Hand Sam the shield", path: "canon", text: "\"It feels like it's someone else's.\" \"It's not.\" A new Captain on the cover.", effects: { happiness: 10, reputation: 8 }, trait: "team" },
+          { id: "keep", label: "Keep it a while longer", path: "bend", text: "Two Captains on patrol, one with wings. It works.", effects: { fame: 6 } },
+        ],
+      },
+      {
+        id: "skull-reborn", age: 63, title: "The Skull Reborn", text: "Hydra pulls the Red Skull out of a cosmic cube. He's younger than you now, and he's been waiting.",
+        choices: [
+          { id: "fight", label: "One last fight", path: "canon", text: "He's faster. You're smarter. The cube goes in the river.", fight: "red-skull", meet: "red-skull", effects: { fame: 10 } },
+          { id: "cube", label: "Destroy the cube first", path: "bend", text: "No cube, no comeback. The Skull fades back into history.", effects: { karma: 8, smarts: 4 }, meet: "red-skull" },
+        ],
+      },
+      {
+        id: "bench", age: 67, title: "Bucky's Bench", text: "Bucky, grey in the beard, sits on a bench by the lake and asks if you're still mad about the train.",
+        choices: [
+          { id: "peace", label: "Tell him you never were", path: "canon", text: "Two old men from Brooklyn, feeding ducks. Neither of you says sorry. Neither of you needs to.", effects: { happiness: 12 }, meet: "winter" },
+          { id: "mission", label: "Ask him for one more mission", path: "bend", text: "A road trip across a country you both fought for. It's the best month of your life.", effects: { happiness: 10, health: -2 }, meet: "winter" },
+        ],
+      },
+      {
+        id: "dance", age: 72, title: "One Dance", text: "A record player. A slow song. You promised someone a dance a long time ago.",
+        endings: {
+          canon: "Earth-4101 ends the way the legend should: a kid from Brooklyn who never stopped standing up, and finally got his dance.",
+          bend: "Earth-4101 bends kinder: two Captains, one team, and a shield that always found the right hands.",
+          break: "Earth-4101 ends off the map. No comic ever let Steve Rogers skip the ice and grow old on time.",
+        },
+        choices: [
+          { id: "dance", label: "Dance", path: "canon", text: "You step on her foot twice. She doesn't mind.", effects: { happiness: 14 } },
+          { id: "teach", label: "Teach a history class", path: "bend", text: "You were there. The students can tell.", effects: { smarts: 4, happiness: 8 } },
+        ],
+      },
+    ],
+    villains: [
+      { id: "red-skull", name: "Johann Schmidt", alias: "Red Skull", title: "The serum's other son", powerId: "strength", level: 8, blurb: "Everything the serum made you, turned inside out.", moves: [mv("Luger Volley", "He never fights fair.", 6, "strike", "force", "area"), mv("Cube Flare", "Cosmic light in a cube.", 9, "strike", "energy", "burst"), mv("Hail Hydra", "Agents everywhere.", 5, "trick", "shadow", "status"), mv("Dust of Death", "A cloud you shouldn't breathe.", 6, "trick", "life")] },
+      { id: "winter", name: "Bucky Barnes", alias: "Winter Soldier", title: "Your best friend, reprogrammed", powerId: "strength", level: 7, blurb: "A metal arm, seventy years of orders, and somewhere in there, Bucky.", moves: [mv("Metal Arm", "It stops your shield cold.", 8, "strike", "force", "burst"), mv("Sniper's Nest", "A shot from a mile out.", 7, "strike", "speed"), mv("Ghost Story", "Nobody sees him coming.", 5, "trick", "shadow", "dash"), mv("Brace", "The arm takes the hit.", 5, "guard", "shield", "guard")] },
+      { id: "zemo", name: "Helmut Zemo", alias: "Baron Zemo", title: "The man who breaks teams", powerId: "intellect", level: 6, from: 40, blurb: "No powers, no mercy, and a plan that turns your friends into a weapon.", moves: [mv("Divide", "Your team turns on you.", 6, "trick", "psychic", "status"), mv("Adhesive X", "You're stuck.", 5, "trick", "stretch"), mv("Fencing Lunge", "Old-world swordsmanship.", 7, "strike", "speed", "dash"), mv("Contingency", "He planned for you.", 5, "guard", "shield", "guard")] },
+      { id: "crossbones", name: "Brock Rumlow", alias: "Crossbones", title: "Hydra's heavy", powerId: "strength", level: 6, from: 34, blurb: "A strike-team leader with a grudge and gauntlets.", moves: [mv("Gauntlet Punch", "Built to break shields.", 7, "strike", "force", "burst"), mv("Frag Grenade", "Everyone down.", 6, "strike", "fire", "area"), mv("Dirty Fighter", "Sand in the eyes.", 5, "trick", "shadow"), mv("Body Armor", "Hydra plating.", 5, "guard", "shield", "guard")] },
+    ],
+  },
+  {
+    id: "thor",
+    hero: "Thor",
+    name: "Thor Odinson",
+    earth: "Earth-8017",
+    twist: "Loki is the firstborn heir. Thor is the adopted one, a frost-giant foundling who learned to love thunder.",
+    tagline: "He's worthy. He just keeps having to prove it.",
+    sex: "male",
+    cityId: "crown",
+    upbringing: "legacy",
+    face: "loud",
+    drive: "glory",
+    family: [{ name: "Frigga", note: "Mother, Queen of Asgard", sex: "female" }, { name: "Odin", note: "All-Father", sex: "male" }],
+    extra: ["royalty"],
+    look: { skin: 0, hair: 2, style: 2, build: 1, feature: 1 },
+    portrait: 8017,
+    art: "hero-thor",
+    color: "#a07cff",
+    powers: ["lightning-control", "super-strength", "storm-calling"],
+    decades: [
+      { title: "A Prince of Asgard", premise: "{name} is the second son. Loki is the heir. Both of them want Odin to look their way." },
+      { title: "Worthy", premise: "Teen years. A hammer sits in the vault that nobody can lift. {name} tries every day." },
+      { title: "Banished", premise: "Twenties. Odin strips {name} of his power and drops him in {city} to learn humility." },
+      { title: "God of Thunder", premise: "Thirties. Avengers, frost giants and a brother who keeps dying and coming back." },
+      { title: "Ragnarok", premise: "Forty. A sister nobody mentioned. A city on fire. A hammer in pieces." },
+      { title: "King of Asgard", premise: "Fifty. A throne in exile, a people to feed, and a crown that never fit." },
+      { title: "The Unworthy", premise: "Sixty. Someone else lifts the hammer. {name} learns what he is without it." },
+      { title: "All-Father", premise: "Late light over {city}. Two ravens on the windowsill, waiting." },
+    ],
+    beats: [
+      {
+        id: "brothers", age: 8, title: "Brothers", text: "Loki, the heir, turns your sword into a snake at the feast. Everyone laughs. Odin doesn't.",
+        choices: [
+          { id: "laugh", label: "Laugh with him", path: "canon", text: "You pull the snake's tail. He turns it back. Brothers, for now.", effects: { happiness: 6 }, meet: "loki" },
+          { id: "punch", label: "Punch him", path: "bend", text: "Odin separates you. Frigga takes you both for a long walk.", effects: { health: 2, happiness: -2 }, meet: "loki" },
+        ],
+      },
+      {
+        id: "worthy", age: 16, wake: true, title: "Worthy", text: "You go to the vault to steal a look at Mjolnir. You're there to save a servant boy trapped under rubble, not for glory. The hammer comes to your hand.",
+        choices: [
+          { id: "lift", label: "Lift it", path: "canon", text: "Thunder over all nine realms. Loki stares at you across the hall.", effects: { fame: 10, powerLevel: 0.3 } },
+          { id: "give", label: "Hand it to Loki", path: "break", text: "He can't lift it. He never forgives you for offering.", effects: { karma: 6 }, meet: "loki" },
+        ],
+      },
+      {
+        id: "banished", age: 21, title: "Banished", text: "You start a war with the frost giants on a dare. Odin tears the lightning out of you and throws you down to {city}.",
+        choices: [
+          { id: "humble", label: "Learn to be mortal", path: "canon", text: "Coffee, a hospital bed, and Jane Foster driving her van into you twice.", effects: { smarts: 4, happiness: 4 } },
+          { id: "storm", label: "Shout at the sky", path: "bend", text: "The sky doesn't answer. A girl with a clipboard does.", effects: { happiness: -4, health: 4 } },
+        ],
+      },
+      {
+        id: "jane", age: 23, title: "Jane Foster", text: "An astrophysicist who chases storms. She wants to study you. You want her to keep looking at you like that.",
+        choices: [
+          { id: "stay", label: "Stay in {city}", path: "canon", text: "Asgard calls. You promise to come back. You mean it every time.", effects: { happiness: 10 } },
+          { id: "take", label: "Take her to Asgard", path: "break", text: "Odin is furious. Frigga likes her immediately.", effects: { happiness: 8, reputation: -2 } },
+        ],
+      },
+      {
+        id: "throne", age: 27, title: "Loki's Throne", text: "Odin falls into the long sleep. Loki takes the throne and sends the Destroyer to {city} to finish you.",
+        choices: [
+          { id: "fight", label: "Face your brother", path: "canon", text: "On the Bifrost, with the stars falling. He lets go of the edge.", fight: "loki", meet: "loki", arch: true },
+          { id: "kneel", label: "Kneel and let him rule", path: "break", text: "Loki didn't expect that. He doesn't know what to do with a brother who isn't fighting.", effects: { karma: 10, fame: -4 }, meet: "loki", arch: true },
+        ],
+      },
+      {
+        id: "dark-world", age: 33, title: "The Dark World", text: "Malekith and the dark elves return from before time. They come for the Aether, and for your mother.",
+        choices: [
+          { id: "fight", label: "Fight the dark elves", path: "canon", text: "Frigga dies with a sword in her hand. You burn her boat at sea.", fight: "malekith", meet: "malekith", loss: ["Frigga"] },
+          { id: "guard", label: "Guard the queen yourself", path: "break", text: "She lives. Malekith escapes into the dark between worlds.", effects: { happiness: 8 }, meet: "malekith" },
+        ],
+      },
+      {
+        id: "hela", age: 40, title: "Ragnarok", text: "A sister nobody mentioned. Hela, Goddess of Death, catches Mjolnir in one hand and crushes it.",
+        choices: [
+          { id: "fight", label: "Fight without the hammer", path: "canon", text: "You were never the god of hammers. Lightning pours out of you like a river.", fight: "hela", meet: "hela", effects: { powerLevel: 0.3 } },
+          { id: "surtur", label: "Let Asgard burn to stop her", path: "bend", text: "Asgard is a people, not a place. You save the people.", effects: { karma: 10, happiness: -6 }, meet: "hela" },
+        ],
+      },
+      {
+        id: "king", age: 48, title: "King of Asgard", text: "New Asgard, a fishing village on a cold coast. Your people need a king. You'd rather be on a ship somewhere.",
+        choices: [
+          { id: "rule", label: "Take the crown", path: "canon", text: "You rule well. It's very boring. You're very good at it.", effects: { reputation: 10, happiness: -2 } },
+          { id: "give", label: "Give the crown to Valkyrie", path: "bend", text: "She's better at it. You go on a long trip with friends.", effects: { happiness: 10 }, trait: "team" },
+        ],
+      },
+      {
+        id: "jane-hammer", age: 58, title: "The Mighty Thor", text: "The pieces of Mjolnir call to someone. Jane Foster lifts the hammer, and the lightning loves her.",
+        choices: [
+          { id: "bless", label: "Give her your blessing", path: "canon", text: "Two Thors. She's better at the speeches.", effects: { happiness: 10 }, trait: "family" },
+          { id: "worthy", label: "Try to lift it again", path: "bend", text: "It wobbles. It's enough. You let her keep it.", effects: { happiness: 6, karma: 4 } },
+        ],
+      },
+      {
+        id: "surtur", age: 63, title: "Surtur", text: "The fire giant rises at the end of all things. The prophecy says Asgard falls. It does not say you lose.",
+        choices: [
+          { id: "fight", label: "Fight the fire giant", path: "canon", text: "Lightning against fire, for a whole day. When the smoke clears, you're the one standing.", fight: "surtur", meet: "surtur", effects: { fame: 12 } },
+          { id: "loki", label: "Ask Loki for help", path: "break", text: "He makes a hundred of you. Surtur doesn't know which one to burn.", effects: { karma: 6, happiness: 6 }, meet: "surtur" },
+        ],
+      },
+      {
+        id: "last-trick", age: 67, title: "Loki's Last Trick", text: "Loki, older, shows up at your door with a bottle of mead and a story you've heard a hundred times.",
+        choices: [
+          { id: "drink", label: "Pour two cups", path: "canon", text: "You both laugh at the snake story. He doesn't turn anything into anything. That's the trick.", effects: { happiness: 12 }, meet: "loki" },
+          { id: "fight", label: "Spar for old times", path: "bend", text: "Two old gods in the snow. Nobody wins. Everybody's happy.", fight: "loki", meet: "loki" },
+        ],
+      },
+      {
+        id: "all-father", age: 72, title: "All-Father", text: "Two ravens land on your windowsill. They used to belong to Odin. They've been waiting for you.",
+        endings: {
+          canon: "Earth-8017 ends the way the legend should: the adopted son who was worthy all along, and finally believed it.",
+          bend: "Earth-8017 bends warmer: a king who gave away his crown, a hammer shared, and a brother at the table.",
+          break: "Earth-8017 ends off the map. No comic ever let Thor and Loki grow old in the same house.",
+        },
+        choices: [
+          { id: "throne", label: "Take Odin's seat", path: "canon", text: "You look out over all nine realms. Most of them are fine.", effects: { reputation: 10, happiness: 6 } },
+          { id: "fish", label: "Go fishing", path: "bend", text: "A cold fjord, a good boat, and the thunder rolling somewhere far away.", effects: { happiness: 12 } },
+        ],
+      },
+    ],
+    villains: [
+      { id: "loki", name: "Loki Laufeyson", alias: "Loki", title: "The heir who wanted the hammer", powerId: "shapeshift", level: 8, blurb: "God of mischief, firstborn of Asgard here, and your brother in every way that hurts.", moves: [mv("Hundred Lokis", "Which one is real?", 6, "trick", "psychic", "status"), mv("Dagger in the Back", "Classic.", 8, "strike", "shadow", "burst"), mv("Seidr Bolt", "Green fire from the old magic.", 7, "strike", "arcane", "area"), mv("Shapeshift", "He's your mother now.", 5, "guard", "shadow", "guard")] },
+      { id: "malekith", name: "Malekith", alias: "Malekith", title: "The dark elf king", powerId: "ice", level: 8, blurb: "Older than light, and he wants it all switched off.", moves: [mv("Aether Surge", "Red mist that eats stars.", 8, "strike", "shadow", "burst"), mv("Black Ice", "Cold from before the world.", 7, "strike", "ice", "area"), mv("Kursed Strength", "His soldiers become monsters.", 5, "trick", "life", "status"), mv("Shadow Veil", "He isn't there.", 5, "guard", "shadow", "guard")] },
+      { id: "hela", name: "Hela", alias: "Hela", title: "Goddess of Death", powerId: "blasts", level: 9, blurb: "Odin's firstborn by blood, locked away until Ragnarok.", moves: [mv("Necroswords", "A rain of black blades.", 8, "strike", "shadow", "area"), mv("Crush the Hammer", "She catches it. She squeezes.", 7, "trick", "force", "status"), mv("Death's Touch", "Cold hands.", 9, "strike", "shadow", "burst"), mv("Antlered Crown", "Death doesn't flinch.", 5, "guard", "shield", "guard")] },
+      { id: "surtur", name: "Surtur", alias: "Surtur", title: "The fire at the end of all things", powerId: "fire", level: 10, from: 60, blurb: "A giant of flame whose sword is the end of Asgard.", moves: [mv("Twilight Sword", "It burns realms.", 10, "strike", "fire", "burst"), mv("Muspelheim Rising", "The ground is lava now.", 8, "strike", "fire", "area"), mv("Prophecy", "It is written.", 6, "trick", "arcane", "status"), mv("Crown of Flame", "Too hot to touch.", 6, "guard", "fire", "guard")] },
     ],
   },
 ];

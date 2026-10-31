@@ -14,6 +14,10 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   "hero-batman": () => import("./hero-batman"),
   "hero-iron-man": () => import("./hero-iron-man"),
   "hero-hulk": () => import("./hero-hulk"),
+  "hero-superman": () => import("./hero-superman"),
+  "hero-wonder-woman": () => import("./hero-wonder-woman"),
+  "hero-captain-america": () => import("./hero-captain-america"),
+  "hero-thor": () => import("./hero-thor"),
 };
 
 const cache = new Map<string, string>();
