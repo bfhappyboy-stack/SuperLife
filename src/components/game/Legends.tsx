@@ -36,7 +36,7 @@ export function ModeSelect() {
         </div>
       </header>
       <div className="stagger relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pt-5 pb-24">
-        <button type="button" onClick={() => pickMode("mystery")} className="mode-card group relative overflow-hidden rounded-[28px] border border-gold/60 p-5 text-left" style={{ "--mode": "#e6b34d" } as CSSProperties}>
+        <button type="button" onClick={() => pickMode("mystery")} className="mode-card group relative shrink-0 overflow-hidden rounded-[28px] border border-gold/60 p-5 text-left" style={{ "--mode": "#e6b34d" } as CSSProperties}>
           <span className="absolute top-4 right-4 rounded-full bg-gold px-2.5 py-1 text-[10px] font-extrabold tracking-[0.14em] text-ink uppercase shadow-[0_0_18px_-2px_var(--color-gold)]">Recommended</span>
           <SealedOrb className="size-24" />
           <p className="t-label mt-3 text-[10px] text-gold">MAIN MODE</p>
@@ -54,10 +54,10 @@ export function ModeSelect() {
           </span>
         </button>
 
-        <button type="button" onClick={() => pickMode("god")} className="mode-card group relative overflow-hidden rounded-[28px] border border-violet-300/50 p-5 text-left" style={{ "--mode": "#a78bfa" } as CSSProperties}>
+        <button type="button" onClick={() => pickMode("god")} className="mode-card group relative shrink-0 overflow-hidden rounded-[28px] border border-violet-300/50 p-5 text-left" style={{ "--mode": "#a78bfa" } as CSSProperties}>
           <div className="flex -space-x-3">
             {PRESETS.map((p, i) => (
-              <LegendThumb key={p.id} legend={p} className="size-16 rounded-2xl border-2 border-ink" style={{ zIndex: 10 - i, rotate: `${(i - 1.5) * 5}deg` }} />
+              <LegendThumb key={p.id} legend={p} className="size-12 rounded-xl border-2 border-ink" style={{ zIndex: 20 - i, rotate: `${(i - (PRESETS.length - 1) / 2) * 4}deg` }} />
             ))}
           </div>
           <p className="t-label mt-3 text-[10px] text-violet-300">SANDBOX</p>
@@ -66,7 +66,7 @@ export function ModeSelect() {
             Live a multiverse variant of a legend, with canon you can follow, bend, or break. Or build your own: any powers, city, upbringing, and traits.
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <Chip icon={<Crown className="size-3" />}>4 legends</Chip>
+            <Chip icon={<Crown className="size-3" />}>{PRESETS.length} legends</Chip>
             <Chip icon={<Swords className="size-3" />}>Signature villains</Chip>
             <Chip icon={<Wand2 className="size-3" />}>Pick your powers</Chip>
           </div>
@@ -186,11 +186,11 @@ function LegendCard({ legend, active }: { legend: HeroPreset; active: boolean })
       aria-label={`${legend.hero}, ${legend.earth}`}
     >
       {art ? <img src={art} alt={`${legend.hero} portrait`} className="anim-fade absolute inset-0 size-full object-cover object-top" /> : <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${legend.color}55, #0c1019)` }} />}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-ink/20 to-ink" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-ink/30 via-55% to-ink" />
       <span className="absolute top-3 left-3 rounded-full border border-white/25 bg-black/55 px-2.5 py-1 text-[10px] font-extrabold tracking-[0.16em] text-fg uppercase backdrop-blur">{legend.earth}</span>
       <span className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-[0.12em] text-ink uppercase" style={{ background: legend.color }}>Variant</span>
       <div className="relative px-4 pb-4">
-        <p className="t-label text-[10px]" style={{ color: legend.color }}>{legend.name.toUpperCase()}</p>
+        <p className="t-label text-[10px]" style={{ color: legend.color, textShadow: "0 1px 2px #000, 0 0 10px rgba(0,0,0,.9)" }}>{legend.name.toUpperCase()}</p>
         <h2 className="t-hero !text-[2.6rem] text-fg drop-shadow-[0_3px_14px_rgba(0,0,0,.8)]">{legend.hero}</h2>
         <p className="mt-1 line-clamp-3 text-pretty text-[13px] leading-snug text-fg/90">{legend.twist}</p>
         <div className="mt-2.5 flex flex-wrap gap-1.5">

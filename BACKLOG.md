@@ -5,7 +5,8 @@
 1. **Legends polish.**
    - Real names are placeholders until you decide: keep them, or rename them to parody variants.
    - Shipped tonight: own-rogue arch-enemies, late canon (58–73) and variant endings.
-   - Next: more presets (Superman, Wonder Woman, Captain America, Thor, Black Panther, Wolverine, The Flash).
+   - Shipped tonight: Superman, Wonder Woman, Captain America and Thor (8 legends).
+   - Next: Black Panther, Wolverine, The Flash. The picker has 9 dots now; past ~10 legends, add a grid or filter.
 2. **Batman's vow.**
    - Today the human vow forbids all powers.
    - An option to let a "bend canon" choice break the vow: decide.

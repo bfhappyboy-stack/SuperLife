@@ -50,6 +50,13 @@ How it was tested:
   - Injected saves at 9y11m and 59y11m to see decade turns, the low-HP warning and a collapse.
   - Screenshots: `/workspace/superlife-screens/playtest-*.png`.
 
+### Four new legends (rogues sim, 3 seeds each)
+
+- Superman, Wonder Woman, Captain America and Thor each met all 4 of their own rogues, with no generic villains (`BAD -`), and logged 11–12 canon beats.
+- Lives ran 73–86 years. 11 of 12 took the canon ending; one Superman life bent it.
+- The arch-enemy varies by seed (for example Doomsday, Zod or Lex for Superman), so replays feel different.
+- At 390×844 the picker cards fit the hero name, twist, 3 power chips and 4 rogues without clipping (`/workspace/superlife-shots/night/28-31`).
+
 ## Playability blockers (fixed on this branch)
 
 | # | Blocker | Evidence (before) | Fix | After |

@@ -29,6 +29,11 @@
   - Batman takes a human vow: no powers ever, with gadget and training goals instead.
 - **Build your own:** pick up to 3 powers (at most one Apex), any city, upbringing and look, plus up to 2 earned traits from day one.
   - The Gen 2 cap, the six-move loadout and the Fire + Speed → Light Speed (+ Strength → Lightning Strikes) chain all still apply.
+- **Four more legends (8 in total):** Superman (Earth-3838), Wonder Woman (Earth-1941), Captain America (Earth-4101) and Thor (Earth-8017).
+  - Each has a portrait, a variant twist, 8 themed decades, 4 rogues with 4 authored moves each, a canon loss, and late canon from 58 to 72 with a variant ending.
+  - Superman: Lex grows up next door; Lex, Zod, Doomsday, Brainiac. Wonder Woman: Themyscira has a UN seat; Cheetah, Circe, Ares, Medusa.
+  - Captain America: Peggy takes the second dose; Red Skull, Winter Soldier, Zemo, Crossbones. Thor: Loki is the firstborn heir; Loki, Malekith, Hela, Surtur.
+  - The mode screen's God Mode card fits all 8 thumbnails at 390px, and the "N legends" chip counts the presets.
 - Everything is offline data; no `XAI_API_KEY` is needed.
 
 ### Legends keep their own rogues (`presets.ts`, `engine.ts`)
@@ -71,6 +76,8 @@
 - **Reachability:** power goals are only picked for a chapter if the power can wake at least 2 years before it ends. Omen goals only appear in Mystery lives.
 
 ### Fixes
+
+- Mode screen: the Mystery Life and God Mode cards no longer shrink and clip their buttons on short screens. Legend card names have a text shadow so they read over bright portraits.
 
 - **Save loading:** the old starter-bundle cleanup no longer strips God Mode picks or Mystery/legend powers.
 
