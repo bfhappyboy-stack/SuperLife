@@ -10,7 +10,9 @@ import { CITIES, FEMALE_NAMES, LAST_NAMES, MALE_NAMES, UPBRINGINGS } from "@/gam
 import { elementOfPower, ELEMENTS } from "@/game/elements";
 import { money } from "@/game/format";
 import { BUILD_NAMES, FEATURE_NAMES, HAIR, HAIR_NAMES, resolveLook, SKIN, SKIN_NAMES, STYLE_NAMES } from "@/game/look";
-import { DRIVE_TRAITS, FACE_TRAITS } from "@/game/origin";
+import { DRIVE_TRAITS, EARNED_TRAITS, FACE_TRAITS } from "@/game/origin";
+import { godPicks } from "@/game/engine";
+import { SealedOrb } from "@/components/game/Legends";
 import { useGame } from "@/game/store";
 import type { Look, Sex, TraitId, UpbringingId } from "@/game/types";
 
@@ -38,6 +40,8 @@ export function CreateScreen() {
   const begin = useGame((s) => s.begin);
   const toTitle = useGame((s) => s.toTitle);
   const existing = useGame((s) => s.game);
+  const mode = useGame((s) => s.createMode);
+  const stepLabel = (id: (typeof STEPS)[number]["id"], label: string) => (id === "gift" ? (mode === "god" ? "Powers" : "Destiny") : label);
   const [boot] = useState(() => {
     const sex: Sex = Math.random() < 0.5 ? "female" : "male";
     return { sex, name: rollName(sex), seed: newSeed() };
@@ -54,6 +58,8 @@ export function CreateScreen() {
   const [drive, setDrive] = useState<TraitId>("protector");
   const [tier, setTier] = useState<Tier>(0);
   const [giftId, setGiftId] = useState(() => pickOne(allPowers().filter((p) => p.generation === 0)).id);
+  const [picks, setPicks] = useState<string[]>(() => [pickOne(allPowers().filter((p) => p.generation === 0)).id]);
+  const [extras, setExtras] = useState<TraitId[]>([]);
 
   const city = CITIES.find((c) => c.id === cityId) ?? CITIES[0];
   const house = UPBRINGINGS.find((u) => u.id === upbringing) ?? UPBRINGINGS[0];
@@ -85,6 +91,11 @@ export function CreateScreen() {
     else if (id === "trait") {
       setFace(pickOne(FACE_TRAITS).id);
       setDrive(pickOne(DRIVE_TRAITS).id);
+    } else if (mode === "god") {
+      const bases = allPowers().filter((p) => p.generation === 0);
+      setPicks(godPicks([pickOne(bases).id, pickOne(bases).id, pickOne(allPowers()).id]));
+    } else if (mode === "mystery") {
+      // Nothing to roll: that's the point.
     } else {
       const t = pickOne([0, 1, 2] as const);
       setTier(t);
@@ -92,7 +103,12 @@ export function CreateScreen() {
     }
   };
   const last = step === STEPS.length - 1;
-  const start = () => begin({ name: name.trim(), cityId: city?.id ?? "nyc", upbringing, portrait, sex, face, drive, look, giftId: giftId || null });
+  const start = () => {
+    const who = { name: name.trim(), cityId: city?.id ?? "nyc", upbringing, portrait, sex, face, drive, look };
+    if (mode === "god") begin({ ...who, mode: "god", giftIds: godPicks(picks), giftId: godPicks(picks)[0] ?? null, extraTraits: extras });
+    else begin({ ...who, mode: "mystery", giftId: null });
+  };
+  const giftSummary = mode === "god" ? (godPicks(picks).map((id) => allPowers().find((p) => p.id === id)?.name ?? id).join(" + ") || "No powers") : "Sealed gift";
 
   return (
     <main className="flex h-full min-h-0 flex-col">
@@ -102,10 +118,10 @@ export function CreateScreen() {
             <ArrowLeft className="size-5" aria-hidden />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="t-label text-[10px] text-muted">NEW LIFE · STEP {step + 1} OF {STEPS.length}</p>
-            <h1 className="t-display !text-2xl leading-none text-fg">{STEP_TITLE[STEPS[step].id]}</h1>
+            <p className="t-label text-[10px] text-muted">{mode === "god" ? "GOD MODE" : "MYSTERY LIFE"} · STEP {step + 1} OF {STEPS.length}</p>
+            <h1 className="t-display !text-2xl leading-none text-fg">{STEPS[step].id === "gift" ? (mode === "god" ? "Your powers" : "Your destiny") : STEP_TITLE[STEPS[step].id]}</h1>
           </div>
-          <button type="button" onClick={surprise} className="btn btn-ghost !min-h-11 gap-1.5 !px-3 text-sm" aria-label="Surprise me: roll this step">
+          <button type="button" onClick={surprise} disabled={mode === "mystery" && STEPS[step].id === "gift"} className="btn btn-ghost !min-h-11 gap-1.5 !px-3 text-sm disabled:invisible" aria-label="Surprise me: roll this step">
             <Dices className="size-4.5 text-gold" aria-hidden />
             Roll
           </button>
@@ -114,7 +130,7 @@ export function CreateScreen() {
           {STEPS.map((s, i) => (
             <button key={s.id} type="button" onClick={() => setStep(i)} aria-current={i === step ? "step" : undefined} className="group flex min-h-9 flex-col items-stretch gap-1 text-center">
               <span className={`h-1.5 rounded-full transition-colors duration-300 ${i < step ? "bg-gold/70" : i === step ? "bg-gold shadow-[0_0_10px_var(--color-gold)]" : "bg-white/12"}`} />
-              <span className={`text-[10px] font-extrabold tracking-wider uppercase ${i === step ? "text-gold" : "text-muted"}`}>{s.label}</span>
+              <span className={`text-[10px] font-extrabold tracking-wider uppercase ${i === step ? "text-gold" : "text-muted"}`}>{stepLabel(s.id, s.label)}</span>
             </button>
           ))}
         </nav>
@@ -128,14 +144,16 @@ export function CreateScreen() {
         {STEPS[step].id === "origin" && <OriginStep value={upbringing} onPick={setUpbringing} />}
         {STEPS[step].id === "city" && <CityStep value={cityId} onPick={setCityId} />}
         {STEPS[step].id === "trait" && <TraitStep face={face} drive={drive} onFace={setFace} onDrive={setDrive} />}
-        {STEPS[step].id === "gift" && <GiftStep tier={tier} giftId={giftId} onTier={setTier} onGift={setGiftId} />}
+        {STEPS[step].id === "gift" && mode === "mystery" && <DestinyStep upbringing={house?.title ?? ""} face={faceT?.title ?? ""} drive={driveT?.title ?? ""} />}
+        {STEPS[step].id === "gift" && mode === "god" && <GodPowersStep picks={picks} onPicks={setPicks} extras={extras} onExtras={setExtras} />}
+        {STEPS[step].id === "gift" && mode !== "mystery" && mode !== "god" && <GiftStep tier={tier} giftId={giftId} onTier={setTier} onGift={setGiftId} />}
       </div>
 
       <footer className="shrink-0 border-t border-white/10 bg-ink/90 px-4 pt-2.5 pb-24 backdrop-blur">
         <div className="mb-2 flex items-center gap-3">
           <Portrait seed={portrait} age={16} sex={sex} look={look} className="size-12 shrink-0 overflow-hidden rounded-2xl border border-gold/40" />
           <p className="line-clamp-2 min-w-0 flex-1 text-xs leading-snug text-muted">
-            <span className="font-bold text-fg">{name.trim() || "Unnamed"}</span> · {house?.title} · {city?.name} · {faceT?.title} · {driveT?.title} · {gift && tier !== "none" ? gift.name : "No gift"}
+            <span className="font-bold text-fg">{name.trim() || "Unnamed"}</span> · {house?.title} · {city?.name} · {faceT?.title} · {driveT?.title} · {mode === "mystery" || mode === "god" ? giftSummary : gift && tier !== "none" ? gift.name : "No gift"}
           </p>
         </div>
         {last ? (
@@ -145,7 +163,7 @@ export function CreateScreen() {
           </button>
         ) : (
           <button type="button" disabled={step === 0 && !name.trim()} onClick={() => setStep(step + 1)} className="btn btn-primary min-h-14 w-full gap-1 text-lg disabled:opacity-40">
-            Next: {STEPS[step + 1].label}
+            Next: {stepLabel(STEPS[step + 1].id, STEPS[step + 1].label)}
             <ChevronRight className="size-5" aria-hidden />
           </button>
         )}
@@ -442,6 +460,107 @@ function GiftStep({ tier, giftId, onTier, onGift }: { tier: Tier; giftId: string
           </div>
         </>
       )}
+    </>
+  );
+}
+
+/** Mystery Life: no pick. The power is sealed, and the childhood you just built shapes the odds. */
+function DestinyStep({ upbringing, face, drive }: { upbringing: string; face: string; drive: string }) {
+  return (
+    <div className="flex flex-col items-center pt-2 text-center">
+      <SealedOrb className="size-36" />
+      <h2 className="t-display mt-4 !text-[2rem] text-fg">Sealed at birth</h2>
+      <p className="mt-2 max-w-[20rem] text-pretty text-sm leading-relaxed text-fg/90">
+        Something is folded up inside you. It wakes on a birthday between <b className="text-gold">7 and 15</b>. Until then, live a kid&apos;s life and watch for the signs.
+      </p>
+      <div className="card mt-4 w-full px-4 py-3 text-left">
+        <p className="t-label text-[10px] text-gold">WHAT SHAPES IT</p>
+        <ul className="mt-1.5 flex flex-col gap-1 text-sm text-fg/90">
+          <li>· Your upbringing ({upbringing}) tilts the odds.</li>
+          <li>· So do your traits ({face}, {drive}).</li>
+          <li>· About one kid in eight is born with a rare braided gift.</li>
+        </ul>
+      </div>
+      <div className="card mt-2 w-full px-4 py-3 text-left">
+        <p className="t-label text-[10px] text-gold">BEFORE IT WAKES</p>
+        <ul className="mt-1.5 flex flex-col gap-1 text-sm text-fg/90">
+          <li>· <b>Life ▸ Today ▸ Chase the strange feeling</b> finds omens.</li>
+          <li>· After two omens, call it in <b>Powers ▸ Call it</b>. Guess right for a bonus.</li>
+          <li>· Power drills, mixes and teachers open at the reveal.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/** God Mode builder: up to three powers (one Apex) and two earned traits from day one. */
+function GodPowersStep({ picks, onPicks, extras, onExtras }: { picks: string[]; onPicks: (ids: string[]) => void; extras: TraitId[]; onExtras: (ids: TraitId[]) => void }) {
+  const powers = allPowers();
+  const [tier, setTier] = useState<0 | 1 | 2>(0);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const pool = powers.filter((p) => p.generation === tier && (!q || p.name.toLowerCase().includes(q) || p.tags.some((t) => t.toLowerCase().includes(q))));
+  const apexTaken = picks.some((id) => powers.find((p) => p.id === id)?.generation === 2);
+  const toggle = (id: string) => {
+    if (picks.includes(id)) return onPicks(picks.filter((x) => x !== id));
+    const next = godPicks([...picks, id]);
+    if (next.includes(id)) onPicks(next);
+  };
+  const toggleTrait = (id: TraitId) => onExtras(extras.includes(id) ? extras.filter((x) => x !== id) : extras.length >= 2 ? extras : [...extras, id]);
+  return (
+    <>
+      <div className="flex min-h-16 flex-wrap items-center gap-2 rounded-2xl border border-violet-300/40 bg-violet-500/10 p-2.5">
+        {picks.length ? (
+          picks.map((id) => {
+            const p = powers.find((row) => row.id === id);
+            const el = elementOfPower(id);
+            return (
+              <button key={id} type="button" onClick={() => toggle(id)} className="inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 text-[13px] font-bold text-fg" style={{ borderColor: `${ELEMENTS[el].color}aa`, background: `${ELEMENTS[el].color}2a` }} aria-label={`Remove ${p?.name}`}>
+                <ElementIcon element={el} className="size-4" />
+                {p?.name}
+                <span className="text-muted">×</span>
+              </button>
+            );
+          })
+        ) : (
+          <span className="px-1 text-sm text-muted">Pick up to three powers.</span>
+        )}
+        <span className="t-num ml-auto pr-1 text-xs text-muted">{picks.length}/3</span>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        {([0, 1, 2] as const).map((t) => (
+          <button key={t} type="button" aria-pressed={tier === t} onClick={() => setTier(t)} className="seg !min-h-11 justify-center">
+            {t === 0 ? "Basic" : t === 1 ? "Mixed" : "Apex"}
+          </button>
+        ))}
+      </div>
+      {tier === 2 && <p className="mt-1.5 text-xs text-muted">{apexTaken ? "One Apex per life. Remove it to swap." : "One Apex per life: the Gen 2 ceiling still holds."}</p>}
+      <label className="mt-2 flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-black/30 px-3 focus-within:border-gold">
+        <Search className="size-4 text-muted" aria-hidden />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search powers or tags" aria-label="Search powers" className="min-h-11 w-full bg-transparent text-sm text-fg placeholder:text-muted focus:outline-none" />
+      </label>
+      <div className="mt-2 grid max-h-[34vh] grid-cols-2 gap-2 overflow-y-auto">
+        {pool.map((p) => {
+          const e = elementOfPower(p.id);
+          const on = picks.includes(p.id);
+          const blocked = !on && (picks.length >= 3 || (p.generation === 2 && apexTaken));
+          return (
+            <button key={p.id} type="button" aria-pressed={on} disabled={blocked} onClick={() => toggle(p.id)} className={`card flex min-h-12 items-center gap-2 px-2.5 py-2 text-left disabled:opacity-35 ${on ? pickedCls : ""}`}>
+              <ElementIcon element={e} className="size-4.5 shrink-0" />
+              <span className="line-clamp-2 text-[13px] leading-tight font-bold text-fg">{p.name}</span>
+            </button>
+          );
+        })}
+      </div>
+      <Section title="Earned traits from day one" aside={<span className="text-xs text-muted">{extras.length}/2</span>}>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {EARNED_TRAITS.map((t) => (
+            <button key={t.id} type="button" aria-pressed={extras.includes(t.id)} onClick={() => toggleTrait(t.id)} title={t.blurb} className={`min-h-10 rounded-full border px-3 text-[13px] font-bold ${extras.includes(t.id) ? "border-gold bg-gold/15 text-gold" : "border-white/15 bg-white/[0.04] text-fg/85"}`}>
+              {t.title}
+            </button>
+          ))}
+        </div>
+      </Section>
     </>
   );
 }

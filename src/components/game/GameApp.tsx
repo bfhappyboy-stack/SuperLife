@@ -2,6 +2,7 @@ import { Banknote, ChevronRight, Heart, FastForward, Home, Lock, Menu, ScrollTex
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip } from "@/components/game/Chapters";
 import { CreateScreen } from "@/components/game/CreateScreen";
+import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
@@ -49,6 +50,8 @@ export function GameApp() {
         className="phone-shell relative flex h-full min-h-0 w-full flex-col overflow-hidden"
       >
         {screen === "title" && <TitleScreen />}
+        {screen === "mode" && <ModeSelect />}
+        {screen === "god" && <GodScreen />}
         {screen === "create" && <CreateScreen />}
         {screen === "play" && <PlayScreen />}
       </div>
@@ -120,7 +123,12 @@ function PlayScreen() {
   const game = useGame((s) => s.game);
   if (!game) return null;
   if (game.phase === "dead" && game.death) return <Obituary game={game} />;
-  return <Life game={game} />;
+  return (
+    <>
+      <Life game={game} />
+      {game.reveal && <RevealOverlay game={game} />}
+    </>
+  );
 }
 
 function Life({ game }: { game: Game }) {

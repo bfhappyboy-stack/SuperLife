@@ -1,10 +1,11 @@
 import { create } from "zustand";
-import { act, ageUp, applyHeroTalk, choose, createGame, freshen, heirFrom, resolveMini, skipToBirthday, type NewLifeOpts } from "./engine";
+import { act, ageUp, applyHeroTalk, choose, createGame, dismissReveal, freshen, heirFrom, resolveMini, skipToBirthday, type NewLifeOpts } from "./engine";
+import { presetById } from "./presets";
 import { loadGame, loadScores, pushScore, saveGame, saveScores, type ScoreRow } from "./save";
 import { applyChapterText, type ChapterText } from "./chapters";
-import type { Game } from "./types";
+import type { Game, GameMode } from "./types";
 
-type Screen = "title" | "create" | "play";
+type Screen = "title" | "mode" | "god" | "create" | "play";
 
 interface Store {
   hydrated: boolean;
@@ -12,7 +13,13 @@ interface Store {
   game: Game | null;
   scores: ScoreRow[];
   hydrate: () => void;
+  /** Which life the create screen is building: a sealed mystery power, or God Mode picks. */
+  createMode: GameMode;
   openCreate: () => void;
+  pickMode: (mode: GameMode) => void;
+  buildOwn: () => void;
+  beginLegend: (presetId: string) => void;
+  closeReveal: () => void;
   begin: (opts: NewLifeOpts) => void;
   resume: () => void;
   age: () => void;
@@ -50,7 +57,21 @@ export const useGame = create<Store>((set, get) => ({
     if (game) saveGame(game);
     set({ hydrated: true, game, scores: loadScores() });
   },
-  openCreate: () => set({ screen: "create" }),
+  createMode: "mystery",
+  openCreate: () => set({ screen: "mode" }),
+  pickMode: (mode) => set({ createMode: mode, screen: mode === "god" ? "god" : "create" }),
+  buildOwn: () => set({ createMode: "god", screen: "create" }),
+  beginLegend: (presetId) => {
+    const legend = presetById(presetId);
+    if (!legend) return;
+    // createGame fills name, city, upbringing, traits and look from the legend.
+    get().begin({ name: legend.name, cityId: legend.cityId, upbringing: legend.upbringing, portrait: legend.portrait, sex: legend.sex, face: legend.face, drive: legend.drive, preset: legend.id, mode: "god" });
+  },
+  closeReveal: () => {
+    const game = get().game;
+    if (!game?.reveal) return;
+    commit(set, get().scores, dismissReveal(game));
+  },
   begin: (opts) => {
     const game = createGame({ ...opts, seed: opts.seed ?? ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0) });
     commit(set, get().scores, game);
