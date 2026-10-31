@@ -6,7 +6,15 @@ import { basePowers, mix } from "../combo.ts";
 import { LIBRARY_MAX, library, libraryCap, notePage, yearlyRoom } from "../library.ts";
 import type { Game } from "../types.ts";
 
-const base = { name: "Kai Moreno", cityId: "metro", upbringing: "supportive", portrait: 5, sex: "male", face: "secret", drive: "protector" } as const;
+const base = {
+  name: "Kai Moreno",
+  cityId: "metro",
+  upbringing: "supportive",
+  portrait: 5,
+  sex: "male",
+  face: "secret",
+  drive: "protector",
+} as const;
 
 test("book room grows with age and new pages slow down as it fills", () => {
   assert.equal(libraryCap(8), 6);
@@ -25,7 +33,12 @@ test("yearly allowance resets on a birthday", () => {
 });
 
 test("a full book refuses a new braid without spending the month", () => {
-  const g = createGame({ ...base, mode: "god", giftIds: ["fire-control", "super-speed", "flight"], seed: 3 } as never);
+  const g = createGame({
+    ...base,
+    mode: "god",
+    giftIds: ["fire-control", "super-speed", "flight"],
+    seed: 3,
+  } as never);
   g.age = 30;
   g.phase = "live";
   g.majorsLeft = 3;
@@ -33,7 +46,9 @@ test("a full book refuses a new braid without spending the month", () => {
   const bases = basePowers().map((p) => p.id);
   g.unlockedPowers = bases.slice(0, libraryCap(30));
   let pair: [string, string] | null = null;
-  for (const a of g.unlockedPowers) for (const b of g.unlockedPowers) if (!pair && a < b && mix(a, b, g.unlockedPowers).ok) pair = [a, b];
+  for (const a of g.unlockedPowers)
+    for (const b of g.unlockedPowers)
+      if (!pair && a < b && mix(a, b, g.unlockedPowers).ok) pair = [a, b];
   assert.ok(pair, "found a pair that would mix");
   assert.ok(library(g).block);
   const before = JSON.stringify({ p: g.unlockedPowers, m: g.majorsLeft });
@@ -41,5 +56,9 @@ test("a full book refuses a new braid without spending the month", () => {
   assert.equal(JSON.stringify({ p: after.unlockedPowers, m: after.majorsLeft }), before);
   g.age = 40;
   const room = act(g, `mix|${pair![0]}|${pair![1]}`);
-  assert.equal(room.unlockedPowers!.length, g.unlockedPowers.length + 1, "room at 40 lets the braid land");
+  assert.equal(
+    room.unlockedPowers!.length,
+    g.unlockedPowers.length + 1,
+    "room at 40 lets the braid land",
+  );
 });

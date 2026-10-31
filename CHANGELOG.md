@@ -58,6 +58,12 @@
 - Powers ▸ Book shows a pages meter ("12/12 pages · 2/2 this year") and the honest reason when it's full. Mix and Learn are disabled instead of silently failing, and no month is spent.
 - **Sims:** seeker policies now end lives with 21–27 powers (was ~130).
 
+### Reveal juice (`RevealCard.tsx`, `FirstMove.tsx`, `sfx.ts`, `Legends.tsx`, `engine.ts`)
+
+- **Shareable reveal card:** a share button next to *Embrace it* draws a 1080×1350 card on a canvas (power name, element and tier, Earth and age, the story line, extra powers, and the legend's portrait for God Mode heroes). Phones with the Web Share API share the PNG directly; everything else gets *Save image*. Works offline with no API key.
+- **First Move mini:** after *Embrace it*, a 3-2-1 countdown, then six element sparks to tap before they fade (about 8 seconds). The score gives a one-time drill bonus to the new power (+6 to +20) and a banner ("Your first move lands clean."). It can be skipped, and it never repeats (`flags.firstMove`).
+- **Sound and haptics, kept cheap and safe:** soft WebAudio blips only on taps (mobile browsers need a gesture anyway), a mute toggle saved on the device, and short `navigator.vibrate` pulses. All of it is guarded and silent where unsupported (e.g. iOS vibration).
+
 ### Clearer chapter goals (`chapters.ts`, `Chapters.tsx`)
 
 - Every goal shows its exact path (tab ▸ section ▸ button) with a tap icon, plus an x/y progress count.

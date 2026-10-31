@@ -33,9 +33,12 @@ export function library(g: Pick<Game, "age" | "flags" | "unlockedPowers">): Libr
   const thisYear = g.flags.libraryAge === g.age ? (g.flags.libraryYear ?? 0) : 0;
   const yearRoom = yearlyRoom(owned);
   let block: string | null = null;
-  if (owned >= LIBRARY_MAX) block = `Your book is full (${LIBRARY_MAX} pages). Master what you hold.`;
-  else if (owned >= cap) block = `Book full for your age: ${owned}/${cap}. Room for one more page every 4 years.`;
-  else if (thisYear >= yearRoom) block = `${thisYear} new ${thisYear === 1 ? "power" : "powers"} this year already. The body needs a birthday to catch up.`;
+  if (owned >= LIBRARY_MAX)
+    block = `Your book is full (${LIBRARY_MAX} pages). Master what you hold.`;
+  else if (owned >= cap)
+    block = `Book full for your age: ${owned}/${cap}. Room for one more page every 4 years.`;
+  else if (thisYear >= yearRoom)
+    block = `${thisYear} new ${thisYear === 1 ? "power" : "powers"} this year already. The body needs a birthday to catch up.`;
   return { owned, cap, thisYear, yearRoom, block };
 }
 

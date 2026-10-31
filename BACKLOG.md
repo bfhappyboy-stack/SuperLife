@@ -12,10 +12,7 @@
 3. **God Mode limits.**
    - 3 powers, 1 Apex and 2 earned traits. Revisit after feedback.
 4. **Power room.** Shipped tonight: 4 + age÷4 pages (max 30), 3/2/1 new per year. Tune after feedback; consider a "retire a page" action.
-5. **Reveal extras.**
-   - A haptic and sound hook.
-   - A shareable reveal card.
-   - A "first move" mini right after Embrace it.
+5. **Reveal extras.** Shipped tonight: share card, First Move mini, blips and haptics. Next: a global sound setting in the menu, and an animated (video/GIF) card.
 
 ## NEXT (from the 2026-10-31 playtest)
 
