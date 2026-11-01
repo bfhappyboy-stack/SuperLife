@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026-11-01 (moves fix): a six-move picker that does what you tap (`devbot/2026-11-01-moves-fix`)
+
+Branches from main `c41ff09`. The player reported move selection felt buggy. It was reproduced at 390x844 with real touch taps in a mystery life before and after the reveal, a Spider-Man legend, Build your own, after a new power, and after reloading.
+
+### Bugs found
+
+- **Swapping was close to impossible.** Dropping a slot left the six at five. The next tap ran the auto top-up first, which put the first bench move straight back (often the one you'd just dropped). Then the move you tapped got "Six moves already". Re-adding a dropped move actually removed it again, while the picker said "is in the six".
+- **Wrong move under the thumb.** Every tap added a notice above the picker and changed the banner on the top card, so the list moved down by about one row. On iOS Safari, which doesn't anchor scrolling, the next tap landed on the wrong move.
+- **Mixed messages.** The picker's own note and the engine's banner could disagree ("Push is in the six" / "Push leaves the six").
+- **Reload changed your six.** A five-move loadout got silently refilled on load, so what you saw after a reload wasn't what you'd left.
+- **Blank Moves tab before your power wakes.** The shelf rendered nothing at all.
+- The street moves shown in empty slots didn't match the ones a fight actually used.
+
+### Fixes (`moves.ts`, `engine.ts`, new `MovePicker.tsx` + `move-picker.css`, `PowerLab.tsx`)
+
+- **Atomic swaps.** The new `slot|index|moveId` action uses `placeInSlot`. A bench move replaces the slot's move in one step, and an equipped move trades places, so you can reorder. The six never shrinks to five.
+- `toggleLoadout` (old `equip|`) now drops a move by swapping in the next bench move in the same slot. It's never the move you just dropped. If every move you know is already equipped, it refuses.
+- **New picker.**
+  - Numbered 6-slot grid with element icons, kind, energy and rank, plus a "5/6" counter.
+  - Swap either way: tap a slot then a move, or a move then a slot. A picked-up slot glows and the possible targets turn dashed.
+  - Tapping an equipped move in the list picks up its slot.
+  - When a bench move is picked, a quick-slot strip appears in the sticky status line so you never scroll back up.
+  - Cancel button. Haptic tick and sound on success, buzz on refusal. The slot that changed pops.
+- **No layout shift.** Feedback lives in a fixed-height sticky line inside the card. Slot swaps and Save/Load sets no longer change the card banner.
+- The list is split into **Ready** and a collapsible **Locked** list. A locked move tells you the power, the rank it needs and where to train it.
+- Before the reveal, or in an unpowered life, the Moves tab shows the six street moves and explains when your power's moves arrive. Padded slots use the same street moves as `battleMoves`.
+- Buttons use `touch-action: manipulation` and have no tap highlight.
+
+### Tests
+
+- New `src/game/test/loadout.test.ts` with 11 tests.
+  - Regressions for the drop/re-add flip and the first-bench-only refill.
+  - Atomic swap and reorder; locked, unknown and out-of-range picks.
+  - Full-six refusal; refused drop with no bench.
+  - Exact order kept across a JSON save and reload; save/load sets.
+  - 120 random swaps with reloads across five kinds of life, always exactly six.
+  - Pre-reveal street six; a new power never reshuffles a full six.
+- Game tests: 99/99. Typecheck, lint and build pass.
+- Touch checks at 390x844 with scroll anchoring off to act like iOS Safari: slot then move, move then slot, reorder, the element under the finger doesn't change, cancel works, reload keeps the exact six, and there are no console errors.
+- Screenshots: `superlife-shots/moves-fix/before` and `/after`.
+
 ## 2026-11-01 (pm): Legends grow in canon, goals that survive their decade, Chase run, legend grid (`devbot/2026-11-01-pm`)
 
 This branch stacks on the unmerged `devbot/2026-11-01-am`, `devbot/2026-10-31-night` and late Oct 31 work.
