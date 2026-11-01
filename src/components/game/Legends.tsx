@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, Crown, Eye, Hammer, Lock, Share2, Sparkles, Swords, Wand2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, Crown, Eye, Hammer, LayoutGrid, Lock, Share2, Sparkles, Swords, Wand2, X } from "lucide-react";
 import { FirstMove } from "@/components/game/FirstMove";
 import { RevealShareSheet, type RevealCardData } from "@/components/game/RevealCard";
 import { blip, buzz } from "@/components/game/sfx";
@@ -138,7 +138,9 @@ export function GodScreen() {
   const beginLegend = useGame((s) => s.beginLegend);
   const buildOwn = useGame((s) => s.buildOwn);
   const [index, setIndex] = useState(0);
+  const [grid, setGrid] = useState(false);
   const rail = useRef<HTMLDivElement>(null);
+  const roster = useRef<HTMLDivElement>(null);
   const cards = PRESETS.length + 1;
   const legend = PRESETS[index];
   const onScroll = () => {
@@ -152,6 +154,20 @@ export function GodScreen() {
     const card = el?.children[i];
     if (card instanceof HTMLElement) el!.scrollTo({ left: card.offsetLeft - 16, behavior: "smooth" });
   };
+  // Keep the active face centred in the roster strip as the cards swipe.
+  useEffect(() => {
+    const strip = roster.current;
+    const face = strip?.children[index];
+    if (strip && face instanceof HTMLElement) strip.scrollTo({ left: face.offsetLeft - strip.clientWidth / 2 + face.offsetWidth / 2, behavior: "smooth" });
+  }, [index]);
+  const pick = (i: number) => {
+    setGrid(false);
+    // Jump without smooth scrolling from the grid so the card lands before the sheet fades.
+    const el = rail.current;
+    const card = el?.children[i];
+    if (card instanceof HTMLElement) el!.scrollTo({ left: card.offsetLeft - 16 });
+    setIndex(i);
+  };
   return (
     <main className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <div className="pointer-events-none absolute inset-0 transition-colors duration-500" style={{ background: `radial-gradient(120% 70% at 50% 30%, ${legend?.color ?? "#a78bfa"}33, transparent 70%)` }} />
@@ -163,6 +179,9 @@ export function GodScreen() {
           <p className="t-label text-[10px] text-violet-300">GOD MODE · THE MULTIVERSE</p>
           <h1 className="t-display !text-[2rem] leading-none text-fg">Pick a legend</h1>
         </div>
+        <button type="button" onClick={() => setGrid(true)} className="btn btn-ghost !min-h-11 gap-1.5 !px-3 text-sm" aria-label={`See all ${PRESETS.length} legends`}>
+          <LayoutGrid className="size-4" aria-hidden /> All {PRESETS.length}
+        </button>
       </header>
       <div ref={rail} onScroll={onScroll} className="no-scrollbar relative flex min-h-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto px-4 pt-4 pb-2" aria-label="Legends">
         {PRESETS.map((p, i) => (
@@ -177,12 +196,25 @@ export function GodScreen() {
           <span className="btn btn-primary mt-2 min-h-12 w-full gap-1 text-base">Open the builder <ChevronRight className="size-5" aria-hidden /></span>
         </button>
       </div>
-      <div className="relative flex shrink-0 justify-center gap-1.5 py-2" role="tablist" aria-label="Legend picker">
-        {Array.from({ length: cards }, (_, i) => (
-          <button key={i} type="button" role="tab" aria-selected={i === index} aria-label={i < PRESETS.length ? PRESETS[i]!.hero : "Build your own"} onClick={() => jump(i)} className="grid min-h-6 min-w-6 place-items-center">
-            <span className={`block h-1.5 rounded-full transition-all duration-300 ${i === index ? "w-6" : "w-1.5 bg-white/25"}`} style={i === index ? { background: legend?.color ?? "#a78bfa" } : undefined} />
-          </button>
-        ))}
+      <div ref={roster} className="no-scrollbar relative flex shrink-0 gap-2 overflow-x-auto px-4 py-2" role="tablist" aria-label="Legend picker">
+        {Array.from({ length: cards }, (_, i) => {
+          const p = PRESETS[i];
+          const on = i === index;
+          return (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              aria-label={p ? p.hero : "Build your own"}
+              onClick={() => jump(i)}
+              className={`relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl border-2 transition-all duration-300 ${on ? "scale-110 opacity-100" : "scale-95 border-white/10 opacity-55"}`}
+              style={on ? { borderColor: p?.color ?? "#a78bfa", boxShadow: `0 0 16px -2px ${p?.color ?? "#a78bfa"}` } : undefined}
+            >
+              {p ? <LegendThumb legend={p} className="absolute inset-0" /> : <Hammer className="size-5 text-violet-200" aria-hidden />}
+            </button>
+          );
+        })}
       </div>
       <footer className="relative shrink-0 px-4 pt-1 pb-24">
         {legend ? (
@@ -194,6 +226,42 @@ export function GodScreen() {
           <button type="button" onClick={buildOwn} className="btn btn-primary min-h-14 w-full text-lg">Build your own</button>
         )}
       </footer>
+      {grid && (
+        <div className="anim-fade absolute inset-0 z-30 flex flex-col bg-ink/92 backdrop-blur-md" role="dialog" aria-label="All legends">
+          <header className="flex shrink-0 items-center gap-2 px-4 pt-4 pb-2">
+            <div className="min-w-0 flex-1">
+              <p className="t-label text-[10px] text-violet-300">THE MULTIVERSE</p>
+              <h2 className="t-display !text-[1.7rem] leading-none text-fg">{PRESETS.length} legends</h2>
+            </div>
+            <button type="button" onClick={() => setGrid(false)} aria-label="Close" className="btn btn-ghost !min-h-11 !min-w-11 !px-0">
+              <X className="size-5" aria-hidden />
+            </button>
+          </header>
+          <div className="stagger grid min-h-0 flex-1 grid-cols-3 content-start gap-3 overflow-y-auto px-4 pt-2 pb-24">
+            {PRESETS.map((p, i) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => pick(i)}
+                className={`group relative aspect-[3/4] overflow-hidden rounded-2xl border-2 text-left shadow-lg transition-transform active:scale-95 ${i === index ? "" : "border-white/10"}`}
+                style={i === index ? { borderColor: p.color, boxShadow: `0 0 22px -4px ${p.color}` } : undefined}
+              >
+                <LegendThumb legend={p} className="absolute inset-0" />
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-2 pt-6 pb-2">
+                  <span className="block truncate text-[13px] leading-tight font-extrabold text-fg">{p.hero}</span>
+                  <span className="block truncate text-[10px] font-bold tracking-[0.12em] opacity-80" style={{ color: p.color }}>{p.earth.toUpperCase()}</span>
+                </span>
+              </button>
+            ))}
+            <button type="button" onClick={() => pick(PRESETS.length)} className="relative grid aspect-[3/4] place-items-center rounded-2xl border-2 border-dashed border-violet-300/50 bg-violet-500/10 p-2 text-center">
+              <span className="grid gap-1 justify-items-center">
+                <Hammer className="size-7 text-violet-200" aria-hidden />
+                <span className="text-[13px] font-extrabold text-fg">Build your own</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
