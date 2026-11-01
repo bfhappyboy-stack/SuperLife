@@ -1,6 +1,7 @@
 // The braid book's room: how many powers a life can hold, and how fast it can add them.
 // Without this, a player who chases every mentor and mix ends up owning ~130 powers by 80.
 import type { Game } from "./types";
+import { presetById, wakeAge } from "./presets";
 
 /** Hard ceiling for a whole life. */
 export const LIBRARY_MAX = 30;
@@ -17,6 +18,22 @@ export function yearlyRoom(owned: number): number {
   return 1;
 }
 
+/** Most pages a legend's book can ever hold: canon kit plus a handful of stretches. */
+export const LEGEND_MAX = 12;
+
+/**
+ * A God Mode legend lives one hero's life, not a sampler: the book holds the canon kit plus 2 pages,
+ * then one more every 6 years after the wake, up to LEGEND_MAX. Without this a Wolverine ended life
+ * with Flight, Sorcery and 20 other powers that have nothing to do with the claws.
+ */
+export function legendCap(presetId: string | null | undefined, age: number): number | null {
+  const legend = presetById(presetId);
+  if (!legend || !legend.powers.length) return null;
+  const wake = wakeAge(legend.id) ?? 0;
+  const since = Math.max(0, age - wake);
+  return Math.min(LEGEND_MAX, legend.powers.length + 2 + Math.floor(since / 6));
+}
+
 export interface LibraryState {
   owned: number;
   cap: number;
@@ -27,14 +44,17 @@ export interface LibraryState {
   block: string | null;
 }
 
-export function library(g: Pick<Game, "age" | "flags" | "unlockedPowers">): LibraryState {
+export function library(g: Pick<Game, "age" | "flags" | "unlockedPowers"> & { preset?: string | null }): LibraryState {
   const owned = (g.unlockedPowers ?? []).length;
-  const cap = libraryCap(g.age);
+  const legend = legendCap(g.preset, g.age);
+  const cap = legend ?? libraryCap(g.age);
   const thisYear = g.flags.libraryAge === g.age ? (g.flags.libraryYear ?? 0) : 0;
   const yearRoom = yearlyRoom(owned);
   let block: string | null = null;
   if (owned >= LIBRARY_MAX)
     block = `Your book is full (${LIBRARY_MAX} pages). Master what you hold.`;
+  else if (owned >= cap && legend != null)
+    block = `This Earth's legend holds ${cap} powers at ${g.age}: the canon kit and a few stretches. One more page every 6 years.`;
   else if (owned >= cap)
     block = `Book full for your age: ${owned}/${cap}. Room for one more page every 4 years.`;
   else if (thisYear >= yearRoom)

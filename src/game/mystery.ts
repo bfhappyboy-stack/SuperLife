@@ -90,23 +90,80 @@ export function pickWakeAge(r: number): number {
 
 /** Omens per element. Kid-sized, specific, and a little uncanny. */
 const OMENS: Record<ElementId, string[]> = {
-  fire: ["The birthday candles light themselves a second before the match.", "Your hands are always warm. Snowballs melt before you can throw them.", "The radiator clanks when you are angry. The radiator is not on."],
-  ice: ["Your juice box is frozen solid again. It was in your hand.", "Frost ferns grow on your bedroom window in July.", "When you cry, the tears are cold enough to sting."],
-  lightning: ["The TV fizzes when you run past it.", "Your hair stands up before every thunderstorm, hours before the forecast.", "You get a shock from the doorknob. The doorknob is wooden."],
-  light: ["The night-light gets brighter when you are scared.", "In photos, you are always a little overexposed.", "Shadows lean away from you at sunset."],
-  energy: ["The street lamp on your block brightens when you walk under it.", "Your fingertips leave faint blue smudges on the bathroom mirror.", "Batteries die in your pocket. All of them. Every week."],
-  psychic: ["You answer a question before your mom finishes asking it.", "You dream about a phone call. It comes the next morning.", "The cat stares at the space behind your head, then at you, then leaves."],
-  speed: ["The playground race ends and you don't remember the middle.", "Your sneakers wear out in a week. Mom checks the receipts.", "You catch a falling glass. You were across the kitchen."],
-  wind: ["Kites fly on still days when you are holding the string.", "Doors slam when you are upset. The windows are shut.", "Rain stops for exactly as long as you stand in it."],
-  gravity: ["Your crayons roll toward you. On a flat table.", "You jump off the swing and land a beat too late, softly.", "The scale at the doctor's reads something different every time you breathe."],
-  force: ["You open a jar your dad gave up on. Then the jar breaks.", "You dent the car door closing it. You were trying to be gentle.", "The bully pushes you. He bounces."],
-  shadow: ["Your teacher marks you absent. You were in the front row.", "The motion lights never notice you.", "In the school photo, you are blurry. Only you."],
-  warp: ["You fall asleep on the couch and wake up in your bed.", "You lose your shoe in the park. It is by the front door when you get home.", "You blink in the hallway and you are at the end of it."],
-  arcane: ["The old book in the attic opens to the same page every time.", "You doodle a symbol in the margin. The pencil gets hot.", "Candles flicker toward you like they are listening."],
-  life: ["Your scraped knee is gone by lunch.", "The dead plant on the windowsill is alive again.", "You never catch the cold that the whole class catches."],
-  shield: ["A dodgeball stops an inch from your face, then drops.", "You fall off the jungle gym. Not a scratch. The mulch is flattened in a perfect circle.", "Rain beads on the air above your head."],
-  stretch: ["You reach the cookie jar on the top shelf. You didn't use the chair.", "Your arm aches like it went somewhere without you.", "You can touch your elbow with your tongue. Both elbows."],
+  fire: ["The birthday candles light themselves a second before the match.", "Your hands are always warm. Snowballs melt before you can throw them.", "The radiator clanks when you are angry. The radiator is not on.", "Your bathwater is always too hot by the time you get out.", "Toast burns when you're impatient. You haven't touched the toaster.", "The campfire leans toward you like a dog that wants a pat."],
+  ice: ["Your juice box is frozen solid again. It was in your hand.", "Frost ferns grow on your bedroom window in July.", "When you cry, the tears are cold enough to sting.", "Your popsicle never melts. Not even in August.", "Your fingertips leave little white ferns on the car window.", "The class goldfish bowl gets a skin of ice when you tap it."],
+  lightning: ["The TV fizzes when you run past it.", "Your hair stands up before every thunderstorm, hours before the forecast.", "You get a shock from the doorknob. The doorknob is wooden.", "Static zaps everyone you high-five.", "Your nightlight flickers in time with your heartbeat.", "The arcade machine gives you a free game every time you lean on it."],
+  light: ["The night-light gets brighter when you are scared.", "In photos, you are always a little overexposed.", "Shadows lean away from you at sunset.", "Fireflies follow you home from the park.", "Your eyes shine in the dark like a cat's. Only in photos.", "Sunbeams find you in every room, even the ones without windows."],
+  energy: ["The street lamp on your block brightens when you walk under it.", "Your fingertips leave faint blue smudges on the bathroom mirror.", "Batteries die in your pocket. All of them. Every week.", "Your crayon drawings glow a little after the lights go out.", "The remote works better when you hold it upside down. No batteries.", "Your hair crackles when you're excited, like a balloon rubbed on wool."],
+  psychic: ["You answer a question before your mom finishes asking it.", "You dream about a phone call. It comes the next morning.", "The cat stares at the space behind your head, then at you, then leaves.", "You know who's on the phone before it rings.", "You dream the plot of a movie before it comes out.", "Your little cousin stops crying the second you look at her."],
+  speed: ["The playground race ends and you don't remember the middle.", "Your sneakers wear out in a week. Mom checks the receipts.", "You catch a falling glass. You were across the kitchen.", "You finish your dinner before anyone sits down.", "Your bike chain snaps from how fast you pedal.", "You win tag so often the other kids invent a new rule just for you."],
+  wind: ["Kites fly on still days when you are holding the string.", "Doors slam when you are upset. The windows are shut.", "Rain stops for exactly as long as you stand in it.", "Dandelion seeds swirl around you like they're dancing.", "Your bubbles never pop. They follow you instead.", "The weathervane on the school roof points at you."],
+  gravity: ["Your crayons roll toward you. On a flat table.", "You jump off the swing and land a beat too late, softly.", "The scale at the doctor's reads something different every time you breathe.", "Your balloon never floats away. It hovers right where you let go.", "You never spill. Not once. Not even upside down.", "Marbles roll in circles around your feet."],
+  force: ["You open a jar your dad gave up on. Then the jar breaks.", "You dent the car door closing it. You were trying to be gentle.", "The bully pushes you. He bounces.", "You pick up the family dog with one hand. It's a big dog.", "Your handprint stays in the clay at school. And the desk under it.", "You tug the tablecloth and the whole table follows."],
+  shadow: ["Your teacher marks you absent. You were in the front row.", "The motion lights never notice you.", "In the school photo, you are blurry. Only you.", "You win hide-and-seek every time. Usually they give up.", "Your reflection is half a second late.", "The school photographer has to take yours four times."],
+  warp: ["You fall asleep on the couch and wake up in your bed.", "You lose your shoe in the park. It is by the front door when you get home.", "You blink in the hallway and you are at the end of it.", "Your toys are never where you left them. They're where you wanted them.", "You arrive at school before the bus that dropped you off.", "You lose a sock. You find it inside a sealed jar."],
+  arcane: ["The old book in the attic opens to the same page every time.", "You doodle a symbol in the margin. The pencil gets hot.", "Candles flicker toward you like they are listening.", "Your nightmares stop when you draw a circle on the floor.", "The cat brings you tiny gifts: a key, a ring, a coin with no face.", "You speak a word in your sleep that nobody in the house knows."],
+  life: ["Your scraped knee is gone by lunch.", "The dead plant on the windowsill is alive again.", "You never catch the cold that the whole class catches.", "The class hamster lives three years longer than it should.", "Flowers bloom early on the walk to school.", "You never get the chickenpox. Nobody can explain why."],
+  shield: ["A dodgeball stops an inch from your face, then drops.", "You fall off the jungle gym. Not a scratch. The mulch is flattened in a perfect circle.", "Rain beads on the air above your head.", "Bike crashes never leave a scratch on you. The bike's another story.", "Hailstones bounce off the air above your head.", "The ball that hits you comes back faster than it arrived."],
+  stretch: ["You reach the cookie jar on the top shelf. You didn't use the chair.", "Your arm aches like it went somewhere without you.", "You can touch your elbow with your tongue. Both elbows.", "You can bend your thumb all the way back to your wrist. Both ways.", "You win limbo by a mile. Then by two.", "Your shirt sleeves keep getting too short. Then too long again."],
 };
+
+/**
+ * Louder signs for the last stretch before the wake. Picked once the power is 2 years or less away,
+ * so the foreshadowing builds toward the reveal instead of repeating the same three kid-sized lines.
+ */
+const LOUD_OMENS: Record<ElementId, string[]> = {
+  fire: ["You sneeze and the curtains scorch. Two little black handprints sit on the wall where you leaned.", "The smoke alarm goes off every time you have a nightmare. Every time.", "A firework fizzles out at the fair. You stare at it and it relights, mid-air."],
+  ice: ["The whole bathroom mirror frosts over while you brush your teeth. In the frost: your handprint, from the inside.", "Your breath fogs in a heated classroom. Everybody else's doesn't.", "The pond freezes in a perfect circle around the rock you're sitting on."],
+  lightning: ["Every phone in the classroom buzzes at once when you get angry. The teacher confiscates yours. It's still buzzing.", "A blue spark jumps from your finger to your friend's ear. You both pretend that didn't happen.", "Lightning hits the flagpole outside your window three nights in a row."],
+  light: ["You wake up and the bedroom is bright as noon. The clock says 3 a.m. The lamp is off.", "Your shadow is missing in the school photo. Everyone else has one.", "When you laugh too hard, the streetlights outside get jealous."],
+  energy: ["The microwave starts when you walk past. It is unplugged.", "Your hand hums against the window and the glass sings a note you can feel in your teeth.", "A blue glow seeps out of your sleeves in the dark cinema. The usher asks you to put your phone away."],
+  psychic: ["You hear your teacher think the test answers. You get every one right and feel sick about it.", "Your friend's dog sits down in front of you and you know, exactly, that it misses its old house.", "Someone across the bus is about to cry. You know before they do."],
+  speed: ["You run for the bus and get there before it. Before the bus stop, too.", "The world goes slow for a second when a ball flies at your face. You watch it spin. You step aside.", "Your shoelaces melt a little after gym class."],
+  wind: ["Your bedroom door blows shut so hard the hinges bend. The window's shut.", "Every umbrella on the street turns inside out the moment you're upset.", "The clouds above the schoolyard start to turn, slowly, in a circle with you at the middle."],
+  gravity: ["Your feet don't touch the bottom stair. They just don't. For a whole second.", "The pencil on the desk rolls uphill toward you. Then the desk does.", "You drop your backpack and it falls slowly, like the air is thick."],
+  force: ["You close your fist around a stress ball and it bursts like a balloon.", "You lean on the fence and the whole post leaves the ground.", "You catch the falling shelf with one hand. Your arm doesn't even shake."],
+  shadow: ["The cafeteria lady looks right through you and serves the kid behind you. Twice.", "In the mirror, for half a second, there's no one there.", "Your dog barks at the place you were standing, not the place you are."],
+  warp: ["You trip on the stairs at school and land on your bed at home. Your bag is still at school.", "Your watch is always nine seconds ahead. You reset it. It goes back to nine.", "You reach into your pocket for your keys and pull out a leaf from the park across town."],
+  arcane: ["The candles at the birthday party bend toward you when you make your wish. All of them.", "You read a word out of the old book and the room goes cold and quiet.", "A circle of mushrooms grows overnight around the spot where you sleep in the yard."],
+  life: ["You hold a hurt bird. It flies away. It was not just hurt.", "The bruise from the fall fades while you watch it, like a cloud moving off the sun.", "Every plant in your room leans toward your bed."],
+  shield: ["A car rolls into you in the parking lot. The bumper crumples. You don't.", "Rain stops a hand's width above your head and runs off the air like a glass roof.", "The fire alarm drill: you walk through a closed glass door. It doesn't break. It just isn't between you anymore."],
+  stretch: ["You wake up with your feet hanging off the end of the bed. In the morning they're back.", "You catch a ball nine feet away without moving your legs.", "Your fingers wrap all the way around a basketball. Twice."],
+};
+
+/** Some traits colour how the kid takes a sign. Used instead of the home frame part of the time. */
+const TRAIT_FRAME: Partial<Record<string, string>> = {
+  secret: "You tell no one. Not even the diary.",
+  loud: "You tell everyone. Nobody believes you, which is almost worse.",
+  reluctant: "You hope it stops. Part of you knows it won't.",
+  protector: "Your first thought: could it have helped someone?",
+  vengeful: "Your first thought is who you'd use it on. That scares you a little.",
+  idealistic: "You write a whole page about how you'd use it for good.",
+  curious: "You try to make it happen again. Twelve times. On the thirteenth, something twitches.",
+  thrill: "You grin for a week.",
+  lone: "You go somewhere nobody can see and try it alone.",
+  amends: "You wonder if it's a punishment or a second chance.",
+  glory: "You practise a pose in the mirror. Just in case.",
+  duty: "It feels less like a gift and more like an order.",
+  family: "You want to tell your family more than anything.",
+};
+
+/** How close the sealed power is to waking, from the kid's side of the skin. 0 faint … 3 any day now. */
+export type OmenStage = 0 | 1 | 2 | 3;
+export const OMEN_STAGES = ["Faint", "Stirring", "Loud", "Any day now"] as const;
+
+export function omenStage(age: number, wakeAt: number | undefined): OmenStage {
+  const left = (wakeAt ?? WAKE_MAX) - age;
+  if (left <= 1) return 3;
+  if (left <= 2) return 2;
+  if (left <= 4) return 1;
+  return 0;
+}
+
+/** Months between signs: the feeling comes back faster as the wake nears. */
+export function omenCooldown(stage: OmenStage): number {
+  return stage >= 3 ? 1 : stage === 2 ? 2 : stage === 1 ? 3 : 4;
+}
 
 const HOME_FRAME: Partial<Record<UpbringingId, string>> = {
   supportive: "Your folks film it, just in case.",
@@ -126,12 +183,13 @@ const HOME_FRAME: Partial<Record<UpbringingId, string>> = {
   isolated: "There's no one around for miles to tell.",
 };
 
-export function omenFor(giftId: string | null | undefined, upbringing: UpbringingId, seen: number, r: number): string {
+export function omenFor(giftId: string | null | undefined, upbringing: UpbringingId, seen: number, r: number, stage: OmenStage = 0, traits: readonly string[] = []): string {
   const element = elementOfPower(giftId ?? null);
-  const list = OMENS[element] ?? OMENS.energy;
-  const line = list[(seen + Math.floor(r * list.length)) % list.length] ?? list[0]!;
-  const frame = HOME_FRAME[upbringing];
-  return frame && r < 0.6 ? `${line} ${frame}` : line;
+  const pool = stage >= 2 ? (LOUD_OMENS[element] ?? LOUD_OMENS.energy) : (OMENS[element] ?? OMENS.energy);
+  const line = pool[(seen + Math.floor(r * pool.length)) % pool.length] ?? pool[0]!;
+  const trait = traits.map((id) => TRAIT_FRAME[id]).filter(Boolean) as string[];
+  const frame = r < 0.35 && trait.length ? trait[Math.floor(r * 1000) % trait.length] : HOME_FRAME[upbringing];
+  return frame && r < 0.7 ? `${line} ${frame}` : line;
 }
 
 /** Three suspects for the "call it" guess: the real element plus two decoys, in a stable shuffled order. */
@@ -170,4 +228,9 @@ export function revealLine(giftId: string, age: number): string {
     stretch: "You catch your friend from the top of the bleachers. From the bottom.",
   };
   return `${by[element]} At ${age}, it is finally here: ${power?.name ?? "something"}.`;
+}
+
+/** The three "Call it" suspects for this life, in the order the Powers tab shows them. */
+export function callItOptions(g: { hiddenGift?: string | null; name: string; flags: Record<string, number> }): ElementId[] {
+  return guessOptions(g.hiddenGift, g.name.length * 31 + (g.flags.manifestAge ?? 0) * 7);
 }

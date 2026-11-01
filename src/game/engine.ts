@@ -36,8 +36,8 @@ import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
-import { canonAt, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
-import { guessOptions, omenFor, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
+import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
+import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
@@ -957,7 +957,8 @@ function wakeHidden(d: Game, banners: string[]): boolean {
   noteGrowth(before, d, banners);
   addWakeGoal(d);
   const power = getPower(head);
-  const beat = legend ? canonAt(legend.id, d.age) : null;
+  // The wake beat, even if a collapse or a fight pushed the birthday it was due on.
+  const beat = legend ? (legend.beats.find((row) => row.wake && !d.flags[`canon:${row.id}`]) ?? canonAt(legend.id, d.age)) : null;
   const line = legend ? `${fillCanon(beat?.text ?? "", d)}` : revealLine(head, d.age);
   d.reveal = { powers: ids, age: d.age, title: legend ? beat?.title ?? "Awakening" : "Your power wakes", line, guess };
   if (guess === "right") {
@@ -985,7 +986,8 @@ function fillCanon(text: string, d: Game): string {
 function openCanon(d: Game, banners: string[]): boolean {
   const legend = presetById(d.preset);
   if (!legend) return false;
-  const beat = canonAt(legend.id, d.age);
+  // This birthday's beat, or one a collapse or a fight pushed past its birthday (up to three years late).
+  const beat = canonBetween(legend.id, d.age - 3, d.age).find((row) => !d.flags[`canon:${row.id}`]) ?? null;
   if (!beat || d.flags[`canon:${beat.id}`]) return false;
   d.flags[`canon:${beat.id}`] = 1;
   d.flags.canon = (d.flags.canon ?? 0) + 1;
@@ -2109,7 +2111,8 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
     );
     return true;
   }
-  if (d.powerId && d.age >= 12 && roll(d) < (forced ? 0.28 : d.secondaryId ? 0.06 : 0.14)) {
+  // Legends get their gifts from canon, not from a stranger guarding a humming door.
+  if (d.powerId && !d.preset && d.age >= 12 && roll(d) < (forced ? 0.28 : d.secondaryId ? 0.06 : 0.14)) {
     const site = RELIC_SITES[rollInt(d, RELIC_SITES.length)] ?? RELIC_SITES[0]!;
     const guard = makeCape(d, "rogue");
     showChoice(
@@ -2324,10 +2327,23 @@ export function dismissReveal(game: Game, firstMove?: number): Game {
   return d;
 }
 
+/** Months until the strange feeling can be chased again (signs come faster as the wake nears). */
+export function omenWait(g: Game): number {
+  if (g.flags.omenAt == null) return 0;
+  const gap = omenCooldown(omenStage(g.age, g.flags.manifestAge));
+  return Math.max(0, g.flags.omenAt + gap - (g.age * 12 + g.month));
+}
+
 /** Record one omen line for a sealed power and return it. */
 function noteOmen(d: Game): string {
   const log = Array.isArray(d.omenLog) ? d.omenLog : [];
-  const line = omenFor(d.hiddenGift, d.upbringing, log.length, roll(d));
+  const stage = omenStage(d.age, d.flags.manifestAge);
+  let line = omenFor(d.hiddenGift, d.upbringing, log.length, roll(d), stage, d.traits);
+  // Skip a sign seen in the last few entries (the base line, framed or not), up to a few tries.
+  const recent = log.slice(-4);
+  for (let tries = 0; tries < 6 && recent.some((seen) => seen.startsWith(line.split(". ")[0]!)); tries++) {
+    line = omenFor(d.hiddenGift, d.upbringing, log.length + tries + 1, roll(d), stage, d.traits);
+  }
   d.omenLog = [...log, line].slice(-8);
   return line;
 }
@@ -2580,8 +2596,9 @@ export function act(game: Game, id: string): Game {
   const power = powerById(d.powerId);
 
   if (id === "omen") {
-    if (!d.hiddenGift || d.preset || d.age < 4 || d.flags.omened) return game;
+    if (!d.hiddenGift || d.preset || d.age < 4 || d.flags.omened || omenWait(d) > 0) return game;
     d.flags.omened = 1;
+    d.flags.omenAt = d.age * 12 + d.month;
     d.flags.omens = (d.flags.omens ?? 0) + 1;
     const line = noteOmen(d);
     const deltas: Delta[] = [];
@@ -4055,7 +4072,9 @@ export function actionsFor(g: Game): ActionItem[] {
     if (g.age >= 45) items.push(item({ id: "mentor", group: life, section: "This month", label: "Mentor a rookie", detail: "Legacy and a little joy. Once a month.", disabled: g.flags.mentored ? "One rookie a month is plenty." : noTime(g, true), accent: g.age >= 60 && !g.flags.mentored }));
   }
   if (g.hiddenGift && !g.preset && g.age >= 4) {
-    items.push(item({ id: "omen", group: life, section: "This month", label: "Chase the strange feeling", detail: "Something about you is not ordinary. Follow it. Once a month.", disabled: g.flags.omened ? "Already chased it this month." : undefined, accent: !g.flags.omened }));
+    const wait = omenWait(g);
+    const stage = OMEN_STAGES[omenStage(g.age, g.flags.manifestAge)];
+    items.push(item({ id: "omen", group: life, section: "This month", label: "Chase the strange feeling", detail: `Something about you is not ordinary. Follow it. The feeling: ${stage.toLowerCase()}.`, disabled: g.flags.omened ? "Already chased it this month." : wait > 0 ? `The feeling has gone quiet. Back in ${wait} month${wait === 1 ? "" : "s"}.` : undefined, accent: !g.flags.omened && wait <= 0 }));
   }
   if (g.age >= 8) items.push(item({ id: "gym", group: life, section: "This month", label: "Hit the gym", detail: "Lift, run, or an underground bout.", disabled: noTime(g, true) }));
   if (g.age >= 6) items.push(item({ id: "books", group: life, section: "This month", label: "Hit the books", detail: "Library, stolen notes, or the cape columns.", disabled: noTime(g, true) }));
@@ -4082,6 +4101,7 @@ export function actionsFor(g: Game): ActionItem[] {
         if (!hero) blocked = "Meet them first. Power tab, look for a sparring partner.";
         else if (hero.relationship < (step.minBond ?? 18)) blocked = `Bond ${step.minBond ?? 18} with ${hero.alias}. Talk is free.`;
       }
+      if (step.kind === "train" && !heldDrill(g, step)) blocked = `Needs ${stepPowers(step).map((powerId) => getPower(powerId)?.name ?? powerId).join(" or ")}. Learn it, or set the case down.`;
       items.push(item({ id: "arc-step", group: life, section: "Cases", label: step.title, detail: `${current.arc.villain} · ${step.kind}. ${step.brief}`, disabled: noTime(g, true) ?? blocked, accent: true }));
       items.push(item({ id: "arc-drop", group: life, section: "Cases", label: "Set the case down", detail: `${current.arc.title} stays on the page. You can pick it up later.`, disabled: noTime(g, true) }));
     } else {
@@ -4111,7 +4131,7 @@ export function actionsFor(g: Game): ActionItem[] {
     if (g.preset) {
       // Legends know their canon: no guessing game.
     } else if (g.flags.guess === undefined && omens >= 2) {
-      for (const element of guessOptions(g.hiddenGift, g.name.length * 31 + (g.flags.manifestAge ?? 0) * 7)) {
+      for (const element of callItOptions(g)) {
         items.push(item({ id: `guess|${ELEMENT_ORDER.indexOf(element)}`, group: power, section: "Call it", label: `Call it: ${ELEMENTS[element].label}`, detail: "Bet on what the signs mean. Right at the reveal: power +0.25 and Joy." }));
       }
     } else if (g.flags.guess !== undefined) {

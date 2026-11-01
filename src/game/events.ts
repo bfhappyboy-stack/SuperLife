@@ -51,6 +51,8 @@ export interface EventDef {
   /** If set, the moment only happens in these city ids. */
   cities?: string[];
   requires?: (g: Game) => boolean;
+  /** Off-canon for God Mode legends: a generic villain, or a gift from nowhere. Legends skip it. */
+  offCanon?: boolean;
   text: (g: Game) => string;
   choices: EventChoice[];
 }
@@ -350,7 +352,7 @@ const HAND: EventDef[] = [
     ],
   },
   {
-    id: "maybe",
+    id: "maybe", offCanon: true,
     weight: 5,
     once: true,
     minAge: 18,
@@ -385,7 +387,7 @@ const HAND: EventDef[] = [
     ],
   },
   {
-    id: "meteor",
+    id: "meteor", offCanon: true,
     weight: 2,
     once: true,
     minAge: 16,
@@ -891,7 +893,7 @@ function cityPulse(): EventDef[] {
       ],
     },
     {
-      id: "relic-subway",
+      id: "relic-subway", offCanon: true,
       weight: 4,
       minAge: 12,
       needsPower: true,
@@ -919,7 +921,7 @@ function cityPulse(): EventDef[] {
       ],
     },
     {
-      id: "relic-crater",
+      id: "relic-crater", offCanon: true,
       weight: 3,
       minAge: 14,
       needsPower: true,
@@ -1039,7 +1041,7 @@ function deeperMoments(): EventDef[] {
       ],
     },
     {
-      id: "lab-offer",
+      id: "lab-offer", offCanon: true,
       weight: 4,
       minAge: 14,
       text: () => "A night class promises 'two gifts, one body, no refunds.' The chalkboard is already full of names that sound like accidents.",
@@ -1144,6 +1146,7 @@ export function eligible(e: EventDef, g: Game): boolean {
   if (e.minAge != null && g.age < e.minAge) return false;
   if (e.maxAge != null && g.age > e.maxAge) return false;
   if (e.once && g.flags[`seen:${e.id}`]) return false;
+  if (e.offCanon && g.preset) return false;
   if (e.needsPower && !g.powerId) return false;
   if (e.needsNoPower && (g.powerId || g.age < 16)) return false;
   if (e.needsNoPower && g.powerId) return false;
@@ -1364,7 +1367,7 @@ function richerMoments(): EventDef[] {
       ],
     },
     {
-      id: "receipt-offer",
+      id: "receipt-offer", offCanon: true,
       weight: 4,
       minAge: 15,
       maxKarma: -6,
