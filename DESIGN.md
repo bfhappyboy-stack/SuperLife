@@ -25,6 +25,8 @@ This is the owner's design, written down as faithfully as possible. Where the co
   - the required chain works
   - every power has moves
 
+- **Legend kin (God Mode).** Teachers, yearly offers and sparks lean 85% toward the legend's canon kit plus its `stretch` list (`kin.ts`). Off-kin powers are never banned; choosing them is bending canon.
+
 ## 2. Progression is a grind
 
 - Leveling powers uses **diminishing returns, costs, and soft caps**.
@@ -48,6 +50,12 @@ This is the owner's design, written down as faithfully as possible. Where the co
 
 - Cases are written for a chapter era. Mid-life cases unlock by age and by closed cases (`minCleared`), use harder foes (`foeLevel`), and pay Legacy when closed.
 - Hero bonds follow one diminishing curve: gains shrink as the bond rises, each hero has a yearly room (5 points at bond 0, 1 near 100), and a bond above 40 drifts down 2 a year without contact. A close bond takes decades of grinding.
+
+### Legend lives stay canon (2026-11-01 am)
+
+- **Book cap for God Mode legends:** canon kit + 2, then +1 every 6 years after the canon wake, with a hard max of 12. Ordinary lives keep the age-based room.
+- **Events marked `offCanon`** (generic villains, gifts from nowhere, gift swaps) and relic-run duels never fire in legend lives.
+- **Mystery omens:** one chase per cooldown (4/3/2/1 months as the wake nears), shown as a 4-step feeling meter.
 
 ## 5. Cities
 
@@ -158,7 +166,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 
 ## 15. Minigame variety
 
-- Six skill kinds, plus the duel. Each one tests a different hand, and the market gear edge maps them to the timing or pattern family:
+- Seven skill kinds, plus the duel. Each one tests a different hand, and the market gear edge maps them to the timing or pattern family:
 
   | Kind | What you do |
   |---|---|
@@ -168,6 +176,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
   | Rescue | Triage the windows |
   | Press | Read the reporter, pick the tone |
   | Hold | Keep the load in a moving zone |
+  | Chase | Switch lanes to dodge wrecks and grab sparks (seeded, always one reachable lane) |
 
 - Engine call sites name a **verb** (stunt, drill, dispatch…), not a kind.
   - `minis.ts` holds the weighted pool for each verb: kind, titles, subtitles and kind-specific outcome text.

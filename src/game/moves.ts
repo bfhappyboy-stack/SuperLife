@@ -236,6 +236,15 @@ export function battleMoves(game: Pick<Game, "loadout" | "unlockedPowers" | "mas
 
 export function fillLoadout(game: Game): void {
   if (!Array.isArray(game.loadout)) game.loadout = [];
+  // Drop stale, duplicate or no-longer-unlocked ids first, then top up, so a pruned slot is refilled
+  // the same tick instead of leaving the six at five.
+  game.loadout = game.loadout
+    .filter((id, index, list) => {
+      if (list.indexOf(id) !== index) return false;
+      const def = moveById(id);
+      return !!def && moveUnlocked(game, def);
+    })
+    .slice(0, MOVESET_SIZE);
   const have = new Set(game.loadout);
   for (const entry of knownMoves(game)) {
     if (game.loadout.length >= MOVESET_SIZE) break;
@@ -243,11 +252,6 @@ export function fillLoadout(game: Game): void {
     game.loadout.push(entry.def.id);
     have.add(entry.def.id);
   }
-  game.loadout = game.loadout.filter((id, index, list) => {
-    if (list.indexOf(id) !== index) return false;
-    const def = moveById(id);
-    return !!def && moveUnlocked(game, def);
-  }).slice(0, MOVESET_SIZE);
 }
 
 export function toggleLoadout(game: Game, moveId: string): string {

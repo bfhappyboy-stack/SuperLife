@@ -6,7 +6,7 @@ import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniHead } from "@/components/game/MiniKit";
 import { skinColor } from "@/components/game/miniUtil";
-import { Hack, Hold, Press, Rescue } from "@/components/game/MiniGames";
+import { Chase, Hack, Hold, Press, Rescue } from "@/components/game/MiniGames";
 import type { MinigameSpec } from "@/game/types";
 
 const ICONS = [
@@ -26,6 +26,7 @@ export function Minigame({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (
   if (spec.kind === "rescue") return <Rescue spec={spec} onDone={onDone} />;
   if (spec.kind === "press") return <Press spec={spec} onDone={onDone} />;
   if (spec.kind === "hold") return <Hold spec={spec} onDone={onDone} />;
+  if (spec.kind === "chase") return <Chase spec={spec} onDone={onDone} />;
   return <Timing spec={spec} onDone={onDone} />;
 }
 

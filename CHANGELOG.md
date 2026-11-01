@@ -1,5 +1,178 @@
 # Changelog
 
+## 2026-11-01 (pm): Legends grow in canon, goals that survive their decade, Chase run, legend grid (`devbot/2026-11-01-pm`)
+
+This branch stacks on the unmerged `devbot/2026-11-01-am`, `devbot/2026-10-31-night` and late Oct 31 work.
+
+### Legends learn powers that fit them (`kin.ts`, `presets.ts`, `combo.ts`, `engine.ts`, `events.ts`)
+
+- Each legend now has a **kin**: the base powers under its canon kit, plus a short hand-picked `stretch` list in `presets.ts` (for example, Flash can stretch to lightning, phasing and regeneration; Thor to weather and flight).
+- Teachers, the trainer-lesson event, yearly power offers, heist sparks and off-book mission lessons now **lean 85% toward kin powers**. Teachers list fitting powers first.
+- Nothing is banned. Braiding an off-kin pair on purpose still works, which counts as bending canon.
+- **Why:** BACKLOG #3. In 10-legend sims, about 171 of 239 learned powers were off-kin (Flash with Telepathy, Wolverine with Sorcery). Now it is about 60.
+- Ordinary and mystery lives are unchanged.
+
+### Chapter goals you can actually finish (`chapters.ts`, `engine.ts`)
+
+- **Family:** "Keep family close" now counts partners and kids at **closeness 30+**. Before, it showed as met all decade, then the partner walked out at 15.
+  - A new banner warns when a partner drifts to 16–23 and names the button: People ▸ Circle ▸ Spend time.
+  - Sims: 8/11 → 14/16.
+- **Fame:** above Fame 72, "Raise Fame by N" fought the yearly fade. It now becomes **"End the chapter with Fame N+"** (current fame minus 6).
+  - Sims: 8/8.
+- **Reputation:** "Keep Reputation" now follows the sign of your Reputation, not the villain check, so a dark-karma hero is no longer asked to stay disliked.
+  - Legends with negative Reputation no longer get it at all.
+- Sims, 15 lives across mystery, villain and legend runs: every other goal hit ≥ 8/9 with goal-aware play. The earlier low quietfame, standing and darkkarma numbers were policy artefacts.
+
+### New minigame: Chase (`minis.ts`, `MiniGames.tsx`, `Minigame.tsx`, `miniUtil.ts`)
+
+- A three-lane run on a tilted road. Swipe, tap a side, use the big LEFT/RIGHT buttons, or press the arrow keys.
+  - Dodge hazard-striped wrecks and grab gold sparks.
+  - Sparks are worth 55% of the score; staying clean is 45%, and three hits wipe out the clean half.
+  - Hits shake the arena and buzz; sparks pop.
+- Courses are **seeded and fair**: every row leaves an open lane you can reach in one step. Tests check 600 courses.
+- **Gym:** *Run the city* now plays Chase (or sprint intervals), and *Lift* plays Hold (or the heavy bag).
+  - A clean round pays slightly more than the old flat reward, and a botched one slightly less, so the gym stays a grind but a played one.
+- Chase also joins the stunt, dispatch and League tryout pools, weighted toward mobility powers.
+
+### God Mode: a legend grid (`Legends.tsx`)
+
+- With 11 legends the dot strip had stopped working. It is now a **face roster** that follows the swipe, plus an **All 11** button that opens a 3-column poster grid. Tap a poster to jump straight to that legend.
+
+### Tests
+
+- New `src/game/test/pm.test.ts` covers:
+  - kin sets and the 85% narrowing;
+  - family closeness and the fame raise-vs-hold switch;
+  - chase course fairness and scoring;
+  - gym rounds opening as minis with an ordered payout.
+- 88/88 game tests pass.
+
+## 2026-11-01 (am): Sealed-gift panel, louder omens, canon-safe legends (`devbot/2026-11-01-am`)
+
+This branch also carries the unmerged `devbot/2026-10-31-night` work and the late Oct 31 WIP (Black Panther, Wolverine and Flash, plus Go buttons on chapter goals).
+
+### Mystery Life: the sealed gift gets a real panel (`SealedGift.tsx`, `PowerLab.tsx`, `GameApp.tsx`, `styles.css`)
+
+- **Powers ▸ Book, before the reveal,** now shows a sealed card instead of plain text:
+  - a glowing orb that quivers harder as the wake gets closer;
+  - a 4-step **The feeling** meter: Faint ▸ Stirring ▸ Loud ▸ Any day now;
+  - a **Signs** journal with your last 3 omens;
+  - **Call it** as three big element tiles, instead of buried action rows.
+- **Fixed:** the old card wrongly said a birthday "from 13" could offer a power.
+- **Legends before their canon wake** get a countdown card showing their Earth, the beat and the years left.
+
+### Omens are paced, varied and build toward the reveal (`mystery.ts`, `engine.ts`)
+
+- *Chase the strange feeling* now has a cooldown: 4, 3, 2 or 1 months depending on how close the wake is. The row says when the feeling comes back.
+  - **Why:** sims showed 24–96 omens per life, drawn from only 3 lines per element. Now it is 18–34.
+- **More lines:**
+  - 6 faint lines per element.
+  - New **loud** lines in the last 2 years before the wake.
+  - Trait frames (for example, curious or reluctant kids notice things differently).
+  - The game avoids repeating anything from the last 4 signs.
+
+### Legends stay canon (`library.ts`, `events.ts`, `engine.ts`)
+
+- **Legend book cap:** canon kit + 2, plus 1 more every 6 years after the wake, with a hard max of 12.
+  - **Why:** a sim Wolverine ended with 20+ powers, including Flight and Sorcery.
+- **Off-canon events are skipped in legend lives:** Doctor Maybe, The Receipt, the night-class braid, the geode swap and the two relic sites.
+  - Relic-run duels with generic guards are skipped too.
+  - Legends now meet their own rogues.
+
+### Painted portraits for the last three legends (`src/assets/art/hero-black-panther.ts`, `hero-wolverine.ts`, `hero-flash.ts`, `index.ts`)
+
+- **Black Panther, Wolverine and The Flash** now show painted 540x960 webp portraits in the God Mode picker and reveal, instead of the drawn silhouette (`LegendBust` stays as the fallback for any legend without art).
+  - The Flash art had garbled neon-sign text in the top-right; that corner is softly blurred and darkened.
+
+### Fixes
+
+- **Six moves, always** (`moves.ts`): `fillLoadout` now prunes stale or locked moves *before* topping up. Some lives had been left with 5 equipped moves.
+
+### Tests
+
+- New `legend.test.ts` (5 tests): legend cap, no off-canon events for legends, long legend lives inside the cap, omen stages and cooldown, and loadout refill. The game suite is now 83 tests, all passing.
+
+## 2026-10-31 (night): Mystery Life, God Mode legends, clearer chapter goals (`devbot/2026-10-31-night`)
+
+### Mystery Life is now the main mode (`mystery.ts`, `engine.ts`, `Legends.tsx`)
+
+- New lives start on a mode screen. **Mystery Life** is marked Recommended. **God Mode** is the sandbox.
+- In a Mystery Life the power is sealed at birth (`hiddenGift`). It wakes on a random birthday from 7 to 15.
+  - Upbringing and traits tilt which power it is. About 1 life in 8 gets a braided Gen 1 gift.
+- **The reveal:** a full-screen overlay with element-coloured rays, a flash, bursts, the power name and a story line. It only closes after the animation has finished.
+- **Before the reveal:**
+  - Drills, mixes, teachers, year powers, sparks and grants are all locked (`giftsSealed`).
+  - Powers ▸ Your gift shows a "Sealed power" card instead.
+- **Childhood stays playful:**
+  - From age 4, Life ▸ Today ▸ *Chase the strange feeling* finds one omen a month. Omens are element-flavoured and framed by your home (Joy +2, Mind +1).
+  - Mystery lives also get birthday omen banners.
+  - After two omens you can **Call it** (Powers ▸ Call it). Call it right and the reveal adds +0.25 power and says so.
+- The reveal adds a bonus "drill your new power" goal to the current chapter.
+
+### God Mode legends (`presets.ts`, `engine.ts`, `Legends.tsx`, `src/assets/art/hero-*.ts`)
+
+- **Four legends, using real names for now:** Spider-Man (Earth-3145), Batman (Earth-3939), Iron Man / Tony Stark (Earth-6380) and Hulk (Earth-1962-G).
+  - Each is a multiverse variant with its own twist, a portrait, themed decade chapters, a canon family and signature villains with authored movesets. Tony's villains include Ultron.
+- **Canon beats** arrive on set birthdays as choices: follow, bend or break. Results are tracked (`canonKept`, `canonBent`, `canonBroken`) and shown on the chapter card as an Earth badge.
+  - Fight choices become boss duels against the canon villain.
+  - Canon losses (Uncle Ben; Thomas and Martha Wayne; Howard and Maria Stark) really happen unless you break canon.
+- **Powers:**
+  - Legend powers wake at their canon age: the Bite at 15, the Cave at 24, the gamma blast at 28.
+  - Batman takes a human vow: no powers ever, with gadget and training goals instead.
+- **Build your own:** pick up to 3 powers (at most one Apex), any city, upbringing and look, plus up to 2 earned traits from day one.
+  - The Gen 2 cap, the six-move loadout and the Fire + Speed → Light Speed (+ Strength → Lightning Strikes) chain all still apply.
+- **Four more legends (8 in total):** Superman (Earth-3838), Wonder Woman (Earth-1941), Captain America (Earth-4101) and Thor (Earth-8017).
+  - Each has a portrait, a variant twist, 8 themed decades, 4 rogues with 4 authored moves each, a canon loss, and late canon from 58 to 72 with a variant ending.
+  - Superman: Lex grows up next door; Lex, Zod, Doomsday, Brainiac. Wonder Woman: Themyscira has a UN seat; Cheetah, Circe, Ares, Medusa.
+  - Captain America: Peggy takes the second dose; Red Skull, Winter Soldier, Zemo, Crossbones. Thor: Loki is the firstborn heir; Loki, Malekith, Hela, Surtur.
+  - The mode screen's God Mode card fits all 8 thumbnails at 390px, and the "N legends" chip counts the presets.
+- Everything is offline data; no `XAI_API_KEY` is needed.
+
+### Legends keep their own rogues (`presets.ts`, `engine.ts`)
+
+- In a legend life every arch-enemy, rival, villain visit, "trouble in the city" and cape introduction now comes from that hero's own rogues gallery. Generic villains (Taxman and friends) never appear.
+  - Rogues debut at a sensible age (`villainDebut`: an explicit `from`, else their first canon beat).
+  - If nobody new has debuted, an already-met rogue returns; there is no fallback to strangers.
+- **New rogues, each with 4 authored moves:**
+  - Spider-Man: Kraven, Mysterio, Vulture.
+  - Batman: Riddler, Scarecrow, Penguin.
+  - Iron Man: Justin Hammer.
+  - Hulk: Red Hulk, The Maestro (a level-10 late-life boss).
+
+### Life after 60 (`presets.ts`, `arcs.ts`, `engine.ts`)
+
+- **Legends get 4 late beats each, from 58 to 73:** successors (Miles-style heir, the Bat-family, Ironheart, Skaar), final showdowns (Kraven's last hunt, the Joker's last laugh, Ultron reborn, the Maestro) and a closing beat.
+- **Variant endings:** the closing beat ends the saga by your dominant path (canon, bend or break). Each ending names your Earth. If you die first, the ending is written into your death story instead.
+- **Regular lives get two late cases:**
+  - *The Reunion Tour* (63+): the old team, one last tour, and Encore.
+  - *The Lighthouse* (71+): a quiet coast town, The Undertow, and a final Riptide fight.
+
+### The braid book has room (`library.ts`, `engine.ts`, `PowerLab.tsx`)
+
+- Seekers used to own ~130 powers by 80. Now the book holds **4 + age÷4 pages** (6 at 8, 14 at 40, 24 at 80) up to **30**.
+- **Diminishing returns:** 3 new pages a year under 8 powers, 2 under 16, then 1. The count resets on each birthday.
+- Mixes, mentor lessons, sparks and grants respect the room. Story powers (the reveal, canon grants, God Mode picks, the starting gift) never count against it. The Gen 2 ceiling is unchanged.
+- Powers ▸ Book shows a pages meter ("12/12 pages · 2/2 this year") and the honest reason when it's full. Mix and Learn are disabled instead of silently failing, and no month is spent.
+- **Sims:** seeker policies now end lives with 21–27 powers (was ~130).
+
+### Reveal juice (`RevealCard.tsx`, `FirstMove.tsx`, `sfx.ts`, `Legends.tsx`, `engine.ts`)
+
+- **Shareable reveal card:** a share button next to *Embrace it* draws a 1080×1350 card on a canvas (power name, element and tier, Earth and age, the story line, extra powers, and the legend's portrait for God Mode heroes). Phones with the Web Share API share the PNG directly; everything else gets *Save image*. Works offline with no API key.
+- **First Move mini:** after *Embrace it*, a 3-2-1 countdown, then six element sparks to tap before they fade (about 8 seconds). The score gives a one-time drill bonus to the new power (+6 to +20) and a banner ("Your first move lands clean."). It can be skipped, and it never repeats (`flags.firstMove`).
+- **Sound and haptics, kept cheap and safe:** soft WebAudio blips only on taps (mobile browsers need a gesture anyway), a mute toggle saved on the device, and short `navigator.vibrate` pulses. All of it is guarded and silent where unsupported (e.g. iOS vibration).
+
+### Clearer chapter goals (`chapters.ts`, `Chapters.tsx`)
+
+- Every goal shows its exact path (tab ▸ section ▸ button) with a tap icon, plus an x/y progress count.
+- Goals you can't work on yet are greyed out with a lock tag: "Unlocks at N", or "Unlocks when your power wakes".
+- **Reachability:** power goals are only picked for a chapter if the power can wake at least 2 years before it ends. Omen goals only appear in Mystery lives.
+
+### Fixes
+
+- Mode screen: the Mystery Life and God Mode cards no longer shrink and clip their buttons on short screens. Legend card names have a text shadow so they read over bright portraits.
+
+- **Save loading:** the old starter-bundle cleanup no longer strips God Mode picks or Mystery/legend powers.
+
 ## 2026-10-31 (pm): mid-life case files, a real bond curve, fewer repeats (`devbot/2026-10-31-pm`)
 
 ### Story arcs (`arcs.ts`, `origin.ts`, `engine.ts`)

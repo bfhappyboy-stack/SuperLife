@@ -1,5 +1,47 @@
 # SuperLife — Backlog
 
+## From the 2026-11-01 pm pass
+
+1. **Kin weight is 85%** (`KIN_WEIGHT` in `kin.ts`). Stretch lists in `presets.ts` are hand-picked. Owner: are any of them wrong for your version of a hero? Renaming or editing them is data only.
+2. **Off-kin chip in PowerLab.** Show a small "off-canon" tag on legend learn rows, so bending canon is a visible choice.
+3. **Chase next:** a villain-escape variant for arc "pursue" steps, and a flight skin (sky lanes) for flyers.
+4. **Villain gimmick phases** in boss duels are still open (NEXT #3).
+5. **Goals still soft:** friend@70s (1/2) when the circle has died off. Consider "Reconnect with 1 old friend" for the final phase.
+6. **Lint:** `src/lib/app-data/client.server.ts:281` has an empty block (`no-empty`). It is Grok Build plumbing, so I left it alone.
+
+## From the 2026-11-01 am pass
+
+1. **Painted portraits for Black Panther, Wolverine and The Flash.**
+   - They use a drawn SVG silhouette (`LegendBust.tsx`) for now.
+   - Needed: 540×960 webp, in the same style as `src/assets/art/hero-*.ts`.
+2. **PR #1 (`devbot/2026-10-31-am`) is stale.** Main already contains its work. Owner: close it?
+3. **Legend book cap** is canon + 2, then +1 every 6 years, max 12. **Done 2026-11-01 pm:** teacher and spark offers lean 85% toward the legend's kin.
+4. **Done 2026-11-01 pm** (family closeness, the fame hold goal, rep sign). **Weak chapter goals (sims):**
+   - "Keep Fame ≤ N" in ch2: 0/8.
+   - End-of-chapter Health in ch4: 0/9.
+   - Dark karma: 1/3.
+   - Mostly policy artefacts, but consider moving the Health goal to "Health 40+" for chapters with a fight-heavy canon.
+5. **Done this pass:**
+   - Clear goals: tab ▸ button routes, Go buttons, greyed "Unlocks at N" goals.
+   - Sealed-gift panel and paced omens.
+   - Black Panther, Wolverine and Flash (Earth-6616, Earth-7419, Earth-1956).
+
+
+## From the 2026-10-31 night pass
+
+1. **Legends polish.**
+   - Real names are placeholders until you decide: keep them, or rename them to parody variants.
+   - Shipped tonight: own-rogue arch-enemies, late canon (58–73) and variant endings.
+   - Shipped tonight: Superman, Wonder Woman, Captain America and Thor (8 legends).
+   - Next: Black Panther, Wolverine, The Flash. The picker has 9 dots now; past ~10 legends, add a grid or filter.
+2. **Batman's vow.**
+   - Today the human vow forbids all powers.
+   - An option to let a "bend canon" choice break the vow: decide.
+3. **God Mode limits.**
+   - 3 powers, 1 Apex and 2 earned traits. Revisit after feedback.
+4. **Power room.** Shipped tonight: 4 + age÷4 pages (max 30), 3/2/1 new per year. Tune after feedback; consider a "retire a page" action.
+5. **Reveal extras.** Shipped tonight: share card, First Move mini, blips and haptics. Next: a global sound setting in the menu, and an animated (video/GIF) card.
+
 ## NEXT (from the 2026-10-31 playtest)
 
 1. **Minigames.** **Shipped 2026-10-31 (am):** Crack, Rescue, Press and Hold, plus verb pools and a shared frame. Timing fell from about 85% to about 30% of celeb minis. Still open:

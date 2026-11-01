@@ -78,6 +78,8 @@ function migrate(game: Game): Game {
 const FREEBIES = new Set<string>([...STARTER_IDS, "lightning-control"]);
 
 function pruneStarterBundle(game: Game) {
+  // Mystery and God lives postdate the old free starter bundle; God picks can legitimately own several base powers.
+  if (game.mode) return;
   const owned = game.unlockedPowers ?? [];
   const freeOwned = owned.filter((id) => FREEBIES.has(id));
   if (freeOwned.length < 2) return;

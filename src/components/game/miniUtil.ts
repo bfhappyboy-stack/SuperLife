@@ -1,12 +1,12 @@
 /** Non-component helpers shared by the skill minigames (kept apart so fast refresh stays happy). */
-import { Brain, Flame, Lock, Mic, Timer, Weight } from "lucide-react";
+import { Brain, Flame, Footprints, Lock, Mic, Timer, Weight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { buzz } from "@/components/game/haptics";
 import { ELEMENTS, isElement } from "@/game/elements";
 import { MINI_KINDS, type SkillKind } from "@/game/minis";
 import type { MinigameSpec } from "@/game/types";
 
-export const KIND_ICON: Record<SkillKind, typeof Flame> = { timing: Timer, pattern: Brain, hack: Lock, rescue: Flame, press: Mic, hold: Weight };
+export const KIND_ICON: Record<SkillKind, typeof Flame> = { timing: Timer, pattern: Brain, hack: Lock, rescue: Flame, press: Mic, hold: Weight, chase: Footprints };
 
 export type Mark = "perfect" | "good" | "miss" | null;
 

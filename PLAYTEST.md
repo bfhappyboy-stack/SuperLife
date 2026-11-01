@@ -1,5 +1,96 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-01 pm): grown-up mystery lives and legends in their 30s
+
+**What I played:**
+- Engine sims, 3 seeds each, with a goal-aware policy:
+  - an isolated Dustreach mystery kid;
+  - a vengeful Stacks mystery kid;
+  - Hulk, Thor and Captain America;
+  - all 10 powered legends, run for a kin census.
+- At 390×844:
+  - the Dustreach life at 9, 34 and 46 (Life tab, chapter card, a duel);
+  - Thor at 31;
+  - the Stacks kid at 14 in the gym;
+  - the God Mode picker.
+
+**Findings (before):**
+- **Family goal:** "Keep family close" read as met for the whole decade, then the partner broke up at closeness 15. The goal counted heads, not closeness (8/11).
+- **Fame goal:** a famous hero at Fame 85 got "Raise Fame by 3" and lost it to the yearly fade above 75.
+- **Reputation goal:** a hero with dark karma but positive Reputation was told to keep Reputation *low*.
+- **Off-kin powers:** legends picked up powers that broke canon (about 171 of 239), for example Thor with Gravity and Flash with Telepathy.
+- **Gym:** Lift and Run were dead taps with flat rewards. Only the bout had a mini.
+- **God Mode picker:** 12 dots, no faces, no way to see the roster at a glance.
+
+**After:**
+- Family 14/16, fame hold 8/8. The holdrep failures were all legends with negative Reputation, who no longer get it.
+- Off-kin powers are down to about 60. Wolverine and Hulk now grow toward durability and strength.
+- **Chase:** reads well at 390×844. Lanes are wide, the buttons are thumb-sized, the gold sparks stand out from the hazard stripes, and the result stamp lands. Screenshots are in `superlife-shots/2026-11-01-pm/after/`.
+- **God Mode:** the "All 11" grid shows every painted portrait, and tapping one lands on its card with the roster face lit.
+
+## Morning pass (2026-11-01 am): mystery childhood and the three new legends
+
+**What I played:**
+- Engine sims, 3 seeds each: an alien-upbringing mystery kid in Neon Spire, a program/lab kid in Crown, Black Panther, Wolverine, Flash and Spider-Man.
+- At 390×844: the age 6, 9 and 10 mystery saves (Powers ▸ Book and the chapter card), the God Mode picker, and a 31-year-old Wolverine.
+
+**Findings:**
+- **Mystery Life:**
+  - Wakes landed at 8–13. Canon beats for legends landed at canon ages (BP 18, Wolverine 12, Flash 25).
+  - Deaths at 71–91. Always 6 moves.
+- **Omen spam (fixed):**
+  - Before: 24–96 "strange feeling" lines per life from 3 lines per element. The same line repeated within a year.
+  - After: 18–34 per life, louder near the wake, with no repeats in the last 4 signs.
+- **The sealed Book tab was a wall of text (fixed).** It also said "From 13, a birthday can offer one", which is wrong for mystery lives. Now it is a sealed-orb card with a feeling meter, signs and Call-it tiles. Screenshots: `superlife-shots/2026-11-01-am/b9-1.png` and `b6-1.png`.
+- **Legends going off-canon (fixed):**
+  - Wolverine at 31 owned 10+ powers, including Flight and Sorcery.
+  - Doctor Maybe and relic guards showed up in a Wolverine life.
+  - Now legends are capped (≤12 at death in every sim) and skip generic villains.
+- **Loadout:** one life sat at 5 moves after a pruned id (fixed).
+- **Chapter goals read clearly at 390px:** each has a tab ▸ button route and a Go button, and locked ones are greyed with "Unlocks when your power wakes" (`l10-1.png`).
+- **Still weak:**
+  - quietfame (ch2) 0/8.
+  - End-of-chapter Health in ch4 0/9.
+  - Canon goal 82/83.
+
+## Night pass (2026-10-31 night): Mystery Life, God Mode, goal clarity
+
+**How it was tested**
+- **Engine sims:** `/workspace/playtest/night.ts` + `night-pol.ts`.
+  - Two Mystery seekers (supportive/protector, rural/thrill) and the four legends, 3 seeds each, to death.
+- **Browser:** Playwright at 390×844, touch.
+  - Fresh mode select → God picker → Begin as Spider-Man.
+  - Build your own (Fire + Speed).
+  - Mystery start.
+  - Injected saves: age 6 dormant, age 10 chapter, the reveal birthday, Spidey's Bite, Batman's Joker beat, Tony's 20s chapter.
+  - No console errors.
+  - Screenshots: `/workspace/superlife-shots/night/*.png`.
+
+**Before (main)**
+- Goals said what to do, not where. Several goals were picked that a life could not reach in its chapter.
+- 6 policies × 4 seeds: `partner 3/18`, `fame 0/5`, `quietfame 1/12`, `infamy 0/8`.
+- There was no hidden-power mode and no legends.
+
+**After**
+- **Mystery seekers:**
+  - The power woke at 8–13, every life on a birthday, with a reveal every time.
+  - The omen goal was hit 4/4. A child never got a power action before the reveal (see the tests).
+- **Legends:**
+  - The canon goal was hit 66/66.
+  - Each life had 8–10 canon beats with a real mix: e.g. Spider-Man kept 5 / bent 4 / broke 1.
+  - Batman stayed human for life (0 powers, 0 moves). Tony and Hulk wake at 24 and 28, and no power goal appears before that.
+- **Still low (policy artefacts, checked by hand):**
+  - `partner`: a targeted check found a partner at 16 on every seed.
+  - `quietfame` and `standing`.
+- **Found:**
+  - God picks were silently pruned on reload by the old starter-bundle migration. Fixed, with a regression test.
+  - The reveal title overlapped on multi-power legends. It now shows one name and "+ power" chips.
+  - Lock chips squeezed goal titles. Moved under the title.
+- **Balance (fixed later tonight):** seeker policies used to end lives owning about 130 powers. With the braid-book room, myst2/Spider-Man/Iron Man/Hulk seekers end with 21–27 (`night.ts`, 3 seeds each).
+- **Reveal juice (390×844, Playwright):** the share sheet draws the card in under a second for Spider-Man and a mystery life; the extras line and story box no longer overlap. First Move: 6/6 taps gave "Clean first move" and +20 drill; the banner shows on the next card. Found and fixed: test taps scrolled the reveal overlay sideways (now `overflow-clip`).
+- **Rogues sim (`rogues.ts`, every preset):** zero generic villains. Every rival, visit and arch-enemy was the hero's own rogue. 10–14 canon beats per life, an ending on every life (mostly canon, some break), deaths at 72–86.
+
+
 How it was tested:
 - **Engine sims:** `/workspace/playtest/*.ts` (outside the repo) drive `createGame/act/choose/resolveMini/ageUp` directly.
   - Three contrasting policies, 20 seeds each, to age 120 or death.
@@ -11,6 +102,13 @@ How it was tested:
   - Fresh onboarding → birth → first months.
   - Injected saves at 9y11m and 59y11m to see decade turns, the low-HP warning and a collapse.
   - Screenshots: `/workspace/superlife-screens/playtest-*.png`.
+
+### Four new legends (rogues sim, 3 seeds each)
+
+- Superman, Wonder Woman, Captain America and Thor each met all 4 of their own rogues, with no generic villains (`BAD -`), and logged 11–12 canon beats.
+- Lives ran 73–86 years. 11 of 12 took the canon ending; one Superman life bent it.
+- The arch-enemy varies by seed (for example Doomsday, Zod or Lex for Superman), so replays feel different.
+- At 390×844 the picker cards fit the hero name, twist, 3 power chips and 4 rogues without clipping (`/workspace/superlife-shots/night/28-31`).
 
 ## Playability blockers (fixed on this branch)
 

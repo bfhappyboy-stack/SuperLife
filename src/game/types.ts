@@ -380,6 +380,28 @@ export interface Game {
   chapterNotice?: ChapterNotice | null;
   /** What you own and what the market remembers. Optional for old saves. */
   market?: MarketState;
+  /** "mystery" (the default for new lives) or "god". Missing on classic saves. */
+  mode?: GameMode;
+  /** The sealed power that has not woken yet (mystery lives and God Mode legends). Cleared at the reveal. */
+  hiddenGift?: string | null;
+  /** God Mode legend id (see presets.ts). */
+  preset?: string | null;
+  /** The big reveal waiting to play. UI-only, cleared on dismiss. */
+  reveal?: RevealNotice | null;
+  /** Strange signs noticed before the power woke, oldest first. */
+  omenLog?: string[];
+}
+
+export type GameMode = "mystery" | "god";
+
+export interface RevealNotice {
+  /** Catalog ids that woke, the headline power first. */
+  powers: string[];
+  age: number;
+  title: string;
+  line: string;
+  /** How the childhood guess went, when one was made. */
+  guess?: "right" | "wrong" | null;
 }
 
 export interface ActionItem {

@@ -1,15 +1,16 @@
 /**
- * Four skill minigames beyond the timing bar: Crack (rotating lock rings), Rescue (window triage),
- * Press (read the reporter, pick the line) and Hold (keep a load inside a moving zone).
+ * Five skill minigames beyond the timing bar: Crack (rotating lock rings), Rescue (window triage),
+ * Press (read the reporter, pick the line), Hold (keep a load inside a moving zone) and Chase
+ * (three-lane dodge-and-grab run).
  * All of them render inside MiniFrame, are touch-first with 56px+ targets, and score 0–1.
  */
-import { Baby, Flame, PersonStanding, User, Weight } from "lucide-react";
+import { Baby, ChevronLeft, ChevronRight, Flame, PersonStanding, User, Weight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniFrame, Pips } from "@/components/game/MiniKit";
 import { clampDifficulty, seeded, skinColor, useFinish, useIntro, type Mark } from "@/components/game/miniUtil";
-import { pressRounds, pressScore, type Tone } from "@/game/minis";
+import { chaseCourse, chaseScore, pressRounds, pressScore, type Tone } from "@/game/minis";
 import type { MinigameSpec } from "@/game/types";
 
 type Props = { spec: MinigameSpec; onDone: (ratio: number) => void };
@@ -540,3 +541,225 @@ export function Hold({ spec, onDone }: Props) {
   );
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Chase: three lanes on a tilted road. Dodge wrecks, grab sparks.     */
+/* ------------------------------------------------------------------ */
+
+const CHASE_LEAD = 1.7; // seconds a row is visible before it reaches the runner
+const RUNNER_Y = 0.84; // runner line, as a fraction of the road's depth
+const TILT = 46;
+
+export function Chase({ spec, onDone }: Props) {
+  const difficulty = clampDifficulty(spec.difficulty);
+  const course = useMemo(() => chaseCourse(spec.seed ?? 7, difficulty), [spec.seed, difficulty]);
+  const go = useIntro();
+  const { result, finish } = useFinish(onDone);
+  const color = skinColor(spec, "chase");
+  const lane = useRef(1);
+  const next = useRef(0);
+  const elapsed = useRef(0);
+  const hits = useRef(0);
+  const sparks = useRef(0);
+  const taken = useRef(new Set<number>());
+  const [view, setView] = useState({ t: 0, lane: 1 });
+  const [shake, setShake] = useState(0);
+  const [pop, setPop] = useState<{ id: number; good: boolean } | null>(null);
+  const swipe = useRef<number | null>(null);
+
+  useFrame(go && result == null, (dt) => {
+    elapsed.current += dt;
+    const t = elapsed.current;
+    // Resolve each row once, the moment it reaches the runner.
+    while (next.current < course.rows.length && course.rows[next.current]!.at <= t) {
+      const row = course.rows[next.current]!;
+      if (row.walls.includes(lane.current)) {
+        hits.current += 1;
+        buzz("miss");
+        setShake((n) => n + 1);
+        setPop({ id: next.current, good: false });
+      } else if (row.spark === lane.current) {
+        sparks.current += 1;
+        taken.current.add(next.current);
+        buzz("tap");
+        setPop({ id: next.current, good: true });
+      }
+      next.current += 1;
+    }
+    setView({ t, lane: lane.current });
+    if (t >= course.duration) finish(chaseScore(sparks.current, course.sparks, hits.current));
+  });
+
+  const move = (dir: -1 | 1) => {
+    if (!go || result != null) return;
+    const to = Math.max(0, Math.min(2, lane.current + dir));
+    if (to === lane.current) return;
+    lane.current = to;
+    setView((v) => ({ ...v, lane: to }));
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "a") move(-1);
+      if (e.key === "ArrowRight" || e.key === "d") move(1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  const t = view.t;
+  const visible = course.rows
+    .map((row, i) => ({ row, i, y: RUNNER_Y - ((row.at - t) / CHASE_LEAD) * RUNNER_Y }))
+    .filter(({ y }) => y > -0.05 && y < 1.08);
+  const laneX = (n: number) => `${(n * 2 + 1) * (100 / 6)}%`;
+  const left = Math.max(0, course.duration - t);
+  const hp = 3 - Math.min(3, hits.current);
+
+  return (
+    <MiniFrame
+      spec={spec}
+      kind="chase"
+      intro={go}
+      result={result}
+      shake={shake}
+      note={go ? (hits.current >= 3 ? "Battered, but still running." : "Swipe or tap a side to switch lanes.") : undefined}
+      hud={
+        <>
+          <span className="chip bg-black/50 text-fg">Sparks <span className="t-num text-gold">{sparks.current}/{course.sparks}</span></span>
+          <span className="chip bg-black/50 text-fg" aria-label={`${hp} of 3 guard left`}>
+            {[0, 1, 2].map((i) => (
+              <span key={i} className={`inline-block h-2.5 w-2.5 rounded-full ${i < hp ? "bg-[#ff6b6b] shadow-[0_0_8px_#ff6b6b]" : "bg-white/15"}`} />
+            ))}
+          </span>
+          <span className="chip bg-black/50 text-fg"><span className="t-num">{left.toFixed(1)}s</span></span>
+        </>
+      }
+      footer={
+        <div className="grid grid-cols-2 gap-3">
+          {([-1, 1] as const).map((dir) => (
+            <button
+              key={dir}
+              type="button"
+              disabled={!go || result != null}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                move(dir);
+              }}
+              onClick={(e) => {
+                // Keyboard activation only; pointers already moved on press for zero lag.
+                if (e.detail === 0) move(dir);
+              }}
+              className="btn btn-primary min-h-16 touch-none text-lg tracking-wide select-none"
+              aria-label={dir < 0 ? "Move left" : "Move right"}
+            >
+              {dir < 0 ? <ChevronLeft className="size-7" /> : null}
+              {dir < 0 ? "LEFT" : "RIGHT"}
+              {dir > 0 ? <ChevronRight className="size-7" /> : null}
+            </button>
+          ))}
+        </div>
+      }
+    >
+      <div
+        className="absolute inset-0 touch-none select-none"
+        onPointerDown={(e) => {
+          swipe.current = e.clientX;
+        }}
+        onPointerUp={(e) => {
+          const from = swipe.current;
+          swipe.current = null;
+          if (from == null) return;
+          const dx = e.clientX - from;
+          if (Math.abs(dx) > 24) move(dx < 0 ? -1 : 1);
+          else {
+            const box = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+            move(e.clientX < box.left + box.width / 2 ? -1 : 1);
+          }
+        }}
+      >
+        {/* Skyline glow at the horizon */}
+        <div className="pointer-events-none absolute inset-x-0 top-10 h-28" style={{ background: `radial-gradient(60% 100% at 50% 100%, color-mix(in srgb, ${color} 35%, transparent), transparent 70%)` }} />
+        <div className="absolute inset-x-0 top-[3.25rem] bottom-0" style={{ perspective: "520px", perspectiveOrigin: "50% 0%" }}>
+          <div
+            className="absolute inset-x-[4%] -top-[38%] bottom-0"
+            style={{
+              transform: `rotateX(${TILT}deg)`,
+              transformOrigin: "50% 100%",
+              transformStyle: "preserve-3d",
+              maskImage: "linear-gradient(180deg, transparent 0%, #000 16%)",
+              WebkitMaskImage: "linear-gradient(180deg, transparent 0%, #000 16%)",
+            }}
+          >
+            {/* Road */}
+            <div
+              className="absolute inset-0 rounded-t-3xl border-x-4"
+              style={{
+                borderColor: `color-mix(in srgb, ${color} 60%, transparent)`,
+                background: "linear-gradient(180deg, #0b1020 0%, #161d33 55%, #1d2540 100%)",
+                boxShadow: `0 0 40px -6px ${color}, inset 0 0 60px rgba(0,0,0,.6)`,
+              }}
+            />
+            {[1, 2].map((n) => (
+              <div
+                key={n}
+                className="absolute top-0 bottom-0 w-1.5 -translate-x-1/2 opacity-60"
+                style={{
+                  left: `${(n * 100) / 3}%`,
+                  backgroundImage: "linear-gradient(180deg, rgba(255,255,255,.85) 0 50%, transparent 50% 100%)",
+                  backgroundSize: "100% 56px",
+                  backgroundPositionY: `${(t * 260) % 56}px`,
+                }}
+              />
+            ))}
+            {/* Wrecks and sparks */}
+            {visible.map(({ row, i, y }) => (
+              <div key={i}>
+                {row.walls.map((w) => (
+                  <div
+                    key={`w${w}`}
+                    className="absolute h-[15%] w-[26%]"
+                    style={{ left: laneX(w), top: `${y * 100}%`, transform: `translate(-50%, -100%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
+                  >
+                    <div
+                      className="h-full w-full rounded-lg border-2 border-black/60"
+                      style={{
+                        background: "repeating-linear-gradient(-45deg, #ffcf4d 0 10px, #1a1a1a 10px 20px)",
+                        boxShadow: "0 6px 0 #0006, 0 0 18px -4px #ff8a3d",
+                      }}
+                    />
+                  </div>
+                ))}
+                {row.spark != null && !taken.current.has(i) ? (
+                  <div
+                    className="absolute h-[9%] aspect-square"
+                    style={{ left: laneX(row.spark), top: `${y * 100}%`, transform: `translate(-50%, -110%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
+                  >
+                    <div className="anim-glow h-full w-full rounded-full" style={{ background: "radial-gradient(circle, #fff 0 20%, #ffcf4d 42%, rgba(255,160,40,.35) 62%, transparent 72%)", boxShadow: "0 0 22px #ffb84d" }} />
+                  </div>
+                ) : null}
+              </div>
+            ))}
+            {/* Runner */}
+            <div
+              className="absolute h-[17%] aspect-[3/5] transition-[left] duration-100 ease-out"
+              style={{ left: laneX(view.lane), top: `${RUNNER_Y * 100}%`, transform: `translate(-50%, -88%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
+            >
+              <div className="absolute inset-x-[15%] bottom-0 h-2 rounded-full bg-black/60 blur-[2px]" />
+              <div
+                className="absolute inset-0 grid place-items-center rounded-[40%] border-2 border-white/80"
+                style={{ background: `radial-gradient(circle at 50% 35%, #fff, ${color} 55%, color-mix(in srgb, ${color} 40%, black))`, boxShadow: `0 0 26px ${color}` }}
+              >
+                <PersonStanding className="size-3/4 text-black/75" strokeWidth={2.4} />
+              </div>
+              {pop ? (
+                <span key={pop.id} className="absolute inset-0">
+                  <HitBurst color={pop.good ? color : "#ff5d5d"} size={64} count={pop.good ? 8 : 6} seed={pop.id} />
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    </MiniFrame>
+  );
+}

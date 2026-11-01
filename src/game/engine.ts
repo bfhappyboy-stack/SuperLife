@@ -1,4 +1,5 @@
 import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
+import { library, notePage } from "./library";
 import {
   CITIES,
   FEMALE_NAMES,
@@ -24,17 +25,20 @@ import {
 } from "./data";
 import { pickEvent, type EventDef, type MiniTemplate } from "./events";
 import { clamp, firstName, money, whenLabel } from "./format";
-import { getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
+import { basePowers, getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
+import { kinOrder, kinPool, legendFits } from "./kin";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
-import { elementOfLegacy, elementOfPower } from "./elements";
+import { ELEMENTS, elementOfLegacy, elementOfPower } from "./elements";
 import { isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
 import { BOND_DRIFT_FLOOR, bondStep, judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { arcById, availableArcs, currentCase, type ArcStep } from "./arcs";
 import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
-import { migrateChapters, openChapter, turnChapter } from "./chapters";
+import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
+import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
+import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
@@ -66,6 +70,7 @@ import type {
   DuelMove,
   Effects,
   Game,
+  GameMode,
   Look,
   MinigameSpec,
   MoveStyle,
@@ -88,8 +93,16 @@ export interface NewLifeOpts {
   face?: TraitId;
   drive?: TraitId;
   look?: Look;
-  /** One catalog power. Empty means an ordinary life. */
+  /** One catalog power. Empty means an ordinary life (or a sealed one in mystery mode). */
   giftId?: string | null;
+  /** "mystery" seals a random power until a birthday from 7 to 15. "god" lets you pick. Missing = classic. */
+  mode?: GameMode;
+  /** God Mode: several starting powers (max 3, at most one Apex). */
+  giftIds?: string[];
+  /** God Mode: earned traits picked at the start. */
+  extraTraits?: TraitId[];
+  /** God Mode legend (presets.ts). Overrides name, city, upbringing, traits and look. */
+  preset?: string | null;
   seed?: number;
   heir?: { fame: number; powerBias: PowerId | null; belief: number; trust?: number };
 }
@@ -387,6 +400,16 @@ function collapse(d: Game, story: string): boolean {
 }
 
 function kill(d: Game, cause: string, story: string) {
+  const legend = presetById(d.preset);
+  if (legend && !Object.keys(d.flags).some((k) => k.startsWith("ending:"))) {
+    // A legend who dies before the closing beat still gets their variant ending.
+    const path = dominantPath(d.flags);
+    const ending = legend.beats.find((beat) => beat.endings)?.endings?.[path];
+    if (ending) {
+      d.flags[`ending:${path}`] = 1;
+      story = `${story}\n\n${ending}`;
+    }
+  }
   peaks(d);
   const scored = scoreOf(d);
   d.phase = "dead";
@@ -461,6 +484,11 @@ function bestTeam(d: Game): TeamDef {
 function maybeRival(d: Game, tier: number) {
   if (tier < 2) return;
   if (d.relationships.some((r) => r.role === "rival" && r.alive)) return;
+  if (d.preset) {
+    const rogue = legendFoe(d, "rival", true);
+    if (rogue) pushHistory(d, `Rival: ${rogue.note ?? rogue.name}.`, "major");
+    return;
+  }
   const rival = addPerson(d, {
     role: "rival",
     closeness: 30,
@@ -585,7 +613,7 @@ function runHeist(d: Game, style: "smash" | "quiet" | "fear" | "spark", deltas: 
     haul += 150;
     heat += 6;
     karma = -8;
-    const gift = randomMissingBase(d.unlockedPowers ?? [], roll(d));
+    const gift = strayBase(d);
     const name = gift ? unlockCombo(d, gift.id) : "";
     text = name ? `You lift a spark instead of a safe. ${name} stays in the book.` : "The jar was empty. You take the petty cash and the humiliation.";
   }
@@ -602,6 +630,7 @@ function runHeist(d: Game, style: "smash" | "quiet" | "fear" | "spark", deltas: 
 
 function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): string {
   if (!special) return "";
+  if (special.kind === "swap" && giftsSealed(d)) return "";
   if (special.kind === "swap") {
     const current = d.powerId;
     let next = rollPower(roll(d), roll(d), null);
@@ -657,6 +686,11 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     if (!foe) return " The rivalry fails to trend. Humiliating, in a quiet way.";
     return ` ${foe.note ?? firstName(foe.name)} is your arch-enemy. The city will print it that way.`;
   }
+  if ((special.kind === "combine" || special.kind === "grant") && giftsSealed(d)) {
+    return d.hiddenGift
+      ? " Something stirs under your skin and goes quiet. Whatever is sealed in you isn't ready to share the room."
+      : " Something offers you a gift. You turn it down. You were always going to do this the human way.";
+  }
   if (special.kind === "combine") {
     return grantSecondGift(d, deltas);
   }
@@ -666,9 +700,10 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
       return " Something sparks in your palm and goes out. Not yet. You are still learning the last one.";
     }
     if (!special.comboId) d.flags.lastGrantAge = d.age;
-    const id = special.comboId ?? randomMissingBase(d.unlockedPowers ?? [], roll(d))?.id ?? null;
+    const id = special.comboId ?? strayBase(d)?.id ?? null;
+    const blocked = id && !(d.unlockedPowers ?? []).includes(id) ? library(d).block : null;
     const name = unlockCombo(d, id);
-    if (!name) return " The spark fizzles. You already hold that page.";
+    if (!name) return blocked ? " The spark settles in your palm, then fades. Your book has no room for it yet." : " The spark fizzles. You already hold that page.";
     const legacy = id ? legacyFromCombo(id) : null;
     if (!d.powerId && legacy) {
       d.powerId = legacy;
@@ -686,7 +721,7 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     } else {
       raiseBond(d, hero, 4);
     }
-    const bases = teachableBases(hero.unlocked, d.unlockedPowers ?? []);
+    const bases = teachFrom(d, hero.unlocked);
     for (const power of bases) discoverPower(d, power.id);
     const page = bases.length ? " What they can teach is in your book now, not on a rumor." : "";
     return ` ${hero.alias} clocks you. ${hero.personality.split(".")[0]}.${page}`;
@@ -857,11 +892,12 @@ function manifestChoices(d: Game): Pending {
 }
 
 function awaken(d: Game, banners: string[], how: "age" | "push") {
+  if (giftsSealed(d)) return;
   const before = abilityNames(d);
   const picked = rollPower(roll(d), roll(d), d.powerBias);
   d.powerId = picked.id;
   d.powerless = false;
-  unlockCombo(d, legacyComboId(picked.id));
+  unlockCombo(d, legacyComboId(picked.id), true);
   const rarity = picked.rarity === "rare" ? 1 : picked.rarity === "uncommon" ? 0.4 : 0;
   let level = 1 + roll(d) * 1.7 + rarity;
   if (d.upbringing === "legacy") level += 0.55;
@@ -878,7 +914,149 @@ function awaken(d: Game, banners: string[], how: "age" | "push") {
   pushHistory(d, `Power manifested: ${picked.name}.`, "major");
 }
 
+/** True while no gift may land: a mystery power still sealed, or a powerless legend's human vow. */
+export function giftsSealed(g: Game): boolean {
+  return !!g.hiddenGift || !!g.flags.humanVow;
+}
+
+/** A legacy power id for a catalog power: its own, or its first parent's. Duels and jobs still read it. */
+function legacyFor(id: string | null | undefined): PowerId | null {
+  if (!id) return null;
+  const own = legacyFromCombo(id);
+  if (own) return own;
+  for (const parent of getPower(id)?.ingredients ?? []) {
+    const found = legacyFor(parent);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** The sealed power wakes: unlock it, play the reveal, and (in a mystery life) ask who finds out. */
+function wakeHidden(d: Game, banners: string[]): boolean {
+  if (!d.hiddenGift) return false;
+  const at = d.flags.manifestAge ?? WAKE_MAX;
+  if (d.age < at) return false;
+  const legend = presetById(d.preset);
+  const ids = legend?.powers.length ? legend.powers : [d.hiddenGift];
+  const head = ids[0] ?? d.hiddenGift;
+  const before = abilityNames(d);
+  d.hiddenGift = null;
+  for (const id of ids) unlockCombo(d, id, true);
+  d.giftId = d.giftId ?? head;
+  d.focusPower = head;
+  d.powerId = legacyFor(head) ?? ids.map(legacyFor).find((id): id is PowerId => !!id) ?? "strength";
+  d.powerless = false;
+  let level = 1.2 + roll(d) * 0.6;
+  if (d.upbringing === "legacy") level += 0.3;
+  if (legend) level += 0.4;
+  let guess: "right" | "wrong" | null = null;
+  if (d.flags.guess !== undefined) {
+    guess = ELEMENT_ORDER[d.flags.guess] === elementOfPower(head) ? "right" : "wrong";
+    if (guess === "right") level += 0.25;
+  }
+  d.stats.powerLevel = clamp(Math.round(Math.max(d.stats.powerLevel, level) * 100) / 100, 1, Math.min(4, powerLevelCap(d.age)));
+  noteGrowth(before, d, banners);
+  addWakeGoal(d);
+  const power = getPower(head);
+  // The wake beat, even if a collapse or a fight pushed the birthday it was due on.
+  const beat = legend ? (legend.beats.find((row) => row.wake && !d.flags[`canon:${row.id}`]) ?? canonAt(legend.id, d.age)) : null;
+  const line = legend ? `${fillCanon(beat?.text ?? "", d)}` : revealLine(head, d.age);
+  d.reveal = { powers: ids, age: d.age, title: legend ? beat?.title ?? "Awakening" : "Your power wakes", line, guess };
+  if (guess === "right") {
+    d.stats.happiness = clamp(d.stats.happiness + 6, 0, 100);
+    banners.push("You called it. Years of squinting at the signs pay off: power +0.25, Joy +6.");
+  } else if (guess === "wrong") {
+    banners.push("Not what you guessed. Nobody ever guesses right the first time.");
+  }
+  pushHistory(d, legend ? `${beat?.title ?? "Awakening"}: ${ids.map((id) => getPower(id)?.name ?? id).join(", ")}.` : `Power awakened at ${d.age}: ${power?.name ?? head}.`, "major");
+  if (legend) return true;
+  const body = `${line}\n\n${power?.name ?? "A power"}. ${power?.description ?? ""}${guess === "right" ? "\n\nYou knew. You've known since the first strange sign." : ""}`;
+  d.card = { kicker: whenLabel(d.age, d.month), banner: banners, body, deltas: [{ stat: "Power", amount: d.stats.powerLevel }] };
+  d.pending = manifestChoices(d);
+  d.phase = "choice";
+  d.minigame = null;
+  d.lastEvent = "manifest";
+  return true;
+}
+
+function fillCanon(text: string, d: Game): string {
+  return text.replaceAll("{city}", d.city).replaceAll("{name}", firstName(d.name));
+}
+
+/** A God Mode legend's turning point for this birthday, if one is due. */
+function openCanon(d: Game, banners: string[]): boolean {
+  const legend = presetById(d.preset);
+  if (!legend) return false;
+  // This birthday's beat, or one a collapse or a fight pushed past its birthday (up to three years late).
+  const beat = canonBetween(legend.id, d.age - 3, d.age).find((row) => !d.flags[`canon:${row.id}`]) ?? null;
+  if (!beat || d.flags[`canon:${beat.id}`]) return false;
+  d.flags[`canon:${beat.id}`] = 1;
+  d.flags.canon = (d.flags.canon ?? 0) + 1;
+  const ending = beat.endings ? beat.endings[dominantPath(d.flags)] : null;
+  if (ending) {
+    d.flags[`ending:${dominantPath(d.flags)}`] = 1;
+    pushHistory(d, ending, "major");
+  }
+  const prompt = fillCanon(ending ? `${beat.text} ${ending}` : beat.text, d);
+  const outcomes: Record<string, Outcome> = {};
+  for (const choice of beat.choices) outcomes[choice.id] = canonOutcome(d, beat, choice);
+  d.pending = { id: `canon|${beat.id}`, prompt, choices: beat.choices.map((choice) => ({ id: choice.id, label: choice.label })), outcomes };
+  d.phase = "choice";
+  d.minigame = null;
+  d.card = { kicker: `${legend.earth} · ${beat.title}`, banner: [...banners, `Canon beat. Follow it, bend it, or break it. ${legend.earth} remembers.`], body: prompt, deltas: [] };
+  d.lastEvent = "canon";
+  return true;
+}
+
+function canonOutcome(d: Game, beat: CanonBeat, choice: CanonBeat["choices"][number]): Outcome {
+  const text = fillCanon(choice.text, d);
+  const villain = choice.fight ? presetVillain(d.preset, choice.fight) : null;
+  if (!villain) return { text, effects: choice.effects };
+  return {
+    text,
+    minigame: makeDuel(d, { name: villain.alias, title: villain.title, side: "villain", powerId: villain.powerId, powerLevel: villain.level, boss: true }, {
+      title: villain.alias,
+      subtitle: `${beat.title}. ${villain.blurb}`,
+      win: `${villain.alias} goes down. ${beat.title} ends the way the stories say it should.`,
+      partial: `You and ${villain.alias} both walk away. This isn't over.`,
+      lose: `${villain.alias} wins this round. The universe takes note.`,
+      tag: "duel",
+      winEffects: { fame: 8, reputation: 6, happiness: 6, powerLevel: 0.2, ...choice.effects },
+      partialEffects: { fame: 3, health: -8 },
+      loseEffects: { health: -16, happiness: -6, fame: 2 },
+    }),
+  };
+}
+
+/** Bookkeeping for a canon choice: path tallies, traits, villains met, and canon losses. */
+function settleCanon(d: Game, beatId: string, choiceId: string): void {
+  const legend = presetById(d.preset);
+  const beat = legend?.beats.find((row) => row.id === beatId);
+  const choice = beat?.choices.find((row) => row.id === choiceId);
+  if (!legend || !beat || !choice) return;
+  const key = choice.path === "canon" ? "canonKept" : choice.path === "bend" ? "canonBent" : "canonBroken";
+  d.flags[key] = (d.flags[key] ?? 0) + 1;
+  if (choice.trait) grantTrait(d, choice.trait);
+  for (const id of choice.grant ?? []) unlockCombo(d, id, true);
+  for (const name of choice.loss ?? []) {
+    const person = d.relationships.find((r) => r.name === name && r.alive);
+    if (person) person.alive = false;
+  }
+  const villain = choice.meet ? presetVillain(legend.id, choice.meet) : null;
+  if (villain) {
+    const person = meetLegendVillain(d, villain);
+    if (person.role === "rival") person.role = "villain";
+    if (choice.arch) markArch(d, person.id);
+  }
+  pushHistory(d, `${beat.title}: ${choice.path === "canon" ? "followed canon" : choice.path === "bend" ? "bent canon" : "broke canon"}.`, "major");
+}
+
 function tryManifest(d: Game, banners: string[]): boolean {
+  if (d.hiddenGift) {
+    const woke = wakeHidden(d, banners);
+    if (woke && d.preset) return openCanon(d, banners) || woke;
+    return woke;
+  }
   if (d.powerId || d.powerless || (d.unlockedPowers?.length ?? 0) > 0) return false;
   if (d.age > 24) {
     d.powerless = true;
@@ -939,7 +1117,7 @@ function monthlyBody(d: Game, banners: string[]) {
 
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "mentored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (key === "rested" || key === "omened" || key === "mentored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
   }
 }
 
@@ -963,6 +1141,9 @@ function openYear(d: Game): string[] {
     if (person.role === "partner" && person.metAt < d.age) person.closeness = clamp(person.closeness - 1, 0, 100);
   }
   const partner = d.relationships.find((r) => r.role === "partner" && r.alive);
+  if (partner && partner.closeness >= 16 && partner.closeness < 24) {
+    banners.push(`${firstName(partner.name)} feels far away lately (closeness ${partner.closeness}). People ▸ Circle ▸ Spend time, before it is a conversation.`);
+  }
   if (partner && partner.closeness < 16) {
     partner.role = "ex";
     d.flags.married = 0;
@@ -1099,12 +1280,26 @@ function openYear(d: Game): string[] {
   return banners;
 }
 
+/** What a hero can teach, legend-fitting powers first (God Mode legends grow in character). */
+function teachFrom(d: Game, heroUnlocked: readonly string[]) {
+  return kinOrder(d.preset, teachableBases(heroUnlocked, d.unlockedPowers ?? []));
+}
+
+/** A stray spark: any missing base, leaning toward the legend's kin in God Mode. */
+function strayBase(d: Game) {
+  if (!d.preset) return randomMissingBase(d.unlockedPowers ?? [], roll(d));
+  const owned = new Set(d.unlockedPowers ?? []);
+  const pool = kinPool(d.preset, basePowers().filter((p) => !owned.has(p.id)), roll(d));
+  return pool.length ? pool[rollInt(d, pool.length)] ?? null : null;
+}
+
 function offerYearPower(d: Game, banners: string[]): boolean {
-  if (d.age < 13) return false;
+  if (d.age < 13 || d.hiddenGift) return false;
   const owned = (d.unlockedPowers ?? []).length;
   const chance = (d.age < 18 ? 0.34 : d.age < 30 ? 0.28 : 0.2) * (owned >= 10 ? 0.5 : 1);
   if (roll(d) >= chance) return false;
-  const offer = offerPower(d.unlockedPowers ?? [], d.age, roll(d));
+  const kinRoll = roll(d);
+  const offer = offerPower(d.unlockedPowers ?? [], d.age, roll(d), (list) => kinPool(d.preset, list, kinRoll));
   if (!offer) return false;
   discoverPower(d, offer.id);
   const rank = offer.tierName.toLowerCase();
@@ -1150,7 +1345,27 @@ function yearEvent(d: Game, banners: string[]) {
   setStory(d, QUIET[rollInt(d, QUIET.length)] ?? QUIET[0]!, [], banners);
 }
 
-export function createGame(opts: NewLifeOpts): Game {
+/** God Mode picks: real catalog ids, max three, at most one Apex (Gen 2). */
+export function godPicks(ids: readonly string[] | undefined): string[] {
+  const out: string[] = [];
+  let apex = 0;
+  for (const id of ids ?? []) {
+    const power = getPower(id);
+    if (!power || out.includes(id) || out.length >= 3) continue;
+    if (power.generation === 2) {
+      if (apex >= 1) continue;
+      apex++;
+    }
+    out.push(id);
+  }
+  return out;
+}
+
+export function createGame(input: NewLifeOpts): Game {
+  const legend = presetById(input.preset);
+  const opts: NewLifeOpts = legend
+    ? { ...input, name: legend.name, cityId: legend.cityId, upbringing: legend.upbringing, face: legend.face, drive: legend.drive, sex: legend.sex, look: legend.look, portrait: legend.portrait, giftId: null, giftIds: [], mode: "god" }
+    : input;
   const city = cityById(opts.cityId);
   const upbringing = upbringingById(opts.upbringing);
   const seed = (opts.seed ?? 1) >>> 0 || 1;
@@ -1224,26 +1439,61 @@ export function createGame(opts: NewLifeOpts): Game {
   if (upbringing.health) d.stats.health = clamp(d.stats.health + upbringing.health, 0, 100);
   if (upbringing.looks) d.stats.looks = clamp(d.stats.looks + upbringing.looks, 0, 100);
   d.stats.fame = clamp(d.stats.fame, 0, 28);
-  if (!opts.heir && roll(d) < 0.07) d.flags.nullGene = 1;
+  if (!opts.heir && !opts.mode && roll(d) < 0.07) d.flags.nullGene = 1;
   if (opts.heir?.trust) d.flags.trust = Math.round(opts.heir.trust);
   const last = d.name.split(" ").slice(1).join(" ") || "Voss";
   const kin = familyPlan(upbringing.id);
   if (kin.count >= 1) addPerson(d, { role: "parent", closeness: upbringing.closeness, age: 29 + rollInt(d, 12), last, sex: "female", note: kin.note });
   if (kin.count === 2) addPerson(d, { role: "parent", closeness: clamp(upbringing.closeness - 8, 12, 100), age: 27 + rollInt(d, 14), last, sex: "male", note: kin.note });
+  if (legend) {
+    const parents = d.relationships.filter((r) => r.role === "parent");
+    legend.family.forEach((member, i) => {
+      const person = parents[i];
+      if (person) {
+        person.name = member.name;
+        person.note = member.note;
+        person.sex = member.sex;
+      } else {
+        addPerson(d, { role: "parent", closeness: 70, age: 28 + rollInt(d, 30), name: member.name, sex: member.sex, note: member.note });
+      }
+    });
+  }
   grantTrait(d, asFace(opts.face));
   grantTrait(d, asDrive(opts.drive));
   biasHeroes(d);
   d.stats.fame = clamp(d.stats.fame, 0, 28);
-  const chosen = opts.giftId && getPower(opts.giftId) ? opts.giftId : null;
+  if (opts.mode) d.mode = opts.mode;
+  for (const id of legend?.extra ?? []) grantTrait(d, id, "mark");
+  for (const id of (opts.extraTraits ?? []).slice(0, 2)) if (traitById(id)?.slot === "earned") grantTrait(d, id);
+  if (legend?.boost) applyEffects(d, legend.boost, []);
+  const picks = godPicks(opts.giftIds);
+  const chosen = opts.giftId && getPower(opts.giftId) ? opts.giftId : picks[0] ?? null;
   d.giftId = chosen;
+  if (legend) {
+    d.preset = legend.id;
+    const wake = wakeAge(legend.id);
+    if (legend.powers.length && wake != null) {
+      d.hiddenGift = legend.powers[0] ?? null;
+      d.flags.manifestAge = wake;
+    } else {
+      d.powerless = true;
+      d.flags.humanVow = 1;
+    }
+  } else if (opts.mode === "mystery" && !chosen) {
+    d.hiddenGift = pickHiddenGift(d.upbringing, d.traits, roll(d), roll(d));
+    d.flags.manifestAge = pickWakeAge(roll(d));
+    d.omenLog = [];
+  } else if (chosen) {
+    for (const id of picks) unlockCombo(d, id, true);
+  }
   if (chosen) {
-    unlockCombo(d, chosen);
+    unlockCombo(d, chosen, true);
     const legacy = legacyFromCombo(chosen);
     if (legacy) d.powerId = legacy;
     d.focusPower = chosen;
     d.powerless = false;
     d.stats.powerLevel = 1.2;
-  } else {
+  } else if (!d.hiddenGift) {
     d.powerless = true;
     d.powerId = null;
     d.focusPower = null;
@@ -1252,7 +1502,13 @@ export function createGame(opts: NewLifeOpts): Game {
   const faceLine = traitById(asFace(opts.face))?.blurb ?? "";
   const driveLine = traitById(asDrive(opts.drive))?.blurb ?? "";
   const gift = chosen ? getPower(chosen) : null;
-  const giftLine = gift
+  const giftLine = legend
+    ? `\n\n${legend.earth}. ${legend.twist} ${legend.powers.length ? `Your powers are canon. They wake at ${wakeAge(legend.id)}.` : "No powers in this universe either. Just preparation."}`
+    : d.hiddenGift
+      ? "\n\nThe nurses find nothing unusual. Your mom swears the lights dimmed when you first cried. Something is sealed inside you, and it will wake on a birthday of its own choosing, somewhere between 7 and 15."
+      : picks.length > 1
+        ? `\n\nGod Mode. You are born with ${picks.map((id) => getPower(id)?.name ?? id).join(", ")}. The book starts full.`
+        : gift
     ? `\n\nYou are born with one gift: ${gift.name}. ${gift.description} The book starts there. A second power has to be taught, offered, or braided.`
     : "\n\nThe tests come back ordinary. No gift. The book stays shut.";
   const prompt = `You are born ${born} in ${city.name}. ${city.flavor}\n\n${upbringing.detail}${kin.line ? ` ${kin.line}` : ""}\n\n${faceLine} ${driveLine}${giftLine}`;
@@ -1271,7 +1527,7 @@ export function createGame(opts: NewLifeOpts): Game {
     },
   };
   d.card = { kicker: whenLabel(0, 0), banner: ["One choice. Then the months start. Three moves each."], body: prompt, deltas: [] };
-  d.history = [{ age: 0, month: 0, text: `Born ${born} in ${city.name}.${gift ? ` Gift: ${gift.name}.` : " No gift."}${kin.line ? ` ${kin.line}` : ""}`, tag: "major" }];
+  d.history = [{ age: 0, month: 0, text: `Born ${born} in ${city.name}.${legend ? ` ${legend.earth}: the ${legend.hero} variant.` : d.hiddenGift ? " Gift: sealed." : gift ? ` Gift: ${gift.name}.` : " No gift."}${kin.line ? ` ${kin.line}` : ""}`, tag: "major" }];
   peaks(d);
   seedRoster(d);
   ensureProgress(d);
@@ -1375,7 +1631,7 @@ function makeDuel(
       playerHp: 26 + Math.round(d.stats.health / 5) + Math.round(d.stats.powerLevel * 2) + (hasTrait(d, "martial") ? 6 : 0) + suit.hp,
       foeHp: 20 + Math.round(pl * 4),
       playerMoves: moves,
-      foeMoves: movesFrom(foe.powerId, pl),
+      foeMoves: signatureMoves(foe.name, pl) ?? movesFrom(foe.powerId, pl),
       personId: foe.personId,
       guard: suit.guard,
       foePower: foe.powerId,
@@ -1487,6 +1743,15 @@ function tickRoster(d: Game): string[] {
 }
 
 function introduceCape(d: Game, side: "hero" | "villain"): Person {
+  if (side === "villain" && d.preset) {
+    const legend = presetById(d.preset)!;
+    const rogue =
+      legendFoe(d) ??
+      d.relationships.find((r) => r.alive && isLegendRogue(d, r)) ??
+      // Nobody has debuted yet: the earliest rogue turns up early rather than a stranger.
+      meetLegendVillain(d, [...legend.villains].sort((a, b) => villainDebut(legend, a.id) - villainDebut(legend, b.id))[0]!);
+    return rogue;
+  }
   const living = d.relationships.filter((r) => r.role === side && r.alive);
   if (living.length >= 4) return living[rollInt(d, living.length)] ?? living[0]!;
   const power = rollPower(roll(d), roll(d), null);
@@ -1516,7 +1781,65 @@ function introduceCape(d: Game, side: "hero" | "villain"): Person {
   return person;
 }
 
+/** A legend's villain as a person in this life (made on first meeting, with a board entry). */
+function meetLegendVillain(d: Game, villain: PresetVillain, role: "villain" | "rival" = "villain"): Person {
+  const known = d.relationships.find((r) => r.note === villain.alias && r.alive);
+  if (known) return known;
+  const person = addPerson(d, {
+    role,
+    closeness: role === "rival" ? 28 : 12,
+    age: Math.max(18, d.age + rollInt(d, 12) - 2),
+    name: villain.name,
+    note: villain.alias,
+    latentPower: villain.powerId,
+    sex: "sex" in villain ? villain.sex : "male",
+  });
+  if (!d.roster.some((cape) => cape.alias === villain.alias)) {
+    d.roster.push({ id: person.id, name: villain.name, alias: villain.alias, side: "villain", powerId: villain.powerId, powerLevel: villain.level, heat: 60 + rollInt(d, 20), note: villain.title, portrait: person.portrait ?? 1, sex: person.sex });
+    trimRoster(d);
+  }
+  return person;
+}
+
+/** The next rogue from this legend's gallery that the city can point you at (debut age passed, not met yet). */
+function nextLegendRogue(d: Game): PresetVillain | null {
+  const legend = presetById(d.preset);
+  if (!legend) return null;
+  return legend.villains.find((v) => villainDebut(legend, v.id) <= d.age && !d.relationships.some((r) => r.note === v.alias)) ?? null;
+}
+
+/** True when this person is one of the current legend's own rogues. */
+function isLegendRogue(d: Game, person: Person | undefined): boolean {
+  const legend = presetById(d.preset);
+  return !!legend && !!person && legend.villains.some((v) => v.alias === person.note);
+}
+
+/**
+ * In a legend life every foe, rival and arch-enemy comes from the hero's own rogues gallery.
+ * Prefers someone not met yet whose debut age has passed; otherwise a living rogue already known.
+ * Returns null when no rogue is available yet (callers skip the beat rather than invent a stranger).
+ */
+function legendFoe(d: Game, role: "villain" | "rival" = "villain", fresh = true): Person | null {
+  const legend = presetById(d.preset);
+  if (!legend) return null;
+  if (fresh) {
+    const unmet = legend.villains.filter((v) => villainDebut(legend, v.id) <= d.age && !d.relationships.some((r) => r.note === v.alias));
+    if (unmet.length) return meetLegendVillain(d, unmet[rollInt(d, unmet.length)]!, role);
+  }
+  const known = d.relationships.filter((r) => r.alive && !r.arch && (r.role === "villain" || r.role === "rival") && isLegendRogue(d, r));
+  return known.length ? known[rollInt(d, known.length)]! : null;
+}
+
 function markArch(d: Game, personId?: string): Person | null {
+  if (d.preset) {
+    const asked = d.relationships.find((r) => r.id === personId && r.alive);
+    const foe = isLegendRogue(d, asked) ? asked! : legendFoe(d, "villain", false) ?? legendFoe(d, "villain", true);
+    if (!foe) return null;
+    for (const person of d.relationships) person.arch = false;
+    foe.arch = true;
+    foe.closeness = clamp(foe.closeness + 8, 0, 100);
+    return foe;
+  }
   let foe =
     d.relationships.find((r) => r.id === personId && r.alive) ??
     d.relationships.find((r) => r.role === "villain" && r.alive && !r.arch) ??
@@ -1534,13 +1857,24 @@ function discoverPower(d: Game, id: string | null | undefined) {
   if (!d.discovered.includes(id)) d.discovered.push(id);
 }
 
-function unlockCombo(d: Game, id: string | null | undefined): string {
+/**
+ * Add a power to the braid book. `force` is for story powers (the reveal, canon grants, God Mode picks,
+ * the starting gift) which never count against the book's room. Everything else is capped by `library()`.
+ */
+function unlockCombo(d: Game, id: string | null | undefined, force = false): string {
   if (!id) return "";
+  // A sealed power blocks every other gift until it wakes: the reveal is the first power, always.
+  // A powerless legend (Batman) keeps the human vow for life.
+  if (giftsSealed(d)) return "";
   const power = getPower(id);
   if (!power) return "";
   discoverPower(d, id);
   if (!Array.isArray(d.unlockedPowers)) d.unlockedPowers = [];
   if (d.unlockedPowers.includes(id)) return "";
+  if (!force) {
+    if (library(d).block) return "";
+    notePage(d);
+  }
   d.unlockedPowers.push(id);
   if (!d.mastery) d.mastery = {};
   if (d.mastery[id] == null) d.mastery[id] = 0;
@@ -1568,7 +1902,7 @@ function ensureProgress(game: Game) {
   if (game.giftId === undefined) game.giftId = legacyComboId(game.powerId) ?? game.unlockedPowers?.[0] ?? null;
   for (const hero of game.heroes ?? []) {
     if (!hero.met) continue;
-    for (const power of teachableBases(hero.unlocked, game.unlockedPowers ?? [])) discoverPower(game, power.id);
+    for (const power of teachFrom(game, hero.unlocked)) discoverPower(game, power.id);
   }
   for (const id of game.unlockedPowers ?? []) {
     if (game.mastery[id] == null) game.mastery[id] = 0;
@@ -1652,7 +1986,7 @@ function grantSecondGift(d: Game, deltas: Delta[]): string {
     const picked = rollPower(roll(d), roll(d), d.powerBias);
     d.powerId = picked.id;
     d.powerless = false;
-    unlockCombo(d, legacyComboId(picked.id));
+    unlockCombo(d, legacyComboId(picked.id), true);
     const before = d.stats.powerLevel;
     d.stats.powerLevel = clamp(Math.max(before, 1.3), 0, powerLevelCap(d.age));
     deltas.push({ stat: "Power", amount: Math.round((d.stats.powerLevel - before) * 100) / 100 });
@@ -1661,7 +1995,7 @@ function grantSecondGift(d: Game, deltas: Delta[]): string {
   let next = rollPower(roll(d), roll(d), null);
   for (let i = 0; i < 6 && (next.id === d.powerId || next.id === d.secondaryId); i++) next = rollPower(roll(d), roll(d), null);
   d.secondaryId = next.id;
-  unlockCombo(d, legacyComboId(next.id));
+  unlockCombo(d, legacyComboId(next.id), true);
   const before = d.stats.powerLevel;
   d.stats.powerLevel = clamp(Math.round((before + 0.35) * 100) / 100, 0, powerLevelCap(d.age));
   deltas.push({ stat: "Power", amount: Math.round((d.stats.powerLevel - before) * 100) / 100 });
@@ -1754,7 +2088,9 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
       return true;
     }
     const known = d.relationships.filter((r) => r.role === "villain" && r.alive && !r.arch);
-    const person = known.length && (known.length >= 3 || roll(d) < 0.72) ? known[rollInt(d, known.length)]! : introduceCape(d, "villain");
+    const pool = d.preset ? known.filter((r) => isLegendRogue(d, r)) : known;
+    const person = pool.length && (pool.length >= 3 || roll(d) < 0.72) ? pool[rollInt(d, pool.length)]! : d.preset ? legendFoe(d) : introduceCape(d, "villain");
+    if (!person) return false;
     const foe = personFoe(d, person);
     showChoice(
       d,
@@ -1793,7 +2129,8 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
     );
     return true;
   }
-  if (d.powerId && d.age >= 12 && roll(d) < (forced ? 0.28 : d.secondaryId ? 0.06 : 0.14)) {
+  // Legends get their gifts from canon, not from a stranger guarding a humming door.
+  if (d.powerId && !d.preset && d.age >= 12 && roll(d) < (forced ? 0.28 : d.secondaryId ? 0.06 : 0.14)) {
     const site = RELIC_SITES[rollInt(d, RELIC_SITES.length)] ?? RELIC_SITES[0]!;
     const guard = makeCape(d, "rogue");
     showChoice(
@@ -1902,6 +2239,11 @@ export function ageUp(game: Game): Game {
     peaks(d);
     return d;
   }
+  if (birthday && openCanon(d, banners)) {
+    peaks(d);
+    return d;
+  }
+  if (birthday && d.hiddenGift && !d.preset && d.age >= 3) banners.push(`Strange: ${noteOmen(d)}`);
   if (maybeEncounter(d, banners)) {
     peaks(d);
     return d;
@@ -1933,7 +2275,10 @@ export function ageUp(game: Game): Game {
 function resolveOutcome(d: Game, outcome: Outcome) {
   if (outcome.flags) {
     for (const [key, value] of Object.entries(outcome.flags)) {
-      if (key === "missionCredit") d.missions += value;
+      if (key === "missionCredit") {
+        d.missions += value;
+        d.flags.missionsAll = (d.flags.missionsAll ?? 0) + value;
+      }
       else if (key === "dropSchool") d.schoolId = null;
       else if (key === "quitJob") {
         d.jobId = null;
@@ -1974,9 +2319,51 @@ export function choose(game: Game, choiceId: string): Game {
   const outcome = game.pending.outcomes[choiceId];
   if (!outcome) return game;
   const d = structuredClone(game);
+  const pendingId = game.pending.id;
   d.pending = null;
+  if (pendingId.startsWith("canon|")) settleCanon(d, pendingId.slice(6), choiceId);
   resolveOutcome(d, outcome);
   return d;
+}
+
+/** The reveal overlay has played. */
+/**
+ * Close the reveal. `firstMove` is the 0..1 score from the First Move mini right after it:
+ * a one-time drill bonus for the head power (6 to 20 raw exp), a banner, and a flag so it never repeats.
+ */
+export function dismissReveal(game: Game, firstMove?: number): Game {
+  if (!game.reveal) return game;
+  if (firstMove === undefined || !Number.isFinite(firstMove) || game.flags.firstMove !== undefined) return { ...game, reveal: null };
+  const d = structuredClone(game);
+  const score = Math.max(0, Math.min(1, firstMove));
+  const head = d.reveal?.powers[0] ?? null;
+  d.reveal = null;
+  d.flags.firstMove = Math.round(score * 100);
+  const gain = head ? grantMastery(d, head, Math.round(6 + score * 14)) : "";
+  const lead = score >= 0.8 ? "Your first move lands clean." : score >= 0.4 ? "Your first move half works, which is how all of them start." : "Your first move mostly hits the ceiling.";
+  d.card = { ...d.card, banner: [`${lead}${gain}`] };
+  return d;
+}
+
+/** Months until the strange feeling can be chased again (signs come faster as the wake nears). */
+export function omenWait(g: Game): number {
+  if (g.flags.omenAt == null) return 0;
+  const gap = omenCooldown(omenStage(g.age, g.flags.manifestAge));
+  return Math.max(0, g.flags.omenAt + gap - (g.age * 12 + g.month));
+}
+
+/** Record one omen line for a sealed power and return it. */
+function noteOmen(d: Game): string {
+  const log = Array.isArray(d.omenLog) ? d.omenLog : [];
+  const stage = omenStage(d.age, d.flags.manifestAge);
+  let line = omenFor(d.hiddenGift, d.upbringing, log.length, roll(d), stage, d.traits);
+  // Skip a sign seen in the last few entries (the base line, framed or not), up to a few tries.
+  const recent = log.slice(-4);
+  for (let tries = 0; tries < 6 && recent.some((seen) => seen.startsWith(line.split(". ")[0]!)); tries++) {
+    line = omenFor(d.hiddenGift, d.upbringing, log.length + tries + 1, roll(d), stage, d.traits);
+  }
+  d.omenLog = [...log, line].slice(-8);
+  return line;
 }
 
 export function resolveMini(game: Game, ratio: number, used: readonly string[] = []): Game {
@@ -2014,7 +2401,10 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
     if (trained.length) extra += ` ${trained.join(". ")}.`;
   }
   if (spec.tag === "tryout" && score >= 0.33) extra += joinLeague(d);
-  if (spec.tag === "mission" && score >= 0.33) d.missions += 1;
+  if (spec.tag === "mission" && score >= 0.33) {
+    d.missions += 1;
+    d.flags.missionsAll = (d.flags.missionsAll ?? 0) + 1;
+  }
   const banners: string[] = [];
   noteGrowth(before, d, banners);
   const kit = edge.bonus > 0 ? ` Kit edge +${Math.round(edge.bonus * 100)}%.${edge.notes.length ? ` ${edge.notes.join(" ")}` : ""}` : "";
@@ -2115,8 +2505,8 @@ function openSpendChoice(d: Game, pending: Pending) {
   showChoice(d, pending, []);
 }
 
-function powerOffer(hero: AiHero, unlocked: readonly string[], discovered: readonly string[]): string {
-  const missing = teachableBases(hero.unlocked, unlocked)[0];
+function powerOffer(d: Game, hero: AiHero, discovered: readonly string[]): string {
+  const missing = teachFrom(d, hero.unlocked)[0];
   if (missing) return discovered.includes(missing.id) ? missing.name : "an unshown power";
   const braid = hero.unlocked.map((id) => getPower(id)).find((power) => power && power.generation > 0 && discovered.includes(power.id));
   return braid?.name ?? "a trick you have not been shown";
@@ -2223,6 +2613,28 @@ export function act(game: Game, id: string): Game {
   }
   const power = powerById(d.powerId);
 
+  if (id === "omen") {
+    if (!d.hiddenGift || d.preset || d.age < 4 || d.flags.omened || omenWait(d) > 0) return game;
+    d.flags.omened = 1;
+    d.flags.omenAt = d.age * 12 + d.month;
+    d.flags.omens = (d.flags.omens ?? 0) + 1;
+    const line = noteOmen(d);
+    const deltas: Delta[] = [];
+    applyEffects(d, { happiness: 2, smarts: 1 }, deltas);
+    const nudge = d.flags.omens === 2 ? ["Two signs. You could call it now: Powers ▸ Call it."] : [];
+    setStory(d, line, deltas, nudge);
+    peaks(d);
+    return d;
+  }
+
+  if (id.startsWith("guess|")) {
+    const index = Number(id.slice(6));
+    if (!d.hiddenGift || d.flags.guess !== undefined || (d.flags.omens ?? 0) < 2 || !ELEMENT_ORDER[index]) return game;
+    d.flags.guess = index;
+    setStory(d, `You decide it's ${ELEMENTS[ELEMENT_ORDER[index]!].label.toLowerCase()}. You don't tell anyone. You just start watching for it.`, [], []);
+    return d;
+  }
+
   if (id === "rest") {
     if (d.age < 1 || d.flags.rested) return game;
     d.flags.rested = 1;
@@ -2244,8 +2656,40 @@ export function act(game: Game, id: string): Game {
         { id: "bout", label: "Underground bout" },
       ],
       outcomes: {
-        lift: { text: "You sweat on purpose. Your body files a thank-you and a complaint.", effects: { health: 4, happiness: 1 } },
-        run: { text: "You run until the block knows your pace. A couple of phones come up.", effects: { health: 2, fame: 1, happiness: 2 } },
+        // Lift and run are short skill rounds now: a clean set pays a little more than the old flat
+        // reward, a sloppy one a little less, so the gym is still a grind but a played one.
+        lift: {
+          text: "You sweat on purpose. Your body files a thank-you and a complaint.",
+          minigame: {
+            kind: "hold",
+            verb: "lift",
+            title: "Lift until it counts",
+            subtitle: "Keep the bar steady. Form is the whole workout.",
+            difficulty: d.age < 14 ? 1 : 2,
+            winText: "Perfect form, every rep. Your body files a thank-you note.",
+            partialText: "Good reps, a few ugly ones. Progress counts.",
+            loseText: "The bar wins this round. You rack it and your ego.",
+            winEffects: { health: 5, happiness: 2 },
+            partialEffects: { health: 3, happiness: 1 },
+            loseEffects: { health: 1, happiness: -1 },
+          },
+        },
+        run: {
+          text: "You lace up and pick a route. The city does not move for you.",
+          minigame: {
+            kind: "chase",
+            verb: "run",
+            title: "Run the city",
+            subtitle: "Your route, rush hour, and nobody moving for you.",
+            difficulty: d.age < 14 ? 1 : 2,
+            winText: "You run the route clean. A couple of phones come up.",
+            partialText: "A couple of near misses. A good run with a few apologies.",
+            loseText: "You clip a cart and a pride. You walk the last mile.",
+            winEffects: { health: 3, fame: 1, happiness: 3 },
+            partialEffects: { health: 2, happiness: 1 },
+            loseEffects: { health: 1, happiness: -1 },
+          },
+        },
         bout: {
           text: "No posters. A circle of people who paid to see someone else lose.",
           minigame: {
@@ -2385,6 +2829,7 @@ export function act(game: Game, id: string): Game {
     }
     d.stats.health = clamp(d.stats.health - cost.health, 0, 100);
     d.stats.money -= cost.money;
+    d.flags.drills = (d.flags.drills ?? 0) + 1;
     const exp = trainExp({ level, generation: trained.generation, age: d.age, withHero: false, story: false, bond: 0 });
     openMini(
       d,
@@ -2462,7 +2907,7 @@ export function act(game: Game, id: string): Game {
   }
 
   if (id === "spark") {
-    if (d.powerId || d.powerless || d.age < 16 || d.age > 24 || noTime(d, true)) return game;
+    if (d.powerId || d.powerless || d.hiddenGift || d.age < 16 || d.age > 24 || noTime(d, true)) return game;
     spend(d);
     if (roll(d) < 0.2) {
       awaken(d, ["You refuse to let the year be ordinary."], "push");
@@ -2884,6 +3329,7 @@ export function act(game: Game, id: string): Game {
     if (!left || !right || noTime(d, true)) return game;
     const attempt = mix(left, right, d.unlockedPowers ?? []);
     if (!attempt.ok) return game;
+    if (!(d.unlockedPowers ?? []).includes(attempt.power.id) && library(d).block) return game;
     spend(d);
     const name = unlockCombo(d, attempt.power.id);
     const deltas: Delta[] = [];
@@ -2916,11 +3362,12 @@ export function act(game: Game, id: string): Game {
       .sort((a, b) => {
         const local = Number(home.has(b.id)) - Number(home.has(a.id));
         if (local) return local;
-        return teachableBases(b.unlocked, unlocked).length - teachableBases(a.unlocked, unlocked).length;
+        const fits = (list: { id: string }[]) => list.filter((p) => legendFits(d.preset, p.id)).length;
+        return fits(teachableBases(b.unlocked, unlocked)) - fits(teachableBases(a.unlocked, unlocked));
       })
       .slice(0, 4);
     if (!unmet.length) return game;
-    const choices = unmet.map((hero) => ({ id: hero.id, label: `${hero.alias} · ${powerOffer(hero, unlocked, d.discovered ?? [])}` }));
+    const choices = unmet.map((hero) => ({ id: hero.id, label: `${hero.alias} · ${powerOffer(d, hero, d.discovered ?? [])}` }));
     const outcomes: Record<string, Outcome> = {};
     for (const hero of unmet) {
       outcomes[hero.id] = {
@@ -3203,9 +3650,10 @@ export function act(game: Game, id: string): Game {
   if (id.startsWith("heromission|")) {
     const hero = d.heroes.find((item) => item.id === id.slice(12) && item.met);
     if (!hero || hero.relationship < 22 || noTime(d, true)) return game;
-    const bases = teachableBases(hero.unlocked, d.unlockedPowers ?? []);
+    const bases = teachFrom(d, hero.unlocked);
     const signature = bases[0];
-    const offbookTeach = roll(d) < 0.55 ? bases[rollInt(d, Math.max(1, bases.length))]?.id : undefined;
+    const offPool = kinPool(d.preset, bases, roll(d));
+    const offbookTeach = roll(d) < 0.55 ? offPool[rollInt(d, Math.max(1, offPool.length))]?.id : undefined;
     const choices = [
       { id: "rescue", label: "Run a rescue" },
       { id: "bust", label: "Bust a ring" },
@@ -3246,7 +3694,7 @@ export function act(game: Game, id: string): Game {
     if (!hero || hero.relationship < 36 || noTime(d, true)) return game;
     const options = possibleMixes(d.unlockedPowers ?? []).filter((item) => hero.unlocked.includes(item.left.id) || hero.unlocked.includes(item.right.id));
     const taught = options[0];
-    const bases = teachableBases(hero.unlocked, d.unlockedPowers ?? []);
+    const bases = teachFrom(d, hero.unlocked);
     const base = bases[0];
     const focus = focusId(d);
     const focusGen = getPower(focus)?.generation ?? 0;
@@ -3308,8 +3756,9 @@ export function act(game: Game, id: string): Game {
     const [, heroId, powerId] = id.split("|");
     const hero = d.heroes.find((item) => item.id === heroId && item.met);
     const power = getPower(powerId);
-    if (!hero || !power || power.generation !== 0 || hero.relationship < 28 || noTime(d, true)) return game;
+    if (!hero || !power || power.generation !== 0 || hero.relationship < 28 || d.hiddenGift || noTime(d, true)) return game;
     if (!hero.unlocked.includes(power.id) || (d.unlockedPowers ?? []).includes(power.id)) return game;
+    if (library(d).block) return game;
     spend(d);
     const name = unlockCombo(d, power.id);
     raiseBond(d, hero, 5);
@@ -3543,6 +3992,16 @@ export function act(game: Game, id: string): Game {
     return d;
   }
 
+  if (id === "city-trouble" && d.preset) {
+    const rogue = nextLegendRogue(d);
+    if (d.age < 12 || noTime(d, true) || !rogue) return game;
+    spend(d);
+    meetLegendVillain(d, rogue);
+    setStory(d, `${rogue.alias}. ${rogue.blurb} Now they know your face, too.`, [], [], "major");
+    peaks(d);
+    return d;
+  }
+
   if (id === "city-trouble") {
     const villain = nextLocalVillain(d);
     if (d.age < 12 || noTime(d, true) || !villain) return game;
@@ -3645,9 +4104,10 @@ export function actionsFor(g: Game): ActionItem[] {
   if (g.age >= 6) {
     const city = dossier(g.cityId);
     items.push(item({ id: "city-walk", group: life, section: g.city, label: `Walk ${g.city}`, detail: city.scenes[0], disabled: noTime(g, true) ?? (g.flags.walked ? "Already walked this month." : undefined) }));
-    const villain = g.age >= 12 ? nextLocalVillain(g) : null;
+    const rogue = g.preset && g.age >= 12 ? nextLegendRogue(g) : null;
+    const villain = g.age >= 12 ? (g.preset ? (rogue?.alias ?? null) : nextLocalVillain(g)) : null;
     if (g.age >= 12) {
-      items.push(item({ id: "city-trouble", group: life, section: g.city, label: villain ? `Find ${villain}` : "Local names", detail: villain ? `${city.trouble} A villain this city keeps.` : "You already know the names on this block.", disabled: noTime(g, true) ?? (villain ? undefined : "Nobody new."), accent: !!villain }));
+      items.push(item({ id: "city-trouble", group: life, section: g.city, label: villain ? `Find ${villain}` : "Local names", detail: rogue ? rogue.title + "." : villain ? `${city.trouble} A villain this city keeps.` : "You already know the names on this block.", disabled: noTime(g, true) ?? (villain ? undefined : "Nobody new."), accent: !!villain }));
     }
     if (g.age >= 8) {
       const cost = travelCost(g);
@@ -3662,6 +4122,11 @@ export function actionsFor(g: Game): ActionItem[] {
   if (g.age >= 1) {
     items.push(item({ id: "rest", group: life, section: "This month", label: "Rest", detail: "Health and a little peace. Once a month.", disabled: g.flags.rested ? "You already rested." : undefined }));
     if (g.age >= 45) items.push(item({ id: "mentor", group: life, section: "This month", label: "Mentor a rookie", detail: "Legacy and a little joy. Once a month.", disabled: g.flags.mentored ? "One rookie a month is plenty." : noTime(g, true), accent: g.age >= 60 && !g.flags.mentored }));
+  }
+  if (g.hiddenGift && !g.preset && g.age >= 4) {
+    const wait = omenWait(g);
+    const stage = OMEN_STAGES[omenStage(g.age, g.flags.manifestAge)];
+    items.push(item({ id: "omen", group: life, section: "This month", label: "Chase the strange feeling", detail: `Something about you is not ordinary. Follow it. The feeling: ${stage.toLowerCase()}.`, disabled: g.flags.omened ? "Already chased it this month." : wait > 0 ? `The feeling has gone quiet. Back in ${wait} month${wait === 1 ? "" : "s"}.` : undefined, accent: !g.flags.omened && wait <= 0 }));
   }
   if (g.age >= 8) items.push(item({ id: "gym", group: life, section: "This month", label: "Hit the gym", detail: "Lift, run, or an underground bout.", disabled: noTime(g, true) }));
   if (g.age >= 6) items.push(item({ id: "books", group: life, section: "This month", label: "Hit the books", detail: "Library, stolen notes, or the cape columns.", disabled: noTime(g, true) }));
@@ -3688,6 +4153,7 @@ export function actionsFor(g: Game): ActionItem[] {
         if (!hero) blocked = "Meet them first. Power tab, look for a sparring partner.";
         else if (hero.relationship < (step.minBond ?? 18)) blocked = `Bond ${step.minBond ?? 18} with ${hero.alias}. Talk is free.`;
       }
+      if (step.kind === "train" && !heldDrill(g, step)) blocked = `Needs ${stepPowers(step).map((powerId) => getPower(powerId)?.name ?? powerId).join(" or ")}. Learn it, or set the case down.`;
       items.push(item({ id: "arc-step", group: life, section: "Cases", label: step.title, detail: `${current.arc.villain} · ${step.kind}. ${step.brief}`, disabled: noTime(g, true) ?? blocked, accent: true }));
       items.push(item({ id: "arc-drop", group: life, section: "Cases", label: "Set the case down", detail: `${current.arc.title} stays on the page. You can pick it up later.`, disabled: noTime(g, true) }));
     } else {
@@ -3710,10 +4176,25 @@ export function actionsFor(g: Game): ActionItem[] {
     items.push(item({ id: "disband", group: life, section: g.crew.name, label: "Disband the crew", detail: "Burn the ledger, sell the name, or keep them.", disabled: noTime(g, true) }));
   }
 
-  if (!onFile(g) && g.age >= 7 && g.age <= 15 && !g.powerless) {
+  if (g.hiddenGift) {
+    const omens = g.flags.omens ?? 0;
+    const sign = g.omenLog?.[g.omenLog.length - 1];
+    items.push(item({ id: "sealed", group: power, section: "Your gift", label: "Sealed power", detail: g.preset ? `Canon says it wakes at ${g.flags.manifestAge ?? "?"}. Until then you are just ${firstName(g.name)}.` : `${omens ? `${omens} strange sign${omens === 1 ? "" : "s"} so far.${sign ? ` Latest: ${sign}` : ""}` : "Nothing yet. Chase the strange feeling in Life ▸ Today."} It wakes on a birthday between ${WAKE_MIN} and ${WAKE_MAX}.`, disabled: "It wakes when it's ready." }));
+    if (g.preset) {
+      // Legends know their canon: no guessing game.
+    } else if (g.flags.guess === undefined && omens >= 2) {
+      for (const element of callItOptions(g)) {
+        items.push(item({ id: `guess|${ELEMENT_ORDER.indexOf(element)}`, group: power, section: "Call it", label: `Call it: ${ELEMENTS[element].label}`, detail: "Bet on what the signs mean. Right at the reveal: power +0.25 and Joy." }));
+      }
+    } else if (g.flags.guess !== undefined) {
+      const called = ELEMENT_ORDER[g.flags.guess];
+      items.push(item({ id: "guessed", group: power, section: "Call it", label: `You called ${called ? ELEMENTS[called].label : "it"}`, detail: "The reveal will tell.", disabled: "Locked in." }));
+    }
+  }
+  if (!onFile(g) && !g.hiddenGift && g.age >= 7 && g.age <= 15 && !g.powerless) {
     items.push(item({ id: "waiting", group: power, section: "Your gift", label: "Wait for a spark", detail: "It shows up when it shows up.", disabled: "Keep aging." }));
   }
-  if (!onFile(g) && g.age >= 16 && g.age <= 24 && !g.powerless) {
+  if (!onFile(g) && !g.hiddenGift && g.age >= 16 && g.age <= 24 && !g.powerless) {
     items.push(item({ id: "spark", group: power, section: "Your gift", label: "Push for a spark", detail: "Late bloomers sometimes aren't kidding.", disabled: noTime(g, true) }));
   }
   if (g.powerless) {

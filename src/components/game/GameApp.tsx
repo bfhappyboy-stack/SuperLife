@@ -1,7 +1,9 @@
 import { Banknote, ChevronRight, Heart, FastForward, Home, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChapterOverlay, ChapterStrip } from "@/components/game/Chapters";
+import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
+import { actMatches, type GoalRoute } from "@/game/chapters";
 import { CreateScreen } from "@/components/game/CreateScreen";
+import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
@@ -49,6 +51,8 @@ export function GameApp() {
         className="phone-shell relative flex h-full min-h-0 w-full flex-col overflow-hidden"
       >
         {screen === "title" && <TitleScreen />}
+        {screen === "mode" && <ModeSelect />}
+        {screen === "god" && <GodScreen />}
         {screen === "create" && <CreateScreen />}
         {screen === "play" && <PlayScreen />}
       </div>
@@ -120,7 +124,12 @@ function PlayScreen() {
   const game = useGame((s) => s.game);
   if (!game) return null;
   if (game.phase === "dead" && game.death) return <Obituary game={game} />;
-  return <Life game={game} />;
+  return (
+    <>
+      <Life game={game} />
+      {game.reveal && <RevealOverlay game={game} />}
+    </>
+  );
 }
 
 function Life({ game }: { game: Game }) {
@@ -149,7 +158,12 @@ function Life({ game }: { game: Game }) {
   const onDesk = placed.filter((row) => row.desk === desk);
   const shelves = SHELF_ORDER[desk].filter((name) => (ALWAYS_SHELF[desk] ?? []).includes(name) || onDesk.some((row) => row.shelf === name));
   const activeShelf = shelves.includes(shelf ?? "") ? (shelf ?? "") : (shelves[0] ?? "");
-  const visible = onDesk.filter((row) => row.shelf === activeShelf).map((row) => row.action);
+  // Before the reveal, the Sealed Gift panel (PowerLab) owns the sealed card and the "Call it" bet.
+  const sealedPanel = desk === "gift" && activeShelf === "Book" && !!game.hiddenGift;
+  const visible = onDesk
+    .filter((row) => row.shelf === activeShelf)
+    .map((row) => row.action)
+    .filter((action) => !sealedPanel || !(action.id === "sealed" || action.id === "guessed" || action.id.startsWith("guess|")));
   const sections = useMemo(() => group(visible), [visible]);
   const elsewhere = game.majorsLeft > 0 ? DESKS.filter((item) => item.id !== desk && placed.some((row) => row.desk === item.id && !row.action.disabled)) : [];
   const team = teamById(game.teamId);
@@ -170,6 +184,31 @@ function Life({ game }: { game: Game }) {
   const phase = game.chapters?.[game.chapters.length - 1]?.phase ?? null;
   const family = capeTheme(game).cape;
   const showTabs = !choosing && game.phase !== "mini";
+  // Chapter goals: Go jumps to the tab and shelf, then the matching button pulses.
+  const [pulse, setPulse] = useState<string[] | null>(null);
+  const goTo = (route: GoalRoute) => {
+    const id = DESKS.find((item) => item.label === route.tab)?.id ?? "life";
+    setDesk(id);
+    setShelf(route.shelf);
+    setPulse(route.acts);
+    setAck(`Go to ${route.tab}, ${route.shelf} — pressed.`);
+  };
+  useEffect(() => {
+    if (!pulse) return;
+    const find = window.setTimeout(() => {
+      const nodes = [...(scroller.current?.querySelectorAll<HTMLElement>("[data-act]") ?? [])];
+      const hit = nodes.find((node) => actMatches(node.dataset.act ?? "", pulse));
+      if (!hit) return;
+      hit.scrollIntoView({ block: "center", behavior: "smooth" });
+      hit.classList.add("goal-pulse");
+      window.setTimeout(() => hit.classList.remove("goal-pulse"), 2400);
+    }, 160);
+    const clear = window.setTimeout(() => setPulse(null), 600);
+    return () => {
+      window.clearTimeout(find);
+      window.clearTimeout(clear);
+    };
+  }, [pulse, desk, activeShelf]);
   const pickDesk = (id: Desk) => {
     setDesk(id);
     setShelf(null);
@@ -290,6 +329,7 @@ function Life({ game }: { game: Game }) {
               )}
             </article>
             {!choosing && desk === "life" && <ChapterStrip game={game} />}
+            {!choosing && desk === "life" && <NextGoal game={game} onGo={goTo} />}
             {!choosing && <p className="desk-accent t-label mt-4">{DESK_LINE[desk]}</p>}
             {!choosing && desk === "work" && activeShelf !== "Market" && (
               <p className="mt-2 text-sm text-muted">
@@ -469,7 +509,7 @@ function Life({ game }: { game: Game }) {
 
       {closet && <Closet game={game} onAct={act} onClose={() => setCloset(false)} />}
       {chat && <HeroChat game={game} heroId={chat} onClose={() => setChat(null)} onAct={act} />}
-      <ChapterOverlay game={game} />
+      <ChapterOverlay game={game} onGo={goTo} />
       {sheet && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm" role="dialog" aria-modal="true" onClick={(event) => event.target === event.currentTarget && setSheet(null)}>
           <div className="card-glass anim-rise max-h-[78%] w-full max-w-[28rem] overflow-y-auto px-4 py-4">
@@ -745,7 +785,7 @@ function ActionRow({ action, file, onPress }: { action: ActionItem; file?: boole
   const Icon = actionIcon(action.id, action.section);
   if (paper) {
     return (
-      <button type="button" onClick={onPress} className="card-paper relative min-h-14 overflow-hidden px-4 py-3 pl-5 text-left">
+      <button type="button" onClick={onPress} data-act={action.id} className="card-paper relative min-h-14 overflow-hidden px-4 py-3 pl-5 text-left">
         <span className="absolute inset-y-0 left-0 w-1.5 bg-cape" />
         <span className="t-label opacity-60">Case file</span>
         <span className="block font-extrabold">{action.label}</span>
@@ -758,6 +798,7 @@ function ActionRow({ action, file, onPress }: { action: ActionItem; file?: boole
       type="button"
       disabled={!!action.disabled}
       onClick={onPress}
+      data-act={action.id}
       className={`card group flex min-h-14 items-center gap-3 px-3 py-2.5 text-left disabled:opacity-50 ${action.accent && !action.disabled ? "!border-gold/70 shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-gold)_30%,transparent),0_8px_24px_-12px_var(--color-gold)]" : ""}`}
     >
       <IconTile color={action.disabled ? "#4b5366" : GROUP_COLOR[action.group]} size="size-10">

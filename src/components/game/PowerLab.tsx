@@ -12,6 +12,8 @@ import { masteryCap, masteryLevel, nextMasteryExp, powerRank } from "@/game/mast
 import { knownMoves, moveLevel, MOVESET_SIZE, STREET_MOVES } from "@/game/moves";
 import { dossier, homeArc, talkBrief } from "@/game/origin";
 import { hasGift } from "@/game/theme";
+import { library, type LibraryState } from "@/game/library";
+import { SealedGift } from "@/components/game/SealedGift";
 import { useGame } from "@/game/store";
 import type { AiHero, Game } from "@/game/types";
 
@@ -79,6 +81,11 @@ export function PowerLab({
       setNotice(result.reason);
       return;
     }
+    const room = library(game);
+    if (room.block && !unlocked.includes(result.power.id)) {
+      setNotice(room.block);
+      return;
+    }
     if (!moves) {
       setNotice("No moves left this month.");
       return;
@@ -92,7 +99,7 @@ export function PowerLab({
   if (!gift && pane === "book") {
     return (
       <div className="flex flex-col gap-4">
-        <Dormant game={game} />
+        {game.hiddenGift ? <SealedGift game={game} onAct={onAct} /> : <Dormant game={game} />}
       </div>
     );
   }
@@ -125,6 +132,8 @@ export function PowerLab({
                 : "Pick two different powers. Tap one again to take it back out."
             }
             moves={moves}
+            room={library(game)}
+            blocked={!!(preview?.ok && library(game).block && !unlocked.includes(preview.power.id))}
             onPick={pick}
             onMix={() => left && right && attempt(left, right)}
           />
@@ -212,6 +221,7 @@ function TrainerCircle({
                     onNote(`Talking to ${hero.alias}.`);
                     onChat(hero.id);
                   }}
+                  data-act="herotalk"
                   className="btn btn-gold !min-h-11 text-sm"
                 >
                   Talk
@@ -250,6 +260,7 @@ function TrainerCircle({
                     onNote(`Training with ${hero.alias} — sent.`);
                     onAct(`herotrain|${hero.id}`);
                   }}
+                  data-act={`herotrain|${hero.id}`}
                   className={`btn btn-ghost !min-h-11 text-sm ${moves && hero.relationship >= 36 ? "" : "opacity-60"}`}
                 >
                   Train
@@ -258,7 +269,8 @@ function TrainerCircle({
               {offers.length > 0 && (
                 <div className="mt-2 flex flex-col gap-2">
                   {offers.map((power) => {
-                    const ready = moves && hero.relationship >= 28;
+                    const block = library(game).block;
+                    const ready = moves && hero.relationship >= 28 && !block;
                     return (
                       <button
                         key={power.id}
@@ -269,6 +281,10 @@ function TrainerCircle({
                             onNote("No moves left this month.");
                             return;
                           }
+                          if (block) {
+                            onNote(block);
+                            return;
+                          }
                           if (hero.relationship < 28) {
                             onNote(`Bond ${hero.relationship}. ${power.name} wants 28.`);
                             return;
@@ -276,10 +292,11 @@ function TrainerCircle({
                           onNote(`Asked ${hero.alias} to teach ${power.name}.`);
                           onAct(`learn|${hero.id}|${power.id}`);
                         }}
+                        data-act={`learn|${hero.id}|${power.id}`}
                         className={`card min-h-11 px-3 py-2 text-left text-sm ${ready ? "!border-gold text-fg" : "text-muted"}`}
                       >
                         <span className="font-semibold">Learn {power.name}</span>
-                        <span className="block text-muted">{hero.relationship < 28 ? "Bond 28 to take the lesson." : "A base power. It can braid with what you hold."}</span>
+                        <span className="block text-muted">{hero.relationship < 28 ? "Bond 28 to take the lesson." : block ? "No room in your book yet." : "A base power. It can braid with what you hold."}</span>
                       </button>
                     );
                   })}
@@ -316,6 +333,8 @@ function BraidBook({
   previewOk,
   previewText,
   moves,
+  room,
+  blocked,
   onPick,
   onMix,
 }: {
@@ -326,13 +345,25 @@ function BraidBook({
   previewOk: boolean;
   previewText: string;
   moves: boolean;
+  room: LibraryState;
+  blocked: boolean;
   onPick: (id: string) => void;
   onMix: () => void;
 }) {
   const ready = owned.filter((power) => power.unlocked);
+  const fill = Math.min(100, Math.round((room.owned / Math.max(1, room.cap)) * 100));
   return (
     <section className="card px-4 py-3">
-      <h2 className="t-label text-muted">BRAID BOOK</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="t-label text-muted">BRAID BOOK</h2>
+        <span className="t-num text-xs text-muted" aria-label={`${room.owned} of ${room.cap} pages, ${room.thisYear} of ${room.yearRoom} new this year`}>
+          <b className={room.owned >= room.cap ? "text-gold" : "text-fg"}>{room.owned}</b>/{room.cap} pages · {room.thisYear}/{room.yearRoom} this year
+        </span>
+      </div>
+      <div className="stat-bar mt-1.5" aria-hidden>
+        <div className="stat-fill" style={{ width: `${fill}%`, "--fill": "var(--color-gold)" } as React.CSSProperties} />
+      </div>
+      {room.block && <p className="mt-1.5 text-xs font-semibold text-gold/90">{room.block}</p>}
       <p className="mt-1 text-sm text-muted">Two hands, then Mix. Tap a chosen power again to drop it. The name of a new braid stays hidden until it lands.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Slot label="Hand 1" id={left} />
@@ -357,8 +388,8 @@ function BraidBook({
           );
         })}
       </div>
-      <button type="button" disabled={!left || !right || !moves || !previewOk} onClick={onMix} className="btn btn-primary mt-3 min-h-12 w-full disabled:opacity-40">
-        {!moves ? "No moves left this month" : !left || !right ? "Choose two powers" : previewOk ? "Mix these two" : "These two won't mix"}
+      <button type="button" disabled={!left || !right || !moves || !previewOk || blocked} onClick={onMix} data-act="mix|" className="btn btn-primary mt-3 min-h-12 w-full disabled:opacity-40">
+        {!moves ? "No moves left this month" : !left || !right ? "Choose two powers" : !previewOk ? "These two won't mix" : blocked ? "No room in the book yet" : "Mix these two"}
       </button>
     </section>
   );

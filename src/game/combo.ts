@@ -287,10 +287,12 @@ export interface Lesson {
 export function nextLesson(
   unlocked: readonly string[],
   heroes: readonly { id: string; alias: string; met: boolean; unlocked: readonly string[] }[],
+  fits: (powerId: string) => boolean = () => true,
 ): Lesson | null {
   for (const hero of heroes) {
     if (!hero.met) continue;
     for (const power of teachableBases(hero.unlocked, unlocked)) {
+      if (!fits(power.id)) continue;
       const opened = possibleMixes([...unlocked, power.id]).find((item) => item.left.id === power.id || item.right.id === power.id);
       if (!opened) continue;
       return { heroId: hero.id, alias: hero.alias, powerId: power.id, powerName: power.name, resultName: opened.result.name };
@@ -306,11 +308,11 @@ export function randomMissingBase(unlocked: readonly string[], roll: number): Ca
   return missing[Math.floor(roll * missing.length) % missing.length] ?? null;
 }
 
-export function offerPower(unlocked: readonly string[], age: number, roll: number): CatalogPower | null {
+export function offerPower(unlocked: readonly string[], age: number, roll: number, narrow: (list: CatalogPower[]) => CatalogPower[] = (list) => list): CatalogPower | null {
   const owned = new Set(unlocked);
-  const bases = basePowers().filter((power) => !owned.has(power.id));
-  const mixed = allPowers().filter((power) => power.generation === 1 && !owned.has(power.id));
-  const apex = allPowers().filter((power) => power.generation >= 2 && !owned.has(power.id));
+  const bases = narrow(basePowers().filter((power) => !owned.has(power.id)));
+  const mixed = narrow(allPowers().filter((power) => power.generation === 1 && !owned.has(power.id)));
+  const apex = narrow(allPowers().filter((power) => power.generation >= 2 && !owned.has(power.id)));
   const want = age < 16 ? 0 : age < 21 ? (roll < 0.62 ? 0 : 1) : roll < 0.4 ? 0 : roll < 0.78 ? 1 : 2;
   const pool = want === 0 ? bases : want === 1 ? mixed : apex;
   const fallback = bases.length ? bases : mixed.length ? mixed : apex;

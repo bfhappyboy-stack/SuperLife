@@ -1,4 +1,5 @@
 import { nextLesson } from "./combo";
+import { legendFits } from "./kin";
 import { powerById } from "./data";
 import { firstName } from "./format";
 import { hasTrait } from "./origin";
@@ -51,6 +52,8 @@ export interface EventDef {
   /** If set, the moment only happens in these city ids. */
   cities?: string[];
   requires?: (g: Game) => boolean;
+  /** Off-canon for God Mode legends: a generic villain, or a gift from nowhere. Legends skip it. */
+  offCanon?: boolean;
   text: (g: Game) => string;
   choices: EventChoice[];
 }
@@ -350,7 +353,7 @@ const HAND: EventDef[] = [
     ],
   },
   {
-    id: "maybe",
+    id: "maybe", offCanon: true,
     weight: 5,
     once: true,
     minAge: 18,
@@ -385,7 +388,7 @@ const HAND: EventDef[] = [
     ],
   },
   {
-    id: "meteor",
+    id: "meteor", offCanon: true,
     weight: 2,
     once: true,
     minAge: 16,
@@ -891,7 +894,7 @@ function cityPulse(): EventDef[] {
       ],
     },
     {
-      id: "relic-subway",
+      id: "relic-subway", offCanon: true,
       weight: 4,
       minAge: 12,
       needsPower: true,
@@ -919,7 +922,7 @@ function cityPulse(): EventDef[] {
       ],
     },
     {
-      id: "relic-crater",
+      id: "relic-crater", offCanon: true,
       weight: 3,
       minAge: 14,
       needsPower: true,
@@ -1039,7 +1042,7 @@ function deeperMoments(): EventDef[] {
       ],
     },
     {
-      id: "lab-offer",
+      id: "lab-offer", offCanon: true,
       weight: 4,
       minAge: 14,
       text: () => "A night class promises 'two gifts, one body, no refunds.' The chalkboard is already full of names that sound like accidents.",
@@ -1144,6 +1147,7 @@ export function eligible(e: EventDef, g: Game): boolean {
   if (e.minAge != null && g.age < e.minAge) return false;
   if (e.maxAge != null && g.age > e.maxAge) return false;
   if (e.once && g.flags[`seen:${e.id}`]) return false;
+  if (e.offCanon && g.preset) return false;
   if (e.needsPower && !g.powerId) return false;
   if (e.needsNoPower && (g.powerId || g.age < 16)) return false;
   if (e.needsNoPower && g.powerId) return false;
@@ -1213,9 +1217,9 @@ function richerMoments(): EventDef[] {
       id: "trainer-lesson",
       weight: 5,
       minAge: 10,
-      requires: (g) => !!nextLesson(g.unlockedPowers ?? [], g.heroes ?? []),
+      requires: (g) => !!nextLesson(g.unlockedPowers ?? [], g.heroes ?? [], (id) => legendFits(g.preset, id)),
       text: (g) => {
-        const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? []);
+        const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? [], (id) => legendFits(g.preset, id));
         if (!lesson) return "A trainer almost calls. The almost is the whole message.";
         return `${lesson.alias} texts a single line: you are one page from ${lesson.resultName}. They can put ${lesson.powerName} in your hands if you stop performing and start listening.`;
       },
@@ -1225,7 +1229,7 @@ function richerMoments(): EventDef[] {
           text: "You shut up and learn. The braid book gets a new page on purpose.",
           effects: { happiness: 2, smarts: 1, karma: 1 },
           special: (g) => {
-            const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? []);
+            const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? [], (id) => legendFits(g.preset, id));
             if (!lesson) return undefined;
             return { kind: "heroProgress", heroId: lesson.heroId, exp: 16, bond: 6, teach: lesson.powerId };
           },
@@ -1235,7 +1239,7 @@ function richerMoments(): EventDef[] {
           text: "The lesson lands. So does a debt they will absolutely remember.",
           effects: { karma: -2, fame: 1 },
           special: (g) => {
-            const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? []);
+            const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? [], (id) => legendFits(g.preset, id));
             if (!lesson) return undefined;
             return { kind: "heroProgress", heroId: lesson.heroId, exp: 10, bond: 3, teach: lesson.powerId };
           },
@@ -1364,7 +1368,7 @@ function richerMoments(): EventDef[] {
       ],
     },
     {
-      id: "receipt-offer",
+      id: "receipt-offer", offCanon: true,
       weight: 4,
       minAge: 15,
       maxKarma: -6,
