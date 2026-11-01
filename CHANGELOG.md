@@ -1,5 +1,58 @@
 # Changelog
 
+## 2026-11-01 (night): Boss phases and villain gimmicks, fights that grow with you (`devbot/2026-11-01-night`)
+
+This branch is based on `main` at c41ff09, which already includes PR #3.
+
+### Every legend rogue fights like themselves (`duel.ts`, `presets.ts`, `gimmicks.ts`, `Duel.tsx`)
+
+- **Two-phase boss duels.** At 55% health (each villain can set its own point), a boss enters **Phase 2**. A full-screen card names the move, gives the villain's line, and tells you how to beat it. The arena then takes on the gimmick's colour.
+- **Ten gimmicks.** Each is a data row in `presets.ts`. All 49 legend rogues have a named one (`VILLAIN_GIMMICKS`):
+  - **armor:** Iron Monger's plating takes two trick hits to crack. Then he takes +20%.
+  - **enrage:** the Goblin and Abomination hit harder but leave openings.
+  - **fog:** Venom and Scarecrow hide some of their tells.
+  - **feint:** the Joker and Mysterio sometimes show a false tell.
+  - **adapt:** the Riddler soaks a repeated move.
+  - **regen:** heals each turn until a trick or status move stalls it.
+  - **revive:** Ultron's backup body gets up once at 40%.
+  - **coin:** Two-Face flips every turn. Heads, he hits ×1.6. Tails, he is open.
+  - **swarm:** Ock's arms and Penguin's goons chip damage each turn until an area move clears them.
+  - **charge:** Bane's Back Breaker is telegraphed every third turn. Guard it or eat it.
+- **Generic bosses** (case villains in ordinary and mystery lives) get a gimmick from their power: brute strength charges, ice armours up, healers regenerate, and so on.
+- **The HUD explains each gimmick:**
+  - a strip under the health bars with the gimmick icon, a `At 55%` / `Live` tag, and its live status ("1 plate left · trick cracks them", "Big hit in 2 turns" with three pips);
+  - a tick on the boss health bar where Phase 2 begins;
+  - a pulsing red tell when a charged hit is coming, and a `Tell: ???` chip in fog;
+  - a flipping HEADS/TAILS coin, armor plate pips, swarm motes, and green +N heal floats;
+  - `Cracks` / `Clears` / `Stalls` / `Adapted` tags on the move cards;
+  - on a loss, a "Next time, <gimmick>" tip on the K.O. card.
+- **Why:** BACKLOG #4 (villain gimmick phases), and the user's ask that signature villains be real bosses with fitting movesets. Before, every boss was a bigger health bar.
+
+### Legend cases end at a legend rogue (`engine.ts`)
+
+- In a legend life, the boss step of a city case is now fought against one of that hero's rogues whose debut has passed. "Cinder Mallory was the front. Whiplash was paying for it."
+- The pick is stable per case, so a retry faces the same rogue.
+- **Why:** Iron Man was fighting Cinder Mallory and Static Bishop as case bosses.
+
+### Fights scale with the hero (`moves.ts`, `engine.ts`, `duel.ts`)
+
+- **Playtest finding:** at perfect play, a mystery hero won only about 21% of fights and Iron Man about 40%, while an unpowered Batman won 100%. Player moves stayed at 4–6 power from age 11 to 70, while foes grew to 10–17.
+- **Power moves** now gain an edge from power level and mastery: round(PL × 0.55) + (rank − 1).
+- **Street moves** gain round(PL × 0.35).
+- **Unpowered legacy kits** (Batman) are trimmed by round(PL × 0.15).
+- **Boss health** is now ×1.25.
+- **Catch a breath** now counters a telegraphed strike for half your best move's power. Many loadouts had no guard move, so a strike tell could not be answered.
+- **Auto-filled loadouts and street padding** cover missing styles first. Hand-picked slots are never touched. Still exactly 6 moves.
+- **Sims** (perfect, 60% and random play):
+  - regular fights win 0.96 / 0.73–0.85 / 0.36–0.43;
+  - bosses win 0.82 / 0.63 / 0.29.
+- **Pure duel core:** `Duel.tsx` now runs on `duel.ts` (`startDuel`, `playTurn`), so the balance can be tested headless.
+
+### Small fixes
+
+- Female rogues (Hela, Cheetah, Circe, Medusa, Lady Deathstrike) were drawn as men. `villainSex` now follows the data.
+- New test file `night.test.ts` (11 tests). It checks that every rogue has a gimmick, that each gimmick mechanic fires, that a smart-play win band holds against all 49 rogues, edge scaling, loadouts of 6 with more than one style, and stable arc patrons.
+
 ## 2026-11-01 (pm): Legends grow in canon, goals that survive their decade, Chase run, legend grid (`devbot/2026-11-01-pm`)
 
 This branch stacks on the unmerged `devbot/2026-11-01-am`, `devbot/2026-10-31-night` and late Oct 31 work.

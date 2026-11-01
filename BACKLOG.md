@@ -1,11 +1,23 @@
 # SuperLife — Backlog
 
+## From the 2026-11-01 night pass
+
+1. **Boss phases shipped** (gimmicks for all 49 rogues, plus generic bosses by power). Next:
+   - a second gimmick for Phase 3 on the final canon bosses (e.g. Ultron at 51+);
+   - authored gimmicks for the city-case villains in `arcs.ts` (they use the power fallback today).
+2. **Owner call:** are any gimmicks wrong for your version of a hero? They are one data row each in `VILLAIN_GIMMICKS` (`presets.ts`).
+3. **Thor's late bosses are walls.** Hela and Surtur at levels 9–10 (Surtur at 73 is about 3% at 60% play). Either cap the legend boss level near 8.5 or give Thor a guard move in canon.
+4. **Too easy:** Spider-Man, Hulk and Batman bosses are about 0.95 at 60% play. Consider a +10% boss health bump for those three, or a second gimmick.
+5. **Boss retries repeat.** Losing a case boss re-offers it the same month, up to 4–5 times. Add a one-month cooldown, or a "regroup" beat between tries.
+6. **Move catalog skew:** mastery-1 moves are 59 strike / 45 trick / 22 guard. Author more rank-1 guard moves so loadouts don't depend on street padding.
+7. **Fight injuries** (NEXT #3) are still open: a heavy boss loss should feed the collapse system.
+
 ## From the 2026-11-01 pm pass
 
 1. **Kin weight is 85%** (`KIN_WEIGHT` in `kin.ts`). Stretch lists in `presets.ts` are hand-picked. Owner: are any of them wrong for your version of a hero? Renaming or editing them is data only.
 2. **Off-kin chip in PowerLab.** Show a small "off-canon" tag on legend learn rows, so bending canon is a visible choice.
 3. **Chase next:** a villain-escape variant for arc "pursue" steps, and a flight skin (sky lanes) for flyers.
-4. **Villain gimmick phases** in boss duels are still open (NEXT #3).
+4. **Shipped 2026-11-01 night:** villain gimmick phases in boss duels.
 5. **Goals still soft:** friend@70s (1/2) when the circle has died off. Consider "Reconnect with 1 old friend" for the final phase.
 6. **Lint:** `src/lib/app-data/client.server.ts:281` has an empty block (`no-empty`). It is Grok Build plumbing, so I left it alone.
 
@@ -176,7 +188,7 @@ There are only three kinds today: `timing`, `pattern` and `duel`. Add these, eac
 7. **Stealth path:** a grid where you avoid vision cones. For invisibility and secret identity.
 8. **Press conference:** pick lines on a timer. For loud and celebrity, affecting fame.
 9. **Weight lift / hold:** press and hold within a zone. For strength and durability training.
-10. **Boss phases:** multi-phase duels with a gimmick per villain.
+10. **Shipped 2026-11-01 night:** boss phases, with multi-phase duels and a gimmick per villain.
 
 Also give each training action its own mini instead of only stat rolls, and add daily or seasonal challenge minis.
 

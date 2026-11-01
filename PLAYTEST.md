@@ -1,5 +1,32 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-01 night): the fight numbers, and bosses that were just bigger bars
+
+**What I played:**
+- Engine sims, 3 seeds each:
+  - a **NYC skeptical / loud / idealistic** mystery hero;
+  - a **Metro legacy / secret / thrill** mystery hero;
+  - Batman, Iron Man, Hulk, Spider-Man, Flash and Thor.
+- Every duel board was dumped and replayed with a smart, tell-reading policy (`/workspace/playtest/duelsim.ts`) at perfect, 60% and random play.
+- At 390×844: boss duels against Iron Monger (25), Two-Face (30), Bane (38), Doc Ock (28), Venom (33), Ultron (51) and Abomination (33).
+
+**Findings (before):**
+- **Combat did not scale.** Player moves sat at 4–6 power from 11 to 70, while foes reached 10–17. Perfect-play win rates: mystery hero 21%, Iron Man 40%, bosses 34%. Unpowered Batman won 100%, because his legacy kit used foe-scale numbers.
+- **Missing styles.** Mastery-1 moves are mostly strike (59 strike, 45 trick, 22 guard). Thor's and Iron Man's six had **no guard**, so a strike tell had no answer.
+- **Generic case bosses in legend lives:** Iron Man vs "Cinder Mallory", "Static Bishop", "Second Skin".
+- **Bosses had no identity.** A boss was the same rock-paper-scissors loop with a bigger health bar.
+- **Female rogues drawn as men.** Hela, Cheetah and Lady Deathstrike defaulted to male figures.
+- **Boss retries repeat.** One case boss came up 4–5 times at the same age when the player keeps losing. Not changed; see BACKLOG.
+
+**After:**
+- **Win rates** (perfect / 60% / random): regular fights 0.96 / ~0.8 / ~0.4; bosses 0.82 / 0.63 / 0.29. Per gimmick at perfect play: 0.89 (feint) to 1.00.
+- **Outliers:** Thor's late bosses (Hela, Surtur at level 9–10) are still the hardest. Spider-Man, Hulk and Batman sit around 0.95 at 60% play.
+- **At 390×844:**
+  - the Phase 2 card reads cleanly over a blurred arena;
+  - the gimmick strip fits between the bars and the arena (the arena is 24px shorter on boss fights, so all 6 cards stay visible);
+  - Bane's charge turn glows red with "Charging!", and Iron Monger's plates show as pips by his figure.
+- Screenshots: `superlife-shots/2026-11-01-night/before/` and `.../after/`.
+
 ## Afternoon pass (2026-11-01 pm): grown-up mystery lives and legends in their 30s
 
 **What I played:**
