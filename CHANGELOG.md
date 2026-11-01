@@ -1,5 +1,52 @@
 # Changelog
 
+## 2026-11-01 (pm): Legends grow in canon, goals that survive their decade, Chase run, legend grid (`devbot/2026-11-01-pm`)
+
+This branch stacks on the unmerged `devbot/2026-11-01-am`, `devbot/2026-10-31-night` and late Oct 31 work.
+
+### Legends learn powers that fit them (`kin.ts`, `presets.ts`, `combo.ts`, `engine.ts`, `events.ts`)
+
+- Each legend now has a **kin**: the base powers under its canon kit, plus a short hand-picked `stretch` list in `presets.ts` (for example, Flash can stretch to lightning, phasing and regeneration; Thor to weather and flight).
+- Teachers, the trainer-lesson event, yearly power offers, heist sparks and off-book mission lessons now **lean 85% toward kin powers**. Teachers list fitting powers first.
+- Nothing is banned. Braiding an off-kin pair on purpose still works, which counts as bending canon.
+- **Why:** BACKLOG #3. In 10-legend sims, about 171 of 239 learned powers were off-kin (Flash with Telepathy, Wolverine with Sorcery). Now it is about 60.
+- Ordinary and mystery lives are unchanged.
+
+### Chapter goals you can actually finish (`chapters.ts`, `engine.ts`)
+
+- **Family:** "Keep family close" now counts partners and kids at **closeness 30+**. Before, it showed as met all decade, then the partner walked out at 15.
+  - A new banner warns when a partner drifts to 16–23 and names the button: People ▸ Circle ▸ Spend time.
+  - Sims: 8/11 → 14/16.
+- **Fame:** above Fame 72, "Raise Fame by N" fought the yearly fade. It now becomes **"End the chapter with Fame N+"** (current fame minus 6).
+  - Sims: 8/8.
+- **Reputation:** "Keep Reputation" now follows the sign of your Reputation, not the villain check, so a dark-karma hero is no longer asked to stay disliked.
+  - Legends with negative Reputation no longer get it at all.
+- Sims, 15 lives across mystery, villain and legend runs: every other goal hit ≥ 8/9 with goal-aware play. The earlier low quietfame, standing and darkkarma numbers were policy artefacts.
+
+### New minigame: Chase (`minis.ts`, `MiniGames.tsx`, `Minigame.tsx`, `miniUtil.ts`)
+
+- A three-lane run on a tilted road. Swipe, tap a side, use the big LEFT/RIGHT buttons, or press the arrow keys.
+  - Dodge hazard-striped wrecks and grab gold sparks.
+  - Sparks are worth 55% of the score; staying clean is 45%, and three hits wipe out the clean half.
+  - Hits shake the arena and buzz; sparks pop.
+- Courses are **seeded and fair**: every row leaves an open lane you can reach in one step. Tests check 600 courses.
+- **Gym:** *Run the city* now plays Chase (or sprint intervals), and *Lift* plays Hold (or the heavy bag).
+  - A clean round pays slightly more than the old flat reward, and a botched one slightly less, so the gym stays a grind but a played one.
+- Chase also joins the stunt, dispatch and League tryout pools, weighted toward mobility powers.
+
+### God Mode: a legend grid (`Legends.tsx`)
+
+- With 11 legends the dot strip had stopped working. It is now a **face roster** that follows the swipe, plus an **All 11** button that opens a 3-column poster grid. Tap a poster to jump straight to that legend.
+
+### Tests
+
+- New `src/game/test/pm.test.ts` covers:
+  - kin sets and the 85% narrowing;
+  - family closeness and the fame raise-vs-hold switch;
+  - chase course fairness and scoring;
+  - gym rounds opening as minis with an ordered payout.
+- 88/88 game tests pass.
+
 ## 2026-11-01 (am): Sealed-gift panel, louder omens, canon-safe legends (`devbot/2026-11-01-am`)
 
 This branch also carries the unmerged `devbot/2026-10-31-night` work and the late Oct 31 WIP (Black Panther, Wolverine and Flash, plus Go buttons on chapter goals).

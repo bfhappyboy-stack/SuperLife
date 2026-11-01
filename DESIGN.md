@@ -25,6 +25,8 @@ This is the owner's design, written down as faithfully as possible. Where the co
   - the required chain works
   - every power has moves
 
+- **Legend kin (God Mode).** Teachers, yearly offers and sparks lean 85% toward the legend's canon kit plus its `stretch` list (`kin.ts`). Off-kin powers are never banned; choosing them is bending canon.
+
 ## 2. Progression is a grind
 
 - Leveling powers uses **diminishing returns, costs, and soft caps**.
@@ -164,7 +166,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 
 ## 15. Minigame variety
 
-- Six skill kinds, plus the duel. Each one tests a different hand, and the market gear edge maps them to the timing or pattern family:
+- Seven skill kinds, plus the duel. Each one tests a different hand, and the market gear edge maps them to the timing or pattern family:
 
   | Kind | What you do |
   |---|---|
@@ -174,6 +176,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
   | Rescue | Triage the windows |
   | Press | Read the reporter, pick the tone |
   | Hold | Keep the load in a moving zone |
+  | Chase | Switch lanes to dodge wrecks and grab sparks (seeded, always one reachable lane) |
 
 - Engine call sites name a **verb** (stunt, drill, dispatch…), not a kind.
   - `minis.ts` holds the weighted pool for each verb: kind, titles, subtitles and kind-specific outcome text.

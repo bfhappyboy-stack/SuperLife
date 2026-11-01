@@ -1,5 +1,33 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-01 pm): grown-up mystery lives and legends in their 30s
+
+**What I played:**
+- Engine sims, 3 seeds each, with a goal-aware policy:
+  - an isolated Dustreach mystery kid;
+  - a vengeful Stacks mystery kid;
+  - Hulk, Thor and Captain America;
+  - all 10 powered legends, run for a kin census.
+- At 390×844:
+  - the Dustreach life at 9, 34 and 46 (Life tab, chapter card, a duel);
+  - Thor at 31;
+  - the Stacks kid at 14 in the gym;
+  - the God Mode picker.
+
+**Findings (before):**
+- **Family goal:** "Keep family close" read as met for the whole decade, then the partner broke up at closeness 15. The goal counted heads, not closeness (8/11).
+- **Fame goal:** a famous hero at Fame 85 got "Raise Fame by 3" and lost it to the yearly fade above 75.
+- **Reputation goal:** a hero with dark karma but positive Reputation was told to keep Reputation *low*.
+- **Off-kin powers:** legends picked up powers that broke canon (about 171 of 239), for example Thor with Gravity and Flash with Telepathy.
+- **Gym:** Lift and Run were dead taps with flat rewards. Only the bout had a mini.
+- **God Mode picker:** 12 dots, no faces, no way to see the roster at a glance.
+
+**After:**
+- Family 14/16, fame hold 8/8. The holdrep failures were all legends with negative Reputation, who no longer get it.
+- Off-kin powers are down to about 60. Wolverine and Hulk now grow toward durability and strength.
+- **Chase:** reads well at 390×844. Lanes are wide, the buttons are thumb-sized, the gold sparks stand out from the hazard stripes, and the result stamp lands. Screenshots are in `superlife-shots/2026-11-01-pm/after/`.
+- **God Mode:** the "All 11" grid shows every painted portrait, and tapping one lands on its card with the roster face lit.
+
 ## Morning pass (2026-11-01 am): mystery childhood and the three new legends
 
 **What I played:**

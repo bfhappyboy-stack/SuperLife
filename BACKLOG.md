@@ -1,14 +1,22 @@
 # SuperLife — Backlog
 
+## From the 2026-11-01 pm pass
+
+1. **Kin weight is 85%** (`KIN_WEIGHT` in `kin.ts`). Stretch lists in `presets.ts` are hand-picked. Owner: are any of them wrong for your version of a hero? Renaming or editing them is data only.
+2. **Off-kin chip in PowerLab.** Show a small "off-canon" tag on legend learn rows, so bending canon is a visible choice.
+3. **Chase next:** a villain-escape variant for arc "pursue" steps, and a flight skin (sky lanes) for flyers.
+4. **Villain gimmick phases** in boss duels are still open (NEXT #3).
+5. **Goals still soft:** friend@70s (1/2) when the circle has died off. Consider "Reconnect with 1 old friend" for the final phase.
+6. **Lint:** `src/lib/app-data/client.server.ts:281` has an empty block (`no-empty`). It is Grok Build plumbing, so I left it alone.
+
 ## From the 2026-11-01 am pass
 
 1. **Painted portraits for Black Panther, Wolverine and The Flash.**
    - They use a drawn SVG silhouette (`LegendBust.tsx`) for now.
    - Needed: 540×960 webp, in the same style as `src/assets/art/hero-*.ts`.
 2. **PR #1 (`devbot/2026-10-31-am`) is stale.** Main already contains its work. Owner: close it?
-3. **Legend book cap** is canon + 2, then +1 every 6 years, max 12. Teachers still hand legends off-canon picks (for example, Flash learns Telepathy).
-   - Next: weight teacher and spark offers toward the legend's element.
-4. **Weak chapter goals (sims):**
+3. **Legend book cap** is canon + 2, then +1 every 6 years, max 12. **Done 2026-11-01 pm:** teacher and spark offers lean 85% toward the legend's kin.
+4. **Done 2026-11-01 pm** (family closeness, the fame hold goal, rep sign). **Weak chapter goals (sims):**
    - "Keep Fame ≤ N" in ch2: 0/8.
    - End-of-chapter Health in ch4: 0/9.
    - Dark karma: 1/3.
