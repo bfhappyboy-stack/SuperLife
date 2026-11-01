@@ -254,6 +254,17 @@ export function fillLoadout(game: Game): void {
   }
 }
 
+/** Unlocked moves that are not in the six, in book order: what a dropped slot can be refilled from. */
+function benchMoves(game: Game, skip: readonly string[]): MoveDef[] {
+  const have = new Set([...(game.loadout ?? []), ...skip]);
+  return knownMoves(game).filter((entry) => entry.unlocked && !have.has(entry.def.id)).map((entry) => entry.def);
+}
+
+/**
+ * Tap-to-toggle, kept for old buttons and saved routes. The six stays exactly six whenever you know six:
+ * dropping a move swaps the next bench move into the same slot (never the one you just dropped), and when
+ * every move you know is already in, a drop is refused instead of leaving a hole that the next tap refills.
+ */
 export function toggleLoadout(game: Game, moveId: string): string {
   const def = moveById(moveId);
   if (!def) return "That move isn't in the book.";
@@ -262,11 +273,54 @@ export function toggleLoadout(game: Game, moveId: string): string {
     return `${def.name} wants ${power?.name ?? "that power"} at mastery ${def.minMastery}.`;
   }
   if (!Array.isArray(game.loadout)) game.loadout = [];
-  if (game.loadout.includes(moveId)) {
-    game.loadout = game.loadout.filter((id) => id !== moveId);
-    return `${def.name} leaves the six.`;
+  const at = game.loadout.indexOf(moveId);
+  if (at >= 0) {
+    const next = benchMoves(game, [moveId])[0];
+    if (!next) return `Every move you know is already in the six. Unlock another to swap ${def.name} out.`;
+    game.loadout = game.loadout.map((id, index) => (index === at ? next.id : id));
+    return `${def.name} leaves the six. ${next.name} takes slot ${at + 1}.`;
   }
-  if (game.loadout.length >= MOVESET_SIZE) return "Six moves already. Drop one first.";
+  if (game.loadout.length >= MOVESET_SIZE) return "Six moves already. Pick a slot to swap it into.";
   game.loadout = [...game.loadout, moveId];
-  return `${def.name} takes a slot.`;
+  return `${def.name} takes slot ${game.loadout.length}.`;
+}
+
+export interface SlotResult {
+  ok: boolean;
+  line: string;
+}
+
+/**
+ * Put a move into one slot in a single step, so a swap can never be half-done.
+ * - A bench move replaces whatever is in that slot (or fills the next open slot).
+ * - A move already in the six trades places with the slot's move, so you can reorder.
+ * The six never shrinks: a slot is only ever replaced, never emptied.
+ */
+export function placeInSlot(game: Game, slot: number, moveId: string): SlotResult {
+  const def = moveById(moveId);
+  if (!def) return { ok: false, line: "That move isn't in the book." };
+  if (!moveUnlocked(game, def)) {
+    const power = getPower(def.powerId);
+    return { ok: false, line: `${def.name} wants ${power?.name ?? "that power"} at mastery ${def.minMastery}.` };
+  }
+  if (!Number.isInteger(slot) || slot < 0 || slot >= MOVESET_SIZE) return { ok: false, line: "There are only six slots." };
+  if (!Array.isArray(game.loadout)) game.loadout = [];
+  const loadout = [...game.loadout];
+  const from = loadout.indexOf(moveId);
+  // Slots past the filled ones collapse onto the next open slot so there are never gaps.
+  const target = Math.min(slot, from >= 0 ? loadout.length - 1 : loadout.length);
+  if (from === target) return { ok: true, line: `${def.name} is already in slot ${target + 1}.` };
+  if (from >= 0) {
+    const other = loadout[target]!;
+    loadout[target] = moveId;
+    loadout[from] = other;
+    game.loadout = loadout;
+    const otherName = moveById(other)?.name ?? "That move";
+    return { ok: true, line: `${def.name} moves to slot ${target + 1}. ${otherName} takes slot ${from + 1}.` };
+  }
+  const out = loadout[target];
+  loadout[target] = moveId;
+  game.loadout = loadout.slice(0, MOVESET_SIZE);
+  const outName = out ? moveById(out)?.name : null;
+  return { ok: true, line: outName ? `${def.name} in, ${outName} out. Slot ${target + 1}.` : `${def.name} takes slot ${target + 1}.` };
 }

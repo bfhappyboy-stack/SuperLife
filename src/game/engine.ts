@@ -39,7 +39,7 @@ import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, p
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
 import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
-import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
+import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
   asFace,
@@ -2561,6 +2561,13 @@ export function act(game: Game, id: string): Game {
     d.card = { ...d.card, banner: [note] };
     return d;
   }
+  if (id.startsWith("slot|")) {
+    // slot|<index>|<moveId>: one atomic swap. No card banner, so the page under the player's finger never moves;
+    // the move picker shows its own feedback in a fixed-height line.
+    const [, index, ...rest] = id.split("|");
+    const res = placeInSlot(d, Number(index), rest.join("|"));
+    return res.ok ? d : game;
+  }
   if (id.startsWith("buy-fit|") || id.startsWith("wear-fit|") || id.startsWith("clear-fit|")) {
     return fitAct(d, id);
   }
@@ -2576,7 +2583,7 @@ export function act(game: Game, id: string): Game {
     const slot = d.moveSets[Number(id.slice(9))];
     if (!slot) return game;
     slot.moves = [...d.loadout];
-    d.card = { ...d.card, banner: [`${slot.name} remembers this six.`] };
+    // No card banner here or on set-load: the move picker answers in its own line, so the list doesn't jump.
     return d;
   }
   if (id.startsWith("set-load|")) {
@@ -2587,7 +2594,6 @@ export function act(game: Game, id: string): Game {
       return !!def && (d.unlockedPowers ?? []).includes(def.powerId);
     }).slice(0, 6);
     fillLoadout(d);
-    d.card = { ...d.card, banner: [`${slot.name} is what you bring.`] };
     return d;
   }
   if (id.startsWith("buy|") || id.startsWith("sell|")) {
