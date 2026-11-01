@@ -25,7 +25,8 @@ import {
 } from "./data";
 import { pickEvent, type EventDef, type MiniTemplate } from "./events";
 import { clamp, firstName, money, whenLabel } from "./format";
-import { getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
+import { basePowers, getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
+import { kinOrder, kinPool, legendFits } from "./kin";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
 import { ELEMENTS, elementOfLegacy, elementOfPower } from "./elements";
@@ -612,7 +613,7 @@ function runHeist(d: Game, style: "smash" | "quiet" | "fear" | "spark", deltas: 
     haul += 150;
     heat += 6;
     karma = -8;
-    const gift = randomMissingBase(d.unlockedPowers ?? [], roll(d));
+    const gift = strayBase(d);
     const name = gift ? unlockCombo(d, gift.id) : "";
     text = name ? `You lift a spark instead of a safe. ${name} stays in the book.` : "The jar was empty. You take the petty cash and the humiliation.";
   }
@@ -699,7 +700,7 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
       return " Something sparks in your palm and goes out. Not yet. You are still learning the last one.";
     }
     if (!special.comboId) d.flags.lastGrantAge = d.age;
-    const id = special.comboId ?? randomMissingBase(d.unlockedPowers ?? [], roll(d))?.id ?? null;
+    const id = special.comboId ?? strayBase(d)?.id ?? null;
     const blocked = id && !(d.unlockedPowers ?? []).includes(id) ? library(d).block : null;
     const name = unlockCombo(d, id);
     if (!name) return blocked ? " The spark settles in your palm, then fades. Your book has no room for it yet." : " The spark fizzles. You already hold that page.";
@@ -720,7 +721,7 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     } else {
       raiseBond(d, hero, 4);
     }
-    const bases = teachableBases(hero.unlocked, d.unlockedPowers ?? []);
+    const bases = teachFrom(d, hero.unlocked);
     for (const power of bases) discoverPower(d, power.id);
     const page = bases.length ? " What they can teach is in your book now, not on a rumor." : "";
     return ` ${hero.alias} clocks you. ${hero.personality.split(".")[0]}.${page}`;
@@ -1140,6 +1141,9 @@ function openYear(d: Game): string[] {
     if (person.role === "partner" && person.metAt < d.age) person.closeness = clamp(person.closeness - 1, 0, 100);
   }
   const partner = d.relationships.find((r) => r.role === "partner" && r.alive);
+  if (partner && partner.closeness >= 16 && partner.closeness < 24) {
+    banners.push(`${firstName(partner.name)} feels far away lately (closeness ${partner.closeness}). People ▸ Circle ▸ Spend time, before it is a conversation.`);
+  }
   if (partner && partner.closeness < 16) {
     partner.role = "ex";
     d.flags.married = 0;
@@ -1276,12 +1280,26 @@ function openYear(d: Game): string[] {
   return banners;
 }
 
+/** What a hero can teach, legend-fitting powers first (God Mode legends grow in character). */
+function teachFrom(d: Game, heroUnlocked: readonly string[]) {
+  return kinOrder(d.preset, teachableBases(heroUnlocked, d.unlockedPowers ?? []));
+}
+
+/** A stray spark: any missing base, leaning toward the legend's kin in God Mode. */
+function strayBase(d: Game) {
+  if (!d.preset) return randomMissingBase(d.unlockedPowers ?? [], roll(d));
+  const owned = new Set(d.unlockedPowers ?? []);
+  const pool = kinPool(d.preset, basePowers().filter((p) => !owned.has(p.id)), roll(d));
+  return pool.length ? pool[rollInt(d, pool.length)] ?? null : null;
+}
+
 function offerYearPower(d: Game, banners: string[]): boolean {
   if (d.age < 13 || d.hiddenGift) return false;
   const owned = (d.unlockedPowers ?? []).length;
   const chance = (d.age < 18 ? 0.34 : d.age < 30 ? 0.28 : 0.2) * (owned >= 10 ? 0.5 : 1);
   if (roll(d) >= chance) return false;
-  const offer = offerPower(d.unlockedPowers ?? [], d.age, roll(d));
+  const kinRoll = roll(d);
+  const offer = offerPower(d.unlockedPowers ?? [], d.age, roll(d), (list) => kinPool(d.preset, list, kinRoll));
   if (!offer) return false;
   discoverPower(d, offer.id);
   const rank = offer.tierName.toLowerCase();
@@ -1884,7 +1902,7 @@ function ensureProgress(game: Game) {
   if (game.giftId === undefined) game.giftId = legacyComboId(game.powerId) ?? game.unlockedPowers?.[0] ?? null;
   for (const hero of game.heroes ?? []) {
     if (!hero.met) continue;
-    for (const power of teachableBases(hero.unlocked, game.unlockedPowers ?? [])) discoverPower(game, power.id);
+    for (const power of teachFrom(game, hero.unlocked)) discoverPower(game, power.id);
   }
   for (const id of game.unlockedPowers ?? []) {
     if (game.mastery[id] == null) game.mastery[id] = 0;
@@ -2487,8 +2505,8 @@ function openSpendChoice(d: Game, pending: Pending) {
   showChoice(d, pending, []);
 }
 
-function powerOffer(hero: AiHero, unlocked: readonly string[], discovered: readonly string[]): string {
-  const missing = teachableBases(hero.unlocked, unlocked)[0];
+function powerOffer(d: Game, hero: AiHero, discovered: readonly string[]): string {
+  const missing = teachFrom(d, hero.unlocked)[0];
   if (missing) return discovered.includes(missing.id) ? missing.name : "an unshown power";
   const braid = hero.unlocked.map((id) => getPower(id)).find((power) => power && power.generation > 0 && discovered.includes(power.id));
   return braid?.name ?? "a trick you have not been shown";
@@ -2638,8 +2656,40 @@ export function act(game: Game, id: string): Game {
         { id: "bout", label: "Underground bout" },
       ],
       outcomes: {
-        lift: { text: "You sweat on purpose. Your body files a thank-you and a complaint.", effects: { health: 4, happiness: 1 } },
-        run: { text: "You run until the block knows your pace. A couple of phones come up.", effects: { health: 2, fame: 1, happiness: 2 } },
+        // Lift and run are short skill rounds now: a clean set pays a little more than the old flat
+        // reward, a sloppy one a little less, so the gym is still a grind but a played one.
+        lift: {
+          text: "You sweat on purpose. Your body files a thank-you and a complaint.",
+          minigame: {
+            kind: "hold",
+            verb: "lift",
+            title: "Lift until it counts",
+            subtitle: "Keep the bar steady. Form is the whole workout.",
+            difficulty: d.age < 14 ? 1 : 2,
+            winText: "Perfect form, every rep. Your body files a thank-you note.",
+            partialText: "Good reps, a few ugly ones. Progress counts.",
+            loseText: "The bar wins this round. You rack it and your ego.",
+            winEffects: { health: 5, happiness: 2 },
+            partialEffects: { health: 3, happiness: 1 },
+            loseEffects: { health: 1, happiness: -1 },
+          },
+        },
+        run: {
+          text: "You lace up and pick a route. The city does not move for you.",
+          minigame: {
+            kind: "chase",
+            verb: "run",
+            title: "Run the city",
+            subtitle: "Your route, rush hour, and nobody moving for you.",
+            difficulty: d.age < 14 ? 1 : 2,
+            winText: "You run the route clean. A couple of phones come up.",
+            partialText: "A couple of near misses. A good run with a few apologies.",
+            loseText: "You clip a cart and a pride. You walk the last mile.",
+            winEffects: { health: 3, fame: 1, happiness: 3 },
+            partialEffects: { health: 2, happiness: 1 },
+            loseEffects: { health: 1, happiness: -1 },
+          },
+        },
         bout: {
           text: "No posters. A circle of people who paid to see someone else lose.",
           minigame: {
@@ -3312,11 +3362,12 @@ export function act(game: Game, id: string): Game {
       .sort((a, b) => {
         const local = Number(home.has(b.id)) - Number(home.has(a.id));
         if (local) return local;
-        return teachableBases(b.unlocked, unlocked).length - teachableBases(a.unlocked, unlocked).length;
+        const fits = (list: { id: string }[]) => list.filter((p) => legendFits(d.preset, p.id)).length;
+        return fits(teachableBases(b.unlocked, unlocked)) - fits(teachableBases(a.unlocked, unlocked));
       })
       .slice(0, 4);
     if (!unmet.length) return game;
-    const choices = unmet.map((hero) => ({ id: hero.id, label: `${hero.alias} · ${powerOffer(hero, unlocked, d.discovered ?? [])}` }));
+    const choices = unmet.map((hero) => ({ id: hero.id, label: `${hero.alias} · ${powerOffer(d, hero, d.discovered ?? [])}` }));
     const outcomes: Record<string, Outcome> = {};
     for (const hero of unmet) {
       outcomes[hero.id] = {
@@ -3599,9 +3650,10 @@ export function act(game: Game, id: string): Game {
   if (id.startsWith("heromission|")) {
     const hero = d.heroes.find((item) => item.id === id.slice(12) && item.met);
     if (!hero || hero.relationship < 22 || noTime(d, true)) return game;
-    const bases = teachableBases(hero.unlocked, d.unlockedPowers ?? []);
+    const bases = teachFrom(d, hero.unlocked);
     const signature = bases[0];
-    const offbookTeach = roll(d) < 0.55 ? bases[rollInt(d, Math.max(1, bases.length))]?.id : undefined;
+    const offPool = kinPool(d.preset, bases, roll(d));
+    const offbookTeach = roll(d) < 0.55 ? offPool[rollInt(d, Math.max(1, offPool.length))]?.id : undefined;
     const choices = [
       { id: "rescue", label: "Run a rescue" },
       { id: "bust", label: "Bust a ring" },
@@ -3642,7 +3694,7 @@ export function act(game: Game, id: string): Game {
     if (!hero || hero.relationship < 36 || noTime(d, true)) return game;
     const options = possibleMixes(d.unlockedPowers ?? []).filter((item) => hero.unlocked.includes(item.left.id) || hero.unlocked.includes(item.right.id));
     const taught = options[0];
-    const bases = teachableBases(hero.unlocked, d.unlockedPowers ?? []);
+    const bases = teachFrom(d, hero.unlocked);
     const base = bases[0];
     const focus = focusId(d);
     const focusGen = getPower(focus)?.generation ?? 0;

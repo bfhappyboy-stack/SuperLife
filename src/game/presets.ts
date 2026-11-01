@@ -99,6 +99,12 @@ export interface HeroPreset {
   boost?: Effects;
   /** Powers that wake at the `wake` beat. Empty for a powerless legend. */
   powers: string[];
+  /**
+   * Base powers that fit this legend's canon beyond the starting kit (heat vision, the lasso, phasing...).
+   * Teachers, year offers and stray sparks lean hard toward these, so a legend's book grows in character.
+   * Off-list powers can still be braided on purpose: that is bending canon.
+   */
+  stretch?: string[];
   decades: PresetDecade[];
   beats: CanonBeat[];
   villains: PresetVillain[];
@@ -127,6 +133,7 @@ export const PRESETS: HeroPreset[] = [
     color: "#e2363e",
     boost: { smarts: 14 },
     powers: ["super-senses", "super-strength", "super-speed"],
+    stretch: ["super-durability", "regeneration", "invisibility", "elasticity"],
     decades: [
       { title: "Queens, Before the Bite", premise: "{name} grows up in a small Queens apartment with Aunt May, Uncle Ben, and a library card worn soft." },
       { title: "The Bite", premise: "A school trip to Oscorp. A spider that should not exist. {name} is about to learn the rest of the sentence." },
@@ -409,6 +416,7 @@ export const PRESETS: HeroPreset[] = [
     color: "#ffb02e",
     boost: { smarts: 30, money: 60000 },
     powers: ["energy-projection", "flight"],
+    stretch: ["force-field", "super-durability", "super-strength", "super-senses", "lightning-control"],
     decades: [
       { title: "Boy Genius", premise: "{name} builds a circuit board at four and an engine at six. Howard Stark is proud in the quiet way that feels like nothing." },
       { title: "MIT at Fifteen", premise: "Teen years. {name} graduates before he can drive and starts drinking before he should." },
@@ -546,6 +554,7 @@ export const PRESETS: HeroPreset[] = [
     color: "#58d46a",
     boost: { smarts: 24 },
     powers: ["super-strength", "super-durability", "regeneration"],
+    stretch: ["super-speed", "gravity", "super-senses"],
     decades: [
       { title: "A Quiet Boy in {city}", premise: "{name} learns early that anger is a thing you hide. The desert is big enough to hide it in." },
       { title: "Culver University", premise: "Teen years. {name} finds physics, and physics finds no reason to be afraid of him." },
@@ -674,6 +683,7 @@ export const PRESETS: HeroPreset[] = [
     art: "hero-superman",
     color: "#3b7dff",
     powers: ["super-strength", "flight", "super-durability"],
+    stretch: ["super-speed", "super-senses", "energy-projection", "ice-control", "regeneration"],
     decades: [
       { title: "A Farm Outside {city}", premise: "{name} is a quiet kid with very good hearing. The barn has a locked cellar. Pa has the key." },
       { title: "Smallville Nights", premise: "Teen years. {name} catches a tractor, then a falling star, then the eye of the Luthor boy." },
@@ -801,6 +811,7 @@ export const PRESETS: HeroPreset[] = [
     art: "hero-wonder-woman",
     color: "#e2b13c",
     powers: ["super-strength", "flight", "aegis-shell"],
+    stretch: ["super-speed", "super-durability", "force-field", "telepathy", "lightning-control", "super-senses"],
     decades: [
       { title: "Clay and Lightning", premise: "{name} is the only child on an island of warriors. She was sculpted from clay, and something answered." },
       { title: "The Contest", premise: "Teen years. Antiope trains {name} in secret. Hippolyta pretends not to know." },
@@ -929,6 +940,7 @@ export const PRESETS: HeroPreset[] = [
     color: "#3a6fd8",
     boost: { karma: 10 },
     powers: ["super-strength", "aegis-shell", "regeneration"],
+    stretch: ["super-speed", "super-durability", "super-senses", "force-field"],
     decades: [
       { title: "Brooklyn Kid", premise: "{name} is small, sick, and starts fights he can't win. His mother patches him up and tells him not to stop." },
       { title: "Back Alleys", premise: "Teen years. Bucky Barnes keeps pulling {name} out of fights. {name} keeps going back in." },
@@ -1056,6 +1068,7 @@ export const PRESETS: HeroPreset[] = [
     art: "hero-thor",
     color: "#a07cff",
     powers: ["lightning-control", "super-strength", "storm-calling"],
+    stretch: ["weather", "flight", "super-durability", "energy-projection", "regeneration"],
     decades: [
       { title: "A Prince of Asgard", premise: "{name} is the second son. Loki is the heir. Both of them want Odin to look their way." },
       { title: "Worthy", premise: "Teen years. A hammer sits in the vault that nobody can lift. {name} tries every day." },
@@ -1185,6 +1198,7 @@ export const PRESETS: HeroPreset[] = [
     kit: { suit: "#15131d", trim: "#b48cff", mask: "cowl", maskColor: "#15131d", glove: "#1d1a28", crest: "panther" },
     boost: { smarts: 10, money: 40000 },
     powers: ["super-strength", "super-senses", "kinetic-impact"],
+    stretch: ["super-speed", "super-durability", "force-field", "invisibility", "regeneration"],
     decades: [
       { title: "The Prince of Birnin Zana", premise: "{name} grows up in a palace with a view of the Great Mound, a father who listens more than he speaks, and a sister who hacks the doors." },
       { title: "Warrior Falls", premise: "Teen years. Lessons in the jungle, lessons in council, and a challenge waiting at the edge of the water." },
@@ -1307,6 +1321,7 @@ export const PRESETS: HeroPreset[] = [
     kit: { suit: "#f2c230", trim: "#2a4aa8", mask: "cowl", maskColor: "#2a4aa8", glove: "#2a4aa8", crest: "wolverine" },
     boost: { health: 10 },
     powers: ["regeneration", "super-senses", "pain-map"],
+    stretch: ["super-strength", "super-durability", "super-speed"],
     decades: [
       { title: "The Howlett Estate", premise: "{name} is a sickly kid on a big estate, with a red-haired friend named Rose and a groundskeeper's son who scares him." },
       { title: "Logan", premise: "Teen years. A new name, a mining camp, and a body that heals faster than it should." },
@@ -1429,6 +1444,7 @@ export const PRESETS: HeroPreset[] = [
     kit: { suit: "#d8241c", trim: "#ffd23a", mask: "cowl", maskColor: "#d8241c", glove: "#d8241c", crest: "flash" },
     boost: { smarts: 16 },
     powers: ["super-speed", "thunder-sprint"],
+    stretch: ["lightning-control", "super-durability", "regeneration", "teleportation", "super-senses", "invisibility"],
     decades: [
       { title: "The Night of the Yellow Blur", premise: "{name} is a small kid who saw something impossible kill his mother: red and yellow lightning, in the living room." },
       { title: "Iris and the Wests", premise: "Teen years. Detective West takes {name} in. Iris lends him her notes and her nerve. His father is in prison for something he didn't do." },
