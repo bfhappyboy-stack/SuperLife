@@ -10,7 +10,7 @@
  * The press-conference question bank also lives here so the UI and the tests share one source.
  */
 
-export type SkillKind = "timing" | "pattern" | "hack" | "rescue" | "press" | "hold";
+export type SkillKind = "timing" | "pattern" | "hack" | "rescue" | "press" | "hold" | "chase";
 export type MiniKind = SkillKind | "duel";
 /** Market gear is tuned per family: hack/press read like pattern work, rescue/hold like timing. */
 export type EdgeFamily = "timing" | "pattern" | "duel";
@@ -31,13 +31,14 @@ export const MINI_KINDS: Record<SkillKind, MiniKindDef> = {
   rescue: { id: "rescue", name: "Rescue", how: "Tap people before their ring runs out. Never tap the fire.", family: "timing", color: "#ff7a59" },
   press: { id: "press", name: "Press", how: "Read the reporter, pick the line they want before time runs out.", family: "pattern", color: "#ff7ac8" },
   hold: { id: "hold", name: "Hold", how: "Press and hold to rise, let go to ease off. Stay in the zone.", family: "timing", color: "#7ce07a" },
+  chase: { id: "chase", name: "Chase", how: "Tap or swipe left and right to switch lanes. Dodge the wrecks, grab the sparks.", family: "timing", color: "#5fd2ff" },
 };
 
 export function edgeFamily(kind: MiniKind): EdgeFamily {
   return kind === "duel" ? "duel" : MINI_KINDS[kind].family;
 }
 
-export type MiniVerb = "stunt" | "drill" | "spar" | "tryout" | "dispatch" | "loud" | "bout" | "herospar" | "relic";
+export type MiniVerb = "stunt" | "drill" | "spar" | "tryout" | "dispatch" | "loud" | "bout" | "herospar" | "relic" | "run" | "lift";
 
 interface PoolRow {
   kind: SkillKind;
@@ -57,6 +58,7 @@ export const VERB_POOLS: Record<MiniVerb, PoolRow[]> = {
     { kind: "timing", weight: 3, tags: { mobility: 2, offense: 1 }, titles: ["Public stunt", "Rooftop leap", "Skyline pass"], subtitles: ["Stick it. The phones are already up.", "One clean landing and it trends by lunch.", "The crowd counts down. Don't be early."] },
     { kind: "press", weight: 3, titles: ["Press scrum", "Red carpet", "Morning show"], subtitles: ["The stunt worked. Now the mics want a quote.", "Every lens in the city, and one wrong word.", "Coffee, lights, and a host who has read your file."], win: ["Every outlet runs your line. It's on mugs by Friday.", "The host laughs at the right moment. So does the city."], partial: ["One good quote, one awkward pause. They print both."], lose: ["You say the wrong thing on live TV. It loops all week."] },
     { kind: "hold", weight: 2, tags: { physical: 3, defense: 1 }, titles: ["Hold the bridge", "Lift the bus", "Catch the crane"], subtitles: ["Keep it level until the cameras get the angle.", "Strength is easy. Steady is the show.", "It wants to fall. You want it on the evening news."], win: ["You hold it dead level. The photo is iconic.", "Steady as a statue. The crowd loses it."], partial: ["You hold it, wobbling. The clip is funny, not heroic."], lose: ["It slips. Nobody is hurt, but the footage is brutal."] },
+    { kind: "chase", weight: 1, tags: { mobility: 3 }, titles: ["Rooftop run", "Traffic slalom", "Parade dash"], subtitles: ["Across six roofs before the drone loses you.", "Four lanes, rush hour, and a camera crew on a bike.", "The parade route, at full speed, without touching a float."], win: ["Six roofs, zero stumbles. The drone footage hits a million by dinner.", "Not one bumper touched. The camera bike gives up and claps."], partial: ["You clip a sign or two. The clip is fun anyway."], lose: ["You eat a billboard. The footage is a meme for the wrong reason."] },
     { kind: "rescue", weight: 1, titles: ["Staged rescue", "Fire drill showcase"], subtitles: ["The charity gala wants a demo. Real smoke, fake panic.", "They lit a building on purpose. Get everyone out on camera."], win: ["Everyone out, smiling for the cameras. The gala doubles its pledges."], partial: ["Most of them out. A volunteer coughs into the mic."], lose: ["You grab the wrong window. The demo becomes a lesson."] },
   ],
   drill: [
@@ -73,11 +75,13 @@ export const VERB_POOLS: Record<MiniVerb, PoolRow[]> = {
   tryout: [
     { kind: "timing", weight: 3, tags: { offense: 1 }, titles: ["League tryout"], subtitles: ["Show them the gift, not the nerves."] },
     { kind: "rescue", weight: 3, titles: ["League tryout: rescue sim"], subtitles: ["A collapsing set, nine dummies, and a stopwatch."], win: ["Nine dummies out, ahead of the clock. Someone checks the stopwatch twice."], partial: ["Most of the dummies make it. The panel looks thoughtful."], lose: ["The set collapses on three dummies. The panel stops writing."] },
+    { kind: "chase", weight: 1, tags: { mobility: 2 }, titles: ["League tryout: gauntlet"], subtitles: ["A collapsing obstacle run. The fastest clean time gets a callback."], win: ["Clean run, best time of the day. Someone circles your name."], partial: ["A clipped barrier, a decent time. They keep your file."], lose: ["You hit the wall in the first lane. The panel winces."] },
     { kind: "press", weight: 1, titles: ["League tryout: panel"], subtitles: ["Five officials, one microphone, and your record on a screen."], win: ["The panel leans in. One of them is smiling."], partial: ["Solid answers. Nothing memorable."], lose: ["You talk too much. Then too little. They thank you for your time."] },
   ],
   dispatch: [
     { kind: "rescue", weight: 4, tags: { mobility: 1, defense: 1 }, titles: ["Dispatch: tower fire", "Dispatch: flooded station", "Dispatch: stalled tram"], subtitles: ["Civilians first. The fire is not a civilian.", "The water rises one floor a minute.", "Two hundred people and one emergency exit."], win: ["Everyone out. The captain shakes your hand in front of the cameras."], partial: ["Most of them out. The rest wait for the trucks."], lose: ["You move too slow. The trucks finish the job, and the news notices."] },
     { kind: "timing", weight: 2, titles: ["Dispatch"], subtitles: ["You are slightly out of position. Improvise."] },
+    { kind: "chase", weight: 1, tags: { mobility: 3, physical: 1 }, titles: ["Dispatch: runaway truck", "Dispatch: getaway car"], subtitles: ["No driver, no brakes, six blocks to the market.", "They have a head start and no respect for lanes."], win: ["You catch it a block early. The market never knew.", "You box them in at the bridge. The cuffs are a formality."], partial: ["You catch it late and dented. Nobody hurt, plenty of paperwork."], lose: ["Too much traffic, too little road. The trucks take it from here."] },
     { kind: "hack", weight: 2, tags: { control: 2, mental: 1 }, titles: ["Dispatch: vault lockdown", "Dispatch: bomb panel"], subtitles: ["Someone sealed the hostages in. Open it before they suffocate.", "Three rings, one timer, and a captain shouting colors."], win: ["The last ring clicks. The door swings open to cheering."], partial: ["It opens, late. Everyone is fine, and very pale."], lose: ["It jams. The bomb squad finishes it while you watch."] },
     { kind: "pattern", weight: 1, tags: { mental: 2 }, titles: ["Dispatch: radio chatter"], subtitles: ["Track the call signs in order."], win: ["You track every call sign. Units arrive exactly where they should."], partial: ["You lose one call. Somebody waits longer than they should."], lose: ["The channels blur. Dispatch takes you off the call."] },
   ],
@@ -95,6 +99,14 @@ export const VERB_POOLS: Record<MiniVerb, PoolRow[]> = {
     { kind: "pattern", weight: 1, tags: { mental: 2, mystic: 1 }, titles: ["Read {hero}"], subtitles: ["{hero} shows a combination once. {note}"], win: ["You mirror the combination. {hero} looks impressed."], partial: ["You catch half of it. {hero} shows you the rest."], lose: ["You miss it entirely. {hero} is patient about it."] },
     { kind: "hold", weight: 1, tags: { physical: 2, defense: 1 }, titles: ["Hold against {hero}"], subtitles: ["{hero} pushes. You keep your feet. {note}"], win: ["You keep your feet. {hero} laughs and steps back."], partial: ["You give ground, slowly. {hero} nods."], lose: ["Flat on your back. {hero} offers a hand."] },
     { kind: "hack", weight: 1, tags: { control: 2 }, titles: ["Sync with {hero}"], subtitles: ["Match {hero}'s rhythm ring by ring. {note}"], win: ["Ring by ring, you match. It feels like a duet."], partial: ["You fall out of rhythm once, then find it."], lose: ["Out of sync. {hero} calls it for the day."] },
+  ],
+  run: [
+    { kind: "chase", weight: 4, tags: { mobility: 2, physical: 1 }, titles: ["Run the city", "Night run", "Bridge loop"], subtitles: ["Your route, rush hour, and nobody moving for you.", "Empty streets, wet roads, and the odd dumpster in the way.", "Out and back across the bridge, dodging joggers who think they own it."], win: ["You run the route clean. Your lungs file a compliment.", "Every gap, every light. The block knows your pace now."], partial: ["A couple of near misses. A good run with a few apologies."], lose: ["You clip a cart and a pride. You walk the last mile."] },
+    { kind: "timing", weight: 1, titles: ["Sprint intervals"], subtitles: ["Hit the line on the beat. Coach's whistle is merciless."], win: ["Every interval on the whistle. Your legs hate you, correctly."], partial: ["You lose the beat halfway. Still sweat."], lose: ["Off the beat from the start. You call it a cool-down."] },
+  ],
+  lift: [
+    { kind: "hold", weight: 3, tags: { physical: 2, defense: 1 }, titles: ["Lift until it counts", "Deadlift set", "Overhead hold"], subtitles: ["Keep the bar steady. Form is the whole workout.", "Slow and level. The gym is pretending not to watch.", "Arms locked, bar level, breathe like you mean it."], win: ["Perfect form, every rep. Your body files a thank-you note.", "The bar never wobbles. Someone asks for your routine."], partial: ["Good reps, a few ugly ones. Progress counts."], lose: ["The bar wins this round. You rack it and your ego."] },
+    { kind: "timing", weight: 1, tags: { offense: 1 }, titles: ["Heavy bag"], subtitles: ["Three rounds. Snap the punch on the beat."], win: ["The bag swings like it owes you money."], partial: ["Some crisp shots, some lazy ones."], lose: ["You punch like you are apologising to the bag."] },
   ],
   relic: [
     { kind: "hack", weight: 2, titles: ["The relic's lock"], subtitles: ["Old mechanisms, older wards. Line them up."], win: ["The wards line up. Something old opens."], partial: ["It opens a crack. Enough to look inside."], lose: ["The wards slam shut. It will remember you."] },
@@ -146,6 +158,61 @@ export function pickMini(verb: MiniVerb, rand: () => number, opts: { last?: Skil
 export const SKILL_KIND_IDS = Object.keys(MINI_KINDS) as SkillKind[];
 export function isSkillKind(value: unknown): value is SkillKind {
   return typeof value === "string" && (SKILL_KIND_IDS as string[]).includes(value);
+}
+
+/* ------------------------------------------------------------------ */
+/* Chase                                                               */
+/* ------------------------------------------------------------------ */
+
+export interface ChaseRow {
+  /** Seconds into the run when this row reaches the runner. */
+  at: number;
+  /** Lanes (0–2) blocked by a wreck. Never all three. */
+  walls: number[];
+  /** Lane with a spark to grab, or null. Never on a wall. */
+  spark: number | null;
+}
+
+/**
+ * A fair chase course from a seed: rows arrive faster at higher difficulty, every row leaves at
+ * least one open lane, and two-wall rows always leave the lane next to an open lane in the row
+ * before, so a single lane change is enough to survive.
+ */
+export function chaseCourse(seed: number, difficulty: 1 | 2 | 3): { rows: ChaseRow[]; duration: number; sparks: number } {
+  let s = (seed >>> 0) || 11;
+  const rand = () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  const duration = 7 + difficulty * 0.5;
+  const gap = 0.95 - difficulty * 0.13;
+  const rows: ChaseRow[] = [];
+  let open = [0, 1, 2];
+  for (let at = 1.1; at < duration - 0.3; at += gap * (0.85 + rand() * 0.35)) {
+    const two = rand() < 0.25 + difficulty * 0.12;
+    let walls: number[];
+    if (two) {
+      // Keep one lane open that is reachable from a lane that was open last row.
+      const from = open[Math.floor(rand() * open.length)]!;
+      const reach = [from - 1, from, from + 1].filter((lane) => lane >= 0 && lane <= 2);
+      const keep = reach[Math.floor(rand() * reach.length)]!;
+      walls = [0, 1, 2].filter((lane) => lane !== keep);
+    } else {
+      walls = [Math.floor(rand() * 3)];
+    }
+    const free = [0, 1, 2].filter((lane) => !walls.includes(lane));
+    const spark = rand() < 0.62 ? free[Math.floor(rand() * free.length)]! : null;
+    rows.push({ at: Math.round(at * 100) / 100, walls, spark });
+    open = free;
+  }
+  return { rows, duration, sparks: rows.filter((row) => row.spark != null).length };
+}
+
+/** Score a chase: sparks are 55%, staying clean is 45% (three hits and the clean half is gone). */
+export function chaseScore(sparks: number, total: number, hits: number): number {
+  const grab = total ? Math.min(1, sparks / total) : 1;
+  const clean = Math.max(0, 1 - hits / 3);
+  return Math.max(0, Math.min(1, grab * 0.55 + clean * 0.45));
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,4 +1,5 @@
 import { nextLesson } from "./combo";
+import { legendFits } from "./kin";
 import { powerById } from "./data";
 import { firstName } from "./format";
 import { hasTrait } from "./origin";
@@ -1216,9 +1217,9 @@ function richerMoments(): EventDef[] {
       id: "trainer-lesson",
       weight: 5,
       minAge: 10,
-      requires: (g) => !!nextLesson(g.unlockedPowers ?? [], g.heroes ?? []),
+      requires: (g) => !!nextLesson(g.unlockedPowers ?? [], g.heroes ?? [], (id) => legendFits(g.preset, id)),
       text: (g) => {
-        const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? []);
+        const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? [], (id) => legendFits(g.preset, id));
         if (!lesson) return "A trainer almost calls. The almost is the whole message.";
         return `${lesson.alias} texts a single line: you are one page from ${lesson.resultName}. They can put ${lesson.powerName} in your hands if you stop performing and start listening.`;
       },
@@ -1228,7 +1229,7 @@ function richerMoments(): EventDef[] {
           text: "You shut up and learn. The braid book gets a new page on purpose.",
           effects: { happiness: 2, smarts: 1, karma: 1 },
           special: (g) => {
-            const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? []);
+            const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? [], (id) => legendFits(g.preset, id));
             if (!lesson) return undefined;
             return { kind: "heroProgress", heroId: lesson.heroId, exp: 16, bond: 6, teach: lesson.powerId };
           },
@@ -1238,7 +1239,7 @@ function richerMoments(): EventDef[] {
           text: "The lesson lands. So does a debt they will absolutely remember.",
           effects: { karma: -2, fame: 1 },
           special: (g) => {
-            const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? []);
+            const lesson = nextLesson(g.unlockedPowers ?? [], g.heroes ?? [], (id) => legendFits(g.preset, id));
             if (!lesson) return undefined;
             return { kind: "heroProgress", heroId: lesson.heroId, exp: 10, bond: 3, teach: lesson.powerId };
           },

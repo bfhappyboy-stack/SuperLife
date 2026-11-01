@@ -34,6 +34,8 @@ export interface ChapterSnap {
   legacy: number;
   friends: number;
   family: number;
+  /** Partner and kids who still feel close (closeness 30+). Partners drift a point a year and leave below 16. */
+  familyClose: number;
   karma: number;
   happiness: number;
   health: number;
@@ -138,7 +140,7 @@ export const CHAPTER_PHASES: PhaseDef[] = [
     name: "Rising name",
     openers: ["Thirties. People start to say {name}'s name without checking it.", "{city} has started keeping a file on {name}. Some of it is flattering."],
     titles: ["The Name Gets Around", "Headline Years", "{city} Learns Your Name"],
-    goals: ["fame", "arc", "trust", "mastery", "rank", "infamy"],
+    goals: ["fame", "holdfame", "arc", "trust", "mastery", "rank", "infamy"],
   },
   {
     id: "crisis",
@@ -146,7 +148,7 @@ export const CHAPTER_PHASES: PhaseDef[] = [
     name: "The crisis",
     openers: ["Forty, and the thing {name} has been avoiding arrives on schedule.", "Mid-life in {city}: the bill for every earlier decade comes due."],
     titles: ["The Bill Comes Due", "What {threat} Wants", "Everything at Once"],
-    goals: ["arc", "standing", "holdrep", "holdmoney", "family"],
+    goals: ["arc", "standing", "holdrep", "holdmoney", "family", "holdfame"],
   },
   {
     id: "legacy",
@@ -207,6 +209,9 @@ const focusName = (g: Game) => {
     .join(" ");
 };
 
+/** Closeness a partner or kid needs for the "keep family close" goal to count them. */
+export const FAMILY_CLOSE = 30;
+
 const villain = (g: Game) => g.stats.reputation < -20 || g.stats.karma < -30 || !!g.crew;
 const hasArch = (g: Game) => g.relationships.some((r) => r.arch && r.alive);
 /** A storyline can still be finished this chapter: one is running, or one is open to start. */
@@ -228,14 +233,15 @@ export const CHAPTER_GOALS: GoalDef[] = [
   { id: "fortune", metric: "worth", mode: "gain", target: () => 25000, label: (t) => `Grow net worth by $${t.toLocaleString("en-US")}`, hint: "Promotions, endorsements, or the other road.", how: "Work ▸ Job ▸ Ask for a promotion", opens: 15, act: ["promote", "shift", "job:"] },
   { id: "cases", metric: "missionsAll", mode: "gain", target: () => 5, when: (g) => !villain(g) && g.leagueRank > 0, label: (t) => `Win ${t} League missions`, hint: "A partial win still counts.", how: "Cases ▸ League ▸ Run a mission", opens: 16, act: ["mission"] },
   { id: "partner", metric: "family", mode: "gain", target: () => 1, when: (g) => !g.relationships.some((r) => r.alive && r.role === "partner"), label: () => "Find a partner", hint: "Date, then spend time until it sticks.", how: "People ▸ Meet ▸ Go on a date", opens: 16, act: ["date"] },
-  { id: "family", metric: "family", mode: "atLeast", target: (_g, s) => Math.max(1, s.family), label: (t) => `Keep ${t === 1 ? "your partner or kid" : `${t} family`} close`, hint: "Neglect drifts people away.", how: "People ▸ Circle ▸ Spend time", opens: 0, act: ["time:"] },
+  { id: "family", metric: "familyClose", mode: "atLeast", target: (_g, s) => Math.max(1, s.family), when: (_g, s) => s.family >= 1, label: (t) => `Keep ${t === 1 ? "your partner or kid" : `${t} family`} close (closeness ${FAMILY_CLOSE}+)`, hint: "A partner drifts a point a year and walks out below 16. Spend time before it shows.", how: "People ▸ Circle ▸ Spend time", opens: 0, act: ["time:"] },
   { id: "infamy", metric: "rep", mode: "drop", target: () => 15, when: villain, label: (t) => `Drop Reputation by ${t}`, hint: "Your crew helps.", how: "Life ▸ Shadow ▸ Pull a real job", opens: 14, act: ["crime"] },
-  { id: "fame", metric: "fame", mode: "gain", target: (_g, s) => (s.fame > 80 ? 3 : s.fame > 55 ? 6 : 12), when: (g) => g.stats.fame <= 88, label: (t) => `Raise Fame by ${t}`, hint: "Stunts and missions make the feeds.", how: (g) => (g.leagueRank > 0 ? "Cases ▸ League ▸ Run a mission" : "Powers ▸ Drill ▸ Public stunt"), opens: 10, act: ["mission", "stunt"] },
+  { id: "fame", metric: "fame", mode: "gain", target: (_g, s) => (s.fame > 80 ? 3 : s.fame > 55 ? 6 : 12), when: (g) => g.stats.fame <= 72, label: (t) => `Raise Fame by ${t}`, hint: "Stunts and missions make the feeds.", how: (g) => (g.leagueRank > 0 ? "Cases ▸ League ▸ Run a mission" : "Powers ▸ Drill ▸ Public stunt"), opens: 10, act: ["mission", "stunt"] },
+  { id: "holdfame", metric: "fame", mode: "atLeast", target: (_g, s) => Math.round(s.fame - 6), when: (g) => g.stats.fame > 72, label: (t) => `End the chapter with Fame ${t}+`, hint: "Fame above 75 fades every year. Keep showing up or it slides.", how: (g) => (g.leagueRank > 0 ? "Cases ▸ League ▸ Run a mission" : "Powers ▸ Drill ▸ Public stunt"), opens: 10, act: ["mission", "stunt"] },
   { id: "arc", metric: "arcs", mode: "gain", target: () => 1, when: arcOpen, label: (_t, g) => (hasArch(g) ? "Close the case on your arch-enemy" : "Close 1 case file"), hint: "Each step is a scene. Finish them all.", how: "Cases ▸ Files ▸ next step", opens: 12, act: ["arc-step", "arc-start|"] },
   { id: "trust", metric: "bond", mode: "atLeast", target: (_g, s) => Math.min(95, Math.max(60, s.bond + 10)), when: (g) => (g.heroes ?? []).some((h) => h.met), label: (t) => `Reach bond ${t} with a hero`, hint: "Talking is free. Training builds it faster.", how: "Powers ▸ Teachers ▸ Talk or Train", opens: 10, act: ["herotalk", "herotrain|"] },
   { id: "mastery", metric: "mastery", mode: "gain", target: () => 6, when: (g) => (g.unlockedPowers ?? []).length > 0 && !g.powerless, label: (t) => `Earn ${t} mastery points`, hint: "A soft wall stops drills; a closed case lifts it.", how: "Powers ▸ Drill ▸ Drill", opens: 7, power: true, act: ["train"] },
   { id: "standing", metric: "health", mode: "atLeast", target: (g) => (g.age >= 70 ? 35 : 50), label: (t) => `End the chapter with Health ${t}+`, hint: "Fewer drills and fights near the end.", how: (g) => (g.age >= 10 ? "Life ▸ Today ▸ Rest or See a doctor" : "Life ▸ Today ▸ Rest"), opens: 1, act: ["rest", "doctor"] },
-  { id: "holdrep", metric: "rep", mode: "atLeast", target: (_g, s) => s.rep, label: (t, g) => (villain(g) ? `Keep Reputation at ${t} or lower` : `Keep Reputation at ${t}+`), hint: "Pick fights you can explain.", how: (g) => (villain(g) ? "Life ▸ Shadow" : "Life ▸ Today ▸ Volunteer"), opens: 10, act: ["volunteer"] },
+  { id: "holdrep", metric: "rep", mode: "atLeast", target: (_g, s) => s.rep, when: (g) => g.stats.reputation >= 0 || (!g.preset && g.leagueRank === 0), label: (t, g) => (g.stats.reputation < 0 ? `Keep Reputation at ${t} or lower` : `Keep Reputation at ${t}+`), hint: "Pick fights you can explain.", how: (g) => (g.stats.reputation < 0 ? "Life ▸ Shadow" : "Life ▸ Today ▸ Volunteer"), opens: 10, act: ["volunteer"] },
   { id: "holdmoney", metric: "worth", mode: "atLeast", target: (_g, s) => Math.max(0, Math.round((s.worth * 0.6) / 1000) * 1000), label: (t) => (t > 0 ? `Keep net worth at $${t.toLocaleString("en-US")}+` : "Stay out of debt"), hint: "Watch doctor bills and big buys.", how: "Work ▸ Job ▸ Work a heavy shift", opens: 15, act: ["shift"] },
   { id: "legacy", metric: "legacy", mode: "gain", target: (g) => (g.age >= 70 ? 6 : 8), label: (t) => `Raise Legacy by ${t}`, hint: "Teaching heroes and raising kids count too.", how: "Life ▸ Today ▸ Mentor a rookie", opens: 45, act: ["mentor"] },
   { id: "canon", metric: "canon", mode: "gain", target: (g) => canonDue(g), when: (g) => canonDue(g) > 0, label: (t) => (t === 1 ? "Live this decade's turning point" : `Live ${t} turning points`), hint: "They arrive on their birthdays. Follow canon, bend it, or break it.", how: (g) => { const ages = canonAges(g); return ages.length ? `Arrives on its own at age ${ages.join(", ")} ▸ Life ▸ Today` : "Arrives on its own ▸ Life ▸ Today"; }, opens: 0, act: [] },
@@ -330,8 +336,10 @@ export function goalCount(goal: ChapterGoal, snap: ChapterSnap): string {
 }
 
 // "holdrep" needs a per-hero mode; resolve it here so the table above can stay declarative.
+// It follows the sign of Reputation, not the villain test: a hero with dark karma but a good name
+// was being asked to keep Reputation *low*, then lost the goal to their own missions.
 function goalMode(def: GoalDef, g: Game): GoalMode {
-  if (def.id === "holdrep") return villain(g) ? "atMost" : "atLeast";
+  if (def.id === "holdrep") return g.stats.reputation < 0 ? "atMost" : "atLeast";
   return def.mode;
 }
 
@@ -355,6 +363,7 @@ export function snapshot(g: Game): ChapterSnap {
     legacy: g.legacy ?? 0,
     friends: alive.filter((r) => r.role === "friend" || r.role === "teammate").length,
     family: alive.filter((r) => r.role === "partner" || r.role === "child").length,
+    familyClose: alive.filter((r) => (r.role === "partner" || r.role === "child") && r.closeness >= FAMILY_CLOSE).length,
     karma: g.stats.karma,
     happiness: g.stats.happiness,
     health: g.stats.health,
