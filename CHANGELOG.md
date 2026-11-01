@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-11-01 (am): Sealed-gift panel, louder omens, canon-safe legends (`devbot/2026-11-01-am`)
+
+This branch also carries the unmerged `devbot/2026-10-31-night` work and the late Oct 31 WIP (Black Panther, Wolverine and Flash, plus Go buttons on chapter goals).
+
+### Mystery Life: the sealed gift gets a real panel (`SealedGift.tsx`, `PowerLab.tsx`, `GameApp.tsx`, `styles.css`)
+
+- **Powers ▸ Book, before the reveal,** now shows a sealed card instead of plain text:
+  - a glowing orb that quivers harder as the wake gets closer;
+  - a 4-step **The feeling** meter: Faint ▸ Stirring ▸ Loud ▸ Any day now;
+  - a **Signs** journal with your last 3 omens;
+  - **Call it** as three big element tiles, instead of buried action rows.
+- **Fixed:** the old card wrongly said a birthday "from 13" could offer a power.
+- **Legends before their canon wake** get a countdown card showing their Earth, the beat and the years left.
+
+### Omens are paced, varied and build toward the reveal (`mystery.ts`, `engine.ts`)
+
+- *Chase the strange feeling* now has a cooldown: 4, 3, 2 or 1 months depending on how close the wake is. The row says when the feeling comes back.
+  - **Why:** sims showed 24–96 omens per life, drawn from only 3 lines per element. Now it is 18–34.
+- **More lines:**
+  - 6 faint lines per element.
+  - New **loud** lines in the last 2 years before the wake.
+  - Trait frames (for example, curious or reluctant kids notice things differently).
+  - The game avoids repeating anything from the last 4 signs.
+
+### Legends stay canon (`library.ts`, `events.ts`, `engine.ts`)
+
+- **Legend book cap:** canon kit + 2, plus 1 more every 6 years after the wake, with a hard max of 12.
+  - **Why:** a sim Wolverine ended with 20+ powers, including Flight and Sorcery.
+- **Off-canon events are skipped in legend lives:** Doctor Maybe, The Receipt, the night-class braid, the geode swap and the two relic sites.
+  - Relic-run duels with generic guards are skipped too.
+  - Legends now meet their own rogues.
+
+### Fixes
+
+- **Six moves, always** (`moves.ts`): `fillLoadout` now prunes stale or locked moves *before* topping up. Some lives had been left with 5 equipped moves.
+
+### Tests
+
+- New `legend.test.ts` (5 tests): legend cap, no off-canon events for legends, long legend lives inside the cap, omen stages and cooldown, and loadout refill. The game suite is now 83 tests, all passing.
+
 ## 2026-10-31 (night): Mystery Life, God Mode legends, clearer chapter goals (`devbot/2026-10-31-night`)
 
 ### Mystery Life is now the main mode (`mystery.ts`, `engine.ts`, `Legends.tsx`)

@@ -1,5 +1,30 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-01 am): mystery childhood and the three new legends
+
+**What I played:**
+- Engine sims, 3 seeds each: an alien-upbringing mystery kid in Neon Spire, a program/lab kid in Crown, Black Panther, Wolverine, Flash and Spider-Man.
+- At 390×844: the age 6, 9 and 10 mystery saves (Powers ▸ Book and the chapter card), the God Mode picker, and a 31-year-old Wolverine.
+
+**Findings:**
+- **Mystery Life:**
+  - Wakes landed at 8–13. Canon beats for legends landed at canon ages (BP 18, Wolverine 12, Flash 25).
+  - Deaths at 71–91. Always 6 moves.
+- **Omen spam (fixed):**
+  - Before: 24–96 "strange feeling" lines per life from 3 lines per element. The same line repeated within a year.
+  - After: 18–34 per life, louder near the wake, with no repeats in the last 4 signs.
+- **The sealed Book tab was a wall of text (fixed).** It also said "From 13, a birthday can offer one", which is wrong for mystery lives. Now it is a sealed-orb card with a feeling meter, signs and Call-it tiles. Screenshots: `superlife-shots/2026-11-01-am/b9-1.png` and `b6-1.png`.
+- **Legends going off-canon (fixed):**
+  - Wolverine at 31 owned 10+ powers, including Flight and Sorcery.
+  - Doctor Maybe and relic guards showed up in a Wolverine life.
+  - Now legends are capped (≤12 at death in every sim) and skip generic villains.
+- **Loadout:** one life sat at 5 moves after a pruned id (fixed).
+- **Chapter goals read clearly at 390px:** each has a tab ▸ button route and a Go button, and locked ones are greyed with "Unlocks when your power wakes" (`l10-1.png`).
+- **Still weak:**
+  - quietfame (ch2) 0/8.
+  - End-of-chapter Health in ch4 0/9.
+  - Canon goal 82/83.
+
 ## Night pass (2026-10-31 night): Mystery Life, God Mode, goal clarity
 
 **How it was tested**

@@ -1,5 +1,24 @@
 # SuperLife — Backlog
 
+## From the 2026-11-01 am pass
+
+1. **Painted portraits for Black Panther, Wolverine and The Flash.**
+   - They use a drawn SVG silhouette (`LegendBust.tsx`) for now.
+   - Needed: 540×960 webp, in the same style as `src/assets/art/hero-*.ts`.
+2. **PR #1 (`devbot/2026-10-31-am`) is stale.** Main already contains its work. Owner: close it?
+3. **Legend book cap** is canon + 2, then +1 every 6 years, max 12. Teachers still hand legends off-canon picks (for example, Flash learns Telepathy).
+   - Next: weight teacher and spark offers toward the legend's element.
+4. **Weak chapter goals (sims):**
+   - "Keep Fame ≤ N" in ch2: 0/8.
+   - End-of-chapter Health in ch4: 0/9.
+   - Dark karma: 1/3.
+   - Mostly policy artefacts, but consider moving the Health goal to "Health 40+" for chapters with a fight-heavy canon.
+5. **Done this pass:**
+   - Clear goals: tab ▸ button routes, Go buttons, greyed "Unlocks at N" goals.
+   - Sealed-gift panel and paced omens.
+   - Black Panther, Wolverine and Flash (Earth-6616, Earth-7419, Earth-1956).
+
+
 ## From the 2026-10-31 night pass
 
 1. **Legends polish.**
