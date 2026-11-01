@@ -37,8 +37,9 @@ import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
-import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
+import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
+import { powerGimmick } from "./gimmicks";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
@@ -1586,7 +1587,8 @@ function playerMoves(d: Game): DuelMove[] {
   fillLoadout(d);
   if (equippedMoves(d).length) return battleMoves(d);
   // Unpowered life: the legacy street kit, still padded to the full six.
-  const legacy = movesFrom(d.powerId, d.stats.powerLevel).slice(0, 4);
+  // Slightly under a foe of the same level: an unpowered hero wins on reads and preparation, not numbers.
+  const legacy = movesFrom(d.powerId, d.stats.powerLevel).slice(0, 4).map((move) => ({ ...move, power: Math.max(2, move.power - 1 - Math.round(d.stats.powerLevel * 0.15)) }));
   const names = new Set(legacy.map((move) => move.name));
   const padding = STREET_MOVES.filter((move) => !names.has(move.name)).map((move) => ({ ...move }));
   return [...legacy, ...padding].slice(0, MOVESET_SIZE);
@@ -1598,7 +1600,8 @@ function foeLook(d: Game, foe: { name: string; personId?: string }): { foeSeed: 
   const cape = d.roster.find((row) => row.alias === foe.name || (foe.personId && row.id === foe.personId));
   let h = 2166136261;
   for (let i = 0; i < foe.name.length; i += 1) h = Math.imul(h ^ foe.name.charCodeAt(i), 16777619);
-  return { foeSeed: person?.portrait ?? cape?.portrait ?? ((h >>> 0) % 1_000_000_000) + 1, foeSex: person?.sex ?? cape?.sex };
+  const legend = villainSex(foe.name);
+  return { foeSeed: person?.portrait ?? cape?.portrait ?? ((h >>> 0) % 1_000_000_000) + 1, foeSex: person?.sex ?? cape?.sex ?? (legend === null ? undefined : legend) };
 }
 
 function makeDuel(
@@ -1608,6 +1611,9 @@ function makeDuel(
 ): MinigameSpec {
   const pl = foe.powerLevel;
   const suit = costumeMods(d);
+  // Named rogues always fight with their signature twist; other villains only get one as a boss.
+  const gimmick = foe.side === "villain" ? (villainGimmick(foe.name) ?? (foe.boss ? powerGimmick(foe.powerId, foe.name) : null)) : null;
+  const foeHp = 20 + Math.round(pl * 4);
   const moves = playerMoves(d).map((move) =>
     suit.strike ? { ...move, power: Math.max(1, Math.round(move.power * (1 + suit.strike / 100))) } : move,
   );
@@ -1629,7 +1635,7 @@ function makeDuel(
       foeTitle: foe.title,
       foeSide: foe.side,
       playerHp: 26 + Math.round(d.stats.health / 5) + Math.round(d.stats.powerLevel * 2) + (hasTrait(d, "martial") ? 6 : 0) + suit.hp,
-      foeHp: 20 + Math.round(pl * 4),
+      foeHp: foe.boss ? Math.round(foeHp * 1.25) : foeHp,
       playerMoves: moves,
       foeMoves: signatureMoves(foe.name, pl) ?? movesFrom(foe.powerId, pl),
       personId: foe.personId,
@@ -1637,6 +1643,7 @@ function makeDuel(
       foePower: foe.powerId,
       ...foeLook(d, foe),
       boss: foe.boss || undefined,
+      gimmick: gimmick ?? undefined,
     } satisfies DuelBoard,
   };
 }
@@ -1806,6 +1813,19 @@ function nextLegendRogue(d: Game): PresetVillain | null {
   const legend = presetById(d.preset);
   if (!legend) return null;
   return legend.villains.find((v) => villainDebut(legend, v.id) <= d.age && !d.relationships.some((r) => r.note === v.alias)) ?? null;
+}
+
+/** The legend rogue behind a story arc's boss: stable per arc, debut age passed. Null outside legend lives. */
+function arcPatron(d: Game, arcId: string): PresetVillain | null {
+  const legend = presetById(d.preset);
+  if (!legend) return null;
+  const ready = legend.villains.filter((v) => villainDebut(legend, v.id) <= d.age);
+  if (!ready.length) return null;
+  let h = 7;
+  for (const ch of arcId) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const key = `arcPatron:${arcId}`;
+  if (d.flags[key] === undefined) d.flags[key] = h % ready.length;
+  return ready[(d.flags[key] ?? 0) % ready.length] ?? null;
 }
 
 /** True when this person is one of the current legend's own rogues. */
@@ -3955,15 +3975,20 @@ export function act(game: Game, id: string): Game {
       return d;
     }
     if (step.kind === "fight" || step.kind === "boss") {
-      const foeName = step.foeName ?? current.arc.villain;
+      // In a legend life the case's real boss is one of the hero's own rogues, paying the city villain.
+      const patron = step.kind === "boss" ? arcPatron(d, current.arc.id) : null;
+      const foeName = patron?.alias ?? step.foeName ?? current.arc.villain;
+      const brief = patron ? `${current.arc.villain} was the front. ${patron.alias} was paying for it.` : step.brief;
       openMini(
         d,
         makeDuel(
           d,
-          { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.foeLevel ?? (step.kind === "boss" ? 6.4 : 4.2), boss: step.kind === "boss" },
+          patron
+            ? { name: patron.alias, title: patron.title, side: "villain", powerId: patron.powerId, powerLevel: Math.max(6.4, patron.level), boss: true }
+            : { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.foeLevel ?? (step.kind === "boss" ? 6.4 : 4.2), boss: step.kind === "boss" },
           {
             title: foeName,
-            subtitle: `${step.brief} Your six moves.`,
+            subtitle: `${brief} Your six moves.`,
             win: `You put ${foeName} down. The case moves.`,
             partial: "You split it. The case stays on this page.",
             lose: `${foeName} writes this month's ending.`,

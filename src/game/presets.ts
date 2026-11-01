@@ -12,7 +12,7 @@
  * - Each villain has exactly four signature moves; the player still fights with exactly six.
  * - Pure data: no network, no XAI_API_KEY.
  */
-import type { DuelMove, Effects, Look, PowerId, Sex, TraitId, UpbringingId } from "./types";
+import type { BossGimmick, DuelMove, Effects, Look, PowerId, Sex, TraitId, UpbringingId } from "./types";
 
 export type PresetId = "spider-man" | "batman" | "iron-man" | "hulk" | "superman" | "wonder-woman" | "captain-america" | "thor" | "black-panther" | "wolverine" | "flash";
 export type CanonPath = "canon" | "bend" | "break";
@@ -914,10 +914,10 @@ export const PRESETS: HeroPreset[] = [
       },
     ],
     villains: [
-      { id: "cheetah", name: "Barbara Minerva", alias: "Cheetah", title: "The friend with claws", powerId: "speed", level: 7, blurb: "An archaeologist who found a god in a box and lost herself to it.", moves: [mv("Pounce", "From the shadows, all at once.", 8, "strike", "speed", "dash"), mv("Rake", "Claws like knives.", 7, "strike", "force", "burst"), mv("Hunter's Patience", "She waits. You blink.", 5, "trick", "shadow", "status"), mv("Prowl", "Too fast to pin.", 5, "guard", "speed", "guard")] },
-      { id: "circe", name: "Circe", alias: "Circe", title: "The witch of Aeaea", powerId: "mind", level: 7, blurb: "A sorceress older than the island, with a grudge against every Amazon.", moves: [mv("Swine Hex", "Oink.", 6, "trick", "arcane", "status"), mv("Witchfire", "Green flame that bites.", 7, "strike", "arcane", "area"), mv("Glamour", "She looks like your mother.", 5, "trick", "psychic"), mv("Ward of Aeaea", "Old magic, thick as walls.", 5, "guard", "shield", "guard")] },
+      { id: "cheetah", name: "Barbara Minerva", alias: "Cheetah", sex: "female", title: "The friend with claws", powerId: "speed", level: 7, blurb: "An archaeologist who found a god in a box and lost herself to it.", moves: [mv("Pounce", "From the shadows, all at once.", 8, "strike", "speed", "dash"), mv("Rake", "Claws like knives.", 7, "strike", "force", "burst"), mv("Hunter's Patience", "She waits. You blink.", 5, "trick", "shadow", "status"), mv("Prowl", "Too fast to pin.", 5, "guard", "speed", "guard")] },
+      { id: "circe", name: "Circe", alias: "Circe", sex: "female", title: "The witch of Aeaea", powerId: "mind", level: 7, blurb: "A sorceress older than the island, with a grudge against every Amazon.", moves: [mv("Swine Hex", "Oink.", 6, "trick", "arcane", "status"), mv("Witchfire", "Green flame that bites.", 7, "strike", "arcane", "area"), mv("Glamour", "She looks like your mother.", 5, "trick", "psychic"), mv("Ward of Aeaea", "Old magic, thick as walls.", 5, "guard", "shield", "guard")] },
       { id: "ares", name: "Ares", alias: "Ares", title: "The God of War", powerId: "strength", level: 9, blurb: "Every war ever fought fed him. He is hungry.", moves: [mv("Spear of War", "It has killed gods.", 9, "strike", "force", "burst"), mv("Battle Cry", "Every soldier in the city hears it.", 6, "trick", "psychic", "status"), mv("Aegis of Bronze", "War-god armor.", 6, "guard", "shield", "guard"), mv("Rain of Blades", "The sky remembers every battle.", 8, "strike", "force", "area")] },
-      { id: "medusa", name: "Medusa", alias: "Medusa", title: "The gorgon", powerId: "mind", level: 8, from: 44, blurb: "Snakes for hair and a gaze that ends conversations.", moves: [mv("Stone Gaze", "Don't look.", 8, "trick", "arcane", "status"), mv("Serpent Lash", "A dozen bites at once.", 7, "strike", "life", "area"), mv("Coil", "She tightens.", 6, "strike", "force"), mv("Petrified Hide", "Skin like marble.", 5, "guard", "shield", "guard")] },
+      { id: "medusa", name: "Medusa", alias: "Medusa", sex: "female", title: "The gorgon", powerId: "mind", level: 8, from: 44, blurb: "Snakes for hair and a gaze that ends conversations.", moves: [mv("Stone Gaze", "Don't look.", 8, "trick", "arcane", "status"), mv("Serpent Lash", "A dozen bites at once.", 7, "strike", "life", "area"), mv("Coil", "She tightens.", 6, "strike", "force"), mv("Petrified Hide", "Skin like marble.", 5, "guard", "shield", "guard")] },
     ],
   },
   {
@@ -1173,7 +1173,7 @@ export const PRESETS: HeroPreset[] = [
     villains: [
       { id: "loki", name: "Loki Laufeyson", alias: "Loki", title: "The heir who wanted the hammer", powerId: "shapeshift", level: 8, blurb: "God of mischief, firstborn of Asgard here, and your brother in every way that hurts.", moves: [mv("Hundred Lokis", "Which one is real?", 6, "trick", "psychic", "status"), mv("Dagger in the Back", "Classic.", 8, "strike", "shadow", "burst"), mv("Seidr Bolt", "Green fire from the old magic.", 7, "strike", "arcane", "area"), mv("Shapeshift", "He's your mother now.", 5, "guard", "shadow", "guard")] },
       { id: "malekith", name: "Malekith", alias: "Malekith", title: "The dark elf king", powerId: "ice", level: 8, blurb: "Older than light, and he wants it all switched off.", moves: [mv("Aether Surge", "Red mist that eats stars.", 8, "strike", "shadow", "burst"), mv("Black Ice", "Cold from before the world.", 7, "strike", "ice", "area"), mv("Kursed Strength", "His soldiers become monsters.", 5, "trick", "life", "status"), mv("Shadow Veil", "He isn't there.", 5, "guard", "shadow", "guard")] },
-      { id: "hela", name: "Hela", alias: "Hela", title: "Goddess of Death", powerId: "blasts", level: 9, blurb: "Odin's firstborn by blood, locked away until Ragnarok.", moves: [mv("Necroswords", "A rain of black blades.", 8, "strike", "shadow", "area"), mv("Crush the Hammer", "She catches it. She squeezes.", 7, "trick", "force", "status"), mv("Death's Touch", "Cold hands.", 9, "strike", "shadow", "burst"), mv("Antlered Crown", "Death doesn't flinch.", 5, "guard", "shield", "guard")] },
+      { id: "hela", name: "Hela", alias: "Hela", sex: "female", title: "Goddess of Death", powerId: "blasts", level: 9, blurb: "Odin's firstborn by blood, locked away until Ragnarok.", moves: [mv("Necroswords", "A rain of black blades.", 8, "strike", "shadow", "area"), mv("Crush the Hammer", "She catches it. She squeezes.", 7, "trick", "force", "status"), mv("Death's Touch", "Cold hands.", 9, "strike", "shadow", "burst"), mv("Antlered Crown", "Death doesn't flinch.", 5, "guard", "shield", "guard")] },
       { id: "surtur", name: "Surtur", alias: "Surtur", title: "The fire at the end of all things", powerId: "fire", level: 10, from: 60, blurb: "A giant of flame whose sword is the end of Asgard.", moves: [mv("Twilight Sword", "It burns realms.", 10, "strike", "fire", "burst"), mv("Muspelheim Rising", "The ground is lava now.", 8, "strike", "fire", "area"), mv("Prophecy", "It is written.", 6, "trick", "arcane", "status"), mv("Crown of Flame", "Too hot to touch.", 6, "guard", "fire", "guard")] },
     ],
   },
@@ -1418,7 +1418,7 @@ export const PRESETS: HeroPreset[] = [
     ],
     villains: [
       { id: "sabretooth", name: "Victor Creed", alias: "Sabretooth", title: "The birthday killer", powerId: "healing", level: 8, blurb: "Fangs, claws, a healing factor, and a hundred years of grudges with your name on them.", moves: [mv("Rending Claws", "Faster than yours. Meaner.", 8, "strike", "force", "burst"), mv("Pounce", "He's on you before you see him.", 7, "strike", "speed", "dash"), mv("Hunter's Nose", "He smells the plan.", 5, "trick", "shadow", "status"), mv("Feral Heal", "Wounds close mid-swing.", 6, "guard", "life", "guard")] },
-      { id: "deathstrike", name: "Yuriko Oyama", alias: "Lady Deathstrike", title: "Weapon X's daughter", powerId: "healing", level: 8, blurb: "A cyborg with ten adamantium nails and a claim to the metal in your bones.", moves: [mv("Ten Blades", "Each finger a sword.", 9, "strike", "force", "area"), mv("Cyber Lunge", "Built to close the gap.", 7, "strike", "speed", "dash"), mv("Reaver Code", "She hacked your pain.", 5, "trick", "psychic", "status"), mv("Armored Skin", "Bullets bounce.", 5, "guard", "shield", "guard")] },
+      { id: "deathstrike", name: "Yuriko Oyama", alias: "Lady Deathstrike", sex: "female", title: "Weapon X's daughter", powerId: "healing", level: 8, blurb: "A cyborg with ten adamantium nails and a claim to the metal in your bones.", moves: [mv("Ten Blades", "Each finger a sword.", 9, "strike", "force", "area"), mv("Cyber Lunge", "Built to close the gap.", 7, "strike", "speed", "dash"), mv("Reaver Code", "She hacked your pain.", 5, "trick", "psychic", "status"), mv("Armored Skin", "Bullets bounce.", 5, "guard", "shield", "guard")] },
       { id: "omega-red", name: "Arkady Rossovich", alias: "Omega Red", title: "The Soviet answer", powerId: "elastic", level: 7, from: 40, blurb: "A super-soldier dying of his own power, with carbonadium coils and a death spore in his breath.", moves: [mv("Carbonadium Coils", "Tentacles that drink life.", 8, "strike", "stretch", "area"), mv("Death Spores", "Breathe and weaken.", 6, "trick", "life", "status"), mv("Coil Lash", "From ten feet out.", 7, "strike", "stretch", "burst"), mv("Cryo Shell", "Born in a freezer.", 5, "guard", "ice", "guard")] },
       { id: "silver-samurai", name: "Kenuichio Harada", alias: "Silver Samurai", title: "Clan Yashida's blade", powerId: "blasts", level: 6, from: 30, blurb: "A swordsman whose blade can cut anything, adamantium included, he says.", moves: [mv("Tachyon Blade", "It cuts through anything.", 8, "strike", "energy", "burst"), mv("Iaido Draw", "Sheathed, then not.", 7, "strike", "speed", "dash"), mv("Teleport Ring", "He blinks out.", 4, "trick", "warp", "status"), mv("Silver Armor", "Yashida steel.", 5, "guard", "shield", "guard")] },
     ],
@@ -1592,6 +1592,15 @@ export function signatureMoves(alias: string, level: number): DuelMove[] | null 
   return null;
 }
 
+/** A legend villain's body for figures: their own `sex`, male by default (Ultron stays undefined). */
+export function villainSex(alias: string): Sex | undefined | null {
+  for (const preset of PRESETS) {
+    const villain = preset.villains.find((row) => row.alias === alias || row.name === alias);
+    if (villain) return "sex" in villain ? villain.sex : "male";
+  }
+  return null;
+}
+
 /** The earliest age a legend's villain can appear outside canon: `from`, else their first canon beat, else 16. */
 export function villainDebut(preset: HeroPreset, villainId: string): number {
   const villain = preset.villains.find((row) => row.id === villainId);
@@ -1607,4 +1616,82 @@ export function dominantPath(flags: Record<string, number | undefined>): CanonPa
   const broken = flags.canonBroken ?? 0;
   if (kept >= bent && kept >= broken) return "canon";
   return bent >= broken ? "bend" : "break";
+}
+
+/**
+ * Boss gimmicks: each legend's rogue fights with a signature twist (see duel.ts for the rules).
+ * Kept here with the rest of the preset data so a rename stays one-file.
+ */
+const G = (kind: BossGimmick["kind"], name: string, line: string, hint: string, extra: Partial<BossGimmick> = {}): BossGimmick => ({ kind, name, line, hint, ...extra });
+
+export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
+  // Spider-Man
+  goblin: G("enrage", "Goblin Formula", "\"Now we play my way!\" The glider screams back in, faster.", "He hits harder but takes more. Answer every tell.", { at: 0.5 }),
+  ock: G("swarm", "Four Arms", "The arms stop waiting for orders. Four of them, everywhere.", "Arms chip you each turn. An area move knocks them back."),
+  venom: G("fog", "Sense Blind", "Your spider-sense goes quiet. That is the attack.", "Some tells are hidden. When you can't read him, go big."),
+  kraven: G("charge", "Trophy Hunt", "Kraven sinks low. He has been waiting an hour for this.", "Every third turn he winds up. Guard when it comes."),
+  mysterio: G("feint", "Stagecraft", "The room flickers. Which Mysterio is real?", "One tell in three is a lie. Don't trust a sure thing."),
+  vulture: G("regen", "Updraft", "He climbs out of reach and catches his breath on the wind.", "He recovers each turn. A trick move pulls him down.", { style: "trick" }),
+  // Batman
+  joker: G("feint", "Punchline", "\"Why so serious?\" Every grin means something else now.", "Some tells are lies. Trade even when unsure."),
+  "two-face": G("coin", "Heads or Tails", "The coin goes up. It decides how hard he hits.", "Heads: guard up, he hits ×1.6. Tails: go for it.", { at: 1 }),
+  bane: G("charge", "Back Breaker", "Bane lifts you once already. He wants to finish it.", "Every third turn he winds up the Back Breaker. Guard."),
+  riddler: G("adapt", "Riddle Me This", "\"You repeat yourself. Predictable.\"", "He punishes repeats. Never use the same move twice in a row."),
+  scarecrow: G("fog", "Fear Toxin", "The gas rolls in. Your eyes stop telling the truth.", "Some tells are hidden. Breathe, then hit hard."),
+  penguin: G("swarm", "Hired Muscle", "\"Boys!\" Six goons and a lawyer step out of the fog.", "Goons chip you every turn. An area move clears them."),
+  // Iron Man
+  stane: G("armor", "Iron Monger Plating", "Stane seals the suit. Twice your armor, twice your size.", "His plating soaks hits. Two trick moves crack it open.", { style: "trick" }),
+  whiplash: G("charge", "Reactor Overload", "The whips go white. He doesn't care if he survives this.", "Every third turn he overloads. Guard when it comes."),
+  mandarin: G("feint", "Ten Rings", "The rings turn. Each one wants a different fight.", "Some tells lie. Read twice, trust once."),
+  ultron: G("revive", "Backup Copy", "The body falls. A second one stands up in the doorway.", "He gets back up once. Save energy for round two."),
+  hammer: G("swarm", "Hammer Drones", "\"Not bad, right?\" A cloud of knock-off drones lifts off.", "Drones chip you every turn. An area move clears them."),
+  // Hulk
+  abomination: G("enrage", "Gamma Fury", "The scales split. Blonsky stops fighting like a soldier.", "He hits much harder below half. Answer every tell.", { at: 0.5 }),
+  leader: G("swarm", "Humanoids", "Rubber soldiers pour out of the walls.", "Humanoids chip you each turn. An area move clears them."),
+  "ross-red": G("regen", "Absorb the Gamma", "Red Hulk drinks the heat off you and gets bigger.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  maestro: G("adapt", "He Knows You", "\"I have watched you do that a thousand times.\"", "He reads repeats. Never use the same move twice in a row.", { at: 0.7 }),
+  // Superman
+  lex: G("armor", "Warsuit", "Lex seals the warsuit. Green light hums under the plates.", "The suit soaks hits. Two trick moves crack it.", { style: "trick" }),
+  zod: G("charge", "Kneel", "Zod rises into the air. The fist comes from orbit.", "Every third turn he dives. Guard when it comes."),
+  doomsday: G("adapt", "Adapt", "It stops flinching. Yesterday's punch does nothing.", "It adapts to repeats. Change your move every turn.", { at: 0.8 }),
+  brainiac: G("revive", "Twelfth-Level Intellect", "The body sparks out. The skull ship sends another.", "He comes back once. Keep something in reserve."),
+  // Wonder Woman
+  cheetah: G("enrage", "Blood Frenzy", "Minerva stops talking. The goddess in the claws takes over.", "She hits harder below half. Answer every tell.", { at: 0.5 }),
+  circe: G("feint", "Glamour", "She wears your mother's face, then your own.", "Some tells lie. Don't trust a sure thing."),
+  ares: G("charge", "Spear of War", "Every war ever fought gathers in his spear.", "Every third turn he throws it. Guard when it comes."),
+  medusa: G("fog", "Stone Gaze", "Don't look. You have to look away to live.", "Some tells are hidden. When you can't see, hit hard."),
+  // Captain America
+  "red-skull": G("enrage", "Hydra Rising", "\"Cut off one head...\" The Skull grins under the mask.", "He hits harder below half. Answer every tell.", { at: 0.5 }),
+  winter: G("adapt", "Hydra Programming", "The arm whirs. He has read every move you ever taught him.", "He counters repeats. Change your move every turn."),
+  zemo: G("feint", "Team Breaker", "Zemo talks while he fights. Half of it is true.", "Some tells lie. Trade even when unsure."),
+  crossbones: G("charge", "Last Detonation", "Rumlow pulls the pin and walks forward anyway.", "Every third turn he detonates. Guard when it comes."),
+  // Thor
+  loki: G("feint", "Illusions", "There are three Lokis. Two of them are lying.", "Some tells lie. Read twice, trust once."),
+  malekith: G("fog", "Aether Dark", "The Aether swallows the light. You fight blind.", "Some tells are hidden. Hit hard when you can't see."),
+  hela: G("swarm", "Army of the Dead", "She raises Asgard's dead to hold you still.", "The dead chip you each turn. An area move clears them."),
+  surtur: G("charge", "Twilight Sword", "The sword the size of a mountain rises.", "Every third turn it falls. Guard when it comes."),
+  // Black Panther
+  killmonger: G("enrage", "Golden Jaguar", "The suit flares gold. He fights like he has nothing left to lose.", "He hits harder below half. Answer every tell.", { at: 0.5 }),
+  klaw: G("charge", "Sonic Cannon", "The arm hums up to a pitch you feel in your teeth.", "Every third turn he fires. Guard when it comes."),
+  mbaku: G("armor", "Jabari Guard", "M'Baku plants his feet. You will not move the mountain.", "His guard soaks hits. Two trick moves break it.", { style: "trick" }),
+  namor: G("regen", "Tide's Return", "He dives into the water and comes up whole.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  // Wolverine
+  sabretooth: G("regen", "Healing Factor", "The cuts close while you watch. He grins.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  deathstrike: G("regen", "Cyborg Repair", "Her hand reforms around the claws.", "She heals each turn. A trick move stalls it.", { style: "trick" }),
+  "omega-red": G("swarm", "Carbonadium Coils", "The coils whip out and start draining you.", "The coils drain you each turn. An area move throws them off."),
+  "silver-samurai": G("armor", "Tachyon Blade Stance", "Harada raises the sword. The edge glows.", "His stance soaks hits. Two trick moves slip it.", { style: "trick" }),
+  // Flash
+  "reverse-flash": G("adapt", "Negative Speed Force", "\"I know every move you'll ever make, Barry.\"", "He reads repeats. Change your move every turn."),
+  "captain-cold": G("armor", "Cold Field", "The air freezes into a wall between you.", "The ice soaks hits. Two trick moves shatter it.", { style: "trick" }),
+  grodd: G("fog", "Psionic Fog", "Grodd reaches into your head and turns off the lights.", "Some tells are hidden. Hit hard when you can't see."),
+  "mirror-master": G("feint", "Hall of Mirrors", "Every mirror shows a different Scudder.", "Some tells lie. Trade even when unsure."),
+};
+
+/** A named rogue's gimmick by alias or civilian name. Null for anyone not in a preset. */
+export function villainGimmick(alias: string): BossGimmick | null {
+  for (const preset of PRESETS) {
+    const villain = preset.villains.find((row) => row.alias === alias || row.name === alias);
+    if (villain) return VILLAIN_GIMMICKS[villain.id] ?? null;
+  }
+  return null;
 }

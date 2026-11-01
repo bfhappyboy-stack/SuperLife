@@ -157,6 +157,23 @@ export interface Wardrobe {
   worn: Partial<Record<CostumeSlot, string>>;
 }
 
+export type GimmickKind = "armor" | "enrage" | "fog" | "feint" | "adapt" | "regen" | "revive" | "coin" | "swarm" | "charge";
+
+/** A boss's signature rule twist. Data only: see duel.ts for what each kind does. */
+export interface BossGimmick {
+  kind: GimmickKind;
+  /** Name shown in the fight, e.g. "Living Armor". */
+  name: string;
+  /** What the boss says when the phase starts. */
+  line: string;
+  /** How to beat it, in one short line. */
+  hint: string;
+  /** Health fraction that starts phase 2 (default 0.55). 1 = live from the start. Ignored by revive. */
+  at?: number;
+  /** armor: the style that cracks it. regen: the style that stalls it. */
+  style?: MoveStyle;
+}
+
 export interface DuelBoard {
   foeName: string;
   foeTitle: string;
@@ -175,6 +192,8 @@ export interface DuelBoard {
   foeSex?: Sex;
   /** Boss fights get a bigger entrance and a gold KO. */
   boss?: boolean;
+  /** Signature twist; most switch on in phase 2. */
+  gimmick?: BossGimmick;
 }
 
 export interface Cape {
