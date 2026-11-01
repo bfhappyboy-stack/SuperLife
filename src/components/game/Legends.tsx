@@ -3,7 +3,9 @@ import { FirstMove } from "@/components/game/FirstMove";
 import { RevealShareSheet, type RevealCardData } from "@/components/game/RevealCard";
 import { blip, buzz } from "@/components/game/sfx";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { LegendBust } from "@/components/game/LegendBust";
 import { TitleArt, useArt } from "@/components/game/Scene";
+import { hasArt } from "@/assets/art";
 import { ElementBurst, ElementIcon } from "@/components/game/Vfx";
 import { getPower } from "@/game/combo";
 import { ELEMENTS, elementOfPower } from "@/game/elements";
@@ -104,8 +106,28 @@ export function SealedOrb({ className = "size-20" }: { className?: string }) {
 function LegendThumb({ legend, className, style }: { legend: HeroPreset; className?: string; style?: CSSProperties }) {
   const art = useArt(legend.art);
   return (
-    <span className={`block overflow-hidden bg-panel shadow-lg ${className ?? ""}`} style={{ ...style, background: legend.color }}>
-      {art && <img src={art} alt="" className="anim-fade size-full object-cover object-[50%_18%]" />}
+    <span className={`relative block overflow-hidden bg-panel shadow-lg ${className ?? ""}`} style={{ ...style, background: legend.color }}>
+      {art ? <img src={art} alt="" className="anim-fade size-full object-cover object-[50%_18%]" /> : !hasArt(legend.art) && <LegendPoster legend={legend} thumb />}
+    </span>
+  );
+}
+
+/**
+ * Drawn poster for a legend whose painted portrait hasn't been made yet: their city at night, a halo in
+ * their colour, and the hero in their suit. Swaps out automatically once art lands in src/assets/art.
+ */
+function LegendPoster({ legend, thumb = false }: { legend: HeroPreset; thumb?: boolean }) {
+  const city = useArt(legend.cityId);
+  const kit = legend.kit ?? { suit: legend.color, trim: "#f4ead6" };
+  return (
+    <span className="absolute inset-0 block overflow-hidden bg-ink" aria-hidden>
+      {city && <img src={city} alt="" className="anim-fade absolute inset-0 size-full object-cover opacity-45 saturate-50" />}
+      <span className="absolute inset-0" style={{ background: `radial-gradient(70% 46% at 50% ${thumb ? 40 : 34}%, ${legend.color}cc, ${legend.color}33 48%, transparent 72%), linear-gradient(180deg, #0c101966, #0c1019 92%)` }} />
+      {!thumb && <span className="ko-rays absolute top-[34%] left-1/2 size-[150%] -translate-x-1/2 -translate-y-1/2 opacity-25" style={{ background: `conic-gradient(from 0deg, transparent, ${legend.color}, transparent 12%, transparent 25%, ${legend.color}, transparent 37%, transparent 50%, ${legend.color}, transparent 62%, transparent 75%, ${legend.color}, transparent 87%)` }} />}
+      <span className={`absolute left-1/2 -translate-x-1/2 ${thumb ? "top-[8%] h-[120%] w-[130%]" : "top-[4%] h-[66%] w-[100%]"}`}>
+        <LegendBust crest={kit.crest} color={legend.color} />
+      </span>
+      {!thumb && <span className="t-display absolute top-[8%] left-1/2 -translate-x-1/2 text-[7rem] leading-none opacity-[0.07]" style={{ color: legend.color }}>{legend.earth.replace("Earth-", "")}</span>}
     </span>
   );
 }
@@ -185,7 +207,7 @@ function LegendCard({ legend, active }: { legend: HeroPreset; active: boolean })
       style={{ borderColor: `${legend.color}aa`, boxShadow: active ? `0 18px 50px -18px ${legend.color}` : undefined }}
       aria-label={`${legend.hero}, ${legend.earth}`}
     >
-      {art ? <img src={art} alt={`${legend.hero} portrait`} className="anim-fade absolute inset-0 size-full object-cover object-top" /> : <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${legend.color}55, #0c1019)` }} />}
+      {art ? <img src={art} alt={`${legend.hero} portrait`} className="anim-fade absolute inset-0 size-full object-cover object-top" /> : hasArt(legend.art) ? <div className="absolute inset-0" style={{ background: `linear-gradient(160deg, ${legend.color}55, #0c1019)` }} /> : <LegendPoster legend={legend} />}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-ink/30 via-55% to-ink" />
       <span className="absolute top-3 left-3 rounded-full border border-white/25 bg-black/55 px-2.5 py-1 text-[10px] font-extrabold tracking-[0.16em] text-fg uppercase backdrop-blur">{legend.earth}</span>
       <span className="absolute top-3 right-3 rounded-full px-2.5 py-1 text-[10px] font-extrabold tracking-[0.12em] text-ink uppercase" style={{ background: legend.color }}>Variant</span>

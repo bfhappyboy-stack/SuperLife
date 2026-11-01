@@ -14,7 +14,7 @@
  */
 import type { DuelMove, Effects, Look, PowerId, Sex, TraitId, UpbringingId } from "./types";
 
-export type PresetId = "spider-man" | "batman" | "iron-man" | "hulk" | "superman" | "wonder-woman" | "captain-america" | "thor";
+export type PresetId = "spider-man" | "batman" | "iron-man" | "hulk" | "superman" | "wonder-woman" | "captain-america" | "thor" | "black-panther" | "wolverine" | "flash";
 export type CanonPath = "canon" | "bend" | "break";
 
 export interface PresetVillain {
@@ -93,6 +93,8 @@ export interface HeroPreset {
   art: string;
   /** Accent colour for cards and the reveal. */
   color: string;
+  /** Suit colours for the drawn poster, used when a legend has no painted portrait yet. */
+  kit?: { suit: string; trim: string; mask?: "none" | "domino" | "hood" | "cowl" | "helm"; maskColor?: string; glove?: string; cape?: "none" | "short" | "long" | "coat"; crest?: "panther" | "wolverine" | "flash" };
   /** Head start on base stats (added after the upbringing roll). */
   boost?: Effects;
   /** Powers that wake at the `wake` beat. Empty for a powerless legend. */
@@ -1160,6 +1162,372 @@ export const PRESETS: HeroPreset[] = [
       { id: "malekith", name: "Malekith", alias: "Malekith", title: "The dark elf king", powerId: "ice", level: 8, blurb: "Older than light, and he wants it all switched off.", moves: [mv("Aether Surge", "Red mist that eats stars.", 8, "strike", "shadow", "burst"), mv("Black Ice", "Cold from before the world.", 7, "strike", "ice", "area"), mv("Kursed Strength", "His soldiers become monsters.", 5, "trick", "life", "status"), mv("Shadow Veil", "He isn't there.", 5, "guard", "shadow", "guard")] },
       { id: "hela", name: "Hela", alias: "Hela", title: "Goddess of Death", powerId: "blasts", level: 9, blurb: "Odin's firstborn by blood, locked away until Ragnarok.", moves: [mv("Necroswords", "A rain of black blades.", 8, "strike", "shadow", "area"), mv("Crush the Hammer", "She catches it. She squeezes.", 7, "trick", "force", "status"), mv("Death's Touch", "Cold hands.", 9, "strike", "shadow", "burst"), mv("Antlered Crown", "Death doesn't flinch.", 5, "guard", "shield", "guard")] },
       { id: "surtur", name: "Surtur", alias: "Surtur", title: "The fire at the end of all things", powerId: "fire", level: 10, from: 60, blurb: "A giant of flame whose sword is the end of Asgard.", moves: [mv("Twilight Sword", "It burns realms.", 10, "strike", "fire", "burst"), mv("Muspelheim Rising", "The ground is lava now.", 8, "strike", "fire", "area"), mv("Prophecy", "It is written.", 6, "trick", "arcane", "status"), mv("Crown of Flame", "Too hot to touch.", 6, "guard", "fire", "guard")] },
+    ],
+  },
+  {
+    id: "black-panther",
+    hero: "Black Panther",
+    name: "T'Challa",
+    earth: "Earth-6616",
+    twist: "Wakanda opened its borders a generation early. The whole world knows the king's name, and the whole world wants the vibranium.",
+    tagline: "Wakanda forever. The world, too, if it behaves.",
+    sex: "male",
+    cityId: "crown",
+    upbringing: "legacy",
+    face: "loud",
+    drive: "duty",
+    family: [{ name: "Ramonda", note: "Queen Mother", sex: "female" }, { name: "T'Chaka", note: "Father, the king", sex: "male" }, { name: "Shuri", note: "Little sister, a genius", sex: "female" }],
+    extra: ["royalty", "martial"],
+    look: { skin: 9, hair: 0, style: 2, build: 1, feature: 0 },
+    portrait: 6616,
+    art: "hero-black-panther",
+    color: "#9b6bff",
+    kit: { suit: "#15131d", trim: "#b48cff", mask: "cowl", maskColor: "#15131d", glove: "#1d1a28", crest: "panther" },
+    boost: { smarts: 10, money: 40000 },
+    powers: ["super-strength", "super-senses", "kinetic-impact"],
+    decades: [
+      { title: "The Prince of Birnin Zana", premise: "{name} grows up in a palace with a view of the Great Mound, a father who listens more than he speaks, and a sister who hacks the doors." },
+      { title: "Warrior Falls", premise: "Teen years. Lessons in the jungle, lessons in council, and a challenge waiting at the edge of the water." },
+      { title: "The Heart-Shaped Herb", premise: "Twenties. A crown nobody should want this young, and a purple flower that remembers every king before {name}." },
+      { title: "Killmonger", premise: "Thirties. A cousin nobody told {name} about comes home with a grudge as old as the borders." },
+      { title: "The World Comes Knocking", premise: "Forty. Open borders mean open hands, and open hands mean thieves. {city} watches how a king answers." },
+      { title: "Wakanda Forever", premise: "Fifty. A kingdom under the sea wants what Wakanda has. {name} wants nobody else buried." },
+      { title: "The Ancestral Plane", premise: "Sixty. The panthers in the dreams look a lot like {name}'s father now. They have advice." },
+      { title: "The Last Hunt", premise: "Late light over {city}. Shuri runs the labs. A young warrior wears the suit. {name} still walks the falls at dawn." },
+    ],
+    beats: [
+      {
+        id: "lab", age: 8, title: "Shuri's Lab", text: "Your little sister has built a pair of vibranium sneakers that hum. She wants a test pilot. Your father wants you in council.",
+        choices: [
+          { id: "council", label: "Sit through council", path: "canon", text: "Three hours on water rights. Your father squeezes your shoulder after. 'A king listens first.'", effects: { smarts: 6, karma: 4 } },
+          { id: "test", label: "Test the sneakers", path: "bend", text: "You go through a wall. Shuri takes notes. Your mother pretends not to laugh.", effects: { happiness: 8, health: -3 }, trait: "inventor" },
+        ],
+      },
+      {
+        id: "klaw", age: 13, title: "The Sound of Thieves", text: "A man with a sonic cannon tries to rob the Great Mound. Your father steps in front of it.",
+        choices: [
+          { id: "watch", label: "Freeze where you stand", path: "canon", text: "Ulysses Klaue escapes with a hand full of sound and a vow. T'Chaka is hurt, and alive, and quiet about it.", effects: { happiness: -8 }, meet: "klaw", arch: true },
+          { id: "charge", label: "Charge the cannon", path: "break", text: "You are thirteen and very fast. Klaue's hand is crushed in his own machine. He'll remember you.", effects: { health: -8, fame: 6 }, meet: "klaw", arch: true },
+        ],
+      },
+      {
+        id: "herb", age: 18, wake: true, title: "The Heart-Shaped Herb", text: "The priests bury you in red sand with the purple flower on your tongue. Your heart slows. A panther walks out of the dark.",
+        choices: [
+          { id: "accept", label: "Kneel to the Panther", path: "canon", text: "You wake with the strength of every king before you, and their voices, faintly, at the back of your head.", effects: { health: 16, karma: 6 } },
+          { id: "ask", label: "Ask the Panther a question", path: "bend", text: "It answers. You don't tell anyone what it said. Your father looks at you differently after.", effects: { smarts: 6, happiness: 4 }, trait: "psychic" },
+        ],
+      },
+      {
+        id: "falls", age: 21, title: "Challenge Day", text: "Your father is dead, killed by a bomb at the United Nations. At Warrior Falls, M'Baku of the Jabari steps into the water to take the crown.",
+        choices: [
+          { id: "fight", label: "Fight him for it", path: "canon", text: "Spears, water, and a crowd chanting both names. You win. You do not kill him. He remembers that.", fight: "mbaku", meet: "mbaku", loss: ["T'Chaka"] },
+          { id: "yield", label: "Offer him a seat on the council", path: "bend", text: "Nobody has ever done this. M'Baku laughs for a full minute, then says yes. The Jabari come down the mountain.", effects: { reputation: 10, karma: 8 }, trait: "team", meet: "mbaku", loss: ["T'Chaka"] },
+        ],
+      },
+      {
+        id: "cousin", age: 31, title: "N'Jadaka", text: "A soldier from Oakland arrives with Klaue's body and your uncle's ring. Erik Stevens. Killmonger. He wants the throne, and the guns, and the world on fire.",
+        choices: [
+          { id: "fight", label: "Accept his challenge", path: "canon", text: "He throws you off the falls. The Jabari pull you out of the snow. Round two is in the vibranium mine.", fight: "killmonger", meet: "killmonger", arch: true },
+          { id: "share", label: "Offer him the outreach program", path: "break", text: "He doesn't trust it. Then he runs it. Then he's furious it works. Cousins, in the end.", effects: { karma: 12, reputation: 6 }, meet: "killmonger" },
+        ],
+      },
+      {
+        id: "open", age: 38, title: "The Open Door", text: "The UN asks Wakanda to share vibranium. Half the council wants to close the borders again.",
+        choices: [
+          { id: "share", label: "Share the science, keep the mound", path: "canon", text: "Outreach centers open in {city}. Shuri teaches a class. The thieves get bolder, too.", effects: { reputation: 10, fame: 8 }, trait: "liaison" },
+          { id: "close", label: "Close the borders", path: "break", text: "Quiet years. Safe years. The world calls you a coward. Some of them are right.", effects: { reputation: -8, money: 20000 } },
+        ],
+      },
+      {
+        id: "talokan", age: 46, title: "Talokan Rises", text: "Namor, king of an ocean city, sinks a vibranium detector and gives you a choice: join him against the surface, or be first.",
+        choices: [
+          { id: "fight", label: "Meet him on the water", path: "canon", text: "He's stronger in the sea. You drag the fight onto the sand. Two kings, both bleeding, both still standing.", fight: "namor", meet: "namor", arch: true },
+          { id: "treaty", label: "Write a treaty instead", path: "bend", text: "Two hidden kingdoms, one secret pact. The surface never learns how close it came.", effects: { karma: 10, smarts: 4 }, meet: "namor" },
+        ],
+      },
+      {
+        id: "shuri", age: 58, title: "The Mantle", text: "Shuri asks to take the herb. The council says the Panther is yours until you die.",
+        choices: [
+          { id: "share", label: "Two Panthers, then", path: "bend", text: "Brother and sister in black, back to back. The council shuts up.", effects: { happiness: 10, reputation: 6 }, trait: "team" },
+          { id: "tradition", label: "Keep the tradition", path: "canon", text: "She builds you a better suit instead. She's still annoyed. It's still a better suit.", effects: { health: 6 } },
+        ],
+      },
+      {
+        id: "killmonger-return", age: 62, title: "The Ancestral Plane", text: "On the plane of your ancestors, the panthers part. Erik is there, older too, angry still. 'One more round, cousin.'",
+        choices: [
+          { id: "fight", label: "Give him the round", path: "canon", text: "No crowd, no falls, just two men who wanted the same kingdom for different reasons. You both walk away.", fight: "killmonger", meet: "killmonger", effects: { fame: 6 } },
+          { id: "sit", label: "Sit with him", path: "bend", text: "You talk about Oakland until the sun comes up on a place with no sun.", effects: { karma: 10, happiness: 8 }, meet: "killmonger" },
+        ],
+      },
+      {
+        id: "klaw-last", age: 66, title: "The Sound Returns", text: "Ulysses Klaue is made of sound now, a ghost in the vibranium. He's in every speaker in {city}.",
+        choices: [
+          { id: "fight", label: "Hunt him in the noise", path: "canon", text: "Silence is a weapon too. Shuri builds you one. The speakers go quiet for good.", fight: "klaw", meet: "klaw", effects: { fame: 8 } },
+          { id: "trap", label: "Let Shuri trap him", path: "bend", text: "He's in a jar on her desk. He hums when he's angry.", effects: { smarts: 4, karma: 4 }, meet: "klaw" },
+        ],
+      },
+      {
+        id: "dawn", age: 71, title: "Dawn at the Falls", text: "A young warrior from the outreach program wins the challenge. They ask if you're proud or sad.",
+        endings: {
+          canon: "Earth-6616 ends the way the legend should: a king who opened a door, kept a kingdom, and left the suit in good hands.",
+          bend: "Earth-6616 bends kinder: Jabari on the council, Talokan at the table, and a sister who wore the panther too.",
+          break: "Earth-6616 ends off the map. No comic ever wrote this Wakanda, and the ancestors say they like it better.",
+        },
+        choices: [
+          { id: "proud", label: "Proud", path: "canon", text: "Both. Mostly proud. You show them where the herb grows.", effects: { happiness: 12 } },
+          { id: "teach", label: "Teach them everything", path: "bend", text: "Every morning at the falls. They're faster than you were. You tell them so.", effects: { happiness: 10, smarts: 2 } },
+        ],
+      },
+    ],
+    villains: [
+      { id: "killmonger", name: "N'Jadaka", alias: "Killmonger", title: "The cousin who came home angry", powerId: "strength", level: 8, blurb: "A soldier raised on the wrong side of the border, wearing your own suit back at you.", moves: [mv("Golden Claws", "A gold panther with your moves.", 8, "strike", "force", "burst"), mv("Kinetic Dump", "Your own hits, stored and spat back.", 9, "strike", "energy", "area"), mv("Black Ops", "He studied you for years.", 5, "trick", "shadow", "status"), mv("Vibranium Weave", "The suit drinks the blow.", 5, "guard", "shield", "guard")] },
+      { id: "klaw", name: "Ulysses Klaue", alias: "Klaw", title: "Master of sound", powerId: "blasts", level: 7, blurb: "A thief who turned his ruined hand into a cannon, and then turned himself into noise.", moves: [mv("Sonic Cannon", "A wall of sound.", 8, "strike", "energy", "burst"), mv("Feedback Scream", "Your ears give up first.", 6, "trick", "psychic", "status"), mv("Hard Sound", "Solid noise, shaped like a fist.", 7, "strike", "force", "area"), mv("Static Cloak", "He goes quiet and gone.", 4, "guard", "shadow", "guard")] },
+      { id: "mbaku", name: "M'Baku", alias: "Man-Ape", title: "Chief of the Jabari", powerId: "strength", level: 6, blurb: "A mountain of a man who thinks the throne should be won, not inherited.", moves: [mv("Gorilla Charge", "The ground shakes.", 7, "strike", "force", "dash"), mv("War Club", "Jabari wood, harder than steel.", 7, "strike", "force", "burst"), mv("Mountain Roar", "The whole tribe answers.", 5, "trick", "psychic", "status"), mv("Thick Hide", "He just takes it.", 5, "guard", "shield", "guard")] },
+      { id: "namor", name: "K'uk'ulkan", alias: "Namor", title: "King of Talokan", powerId: "flight", level: 9, from: 40, blurb: "A winged king from under the sea who has kept his city secret for five hundred years.", moves: [mv("Tidal Spear", "The ocean behind the point.", 9, "strike", "wind", "burst"), mv("Siren Song", "His people sing you still.", 6, "trick", "psychic", "status"), mv("Ankle Wings", "He's above you, then behind you.", 6, "strike", "speed", "dash"), mv("Deep Pressure", "Sea-born skin.", 5, "guard", "shield", "guard")] },
+    ],
+  },
+  {
+    id: "wolverine",
+    hero: "Wolverine",
+    name: "James Howlett",
+    earth: "Earth-7419",
+    twist: "The Weapon X memory wipe failed. Logan remembers every name, every decade, and every person who put the metal in him.",
+    tagline: "The best there is at what he does. What he does isn't very nice.",
+    sex: "male",
+    cityId: "dust",
+    upbringing: "tragic",
+    face: "loud",
+    drive: "lone",
+    family: [{ name: "Elizabeth Howlett", note: "Mother", sex: "female" }, { name: "John Howlett", note: "Father", sex: "male" }, { name: "Rose O'Hara", note: "Childhood friend", sex: "female" }],
+    extra: ["martial"],
+    look: { skin: 1, hair: 0, style: 4, build: 1, feature: 0 },
+    portrait: 7419,
+    art: "hero-wolverine",
+    color: "#f2c230",
+    kit: { suit: "#f2c230", trim: "#2a4aa8", mask: "cowl", maskColor: "#2a4aa8", glove: "#2a4aa8", crest: "wolverine" },
+    boost: { health: 10 },
+    powers: ["regeneration", "super-senses", "pain-map"],
+    decades: [
+      { title: "The Howlett Estate", premise: "{name} is a sickly kid on a big estate, with a red-haired friend named Rose and a groundskeeper's son who scares him." },
+      { title: "Logan", premise: "Teen years. A new name, a mining camp, and a body that heals faster than it should." },
+      { title: "A Hundred Wars", premise: "Twenties. Every war that'll have him. {name} doesn't die in any of them, which is starting to look like a problem." },
+      { title: "Weapon X", premise: "Thirties. A lab in the snow, a tank full of liquid metal, and men who think they've wiped his mind. They haven't." },
+      { title: "The X-Men", premise: "Forty. A bald man in a wheelchair offers {name} a room, a team, and a reason. He takes two out of three." },
+      { title: "Madripoor Nights", premise: "Fifty. Patch, the bar, the eyepatch. {name} handles the jobs the team can't know about." },
+      { title: "Old Man Logan", premise: "Sixty. He still looks forty. The people he loves don't. That's the real healing factor: you get to watch." },
+      { title: "The Last Snikt", premise: "Late light over {city}. A kid with claws calls him dad. {name} pretends that doesn't get to him." },
+    ],
+    beats: [
+      {
+        id: "dog", age: 7, title: "The Groundskeeper's Son", text: "Dog Logan kills your puppy to see what you'll do. Rose holds your hand. You feel something itch under your knuckles.",
+        choices: [
+          { id: "cry", label: "Run to Rose", path: "canon", text: "She tells you it's not your fault. The itch goes away. For now.", effects: { happiness: -6, karma: 4 } },
+          { id: "glare", label: "Stare him down", path: "bend", text: "You don't blink. Neither does he. Something old looks back at you out of his eyes.", effects: { happiness: -4 }, trait: "vengeful" },
+        ],
+      },
+      {
+        id: "claws", age: 12, wake: true, title: "Bone Claws", text: "Thomas Logan shoots your father in the front hall. You scream, and three bone claws tear out of each hand.",
+        choices: [
+          { id: "snikt", label: "Let them out", path: "canon", text: "It's over in a second. Thomas is dead. Your mother looks at you like a stranger. You run with Rose into the snow.", effects: { happiness: -14, karma: -4 }, loss: ["John Howlett"], meet: "sabretooth", arch: true },
+          { id: "hold", label: "Hold them back", path: "break", text: "The claws go back in, bleeding. Thomas is arrested. Your father lives, barely, and never asks what he saw.", effects: { health: -10, karma: 8 }, meet: "sabretooth" },
+        ],
+      },
+      {
+        id: "rose", age: 17, title: "The Mining Camp", text: "You and Rose work a quarry under a new name: Logan. Victor Creed, a man with teeth like yours, picks a fight in the camp.",
+        choices: [
+          { id: "fight", label: "Fight Creed", path: "canon", text: "Claw on claw in the mud. Rose steps in to stop it. You hit her by mistake. You walk into the woods and live with the wolves for a year.", fight: "sabretooth", meet: "sabretooth", loss: ["Rose O'Hara"] },
+          { id: "leave", label: "Take Rose and leave", path: "bend", text: "You walk all night. She marries a good man in town. She writes. You keep every letter.", effects: { happiness: 6 }, meet: "sabretooth" },
+        ],
+      },
+      {
+        id: "wars", age: 24, title: "Every War", text: "Beaches, trenches, jungles. You keep getting shot and keep getting up. A man named Stryker starts taking notes.",
+        choices: [
+          { id: "serve", label: "Keep fighting", path: "canon", text: "Medals under a dozen names. Friends in a dozen graves. You stop learning names.", effects: { fame: 6, happiness: -6 }, trait: "duty" },
+          { id: "walk", label: "Walk away from the army", path: "bend", text: "A cabin, a lake, some quiet. Stryker finds you anyway. He always will.", effects: { happiness: 6 } },
+        ],
+      },
+      {
+        id: "weaponx", age: 33, title: "Weapon X", text: "They put you in a tank and pour metal into your bones. The memory wipe hums. In this universe, it doesn't take.",
+        choices: [
+          { id: "break", label: "Break out of the tank", path: "canon", text: "Naked, screaming, adamantium claws, the whole lab on fire. You remember every face. Every one.", effects: { health: -10, karma: -4 }, grant: ["super-durability"], fight: "deathstrike", meet: "deathstrike", arch: true },
+          { id: "play", label: "Play dead and listen", path: "bend", text: "They think you're empty. You learn every name in the program before you walk out.", effects: { smarts: 8 }, grant: ["super-durability"], meet: "deathstrike" },
+        ],
+      },
+      {
+        id: "xavier", age: 40, title: "The School", text: "A telepath in a wheelchair finds you in a cage-fight bar. 'You don't have to be alone, Logan.'",
+        choices: [
+          { id: "join", label: "Take the room", path: "canon", text: "A team, a uniform, a red-haired telepath you shouldn't look at twice. You look three times.", effects: { happiness: 10, reputation: 8 }, trait: "team" },
+          { id: "solo", label: "Stay on the road", path: "break", text: "Bars, borders, one more fight. The X-Men call when it's bad. You always come.", effects: { fame: 6 } },
+        ],
+      },
+      {
+        id: "omega", age: 48, title: "Omega Red", text: "A Soviet super-soldier with carbonadium tentacles comes looking for the one thing that can keep him alive: your healing factor.",
+        choices: [
+          { id: "fight", label: "Cut him loose", path: "canon", text: "Tentacles around your throat. Claws through the tentacles. He's going back in the freezer.", fight: "omega-red", meet: "omega-red" },
+          { id: "trick", label: "Lead him into a trap", path: "bend", text: "Madripoor's harbor, a cargo crane, and a lot of very cold water.", effects: { smarts: 4, reputation: 4 }, meet: "omega-red" },
+        ],
+      },
+      {
+        id: "creed-old", age: 58, title: "Birthday", text: "Every year on your birthday, Victor Creed finds you and tries to kill you. This year he's brought a cake.",
+        choices: [
+          { id: "fight", label: "The annual fight", path: "canon", text: "Same dance as always. Bloodier. You'll both be back next year.", fight: "sabretooth", meet: "sabretooth", effects: { fame: 4 } },
+          { id: "cake", label: "Eat the cake", path: "bend", text: "It's poisoned. You heal. He laughs so hard he forgets to attack.", effects: { happiness: 6, health: -4 }, meet: "sabretooth" },
+        ],
+      },
+      {
+        id: "laura", age: 63, title: "X-23", text: "A girl with two claws in each hand and one in each foot breaks out of a lab and comes looking for her father. That's you.",
+        choices: [
+          { id: "raise", label: "Raise her", path: "canon", text: "She's angry, fast, and smarter than you. She calls you Logan for years. Then once, by accident, dad.", effects: { happiness: 14, karma: 8 }, trait: "family" },
+          { id: "school", label: "Send her to the school", path: "bend", text: "She's safe there. You visit every week, gruff and early. She notices.", effects: { happiness: 8 } },
+        ],
+      },
+      {
+        id: "deathstrike-last", age: 67, title: "Lady Deathstrike", text: "Yuriko Oyama has spent forty years becoming a weapon to kill you. Her father built Weapon X's metal. She thinks it's hers.",
+        choices: [
+          { id: "fight", label: "Finish it", path: "canon", text: "Adamantium on adamantium, in the rain. You win. You're too old to enjoy it.", fight: "deathstrike", meet: "deathstrike", effects: { fame: 8 } },
+          { id: "mercy", label: "Offer her a way out", path: "bend", text: "She doesn't take it. She doesn't come back, either.", effects: { karma: 10 }, meet: "deathstrike" },
+        ],
+      },
+      {
+        id: "cabin", age: 74, title: "The Cabin", text: "A lake, a porch, a cold beer. Laura comes up the road with a kid of her own.",
+        endings: {
+          canon: "Earth-7419 ends the way the legend should: the best there is, who finally stopped running and let the kid win at cards.",
+          bend: "Earth-7419 bends kinder: Rose's letters in a box, a team that never gave up on him, and a man who remembered everything and forgave most of it.",
+          break: "Earth-7419 ends off the map. No comic ever let Logan stop fighting, and he didn't miss it once.",
+        },
+        choices: [
+          { id: "porch", label: "Pull up a chair", path: "canon", text: "The kid asks if the claws hurt. 'Every time.' 'Then why?' 'Worth it.'", effects: { happiness: 14 } },
+          { id: "hike", label: "Take them into the woods", path: "bend", text: "You teach the kid to track a wolf. The wolf teaches you both something too.", effects: { happiness: 10, health: 2 } },
+        ],
+      },
+    ],
+    villains: [
+      { id: "sabretooth", name: "Victor Creed", alias: "Sabretooth", title: "The birthday killer", powerId: "healing", level: 8, blurb: "Fangs, claws, a healing factor, and a hundred years of grudges with your name on them.", moves: [mv("Rending Claws", "Faster than yours. Meaner.", 8, "strike", "force", "burst"), mv("Pounce", "He's on you before you see him.", 7, "strike", "speed", "dash"), mv("Hunter's Nose", "He smells the plan.", 5, "trick", "shadow", "status"), mv("Feral Heal", "Wounds close mid-swing.", 6, "guard", "life", "guard")] },
+      { id: "deathstrike", name: "Yuriko Oyama", alias: "Lady Deathstrike", title: "Weapon X's daughter", powerId: "healing", level: 8, blurb: "A cyborg with ten adamantium nails and a claim to the metal in your bones.", moves: [mv("Ten Blades", "Each finger a sword.", 9, "strike", "force", "area"), mv("Cyber Lunge", "Built to close the gap.", 7, "strike", "speed", "dash"), mv("Reaver Code", "She hacked your pain.", 5, "trick", "psychic", "status"), mv("Armored Skin", "Bullets bounce.", 5, "guard", "shield", "guard")] },
+      { id: "omega-red", name: "Arkady Rossovich", alias: "Omega Red", title: "The Soviet answer", powerId: "elastic", level: 7, from: 40, blurb: "A super-soldier dying of his own power, with carbonadium coils and a death spore in his breath.", moves: [mv("Carbonadium Coils", "Tentacles that drink life.", 8, "strike", "stretch", "area"), mv("Death Spores", "Breathe and weaken.", 6, "trick", "life", "status"), mv("Coil Lash", "From ten feet out.", 7, "strike", "stretch", "burst"), mv("Cryo Shell", "Born in a freezer.", 5, "guard", "ice", "guard")] },
+      { id: "silver-samurai", name: "Kenuichio Harada", alias: "Silver Samurai", title: "Clan Yashida's blade", powerId: "blasts", level: 6, from: 30, blurb: "A swordsman whose blade can cut anything, adamantium included, he says.", moves: [mv("Tachyon Blade", "It cuts through anything.", 8, "strike", "energy", "burst"), mv("Iaido Draw", "Sheathed, then not.", 7, "strike", "speed", "dash"), mv("Teleport Ring", "He blinks out.", 4, "trick", "warp", "status"), mv("Silver Armor", "Yashida steel.", 5, "guard", "shield", "guard")] },
+    ],
+  },
+  {
+    id: "flash",
+    hero: "The Flash",
+    name: "Barry Allen",
+    earth: "Earth-1956",
+    twist: "The bolt hit twice. Iris West caught the second one, and the man in yellow who killed Barry's mother has come back for both of them.",
+    tagline: "Fastest man alive. Still late for everything.",
+    sex: "male",
+    cityId: "metro",
+    upbringing: "tragic",
+    face: "loud",
+    drive: "amends",
+    family: [{ name: "Nora Allen", note: "Mother", sex: "female" }, { name: "Henry Allen", note: "Father, a doctor", sex: "male" }, { name: "Iris West", note: "Foster sister, best friend", sex: "female" }],
+    extra: ["insider"],
+    look: { skin: 0, hair: 4, style: 1, build: 0, feature: 0 },
+    portrait: 1956,
+    art: "hero-flash",
+    color: "#ff3b30",
+    kit: { suit: "#d8241c", trim: "#ffd23a", mask: "cowl", maskColor: "#d8241c", glove: "#d8241c", crest: "flash" },
+    boost: { smarts: 16 },
+    powers: ["super-speed", "thunder-sprint"],
+    decades: [
+      { title: "The Night of the Yellow Blur", premise: "{name} is a small kid who saw something impossible kill his mother: red and yellow lightning, in the living room." },
+      { title: "Iris and the Wests", premise: "Teen years. Detective West takes {name} in. Iris lends him her notes and her nerve. His father is in prison for something he didn't do." },
+      { title: "The Bolt", premise: "Twenties. A crime lab, a storm, a shelf of chemicals, and a lightning bolt that picked {name} on purpose." },
+      { title: "Rogues' Gallery", premise: "Thirties. {city} gets the most stylish criminals in the country. They have a union. They have rules." },
+      { title: "Flashpoint", premise: "Forty. {name} could run back and save her. He knows exactly what it would cost. He's still thinking about it." },
+      { title: "The Speed Force", premise: "Fifty. The lightning has a home, and it talks. It wants {name} to stay." },
+      { title: "Fastest Man Alive", premise: "Sixty. A kid in a yellow-and-red hoodie is outrunning {name} on the bridge. He lets them, a little." },
+      { title: "The Final Run", premise: "Late light over {city}. A slow walk with Iris, at last, at regular speed." },
+    ],
+    beats: [
+      {
+        id: "nora", age: 11, title: "The Yellow Blur", text: "You wake up to wind in the house. Your mother is in a storm of red and yellow lightning, and there are two of them. One of them looks like you.",
+        choices: [
+          { id: "run", label: "Run for help", path: "canon", text: "You're on the street, and then you're twenty blocks away and you don't know how. When you get home, she's gone. Your father is arrested.", effects: { happiness: -16 }, loss: ["Nora Allen"], meet: "reverse-flash", arch: true },
+          { id: "stay", label: "Stand in front of her", path: "break", text: "The yellow man stops. He laughs. 'Not this time, then.' She lives. He'll be back, and he'll be angrier.", effects: { happiness: 6, karma: 8 }, meet: "reverse-flash", arch: true },
+        ],
+      },
+      {
+        id: "lab", age: 16, title: "Crime Scene", text: "Detective Joe West brings you to a crime scene because you won't stop asking. You notice the thing his team missed.",
+        choices: [
+          { id: "science", label: "Point at the evidence", path: "canon", text: "A footprint that shouldn't be there. Joe looks at you differently. You start college a year early.", effects: { smarts: 10, reputation: 4 } },
+          { id: "dad", label: "Ask about your dad's case", path: "bend", text: "Joe says nothing for a long time. Then he hands you the file. 'Find what we missed.'", effects: { smarts: 6, karma: 4 } },
+        ],
+      },
+      {
+        id: "bolt", age: 25, wake: true, title: "Lightning", text: "A storm, a shelf of chemicals, a skylight. The bolt comes down through the glass and finds you like it was looking.",
+        choices: [
+          { id: "wake", label: "Wake up nine months later", path: "canon", text: "Abs. A heartbeat like a hummingbird. You catch a falling tray of coffee and then the cups, then the coffee.", effects: { health: 10, fame: 4 } },
+          { id: "iris", label: "Wake up next to Iris", path: "bend", text: "She got hit too, across town. She's faster off the line. You're faster in the long run. Neither of you will let that go.", effects: { happiness: 10 }, trait: "team" },
+        ],
+      },
+      {
+        id: "cold", age: 28, title: "Captain Cold", text: "A thief with a gun that shoots absolute zero freezes the river and waits for you on the ice.",
+        choices: [
+          { id: "fight", label: "Run circles around him", path: "canon", text: "Ice doesn't help when the floor is moving. Snart grins through the frost. 'Hope you like the cold, kid.'", fight: "captain-cold", meet: "captain-cold", arch: true },
+          { id: "deal", label: "Make a deal with him", path: "bend", text: "No civilians, no kills. He agrees. He keeps it, too, mostly. The Rogues have rules now.", effects: { reputation: 6, karma: 4 }, meet: "captain-cold" },
+        ],
+      },
+      {
+        id: "grodd", age: 33, title: "Gorilla City", text: "A telepathic gorilla takes over {city}'s police radio and makes the whole force sit down.",
+        choices: [
+          { id: "fight", label: "Outrun the thought", path: "canon", text: "He's in your head. You're faster than your head. It's a close thing.", fight: "grodd", meet: "grodd" },
+          { id: "talk", label: "Get him home", path: "bend", text: "He wanted Gorilla City back, not {city}. You run him there. He sends a fruit basket, menacingly.", effects: { karma: 8 }, meet: "grodd" },
+        ],
+      },
+      {
+        id: "flashpoint", age: 41, title: "Flashpoint", text: "You can run fast enough now. Back to that night. One push, and she lives.",
+        choices: [
+          { id: "dont", label: "Don't run", path: "canon", text: "You stand outside the house and watch. It's the worst night of your life again. The world stays the world.", effects: { happiness: -10, karma: 12 } },
+          { id: "run", label: "Run", path: "break", text: "She lives. Your father is free. And the world is wrong: wars that never happened, heroes who never were. You fix it. Mostly.", effects: { happiness: 8, reputation: -8 }, fight: "reverse-flash", meet: "reverse-flash" },
+        ],
+      },
+      {
+        id: "mirror", age: 49, title: "Mirror Master", text: "Sam Scudder steps out of every window on Main Street at once, and every one of him is armed.",
+        choices: [
+          { id: "fight", label: "Break every mirror", path: "canon", text: "A thousand reflections, one real one. You find him by the one that breathes.", fight: "mirror-master", meet: "mirror-master" },
+          { id: "cold", label: "Call Captain Cold", path: "bend", text: "The Rogues hate a show-off. Snart freezes the mirrors. Sam is very upset.", effects: { reputation: 4, karma: 4 }, meet: "mirror-master" },
+        ],
+      },
+      {
+        id: "speedforce", age: 58, title: "The Speed Force", text: "The lightning has a home, out past light. It looks like your mother. It wants you to stay.",
+        choices: [
+          { id: "home", label: "Run home", path: "canon", text: "Iris is holding the lamp in the window. You follow it out. You always will.", effects: { happiness: 10, health: -4 } },
+          { id: "listen", label: "Listen first", path: "bend", text: "It tells you about the kids who'll carry the bolt after you. You come back with names.", effects: { smarts: 6, karma: 6 } },
+        ],
+      },
+      {
+        id: "kid", age: 62, title: "Kid Flash", text: "Wally West, Iris's nephew, is too fast to stop and too young to know better. He wants lessons.",
+        choices: [
+          { id: "teach", label: "Teach him", path: "canon", text: "The first rule is: you're not faster than a bullet if you don't look where you're going. He learns it the hard way.", effects: { happiness: 10, reputation: 6 }, trait: "team" },
+          { id: "race", label: "Race him for it", path: "bend", text: "He wins. You let him think you didn't let him.", effects: { happiness: 8, fame: 4 } },
+        ],
+      },
+      {
+        id: "thawne", age: 66, title: "The Man in Yellow", text: "Eobard Thawne steps out of the future, young and cruel. Every time you beat him, he just runs to a time before you did.",
+        choices: [
+          { id: "fight", label: "The last race", path: "canon", text: "Around the world, then around it again. You catch him at the exact second he was born, and you let him go.", fight: "reverse-flash", meet: "reverse-flash", effects: { fame: 10 } },
+          { id: "trap", label: "Trap him in a moment", path: "bend", text: "Wally and Iris hold the loop. Thawne runs forever in one minute in 1956. He'll be fine. Probably.", effects: { smarts: 4, karma: 6 }, meet: "reverse-flash" },
+        ],
+      },
+      {
+        id: "walk", age: 72, title: "Regular Speed", text: "Iris takes your arm on the bridge. 'Walk with me. Slowly. I mean it.'",
+        endings: {
+          canon: "Earth-1956 ends the way the legend should: the fastest man alive, who never ran back, and was never late for the people who mattered.",
+          bend: "Earth-1956 bends kinder: two bolts, one family, and a Rogues' Gallery that kept its rules.",
+          break: "Earth-1956 ends off the map. No comic ever let Barry run back and keep it. This one did, and paid, and fixed it anyway.",
+        },
+        choices: [
+          { id: "slow", label: "Walk slowly", path: "canon", text: "It takes twenty minutes to cross. It's the longest you've ever spent anywhere. It's perfect.", effects: { happiness: 14 } },
+          { id: "sunset", label: "One last lap first", path: "bend", text: "Around the world before she finishes the sentence. You bring her a flower from every continent.", effects: { happiness: 12, health: -2 } },
+        ],
+      },
+    ],
+    villains: [
+      { id: "reverse-flash", name: "Eobard Thawne", alias: "Reverse-Flash", title: "The man in yellow", powerId: "speed", level: 9, blurb: "A speedster from the future who hates you so much he went back and ruined your childhood.", moves: [mv("Negative Speed Force", "Red lightning, running backwards.", 9, "strike", "lightning", "burst"), mv("Vibrating Hand", "Through the chest.", 8, "strike", "speed", "dash"), mv("Time Remnant", "Another him, from a second ago.", 6, "trick", "warp", "status"), mv("Phase Out", "You hit air.", 5, "guard", "speed", "guard")] },
+      { id: "captain-cold", name: "Leonard Snart", alias: "Captain Cold", title: "Leader of the Rogues", powerId: "ice", level: 6, blurb: "A thief with a cold gun, a code, and a soft spot for his sister.", moves: [mv("Cold Gun", "Absolute zero, aimed.", 8, "strike", "ice", "burst"), mv("Ice Floor", "Run on that, speedster.", 6, "trick", "ice", "area"), mv("Rogue's Code", "He knows your rules too.", 5, "trick", "psychic", "status"), mv("Frost Wall", "A wall of ice.", 5, "guard", "ice", "guard")] },
+      { id: "grodd", name: "Grodd", alias: "Gorilla Grodd", title: "The telepath of Gorilla City", powerId: "mind", level: 8, from: 30, blurb: "A genius gorilla who reads minds and wants a planet that answers to apes.", moves: [mv("Mind Crush", "Your thoughts slow down.", 8, "strike", "psychic", "burst"), mv("Primal Strength", "Five hundred pounds of angry.", 8, "strike", "force", "area"), mv("Puppet Strings", "The crowd turns on you.", 5, "trick", "psychic", "status"), mv("Psionic Wall", "He saw it coming.", 5, "guard", "psychic", "guard")] },
+      { id: "mirror-master", name: "Sam Scudder", alias: "Mirror Master", title: "The man in the glass", powerId: "invisibility", level: 6, from: 30, blurb: "A Rogue who walks through reflections and brings a hundred copies of himself to a fight.", moves: [mv("Glass Shard Storm", "Every window breaks at you.", 7, "strike", "warp", "area"), mv("Mirror Step", "In one pane, out another.", 6, "strike", "warp", "dash"), mv("Hall of Mirrors", "Which one is real?", 5, "trick", "light", "status"), mv("Reflect", "Your hit comes back.", 5, "guard", "light", "guard")] },
     ],
   },
 ];

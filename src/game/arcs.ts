@@ -486,11 +486,23 @@ export function arcsCleared(story: StoryState | undefined): number {
   return story?.cleared?.length ?? 0;
 }
 
-export function availableArcs(game: Pick<Game, "age" | "stats" | "story" | "cityId">): ArcDef[] {
+/** Every power-gated drill in the case can be done with something you hold. */
+export function arcPlayable(arc: ArcDef, owned: readonly string[] | undefined): boolean {
+  if (!owned) return true;
+  return arc.steps.every((step) => {
+    if (step.kind !== "train") return true;
+    const need = step.needAny?.length ? step.needAny : step.needPower ? [step.needPower] : [];
+    return !need.length || need.some((id) => owned.includes(id));
+  });
+}
+
+export function availableArcs(game: Pick<Game, "age" | "stats" | "story" | "cityId"> & { unlockedPowers?: string[] }): ArcDef[] {
   const cleared = new Set(game.story?.cleared ?? []);
   const karma = game.stats.karma ?? 0;
   return ARCS.filter((arc) => {
     if (cleared.has(arc.id)) return false;
+    // A case whose drill needs a power you don't hold would stall forever on that page.
+    if (!arcPlayable(arc, game.unlockedPowers)) return false;
     if (game.age < arc.minAge) return false;
     if (arc.maxKarma != null && karma > arc.maxKarma) return false;
     if (arc.minCleared != null && cleared.size < arc.minCleared) return false;
