@@ -1,10 +1,10 @@
 import type React from "react";
-import { Lock, MousePointerClick, Sparkles } from "lucide-react";
+import { ChevronRight, Lock, MousePointerClick, Sparkles, Target } from "lucide-react";
 import { ChapterArt } from "@/components/game/Scene";
 import { phaseStyle } from "@/components/game/phaseStyle";
 import { useEffect, useMemo, useState } from "react";
 import { generateChapterText } from "@/game/chapter-ai";
-import { chapterBrief, currentChapter, goalCount, goalHow, goalLock, goalProgress, phaseForAge, snapshot, type Chapter } from "@/game/chapters";
+import { chapterBrief, currentChapter, goalCount, goalHow, goalLock, goalProgress, goalRoute, nextGoal, phaseForAge, snapshot, type Chapter, type GoalRoute } from "@/game/chapters";
 import { presetById } from "@/game/presets";
 import { useGame } from "@/game/store";
 import type { Game } from "@/game/types";
@@ -48,6 +48,52 @@ export function ChapterStrip({ game }: { game: Game }) {
   );
 }
 
+/**
+ * The one thing to do next, on the Life desk under the chapter strip: the first open goal, its exact
+ * path, and a Go button that jumps to the tab and lights up the button.
+ */
+export function NextGoal({ game, onGo }: { game: Game; onGo: (route: GoalRoute) => void }) {
+  const chapter = currentChapter(game);
+  const snap = useMemo(() => snapshot(game), [game]);
+  if (!chapter || game.phase !== "live") return null;
+  const goal = nextGoal(chapter, game, snap);
+  const waiting = chapter.goals.filter((row) => !goalProgress(row, snap).met && goalLock(row, game));
+  if (!goal) {
+    if (!waiting.length) return null;
+    return (
+      <p className="mt-2 flex items-center gap-1.5 px-1 text-xs font-semibold text-muted">
+        <Lock className="size-3.5 shrink-0" aria-hidden />
+        <span className="min-w-0 truncate">Next goal {waiting[0].label.charAt(0).toLowerCase() + waiting[0].label.slice(1)} · {goalLock(waiting[0], game)}</span>
+      </p>
+    );
+  }
+  const route = goalRoute(goal, game);
+  const p = goalProgress(goal, snap);
+  const accent = phaseStyle(chapter.phase).accent;
+  return (
+    <div className="card relative mt-2 flex min-h-14 items-center gap-3 overflow-hidden px-3 py-2" style={{ borderColor: `${accent}55` }}>
+      <Target className="size-5 shrink-0" style={{ color: accent }} aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-2">
+          <span className="t-label text-[9px] text-muted">Next goal</span>
+          <span className="t-num text-[10px] text-muted">{goalCount(goal, snap)}</span>
+        </p>
+        <p className="truncate text-sm leading-tight font-bold text-fg">{goal.label}</p>
+        <p className="truncate text-[11px] font-bold text-gold/90">{goalHow(goal, game)}</p>
+        <div className="stat-bar mt-1 !h-1">
+          <div className="stat-fill" style={{ width: `${Math.round(p.ratio * 100)}%`, "--fill": accent } as React.CSSProperties} />
+        </div>
+      </div>
+      {route && (
+        <button type="button" onClick={() => onGo(route)} aria-label={`Go to ${route.tab}, ${route.shelf}`} className="btn btn-gold !min-h-11 shrink-0 !rounded-full !px-3.5 text-sm">
+          Go
+          <ChevronRight className="size-4" aria-hidden />
+        </button>
+      )}
+    </div>
+  );
+}
+
 /** Tiny, quiet marker: this chapter's prose was rewritten by the AI pass. */
 function AiChip() {
   return (
@@ -58,7 +104,7 @@ function AiChip() {
   );
 }
 
-function Goals({ chapter, game }: { chapter: Chapter; game: Game }) {
+function Goals({ chapter, game, onGo }: { chapter: Chapter; game: Game; onGo?: (route: GoalRoute) => void }) {
   const snap = snapshot(game);
   return (
     <ul className="mt-3 flex flex-col gap-2">
@@ -66,6 +112,7 @@ function Goals({ chapter, game }: { chapter: Chapter; game: Game }) {
         const p = goalProgress(goal, snap);
         const lock = p.met ? null : goalLock(goal, game);
         const how = goalHow(goal, game);
+        const route = !p.met && !lock && onGo && chapter === currentChapter(game) ? goalRoute(goal, game) : null;
         return (
           <li
             key={goal.id}
@@ -92,10 +139,18 @@ function Goals({ chapter, game }: { chapter: Chapter; game: Game }) {
                 <div className="stat-fill" style={{ width: `${Math.round(p.ratio * 100)}%`, "--fill": "var(--color-gold)" } as React.CSSProperties} />
               </div>
             )}
-            <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-bold text-gold/90">
-              <MousePointerClick className="size-3.5 shrink-0" aria-hidden />
-              <span className="min-w-0">{how}</span>
-            </p>
+            <div className="mt-1.5 flex items-center gap-2">
+              <p className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] font-bold text-gold/90">
+                <MousePointerClick className="size-3.5 shrink-0" aria-hidden />
+                <span className="min-w-0">{how}</span>
+              </p>
+              {route && (
+                <button type="button" onClick={() => onGo?.(route)} aria-label={`Go to ${route.tab}, ${route.shelf}`} className="btn btn-gold !min-h-9 shrink-0 !rounded-full !px-3 text-xs">
+                  Go
+                  <ChevronRight className="size-3.5" aria-hidden />
+                </button>
+              )}
+            </div>
             <p className="mt-0.5 text-xs text-muted">{chapter.beats[i] ?? goal.hint}</p>
           </li>
         );
@@ -123,7 +178,7 @@ function CanonBadge({ game }: { game: Game }) {
 }
 
 /** Title card + recap overlay. Shown at birth and on each decade birthday, or from the strip. */
-export function ChapterOverlay({ game }: { game: Game }) {
+export function ChapterOverlay({ game, onGo }: { game: Game; onGo?: (route: GoalRoute) => void }) {
   const dismiss = useGame((s) => s.dismissChapter);
   const patch = useGame((s) => s.patchChapter);
   const notice = game.chapterNotice;
@@ -194,7 +249,17 @@ export function ChapterOverlay({ game }: { game: Game }) {
             <p className="mt-2 text-pretty text-sm leading-relaxed text-fg">{chapter.premise}</p>
             <CanonBadge game={game} />
             <p className="t-label mt-4 text-gold">This chapter</p>
-            <Goals chapter={chapter} game={game} />
+            <Goals
+              chapter={chapter}
+              game={game}
+              onGo={
+                onGo &&
+                ((route) => {
+                  dismiss();
+                  onGo(route);
+                })
+              }
+            />
             {past.length > 0 && (
               <div className="mt-3">
                 <button type="button" onClick={() => setShowPast((v) => !v)} className="min-h-11 text-sm font-semibold text-muted underline">

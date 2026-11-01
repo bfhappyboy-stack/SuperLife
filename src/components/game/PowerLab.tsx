@@ -13,6 +13,7 @@ import { knownMoves, moveLevel, MOVESET_SIZE, STREET_MOVES } from "@/game/moves"
 import { dossier, homeArc, talkBrief } from "@/game/origin";
 import { hasGift } from "@/game/theme";
 import { library, type LibraryState } from "@/game/library";
+import { SealedGift } from "@/components/game/SealedGift";
 import { useGame } from "@/game/store";
 import type { AiHero, Game } from "@/game/types";
 
@@ -98,7 +99,7 @@ export function PowerLab({
   if (!gift && pane === "book") {
     return (
       <div className="flex flex-col gap-4">
-        <Dormant game={game} />
+        {game.hiddenGift ? <SealedGift game={game} onAct={onAct} /> : <Dormant game={game} />}
       </div>
     );
   }
@@ -220,6 +221,7 @@ function TrainerCircle({
                     onNote(`Talking to ${hero.alias}.`);
                     onChat(hero.id);
                   }}
+                  data-act="herotalk"
                   className="btn btn-gold !min-h-11 text-sm"
                 >
                   Talk
@@ -258,6 +260,7 @@ function TrainerCircle({
                     onNote(`Training with ${hero.alias} — sent.`);
                     onAct(`herotrain|${hero.id}`);
                   }}
+                  data-act={`herotrain|${hero.id}`}
                   className={`btn btn-ghost !min-h-11 text-sm ${moves && hero.relationship >= 36 ? "" : "opacity-60"}`}
                 >
                   Train
@@ -289,6 +292,7 @@ function TrainerCircle({
                           onNote(`Asked ${hero.alias} to teach ${power.name}.`);
                           onAct(`learn|${hero.id}|${power.id}`);
                         }}
+                        data-act={`learn|${hero.id}|${power.id}`}
                         className={`card min-h-11 px-3 py-2 text-left text-sm ${ready ? "!border-gold text-fg" : "text-muted"}`}
                       >
                         <span className="font-semibold">Learn {power.name}</span>
@@ -384,7 +388,7 @@ function BraidBook({
           );
         })}
       </div>
-      <button type="button" disabled={!left || !right || !moves || !previewOk || blocked} onClick={onMix} className="btn btn-primary mt-3 min-h-12 w-full disabled:opacity-40">
+      <button type="button" disabled={!left || !right || !moves || !previewOk || blocked} onClick={onMix} data-act="mix|" className="btn btn-primary mt-3 min-h-12 w-full disabled:opacity-40">
         {!moves ? "No moves left this month" : !left || !right ? "Choose two powers" : !previewOk ? "These two won't mix" : blocked ? "No room in the book yet" : "Mix these two"}
       </button>
     </section>
