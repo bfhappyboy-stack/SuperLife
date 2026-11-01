@@ -219,17 +219,41 @@ export function toDuel(def: MoveDef, level = 1): DuelMove {
   };
 }
 
-export function equippedMoves(game: Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp">): DuelMove[] {
+type FightGame = Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp"> & { stats?: { powerLevel: number } };
+
+/**
+ * How much your training adds to a move in a real fight: power level (the slow lifetime grind, soft-capped
+ * by age) plus that power's mastery rank. Street moves get half the power-level part and no mastery.
+ * Without this, a 50-year-old hero swung the same 4–6 point moves as a 12-year-old against foes that scale.
+ */
+export function moveEdge(game: { stats?: { powerLevel: number }; mastery?: Record<string, number> }, powerId?: string): number {
+  const pl = Math.max(0, game.stats?.powerLevel ?? 0);
+  if (!powerId) return Math.round(pl * 0.35);
+  const power = getPower(powerId);
+  const rank = masteryLevel(game.mastery?.[powerId] ?? 0, power?.generation ?? 0);
+  return Math.round(pl * 0.55) + Math.max(0, rank - 1);
+}
+
+export function equippedMoves(game: FightGame): DuelMove[] {
   const picked = (game.loadout ?? []).map((id) => moveById(id)).filter((def): def is MoveDef => !!def && moveUnlocked(game, def));
-  return picked.slice(0, 6).map((def) => toDuel(def, moveLevel(game.moveExp?.[def.id] ?? 0)));
+  return picked.slice(0, 6).map((def) => {
+    const move = toDuel(def, moveLevel(game.moveExp?.[def.id] ?? 0));
+    const edge = game.stats ? moveEdge(game, def.powerId) : 0;
+    return edge ? { ...move, power: move.power + edge } : move;
+  });
 }
 
 /** The six a fight actually uses: the equipped moves, padded with street moves so it is always exactly six. */
-export function battleMoves(game: Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp">): DuelMove[] {
+export function battleMoves(game: FightGame): DuelMove[] {
   const picked = equippedMoves(game).slice(0, MOVESET_SIZE);
-  for (const move of STREET_MOVES) {
-    if (picked.length >= MOVESET_SIZE) break;
-    picked.push({ ...move });
+  const edge = game.stats ? moveEdge(game) : 0;
+  // Street padding answers whatever style the kit is missing first, so every tell has a reply.
+  const spare = [...STREET_MOVES];
+  while (picked.length < MOVESET_SIZE && spare.length) {
+    const styles = new Set(picked.map((move) => move.style));
+    const index = Math.max(0, spare.findIndex((move) => !styles.has(move.style)));
+    const move = spare.splice(index, 1)[0]!;
+    picked.push({ ...move, power: move.power + edge });
   }
   return picked;
 }
@@ -246,11 +270,14 @@ export function fillLoadout(game: Game): void {
     })
     .slice(0, MOVESET_SIZE);
   const have = new Set(game.loadout);
-  for (const entry of knownMoves(game)) {
-    if (game.loadout.length >= MOVESET_SIZE) break;
-    if (!entry.unlocked || have.has(entry.def.id)) continue;
-    game.loadout.push(entry.def.id);
-    have.add(entry.def.id);
+  // Auto top-up covers the three styles first (strike, guard, trick), so every tell has an answer.
+  // A slot the player filled by hand is never touched.
+  const pool = knownMoves(game).filter((entry) => entry.unlocked && !have.has(entry.def.id)).map((entry) => entry.def);
+  while (game.loadout.length < MOVESET_SIZE && pool.length) {
+    const styles = new Set(game.loadout.map((id) => moveById(id)?.style));
+    const index = Math.max(0, pool.findIndex((def) => !styles.has(def.style)));
+    const def = pool.splice(index, 1)[0]!;
+    game.loadout.push(def.id);
   }
 }
 

@@ -597,3 +597,44 @@
 @media (prefers-reduced-motion: reduce) {
   .reveal-core { animation: none; }
 }
+
+/* Boss phases (2026-11-01 night): phase-2 overlay, live gimmick auras, charge, fog, coin, swarm. */
+@keyframes phase-in {
+  0% { opacity: 0; transform: scale(1.18); filter: blur(6px); }
+  14% { opacity: 1; transform: scale(0.98); filter: blur(0); }
+  22% { transform: scale(1); }
+  82% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+.phase-in { animation: phase-in 2.3s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+@keyframes duel-aura { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.duel-phase-aura {
+  background: radial-gradient(60% 70% at 78% 70%, color-mix(in srgb, var(--aura) 30%, transparent), transparent 70%);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--aura) 55%, transparent), inset 0 0 46px color-mix(in srgb, var(--aura) 35%, transparent);
+  border-radius: inherit;
+  animation: duel-aura 1.8s ease-in-out infinite;
+}
+.duel-gimmick-live { animation: duel-gimmick 2.4s ease-in-out infinite; }
+@keyframes duel-gimmick { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 18px -6px var(--aura); } }
+@keyframes duel-charge { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.duel-charge {
+  background: radial-gradient(55% 65% at 78% 65%, rgb(255 59 48 / 0.4), transparent 70%);
+  box-shadow: inset 0 0 0 2px rgb(255 59 48 / 0.7), inset 0 0 60px rgb(255 59 48 / 0.45);
+  border-radius: inherit;
+  animation: duel-charge 0.7s ease-in-out infinite;
+}
+.duel-charge-chip { animation: duel-charge 0.7s ease-in-out infinite; background: rgb(255 59 48 / 0.18); }
+@keyframes duel-fog { 0% { background-position: 0% 50%, 100% 50%; } 100% { background-position: 100% 50%, 0% 50%; } }
+.duel-fog {
+  background-image: radial-gradient(40% 50% at 30% 60%, rgb(190 200 220 / 0.22), transparent 70%), radial-gradient(45% 45% at 70% 40%, rgb(190 200 220 / 0.2), transparent 70%);
+  background-size: 160% 100%, 160% 100%;
+  animation: duel-fog 6s ease-in-out infinite alternate;
+}
+@keyframes duel-coin { 0% { transform: rotateY(0) scale(0.6); opacity: 0; } 60% { transform: rotateY(900deg) scale(1.1); opacity: 1; } 100% { transform: rotateY(1080deg) scale(1); } }
+.duel-coin { animation: duel-coin 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) both; box-shadow: 0 0 0 2px rgb(0 0 0 / 0.35), 0 4px 14px rgb(0 0 0 / 0.45); letter-spacing: 0.02em; }
+@keyframes duel-swarm { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(6px, -5px); } 50% { transform: translate(-4px, -9px); } 75% { transform: translate(-7px, 3px); } }
+.duel-swarm { animation: duel-swarm 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .phase-in, .duel-phase-aura, .duel-gimmick-live, .duel-charge, .duel-charge-chip, .duel-fog, .duel-coin, .duel-swarm { animation: none; }
+  .phase-in { opacity: 1; }
+}
