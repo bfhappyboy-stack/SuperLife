@@ -32,6 +32,11 @@ This branch also carries the unmerged `devbot/2026-10-31-night` work and the lat
   - Relic-run duels with generic guards are skipped too.
   - Legends now meet their own rogues.
 
+### Painted portraits for the last three legends (`src/assets/art/hero-black-panther.ts`, `hero-wolverine.ts`, `hero-flash.ts`, `index.ts`)
+
+- **Black Panther, Wolverine and The Flash** now show painted 540x960 webp portraits in the God Mode picker and reveal, instead of the drawn silhouette (`LegendBust` stays as the fallback for any legend without art).
+  - The Flash art had garbled neon-sign text in the top-right; that corner is softly blurred and darkened.
+
 ### Fixes
 
 - **Six moves, always** (`moves.ts`): `fillLoadout` now prunes stale or locked moves *before* topping up. Some lives had been left with 5 equipped moves.
