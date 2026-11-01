@@ -1,7 +1,7 @@
 // Chapter goals: every goal names its button, opens inside its chapter, and locks honestly.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CHAPTER_GOALS, CHAPTER_PHASES, buildChapter, goalCount, goalHow, goalLock, snapshot } from "../chapters.ts";
+import { CHAPTER_GOALS, CHAPTER_PHASES, GOAL_TABS, actMatches, buildChapter, goalCount, goalHow, goalLock, goalRoute, snapshot } from "../chapters.ts";
 import { ageUp, choose, createGame, resolveMini } from "../engine.ts";
 import type { Game } from "../types.ts";
 
@@ -54,4 +54,26 @@ test("locked goals say when they unlock and counts read x/y", () => {
   }
   assert.ok(!ch.goals.some((goal) => goal.power), "no power goal while the power is sealed in the first chapter");
   assert.ok(!/\{gift\}|undefined/.test(ch.title + ch.premise));
+});
+
+test("every goal with a button has a Go route: a real tab, a shelf, and action ids", () => {
+  const g = createGame({ ...base, giftId: "fire-control", seed: 1 } as never);
+  for (const def of CHAPTER_GOALS) {
+    if (!def.act?.length) continue;
+    const goal = { id: def.id, label: "", hint: def.hint, metric: def.metric, mode: def.mode, target: 1, start: 0, how: typeof def.how === "function" ? def.how(g) : def.how, opens: 0 } as never;
+    const route = goalRoute(goal, g);
+    assert.ok(route, `${def.id} has a route`);
+    assert.ok((GOAL_TABS as readonly string[]).includes(route!.tab), `${def.id} tab ${route!.tab}`);
+    assert.ok(route!.shelf && route!.shelf.length > 1, `${def.id} shelf`);
+  }
+});
+
+test("goal action matching: exact ids, id| families, and prefixes", () => {
+  assert.ok(actMatches("train", ["train"]));
+  assert.ok(!actMatches("training-camp", ["train"]));
+  assert.ok(actMatches("herotrain|ace", ["herotrain|"]));
+  assert.ok(actMatches("job:barista", ["job:"]));
+  assert.ok(actMatches("learn|ace|fire-control", ["learn|"]));
+  assert.ok(actMatches("arc-start|blackout", ["arc-start|"]));
+  assert.ok(!actMatches("mission", ["stunt"]));
 });

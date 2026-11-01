@@ -124,7 +124,7 @@ test("the braid chain still holds for legends: Fire + Speed = Light Speed, + Str
 test("every legend is valid data", () => {
   const cities = new Set(CITIES.map((c) => c.id));
   const ups = new Set(UPBRINGINGS.map((u) => u.id));
-  assert.equal(PRESETS.length, 8);
+  assert.equal(PRESETS.length, 11);
   for (const p of PRESETS) {
     assert.ok(cities.has(p.cityId), `${p.id} city`);
     assert.ok(ups.has(p.upbringing), `${p.id} upbringing`);
@@ -152,7 +152,7 @@ test("every legend is valid data", () => {
     assert.equal(p.powers.length ? wakeAge(p.id) != null : wakeAge(p.id) == null, true, `${p.id} wake beat matches powers`);
   }
   const names = PRESETS.map((p) => p.hero).join(" ");
-  for (const hero of ["Spider-Man", "Batman", "Iron Man", "Hulk", "Superman", "Wonder Woman", "Captain America", "Thor"]) assert.ok(names.includes(hero));
+  for (const hero of ["Spider-Man", "Batman", "Iron Man", "Hulk", "Superman", "Wonder Woman", "Captain America", "Thor", "Black Panther", "Wolverine", "The Flash"]) assert.ok(names.includes(hero));
   const tony = PRESETS.find((p) => p.id === "iron-man")!;
   assert.ok(tony.villains.some((v) => v.alias === "Ultron"));
 });
@@ -243,5 +243,32 @@ test("every legend has late-life canon: successors, a final showdown, and varian
     const ending = preset.beats.find((beat) => beat.endings);
     assert.ok(ending && ending.age <= 75, `${preset.id} ending beat lands before most lives end`);
     for (const path of ["canon", "bend", "break"] as const) assert.ok(ending!.endings![path].includes(preset.earth), `${preset.id} ${path} ending names its Earth`);
+  }
+});
+
+test("a wake beat pushed past its birthday still plays, with its own text", () => {
+  let g = createGame({ ...base, preset: "flash", seed: 4 } as never);
+  // Pretend the 25th birthday was eaten by a collapse: the gift is still sealed at 26.
+  g = { ...g, age: 25, month: 11, phase: "live", pending: null, flags: { ...g.flags, "canon:nora": 1, "canon:lab": 1 } } as Game;
+  const seen: string[] = [];
+  g = live(g, 27, undefined, (x) => {
+    if (x.pending?.id.startsWith("canon|")) seen.push(x.pending.id);
+    if (x.reveal) assert.match(x.reveal.line, /bolt/i);
+  });
+  assert.ok(seen.includes("canon|bolt"), seen.join(","));
+  assert.ok((g.unlockedPowers ?? []).includes("super-speed"));
+});
+
+test("the new legends live their canon: Black Panther, Wolverine, The Flash", () => {
+  for (const [id, until, villain] of [["black-panther", 33, /Killmonger|Klaw|Man-Ape/], ["wolverine", 36, /Sabretooth|Deathstrike/], ["flash", 30, /Reverse-Flash|Captain Cold/]] as const) {
+    let g = createGame({ ...base, preset: id, seed: 5 } as never);
+    const seen: string[] = [];
+    g = live(g, until, undefined, (x) => {
+      if (x.pending?.id.startsWith("canon|")) seen.push(x.pending.id);
+    });
+    const wake = canonAt(id, wakeAge(id)!)!;
+    assert.ok(seen.includes(`canon|${wake.id}`), `${id}: ${seen.join(",")}`);
+    assert.ok(g.relationships.some((r) => villain.test(r.note ?? "")), `${id} met a rogue`);
+    assert.ok((g.unlockedPowers ?? []).length >= 2, `${id} powers`);
   }
 });
