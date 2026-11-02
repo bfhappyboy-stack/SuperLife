@@ -9,11 +9,11 @@ import { getPower, mix, teachableBases, viewPowers } from "@/game/combo";
 import { mergeHeroes, replyLocally } from "@/game/heroes";
 import { askHero } from "@/game/hero-talk";
 import { masteryCap, masteryLevel, nextMasteryExp, powerRank } from "@/game/mastery";
-import { knownMoves, moveLevel, MOVESET_SIZE, STREET_MOVES } from "@/game/moves";
 import { dossier, homeArc, talkBrief } from "@/game/origin";
 import { hasGift } from "@/game/theme";
 import { library, type LibraryState } from "@/game/library";
 import { SealedGift } from "@/components/game/SealedGift";
+import { MovePicker, StreetSix } from "@/components/game/MovePicker";
 import { useGame } from "@/game/store";
 import type { AiHero, Game } from "@/game/types";
 
@@ -104,11 +104,11 @@ export function PowerLab({
     );
   }
 
-  if (!gift && pane === "moves") return null;
+  if (!gift && pane === "moves") return <StreetSix game={game} />;
 
   return (
     <div className="flex flex-col gap-4">
-      {notice && (
+      {notice && pane !== "moves" && (
         <p role="status" className="card anim-pop !border-gold/70 px-4 py-3 text-sm font-semibold text-fg">
           {notice}
         </p>
@@ -139,7 +139,7 @@ export function PowerLab({
           />
         </>
       )}
-      {pane === "moves" && gift && <Loadout game={game} onAct={onAct} onNote={setNotice} />}
+      {pane === "moves" && gift && <MovePicker game={game} onAct={onAct} />}
       {pane === "teachers" && (
         <TrainerCircle game={game} met={met} unmet={unmet} unlocked={unlocked} knownIds={knownIds} moves={moves} onAct={onAct} onChat={onChat} onNote={setNotice} />
       )}
@@ -607,123 +607,6 @@ function MasteryBoard({
           </ul>
         </div>
       )}
-    </section>
-  );
-}
-
-function Loadout({ game, onAct, onNote }: { game: Game; onAct: (id: string) => void; onNote: (text: string) => void }) {
-  const known = knownMoves(game);
-  const equipped = game.loadout ?? [];
-  const sets = game.moveSets ?? [];
-  const [saved, setSaved] = useState<number | null>(null);
-
-  function drop(id: string | undefined) {
-    if (!id) {
-      onNote("That slot is empty.");
-      return;
-    }
-    const name = known.find((entry) => entry.def.id === id)?.def.name ?? "That move";
-    onAct(`equip|${id}`);
-    onNote(`${name} left the six.`);
-  }
-
-  function toggle(id: string, name: string, unlocked: boolean, need: string) {
-    if (!unlocked) {
-      onNote(`${name} stays locked until that power ranks ${need}.`);
-      return;
-    }
-    if (equipped.includes(id)) {
-      onAct(`equip|${id}`);
-      onNote(`${name} left the six.`);
-      return;
-    }
-    if (equipped.length >= 6) {
-      onNote("The six are full. Drop one first.");
-      return;
-    }
-    onAct(`equip|${id}`);
-    onNote(`${name} is in the six.`);
-  }
-
-  return (
-    <section className="card px-4 py-3">
-      <h2 className="t-label text-muted">SIX MOVES</h2>
-      <p className="mt-1 text-sm text-muted">Tap a filled slot to drop it. Tap a move below to add it. Swapping is free. A locked move tells you the rank it wants.</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {Array.from({ length: MOVESET_SIZE }, (_, index) => {
-          const id = equipped[index];
-          const def = known.find((entry) => entry.def.id === id)?.def;
-          const filledCount = equipped.filter((slot) => known.some((entry) => entry.def.id === slot)).length;
-          const street = def ? null : STREET_MOVES[Math.max(0, index - filledCount)];
-          return (
-            <button
-              key={`slot-${index}`}
-              type="button"
-              aria-pressed={!!def}
-              disabled={!def}
-              onClick={() => def && drop(id)}
-              className={`card min-h-16 px-3 py-2 text-left ${def ? "!border-gold/70 !bg-panel-2" : "!border-dashed"}`}
-            >
-              <p className="t-label text-muted">Slot {index + 1}</p>
-              <p className={`text-sm font-semibold ${def ? "text-fg" : "text-muted"}`}>{def?.name ?? street?.name ?? "Empty"}</p>
-              <p className="text-xs text-muted">{def ? `${def.kind} · tap to drop` : "street move · fills in fights"}</p>
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {sets.map((set, index) => (
-          <div key={set.name} className="flex flex-col gap-2">
-            <button
-              type="button"
-              aria-pressed={saved === index}
-              onClick={() => {
-                onAct(`set-save|${index}`);
-                setSaved(index);
-                onNote(`${set.name} remembers this six.`);
-              }}
-              className="btn btn-ghost !min-h-11 text-sm"
-            >
-              Save {set.name}
-            </button>
-            <button
-              type="button"
-              aria-pressed={saved === index && set.moves.length > 0}
-              disabled={set.moves.length === 0}
-              onClick={() => {
-                onAct(`set-load|${index}`);
-                setSaved(index);
-                onNote(`${set.name} is what you bring.`);
-              }}
-              className="btn btn-gold !min-h-11 text-sm disabled:opacity-40"
-            >
-              {set.moves.length === 0 ? `${set.name} is empty` : `Load ${set.name}`}
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 flex flex-col gap-2">
-        {known.map(({ def, unlocked }) => {
-          const on = equipped.includes(def.id);
-          const need = powerRank(def.minMastery);
-          return (
-            <button
-              key={def.id}
-              type="button"
-              aria-pressed={on}
-              aria-disabled={!unlocked}
-              onClick={() => toggle(def.id, def.name, unlocked, need)}
-              className={`card min-h-12 px-3 py-2 text-left text-sm ${on ? "!border-gold !bg-panel-2 text-fg" : unlocked ? "text-fg" : "text-muted opacity-70"}`}
-            >
-              <span className="font-semibold">{def.name}</span>
-              <span className="ml-2 text-xs text-gold">{on ? "In the six" : unlocked ? `Move ${moveLevel(game.moveExp?.[def.id] ?? 0)}` : `Needs ${need}`}</span>
-              <span className="block text-muted">
-                {def.kind} · {def.style} · {def.energy}e{def.cooldown ? ` · ${def.cooldown} turn` : ""} · {def.effect}
-              </span>
-            </button>
-          );
-        })}
-      </div>
     </section>
   );
 }
