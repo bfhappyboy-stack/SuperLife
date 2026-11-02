@@ -85,3 +85,45 @@
     linear-gradient(115deg, rgba(59,125,255,.85) 0%, rgba(59,125,255,.55) 46%, rgba(255,59,48,.6) 54%, rgba(255,59,48,.9) 100%);
   box-shadow: 0 8px 22px -10px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.25);
 }
+
+/* ─── Arena online ─────────────────────────────────────────────────────────────── */
+.arena-online-card { border-color: color-mix(in srgb, var(--color-spark) 45%, transparent) !important; box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-spark) 25%, transparent), 0 10px 28px -14px var(--color-spark); }
+.arena-online-card:active { transform: scale(0.985); }
+.arena-radar { position: relative; }
+.arena-radar::after { content: ""; position: absolute; inset: -3px; border-radius: 0.9rem; border: 2px solid var(--color-spark); animation: arena-ping 1.8s ease-out infinite; }
+@keyframes arena-ping { from { opacity: 0.8; transform: scale(0.9); } to { opacity: 0; transform: scale(1.35); } }
+.arena-online-hero {
+  background:
+    radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--color-spark) 30%, transparent), transparent 60%),
+    radial-gradient(70% 90% at 0% 100%, color-mix(in srgb, #ef5d52 30%, transparent), transparent 70%),
+    linear-gradient(135deg, #131c33, #1b1020);
+}
+.arena-radar-rings { border-radius: 9999px; background: repeating-radial-gradient(circle, transparent 0 14px, color-mix(in srgb, var(--color-spark) 28%, transparent) 14px 15.5px); mask: radial-gradient(circle, #000 30%, transparent 70%); animation: arena-spin 5s linear infinite; }
+.arena-radar-rings::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: conic-gradient(from 0deg, transparent 0 80%, color-mix(in srgb, var(--color-spark) 55%, transparent)); }
+@keyframes arena-spin { to { transform: rotate(360deg); } }
+.arena-searching { animation: glow-pulse 1.6s ease-in-out infinite; }
+.arena-input { border-radius: 0.75rem; background: rgba(0,0,0,.35); border: 1.5px solid rgba(255,255,255,.14); color: var(--color-fg, #fff); outline: none; }
+.arena-input:focus { border-color: var(--color-gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 25%, transparent); }
+.arena-tile {
+  display: grid; place-items: center; aspect-ratio: 4 / 5; border-radius: 0.7rem;
+  font-family: var(--font-display); font-size: 1.6rem; line-height: 1; color: #fff;
+  background: rgba(0,0,0,.35); border: 1.5px solid rgba(255,255,255,.14);
+}
+.arena-tile.on { background: linear-gradient(180deg, #23304f, #141b2e); border-color: color-mix(in srgb, var(--color-gold) 60%, transparent); text-shadow: 0 2px 0 rgba(0,0,0,.6); }
+.arena-tile.cur { border-color: var(--color-gold); animation: glow-pulse 1.2s ease-in-out infinite; }
+.arena-tile.big { font-size: 2.1rem; color: #ffe7a6; }
+.arena-toggle { position: relative; width: 2.6rem; height: 1.5rem; flex-shrink: 0; border-radius: 9999px; background: rgba(255,255,255,.15); transition: background 160ms; }
+.arena-toggle > span { position: absolute; top: 3px; left: 3px; width: 1.1rem; height: 1.1rem; border-radius: 9999px; background: #fff; transition: transform 160ms var(--ease-snappy, ease-out); }
+.arena-toggle.on { background: var(--color-gold); }
+.arena-toggle.on > span { transform: translateX(1.1rem); }
+.arena-netbar { background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.2)); border-bottom: 1px solid rgba(255,255,255,.07); }
+.arena-conn[data-off="true"] { animation: glow-pulse 1s ease-in-out infinite; }
+.arena-urgent { animation: arena-throb 0.5s ease-in-out infinite alternate; }
+@keyframes arena-throb { to { transform: scale(1.08); } }
+.arena-away { background: color-mix(in srgb, #2a0f12 88%, transparent); border: 1px solid color-mix(in srgb, #ef5d52 50%, transparent); backdrop-filter: blur(6px); animation: arena-sheet-up 260ms ease-out both; }
+.arena-wait-dot { display: inline-block; width: 0.55rem; height: 0.55rem; flex-shrink: 0; border-radius: 9999px; background: currentColor; animation: arena-blink 1s ease-in-out infinite; }
+@keyframes arena-blink { 50% { opacity: 0.25; transform: scale(0.7); } }
+.arena-found { background: radial-gradient(70% 50% at 50% 50%, rgba(20,24,40,.92), rgba(5,7,14,.97)); animation: ko-in 320ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .arena-radar::after, .arena-radar-rings, .arena-searching, .arena-tile.cur, .arena-urgent, .arena-wait-dot, .arena-conn[data-off="true"] { animation: none !important; }
+}

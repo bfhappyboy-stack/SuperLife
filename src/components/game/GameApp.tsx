@@ -33,6 +33,14 @@ export function GameApp() {
   const hydrate = useGame((s) => s.hydrate);
   useEffect(() => {
     hydrate();
+    // An Arena invite link (?arena=CODE) goes straight to the online lobby.
+    try {
+      // So does reopening the app while you're still in an online room (reconnect and resume).
+      const room = (JSON.parse(localStorage.getItem("superlife.arena.net.v1") ?? "{}") as { code?: string } | null)?.code;
+      if (new URLSearchParams(window.location.search).get("arena") || room) useGame.getState().openArena();
+    } catch {
+      /* no URL access */
+    }
     const flush = () => useGame.getState().flush();
     document.addEventListener("visibilitychange", flush);
     window.addEventListener("pagehide", flush);

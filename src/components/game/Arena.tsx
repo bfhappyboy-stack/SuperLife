@@ -3,7 +3,8 @@
  * All rules live in src/game/arena.ts (pure, seeded); this file only animates them.
  */
 import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { buzz, RivalName } from "@/components/game/arena-context";
 import {
   Activity, ArrowLeft, Bot, Bug, Check, CloudFog, CloudLightning, Cpu, Crown, Dna, Drama, EyeOff, Flame, Gauge, HeartPulse,
   Info, Lightbulb, Lock, Medal, Radar, RefreshCcw, RotateCcw, Shield, ShieldCheck, ShieldHalf, Siren, Sparkles, Swords, Trophy, Users, Wifi, Zap,
@@ -25,6 +26,7 @@ import { listSlots, loadSlot } from "@/game/save";
 import { PRESETS } from "@/game/presets";
 import { useGame } from "@/game/store";
 import type { DuelMove, MoveStyle } from "@/game/types";
+import { OnlineArena } from "@/components/game/OnlineArena";
 
 type View = "hub" | "draft" | "order" | "reveal" | "intro" | "battle" | "results";
 
@@ -36,6 +38,7 @@ interface Saved {
 }
 
 const SAVE_KEY = "superlife.arena.v1";
+
 const HEX: Record<MoveStyle, string> = { strike: "#ff5a4f", guard: "#3fe0c5", trick: "#ffcf4d" };
 const STYLE_ICON: Record<MoveStyle, typeof Swords> = { strike: Swords, guard: Shield, trick: Sparkles };
 const STYLE_NAME: Record<MoveStyle, string> = { strike: "Strike", guard: "Guard", trick: "Trick" };
@@ -105,6 +108,14 @@ export function ArenaScreen() {
   const [saved, setSaved] = useState<Saved | null>(() => loadSaved());
   const [level, setLevel] = useState<AiLevel>(saved?.level ?? "pro");
   const view: View = saved?.view ?? "hub";
+  // `?arena=CODE` (an invite link) or a room you were in when the page closed opens the online lobby.
+  const [online, setOnline] = useState<boolean>(() => {
+    try {
+      return !!new URLSearchParams(window.location.search).get("arena") || !!JSON.parse(localStorage.getItem("superlife.arena.net.v1") ?? "{}")?.code;
+    } catch {
+      return false;
+    }
+  });
 
   function update(next: Saved | null) {
     setSaved(next);
@@ -117,7 +128,8 @@ export function ArenaScreen() {
     update({ v: 1, match: newMatch(seed, pool), level, view: "draft" });
   }
 
-  if (!saved || view === "hub") return <Hub level={level} setLevel={setLevel} lives={lives} onStart={start} onBack={toTitle}/>;
+  if (online) return <OnlineArena lives={lives} onBack={() => setOnline(false)} onTitle={() => { setOnline(false); toTitle(); }} />;
+  if (!saved || view === "hub") return <Hub level={level} setLevel={setLevel} lives={lives} onStart={start} onOnline={() => setOnline(true)} onBack={toTitle} />;
   const set = (match: ArenaMatch, v: View = view) => update({ ...saved, match, view: v });
   const quit = () => update(null);
   if (view === "draft") return <Draft match={saved.match} level={saved.level} lives={lives} onMatch={(m) => set(m, m.stage === "order" ? "order" : "draft")} onQuit={quit} />;
@@ -131,7 +143,7 @@ export function ArenaScreen() {
 // ─── Art ──────────────────────────────────────────────────────────────────────────
 
 /** Painted art when the legend has it; otherwise a city backdrop with a figure bust. `figW` sizes the bust (wide frames want a smaller one). */
-function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%", figTop = "7%" }: { f: ArenaFighter; className?: string; focus?: string; figW?: string; figTop?: string }) {
+export function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%", figTop = "7%" }: { f: ArenaFighter; className?: string; focus?: string; figW?: string; figTop?: string }) {
   const art = useArt(f.art ?? "");
   const city = useArt(PRESETS.find((p) => p.id === f.world)?.cityId ?? "");
   return (
@@ -151,7 +163,7 @@ function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%", figTo
   );
 }
 
-function FighterFigure({ f, pose, label }: { f: ArenaFighter; pose: Pose; label?: string }) {
+export function FighterFigure({ f, pose, label }: { f: ArenaFighter; pose: Pose; label?: string }) {
   if (f.life) return <Figure seed={f.seed ?? 7} age={Math.max(18, f.life.age)} sex={f.life.sex} look={f.life.look} wardrobe={f.life.wardrobe} aura={f.color} bare pose={pose} label={label ?? f.name} />;
   return (
     <Figure
@@ -169,7 +181,7 @@ function FighterFigure({ f, pose, label }: { f: ArenaFighter; pose: Pose; label?
   );
 }
 
-function PassiveTag({ f, compact = false }: { f: ArenaFighter; compact?: boolean }) {
+export function PassiveTag({ f, compact = false }: { f: ArenaFighter; compact?: boolean }) {
   const Icon = PASSIVE_ICON[f.passive.kind];
   return (
     <span className="flex min-w-0 items-center gap-1 text-[11px] font-bold text-fg">
@@ -180,7 +192,7 @@ function PassiveTag({ f, compact = false }: { f: ArenaFighter; compact?: boolean
   );
 }
 
-function Header({ title, kicker, onBack, right }: { title: string; kicker: string; onBack: () => void; right?: React.ReactNode }) {
+export function Header({ title, kicker, onBack, right }: { title: string; kicker: string; onBack: () => void; right?: React.ReactNode }) {
   return (
     <header className="relative flex shrink-0 items-center gap-3 px-4 pt-3 pb-2">
       <button type="button" onClick={onBack} className="btn btn-ghost !min-h-10 !w-10 !p-0" aria-label="Back">
@@ -197,7 +209,7 @@ function Header({ title, kicker, onBack, right }: { title: string; kicker: strin
 
 // ─── Hub ──────────────────────────────────────────────────────────────────────────
 
-function Hub({ level, setLevel, lives, onStart, onBack }: { level: AiLevel; setLevel: (l: AiLevel) => void; lives: ArenaFighter[]; onStart: () => void; onBack: () => void }) {
+function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiLevel; setLevel: (l: AiLevel) => void; lives: ArenaFighter[]; onStart: () => void; onOnline: () => void; onBack: () => void }) {
   const poster = ["spider-man", "batman", "wonder-woman"].map((id) => fighterOf(id));
   return (
     <main className="arena-root relative flex h-full min-h-0 flex-col overflow-hidden">
@@ -240,14 +252,15 @@ function Hub({ level, setLevel, lives, onStart, onBack }: { level: AiLevel; setL
           
         </section>
 
-        <section className="card-glass mt-3 flex items-center gap-3 px-4 py-3 opacity-90">
-          <span className="grid size-11 place-items-center rounded-xl bg-spark/15 text-spark"><Wifi className="size-6" aria-hidden /></span>
+        <button type="button" onClick={onOnline} className="arena-online-card card-glass mt-3 flex w-full items-center gap-3 px-4 py-3 text-left">
+          <span className="arena-radar grid size-11 shrink-0 place-items-center rounded-xl bg-spark/15 text-spark"><Wifi className="size-6" aria-hidden /></span>
           <div className="min-w-0 flex-1">
-            <h2 className="t-label flex items-center gap-2 text-spark">Vs a friend online <span className="rounded-full bg-white/10 px-1.5 py-px text-[9px] text-fg">Soon</span></h2>
-            <p className="text-xs font-semibold text-muted">Invite codes and live turns need the Arena server. The rules engine is already built for it.</p>
+            <h2 className="t-label flex items-center gap-2 text-spark">Vs a friend online <span className="rounded-full bg-spark px-1.5 py-px text-[9px] text-paper-ink">New</span></h2>
+            <p className="text-sm font-bold text-fg">Make a room, send the code</p>
+            <p className="text-xs font-semibold text-muted">Live turns. Hidden picks. 30 s a turn.</p>
           </div>
-          <Lock className="size-4 shrink-0 text-muted" aria-hidden />
-        </section>
+          <ArrowLeft className="size-4 shrink-0 rotate-180 text-spark" aria-hidden />
+        </button>
 
         <section className="mt-4 px-1">
           <h2 className="t-label flex items-center gap-1.5 text-muted"><Info className="size-3.5" aria-hidden /> How it works</h2>
@@ -274,28 +287,37 @@ function Hub({ level, setLevel, lives, onStart, onBack }: { level: AiLevel; setL
 
 type Filter = "all" | "hero" | "villain" | "yours";
 
-function Draft({ match, level, lives, onMatch, onQuit }: { match: ArenaMatch; level: AiLevel; lives: ArenaFighter[]; onMatch: (m: ArenaMatch) => void; onQuit: () => void }) {
+export interface DraftNet {
+  /** Whose pick it is from your seat (0 = you). */
+  turn: Side | null;
+  onPick: (id: string) => void;
+  /** You're side 1 on the server: the pick pips run R-Y-Y-R-R-Y. */
+  flip: boolean;
+}
+
+export function Draft({ match, level, lives, onMatch, onQuit, net }: { match: ArenaMatch; level: AiLevel; lives: ArenaFighter[]; onMatch: (m: ArenaMatch) => void; onQuit: () => void; net?: DraftNet }) {
+  const rival = useContext(RivalName);
   const [filter, setFilter] = useState<Filter>("all");
   const [peek, setPeek] = useState<string | null>(null);
-  const turn = draftTurn(match);
+  const turn = net ? net.turn : draftTurn(match);
   const used = taken(match);
   const n = match.picks[0].length + match.picks[1].length;
 
   // The rival drafts after a beat, so you can see it happen.
   useEffect(() => {
-    if (turn !== 1) return;
+    if (turn !== 1 || net) return;
     const id = window.setTimeout(() => onMatch(draftPick(match, 1, aiDraft(match, 1, level, dice(match.seed, "draft", n)))), 750);
     return () => window.clearTimeout(id);
-  }, [turn, match, level, n, onMatch]);
+  }, [turn, match, level, n, onMatch, net]);
 
   const pool = match.pool.map((id) => fighterOf(id)).filter((f) => (filter === "all" ? true : filter === "yours" ? f.custom : f.side === filter && !f.custom));
   const peeked = peek ? fighterOf(peek) : null;
   return (
     <main className="arena-root relative flex h-full min-h-0 flex-col overflow-hidden">
-      <Header title="The draft" kicker={turn === 0 ? "Your pick" : turn === 1 ? "Rival is picking…" : "Draft done"} onBack={onQuit} right={<DraftPips n={n} />} />
+      <Header title="The draft" kicker={turn === 0 ? "Your pick" : turn === 1 ? `${rival} is picking…` : "Draft done"} onBack={onQuit} right={<DraftPips n={n} flip={net?.flip} />} />
       <div className="grid shrink-0 grid-cols-2 gap-2 px-4">
         <TeamRow label="You" picks={match.picks[0]} active={turn === 0} />
-        <TeamRow label="Rival" picks={match.picks[1]} active={turn === 1} right />
+        <TeamRow label={rival} picks={match.picks[1]} active={turn === 1} right />
       </div>
       <div role="tablist" className="flex shrink-0 gap-1.5 px-4 pt-3 pb-2">
         {(["all", "hero", "villain", ...(lives.length ? ["yours"] : [])] as Filter[]).map((k) => (
@@ -341,9 +363,9 @@ function Draft({ match, level, lives, onMatch, onQuit }: { match: ArenaMatch; le
           onClose={() => setPeek(null)}
           action={
             used.has(peeked.id) ? (
-              <p className="text-center text-sm font-bold text-muted">{match.picks[0].includes(peeked.id) ? "On your team." : "Your rival took them."}</p>
+              <p className="text-center text-sm font-bold text-muted">{match.picks[0].includes(peeked.id) ? "On your team." : `${rival === "Rival" ? "Your rival" : rival} took them.`}</p>
             ) : (
-              <button type="button" disabled={turn !== 0} onClick={() => { onMatch(draftPick(match, 0, peeked.id)); setPeek(null); }} className="btn btn-gold min-h-14 w-full text-lg">
+              <button type="button" disabled={turn !== 0} onClick={() => { if (net) net.onPick(peeked.id); else onMatch(draftPick(match, 0, peeked.id)); setPeek(null); }} className="btn btn-gold min-h-14 w-full text-lg">
                 {turn === 0 ? <>Draft {peeked.name}</> : "Wait for your pick…"}
               </button>
             )
@@ -354,14 +376,14 @@ function Draft({ match, level, lives, onMatch, onQuit }: { match: ArenaMatch; le
   );
 }
 
-function DraftPips({ n }: { n: number }) {
+export function DraftPips({ n, flip = false }: { n: number; flip?: boolean }) {
   return (
     <span className="flex gap-1" aria-label={`Pick ${Math.min(n + 1, 6)} of 6`}>
-      {DRAFT_ORDER.map((s, i) => (
+      {DRAFT_ORDER.map((raw, i) => { const s = flip ? 1 - raw : raw; return (
         <span key={i} className={`h-6 w-3 rounded-sm text-center text-[8px] leading-6 font-extrabold ${i < n ? (s === 0 ? "bg-gold text-paper-ink" : "bg-cape text-white") : i === n ? "animate-pulse bg-white/30 text-fg" : "bg-white/10 text-muted"}`}>
           {s === 0 ? "Y" : "R"}
         </span>
-      ))}
+      ); })}
     </span>
   );
 }
@@ -433,13 +455,27 @@ function FighterSheet({ f, onClose, action }: { f: ArenaFighter; onClose: () => 
 
 // ─── Order + reveal ───────────────────────────────────────────────────────────────
 
-function Order({ match, onLock, onQuit }: { match: ArenaMatch; onLock: (m: ArenaMatch) => void; onQuit: () => void }) {
-  const [order, setOrderState] = useState<string[]>([]);
+export interface OrderNet {
+  onLock: (order: string[]) => void;
+  /** Your order, once the server has it. */
+  locked: string[] | null;
+  rivalLocked: boolean;
+}
+
+export function Order({ match, onLock, onQuit, net }: { match: ArenaMatch; onLock: (m: ArenaMatch) => void; onQuit: () => void; net?: OrderNet }) {
+  const rival = useContext(RivalName);
+  const [order, setOrderState] = useState<string[]>(() => net?.locked ?? []);
+  const locked = !!net?.locked;
   const mine = match.picks[0];
   function tap(id: string) {
+    if (locked) return;
     setOrderState((o) => (o.includes(id) ? o.filter((x) => x !== id) : o.length < 3 ? [...o, id] : o));
   }
   function lock() {
+    if (net) {
+      net.onLock(order);
+      return;
+    }
     const ai = aiOrder(match, 1, dice(match.seed, "order"));
     onLock(setOrder(setOrder(match, 0, order), 1, ai));
   }
@@ -473,7 +509,7 @@ function Order({ match, onLock, onQuit }: { match: ArenaMatch; onLock: (m: Arena
             );
           })}
         </div>
-        <h3 className="t-label mt-5 text-cape">Rival's team · order hidden</h3>
+        <h3 className="t-label mt-5 flex items-center gap-1.5 text-cape">{rival === "Rival" ? "Rival's" : `${rival}'s`} team · order hidden{net && <span className={`ml-auto rounded-full px-2 py-px text-[9px] ${net.rivalLocked ? "bg-cape text-white" : "bg-white/10 text-muted"}`}>{net.rivalLocked ? "Locked" : "Choosing…"}</span>}</h3>
         <div className="mt-2 grid grid-cols-3 gap-2">
           {match.picks[1].map((id) => {
             const f = fighterOf(id);
@@ -487,15 +523,22 @@ function Order({ match, onLock, onQuit }: { match: ArenaMatch; onLock: (m: Arena
         </div>
       </div>
       <div className="shrink-0 px-4 pt-2 pb-6">
-        <button type="button" disabled={order.length < 3} onClick={lock} className="btn btn-gold min-h-14 w-full text-lg">
-          <Lock className="size-5" aria-hidden /> {order.length < 3 ? `Pick ${3 - order.length} more` : "Lock in order"}
+        <button type="button" disabled={order.length < 3 || locked} onClick={lock} className="btn btn-gold min-h-14 w-full text-lg">
+          {locked ? <><Check className="size-5" aria-hidden /> Locked · waiting for {rival}</> : <><Lock className="size-5" aria-hidden /> {order.length < 3 ? `Pick ${3 - order.length} more` : "Lock in order"}</>}
         </button>
       </div>
     </main>
   );
 }
 
-function Reveal({ match, onGo }: { match: ArenaMatch; onGo: () => void }) {
+export function Reveal({ match, onGo, auto }: { match: ArenaMatch; onGo: () => void; auto?: number }) {
+  const go = useRef(onGo);
+  go.current = onGo;
+  useEffect(() => {
+    if (!auto) return;
+    const id = window.setTimeout(() => go.current(), auto);
+    return () => window.clearTimeout(id);
+  }, [auto]);
   const [a, b] = [match.orders[0] ?? [], match.orders[1] ?? []];
   return (
     <main className="arena-root relative flex h-full min-h-0 flex-col overflow-hidden px-4 pt-6 pb-6">
@@ -532,7 +575,7 @@ function Reveal({ match, onGo }: { match: ArenaMatch; onGo: () => void }) {
 
 // ─── Round intro ──────────────────────────────────────────────────────────────────
 
-function RoundTracker({ match, compact = false }: { match: ArenaMatch; compact?: boolean }) {
+export function RoundTracker({ match, compact = false }: { match: ArenaMatch; compact?: boolean }) {
   const pip = (side: Side, r: number) => {
     const res = match.results[r];
     if (res === undefined) return r === match.round && match.stage === "bout" ? "now" : "open";
@@ -547,14 +590,18 @@ function RoundTracker({ match, compact = false }: { match: ArenaMatch; compact?:
   );
 }
 
-function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => void }) {
+export function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => void }) {
+  const rival = useContext(RivalName);
   const bout = match.bout!;
   const fa = fighterOf(bout.fighters[0].id);
   const fb = fighterOf(bout.fighters[1].id);
+  // A ref, so a parent re-render (the online clock ticks 4×/s) doesn't restart the countdown.
+  const go = useRef(onGo);
+  go.current = onGo;
   useEffect(() => {
-    const id = window.setTimeout(onGo, 2600);
+    const id = window.setTimeout(() => go.current(), 2600);
     return () => window.clearTimeout(id);
-  }, [onGo]);
+  }, []);
   const [w0, w1] = roundsWon(match);
   return (
     <button type="button" onClick={onGo} className="arena-root relative flex h-full min-h-0 w-full flex-col overflow-hidden text-left" aria-label="Start the round">
@@ -565,7 +612,7 @@ function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => void }) {
       </div>
       <div className="arena-banner relative mt-8 py-2">
         <RoundTracker match={match} />
-        <p className="t-label mt-0.5 text-center text-[10px] text-muted">You {w0} · {w1} Rival</p>
+        <p className="t-label mt-0.5 text-center text-[10px] text-muted">You {w0} · {w1} {rival}</p>
       </div>
       <div className="relative mt-auto grid grid-cols-[1fr_auto_1fr] items-end gap-1 px-3 pb-10">
         <div className="min-w-0">
@@ -575,7 +622,7 @@ function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => void }) {
         </div>
         <span className="arena-vs arena-stamp mb-2 text-6xl">VS</span>
         <div className="min-w-0 text-right">
-          <p className="t-label text-[10px] text-cape">Rival</p>
+          <p className="t-label truncate text-[10px] text-cape">{rival}</p>
           <p className="t-display truncate text-[1.6rem] text-fg drop-shadow-[0_2px_6px_rgba(0,0,0,.9)]">{fb.name}</p>
           <span className="flex justify-end"><PassiveTag f={fb} compact /></span>
         </div>
@@ -592,7 +639,21 @@ interface Impact { key: number; on: Side; element: string; amount: number; big: 
 
 const T = { hit1: 240, swap: 560, hit2: 800, rest: 1120 };
 
-function Battle({ match, level, onMatch, onRoundDone, onQuit }: { match: ArenaMatch; level: AiLevel; onMatch: (m: ArenaMatch) => void; onRoundDone: (m: ArenaMatch) => void; onQuit: () => void }) {
+export interface BattleNet {
+  /** The rival's tell, once they've led this turn and you're answering. */
+  tell: Tell | null;
+  /** The server is waiting on you this turn. */
+  canAct: boolean;
+  /** What you're waiting for, when it isn't you. */
+  waiting: string | null;
+  send: (a: ArenaAction) => void;
+  /** Both tap on between rounds. */
+  ready: () => void;
+  readied: boolean;
+}
+
+export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { match: ArenaMatch; level: AiLevel; onMatch: (m: ArenaMatch) => void; onRoundDone: (m: ArenaMatch) => void; onQuit: () => void; net?: BattleNet }) {
+  const rival = useContext(RivalName);
   const bout = match.bout!;
   const fa = fighterOf(bout.fighters[0].id);
   const fb = fighterOf(bout.fighters[1].id);
@@ -623,9 +684,25 @@ function Battle({ match, level, onMatch, onRoundDone, onQuit }: { match: ArenaMa
   }, []);
 
   const iLead = hud.leader === 0 && !hud.done;
+  const [sent, setSent] = useState(false);
+  // Online: the server resolves turns; animate each one as it shows up in the log.
+  useEffect(() => {
+    if (!net || busy) return;
+    const b = match.bout!;
+    if (b.log.length <= hud.log.length) return;
+    setBusy(true);
+    setSent(false);
+    animate(b, b.log.at(-1)!);
+    if (!b.done) buzz([18]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [net, match, busy, hud.log.length]);
+  useEffect(() => {
+    if (net?.canAct) setSent(false);
+  }, [net?.canAct, hud.turn]);
+  const locked = !!net && (!net.canAct || sent);
   // The rival commits its lead first; you only ever see the tell.
-  const aiLeadAction = useMemo<ArenaAction | null>(() => (hud.done || hud.leader !== 1 ? null : aiLead(hud, 1, level, dice(match.seed, match.round, hud.turn, "lead"))), [hud, level, match.seed, match.round]);
-  const rivalTell: Tell | null = aiLeadAction ? tellOf(hud, aiLeadAction) : null;
+  const aiLeadAction = useMemo<ArenaAction | null>(() => (net || hud.done || hud.leader !== 1 ? null : aiLead(hud, 1, level, dice(match.seed, match.round, hud.turn, "lead"))), [hud, level, match.seed, match.round, net]);
+  const rivalTell: Tell | null = net ? (hud.leader === 1 && !hud.done ? net.tell : null) : aiLeadAction ? tellOf(hud, aiLeadAction) : null;
   const answer = rivalTell?.style ? answerOf(rivalTell.style) : null;
   const me = hud.fighters[0];
   const them = hud.fighters[1];
@@ -659,6 +736,15 @@ function Battle({ match, level, onMatch, onRoundDone, onQuit }: { match: ArenaMa
       return;
     }
     const mine: ArenaAction = { move: key, feint: f };
+    if (net) {
+      if (locked) return;
+      setSent(true);
+      setFeint(null);
+      setLine(iLead ? `Locked in: ${move === BREATH ? "a breath" : move.name}. ${rival} sees your tell.` : `Locked in: ${move === BREATH ? "a breath" : move.name}.`);
+      buzz([10]);
+      net.send(mine);
+      return;
+    }
     const theirs: ArenaAction = iLead ? aiFollow(hud, 1, tellOf(hud, mine), level, dice(match.seed, match.round, hud.turn, "follow")) : aiLeadAction!;
     const next = matchTurn(match, [mine, theirs]);
     const b = next.bout!;
@@ -774,7 +860,9 @@ function Battle({ match, level, onMatch, onRoundDone, onQuit }: { match: ArenaMa
 
       <div className="card-paper shrink-0 px-3 py-2">
         <p className="text-sm font-bold">
-          {roundOver ? (won ? `${fa.name} takes the round.` : `${fb.name} takes the round.`) : iLead ? (
+          {roundOver ? (won ? `${fa.name} takes the round.` : `${fb.name} takes the round.`) : net && !busy && net.waiting && !(iLead && !sent && net.canAct) ? (
+            <span className="flex items-center gap-2"><span className="arena-wait-dot" aria-hidden />{net.waiting}</span>
+          ) : iLead ? (
             <>You lead. <span className="font-semibold opacity-70">{fb.name} sees your tell{fb.passive.kind !== "sense" ? feint ? " — and it's a lie" : "" : ", and Spider-Sense sees through feints"}.</span></>
           ) : rivalTell?.style ? (
             <>{rivalTell.charged ? "A charged hit is coming. " : ""}They show {STYLE_NAME[rivalTell.style].toLowerCase()}. <span className="font-semibold opacity-70">{STYLE_NAME[answer!]} beats it{hud.feints[1] ? ` — they've feinted ${hud.feints[1]}×` : ""}.</span></>
@@ -812,7 +900,7 @@ function Battle({ match, level, onMatch, onRoundDone, onQuit }: { match: ArenaMa
           const isAnswer = !iLead && !!answer && m.style === answer;
           const fakeSame = iLead && feint === m.style;
           return (
-            <button key={keyOf(m)} type="button" aria-disabled={blocked || busy || roundOver} onClick={() => play(m)} className={`card relative flex min-h-[4.25rem] flex-col gap-0.5 overflow-hidden px-2.5 py-1.5 text-left ${isAnswer && !blocked ? "!border-gold/80 shadow-[0_0_16px_-6px_var(--color-gold)]" : ""} ${blocked ? "opacity-50" : ""}`}>
+            <button key={keyOf(m)} type="button" aria-disabled={blocked || busy || roundOver || locked} onClick={() => play(m)} className={`card relative flex min-h-[4.25rem] flex-col gap-0.5 overflow-hidden px-2.5 py-1.5 text-left ${isAnswer && !blocked && !locked ? "!border-gold/80 shadow-[0_0_16px_-6px_var(--color-gold)]" : ""} ${blocked || locked ? "opacity-50" : ""}`}>
               <span className="absolute inset-y-0 left-0 w-1" style={{ background: HEX[m.style] }} />
               {cool > 0 && <span className="absolute inset-0 bg-ink/55" style={{ clipPath: `inset(${100 - Math.min(100, cool * 50)}% 0 0 0)` }} />}
               <span className="relative flex items-center gap-1.5">
@@ -831,16 +919,16 @@ function Battle({ match, level, onMatch, onRoundDone, onQuit }: { match: ArenaMa
           );
         })}
       </div>
-      <button type="button" disabled={busy || roundOver} onClick={() => play(BREATH)} className={`btn btn-ghost min-h-11 shrink-0 text-sm ${answer === "guard" ? "!border-gold/70" : ""}`}>
+      <button type="button" disabled={busy || roundOver || locked} onClick={() => play(BREATH)} className={`btn btn-ghost min-h-11 shrink-0 text-sm ${answer === "guard" ? "!border-gold/70" : ""}`}>
         <RotateCcw className="size-4" aria-hidden /> Catch a breath · +3 energy{answer === "guard" ? " · counters" : ""}
       </button>
 
-      {roundOver && <RoundOver match={match} ko={ko!} onNext={() => onRoundDone(nextRound(match))} onSkip={() => onRoundDone(finish(nextRound(match)))} />}
+      {roundOver && <RoundOver match={match} ko={ko!} net={net} onNext={() => (net ? net.ready() : onRoundDone(nextRound(match)))} onSkip={() => (net ? net.ready() : onRoundDone(finish(nextRound(match))))} />}
       {quitAsk && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 px-6" role="dialog" aria-label="Leave the match?">
           <div className="card-glass w-full px-4 py-4 text-center">
             <p className="t-display text-fg">Leave the match?</p>
-            <p className="mt-1 text-sm font-semibold text-muted">It counts as a forfeit.</p>
+            <p className="mt-1 text-sm font-semibold text-muted">It counts as a forfeit{net ? ` and ${rival} wins` : ""}.</p>
             <div className="mt-4 flex gap-2">
               <button type="button" className="btn btn-ghost min-h-12 flex-1" onClick={() => setQuitAsk(false)}>Keep fighting</button>
               <button type="button" className="btn btn-primary min-h-12 flex-1" onClick={onQuit}>Forfeit</button>
@@ -896,7 +984,8 @@ function Stage({ side, lunging, pose, glow, children }: { side: Side; lunging: n
   );
 }
 
-function RoundOver({ match, ko, onNext, onSkip }: { match: ArenaMatch; ko: "ko" | "time" | "double"; onNext: () => void; onSkip: () => void }) {
+function RoundOver({ match, ko, onNext, onSkip, net }: { match: ArenaMatch; ko: "ko" | "time" | "double"; onNext: () => void; onSkip: () => void; net?: BattleNet }) {
+  const rival = useContext(RivalName);
   const b = match.bout!;
   const won = b.winner === 0;
   const after = [...match.results, b.winner];
@@ -911,20 +1000,21 @@ function RoundOver({ match, ko, onNext, onSkip }: { match: ArenaMatch; ko: "ko" 
       <span className="ko-rays pointer-events-none absolute top-1/3 left-1/2 size-[140%] -translate-x-1/2 -translate-y-1/2 opacity-30" style={{ background: `conic-gradient(from 0deg, transparent, ${won ? "#e6b34d" : "#ef5d52"}, transparent 10%, transparent 25%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 35%, transparent 50%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 60%, transparent 75%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 85%)` }} />
       <span className="ko-in arena-vs relative text-7xl">{ko === "time" ? "TIME!" : "K.O.!"}</span>
       <div className="card-glass anim-rise relative mt-5 w-full px-4 py-4 text-center">
-        <p className={`t-label ${won ? "text-gold" : "text-cape"}`}>Round {match.round + 1} · {won ? "You win it" : "Rival wins it"}</p>
+        <p className={`t-label ${won ? "text-gold" : "text-cape"}`}>Round {match.round + 1} · {won ? "You win it" : `${rival} wins it`}</p>
         <p className="t-display mt-1 text-fg">{won ? fa.name : fb.name}</p>
         <p className="mt-1 text-sm font-semibold text-muted">
           {ko === "time" ? "Turn limit: the healthier fighter takes it." : ko === "double" ? "Both went down. The bigger last hit wins." : `${won ? fb.name : fa.name} is down in ${b.turn} turns.`}
         </p>
         <div className="mt-3 flex items-center justify-center gap-3">
           <span className="font-display text-4xl text-gold">{w0}</span>
-          <span className="t-label text-muted">You · Rival</span>
+          <span className="t-label max-w-[9rem] truncate text-muted">You · {rival}</span>
           <span className="font-display text-4xl text-cape">{w1}</span>
         </div>
-        <button type="button" onClick={decided ? onSkip : onNext} className="btn btn-gold mt-4 min-h-14 w-full text-lg" autoFocus>
-          {last || decided ? <><Trophy className="size-5" aria-hidden /> See the result</> : <>Round {match.round + 2} <Swords className="size-5" aria-hidden /></>}
+        <button type="button" disabled={net?.readied} onClick={decided ? onSkip : onNext} className="btn btn-gold mt-4 min-h-14 w-full text-lg" autoFocus>
+          {net?.readied ? <><span className="arena-wait-dot" aria-hidden /> Waiting for {rival}…</> : last || decided ? <><Trophy className="size-5" aria-hidden /> See the result</> : <>Round {match.round + 2} <Swords className="size-5" aria-hidden /></>}
         </button>
-        {decided && (
+        {net && !net.readied && <p className="mt-2 text-[11px] font-bold text-muted">Both tap on. Auto in 20 s.</p>}
+        {decided && !net && (
           <button type="button" onClick={onNext} className="btn btn-ghost mt-2 min-h-11 w-full text-sm">
             Play round 3 anyway
           </button>
@@ -936,8 +1026,9 @@ function RoundOver({ match, ko, onNext, onSkip }: { match: ArenaMatch; ko: "ko" 
 
 // ─── Results ──────────────────────────────────────────────────────────────────────
 
-function Results({ match, onRematch, onHub, onTitle }: { match: ArenaMatch; onRematch: () => void; onHub: () => void; onTitle: () => void }) {
+export function Results({ match, onRematch, onHub, onTitle, note, footer }: { match: ArenaMatch; onRematch: () => void; onHub: () => void; onTitle: () => void; note?: React.ReactNode; footer?: React.ReactNode }) {
   const won = match.winner === 0;
+  const played = !!match.orders[0] && !!match.orders[1];
   const [w0, w1] = roundsWon(match);
   const color = won ? "#e6b34d" : "#ef5d52";
   return (
@@ -951,8 +1042,9 @@ function Results({ match, onRematch, onHub, onTitle }: { match: ArenaMatch; onRe
           <span className="arena-vs text-2xl">–</span>
           <span className="font-display text-5xl text-cape">{w1}</span>
         </div>
+        {note}
         <ol className="mt-5 flex flex-col gap-2">
-          {[0, 1, 2].map((r) => {
+          {(played ? [0, 1, 2] : []).map((r) => {
             const a = fighterOf(match.orders[0]![r]!);
             const b = fighterOf(match.orders[1]![r]!);
             const res = match.results[r];
@@ -963,7 +1055,7 @@ function Results({ match, onRematch, onHub, onTitle }: { match: ArenaMatch; onRe
                 <span className={`arena-card relative size-12 shrink-0 !rounded-lg ${res === 0 ? "" : "grayscale-[.7]"}`} style={{ "--c": a.color } as React.CSSProperties}><FighterArt f={a} focus="50% 10%" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-extrabold text-fg">{a.name} <span className="text-muted">vs</span> {b.name}</span>
-                  <span className="block text-[11px] font-bold text-muted">{res === undefined ? "Not played — match decided" : m ? `${Math.round(m[0] * 100)}% HP left vs ${Math.round(m[1] * 100)}%` : ""}</span>
+                  <span className="block text-[11px] font-bold text-muted">{res === undefined ? (note ? "Not played" : "Not played — match decided") : m ? `${Math.round(m[0] * 100)}% HP left vs ${Math.round(m[1] * 100)}%` : ""}</span>
                 </span>
                 <span className={`arena-card relative size-12 shrink-0 !rounded-lg ${res === 1 ? "" : "grayscale-[.7]"}`} style={{ "--c": b.color } as React.CSSProperties}><FighterArt f={b} focus="50% 10%" /></span>
                 <span className={`grid size-8 shrink-0 place-items-center rounded-full font-display text-sm ${res === 0 ? "bg-gold text-paper-ink" : res === 1 ? "bg-cape text-white" : "bg-white/10 text-muted"}`}>{res === 0 ? "W" : res === 1 ? "L" : "–"}</span>
@@ -973,13 +1065,13 @@ function Results({ match, onRematch, onHub, onTitle }: { match: ArenaMatch; onRe
         </ol>
         <MvpCard match={match} />
       </div>
-      <div className="relative flex shrink-0 flex-col gap-2 px-4 pt-2 pb-6">
+      {footer ?? <div className="relative flex shrink-0 flex-col gap-2 px-4 pt-2 pb-6">
         <button type="button" onClick={onRematch} className="btn btn-gold min-h-14 w-full text-lg"><Swords className="size-5" aria-hidden /> New match</button>
         <div className="flex gap-2">
           <button type="button" onClick={onHub} className="btn btn-ghost min-h-12 flex-1"><Users className="size-4" aria-hidden /> Arena</button>
           <button type="button" onClick={onTitle} className="btn btn-ghost min-h-12 flex-1">Title</button>
         </div>
-      </div>
+      </div>}
     </main>
   );
 }
@@ -995,8 +1087,8 @@ function MvpCard({ match }: { match: ArenaMatch }) {
       best = i;
     }
   });
-  if (best < 0) return null;
-  const f = fighterOf(match.orders[0]![best]!);
+  if (best < 0 || !match.orders[0]) return null;
+  const f = fighterOf(match.orders[0][best]!);
   return (
     <section className="anim-rise card-glass mt-3 flex items-center gap-3 overflow-hidden px-3 py-3" style={{ animationDelay: "400ms" }}>
       <span className="arena-card relative h-20 w-16 shrink-0" style={{ "--c": f.color } as React.CSSProperties}><FighterArt f={f} /></span>
@@ -1009,11 +1101,4 @@ function MvpCard({ match }: { match: ArenaMatch }) {
   );
 }
 
-function buzz(pattern: number[]) {
-  try {
-    navigator.vibrate?.(pattern);
-  } catch {
-    /* no haptics */
-  }
-}
 
