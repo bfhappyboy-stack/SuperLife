@@ -103,7 +103,7 @@ export function SealedOrb({ className = "size-20" }: { className?: string }) {
   );
 }
 
-function LegendThumb({ legend, className, style }: { legend: HeroPreset; className?: string; style?: CSSProperties }) {
+export function LegendThumb({ legend, className, style }: { legend: HeroPreset; className?: string; style?: CSSProperties }) {
   const art = useArt(legend.art);
   return (
     <span className={`relative block overflow-hidden bg-panel shadow-lg ${className ?? ""}`} style={{ ...style, background: legend.color }}>
