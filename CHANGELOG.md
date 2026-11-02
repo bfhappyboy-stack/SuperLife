@@ -1,5 +1,59 @@
 # Changelog
 
+## 2026-11-02 (am): Fast age-up, slower kid power, five lives (`devbot/2026-11-01-night`)
+
+### Fast-forward a season or a year (`skip.ts`, `engine.ts`, `FastForward.tsx`, `GameApp.tsx`)
+
+- **The gold Skip button** replaces the old "To N" button and opens a sheet with two choices: **Skip a season · 3 months** or **Skip to age N**.
+- **Each month resolves itself** with sensible defaults, biased by what you have been doing lately (`Game.habits`: action weights, sub-picks and your average minigame score).
+  - Only routine actions are auto-played: school, training, a job, rest, hobbies, books and friends.
+  - Training is skipped when health is low.
+  - Hobbies get more weight when joy is low.
+  - Repeating the same action in a month costs more, so a skip never grinds one thing.
+- **The skip stops by itself** for:
+  - the reveal, story beats and chapter changes;
+  - case files and any choice event;
+  - fights;
+  - health below 25;
+  - a bond falling below 20;
+  - death.
+  Fewer random events and encounters fire while skipping, but any event that would need a choice still stops the skip.
+- **A summary card** follows every skip. It shows:
+  - the months covered, with a track bar;
+  - why the skip stopped;
+  - stat changes and rank changes;
+  - a "What you did" list and a "Meanwhile" list.
+  Its buttons are Again and Back to life (or Take it from here).
+- **It can't be cheesed.** Auto-played minigames score your own average minus 8% (clamped to 30–72%). When both play the same plan, a skip ends slightly behind hand play on power, mastery, money and fame, with joy about equal. `ageup.test.ts` locks this in.
+- **Why:** the user said childhood and the teen years drag. Reaching 18 took about 1,176 taps month by month. It now takes about 145 with year skips. The old "To N" button took about 190 taps but wasted every month.
+
+### Kids grow slower (`mastery.ts`, `engine.ts`)
+
+- Young mastery caps are lower:
+  - under 8: 1.4 (was 1.6)
+  - under 12: 2.3 (was 2.6)
+  - under 16: 3.4 (was 3.8)
+  - under 19: 5 (was 5.6)
+- A new `youthGain` scales power gains before 18. The base multiplier is 0.6 under 12, 0.7 under 16 and 0.85 under 18. Gains also shrink as you near the age cap, down to a floor of 0.3. Losses are unchanged, and existing saves are never pushed below their current level.
+- Teen training EXP is now ×0.62 (was ×0.72).
+- **Power at 18:**
+  - random play: 2.21 → 1.87
+  - a grinder: 4.67 → 3.39
+- By 30, power is back level with before (7.70 vs 7.74).
+- Adult duel win rates are unchanged: about 96% with perfect play, about 75–84% at 60% play and about 40% with random play.
+
+### Five lives (`save.ts`, `store.ts`, `Lives.tsx`)
+
+- **Five save slots** (`superlife.life.N.v1`), with an index in `superlife.lives.v1`.
+- **The "Your lives" screen** is opened from the title screen or the menu. Each card shows:
+  - the portrait (or legend art), name and age;
+  - the mode: Mystery, God Mode · hero, or Build your own;
+  - when the life was last played.
+  From a card you can Continue (or read the obituary of a dead life). Deleting a life asks for confirmation in a bottom sheet. Empty slots offer "Start a new life".
+- **Migration:** the old single save moves into slot 1 once, and only when every slot is empty. The old key is kept as a backup. A deleted life never comes back.
+- **Slots are isolated:** a save only ever writes its own slot. When all five slots are full, New life opens Your lives instead of overwriting one.
+- Tests: `ageup.test.ts` has 12 new tests, covering youth growth, skip stops, fairness, migration, slot isolation and slot modes.
+
 ## 2026-11-01 (night): Boss phases and villain gimmicks, fights that grow with you (`devbot/2026-11-01-night`)
 
 This branch is based on `main` at c41ff09, which already includes PR #3.

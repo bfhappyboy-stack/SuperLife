@@ -1,5 +1,14 @@
 # SuperLife — Backlog
 
+## From the 2026-11-02 am pass
+
+1. **Fast age-up, five lives and slower kid power have shipped.** Open:
+   - Fame ends about 35% lower when skipping than by hand, because skips play no stunts or fights. Decide whether that is fine.
+   - Consider a "skip until something happens" option.
+   - When should the legacy `superlife.save.v1` backup be cleaned up?
+   - The boss win rate with perfect play dipped from 0.82 to 0.78. Watch it.
+   - Pre-existing lint error: `no-empty` at `src/lib/app-data/client.server.ts:281`. It is Grok Build plumbing, so it was left untouched.
+
 ## From the 2026-11-01 night pass
 
 1. **Boss phases shipped** (gimmicks for all 49 rogues, plus generic bosses by power). Next:
