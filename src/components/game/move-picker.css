@@ -106,3 +106,15 @@
 .move-picker .mp-quick-name { max-width: 100%; font-size: 0.5625rem; font-weight: 700; line-height: 1.05; color: var(--color-fg); text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .move-picker .mp-status.is-tall { height: auto; }
 .move-picker .mp-status.is-tall p { display: block; }
+
+/* While a pick is live the sticky line floats over the list: cover the strip above it (the desk padding) and fade
+   the list below it, so slot outlines never peek around the edges. Pseudo-elements only: no layout change. */
+.move-picker .mp-status.is-armed::before {
+  content: ""; position: absolute; left: calc(-0.75rem + 1px); right: calc(-0.75rem + 1px); top: -1rem; height: calc(1rem + 1px);
+  background: var(--color-panel); pointer-events: none;
+}
+.move-picker .mp-status.is-armed::after {
+  content: ""; position: absolute; left: calc(-0.75rem + 1px); right: calc(-0.75rem + 1px); bottom: -0.9rem; height: 0.9rem;
+  background: linear-gradient(var(--color-panel), color-mix(in srgb, var(--color-panel) 0%, transparent)); pointer-events: none;
+}
+.move-picker .mp-quick-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
