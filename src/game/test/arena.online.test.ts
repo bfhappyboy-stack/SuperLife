@@ -190,7 +190,9 @@ test("invalid actions are rejected with a reason and change nothing", () => {
 });
 
 test("a missed turn plays Catch a breath; three missed turns forfeit", () => {
-  let { doc, now } = toBout(8);
+  const start = toBout(8);
+  const now = start.now;
+  let doc = start.doc;
   const m0 = replayDoc(doc).match;
   const L = m0.bout!.leader;
   // Leader idles: after 30 s the server gives them a breath lead and the follower gets a fresh clock.
@@ -221,7 +223,7 @@ test("draft and order clocks auto-pick and auto-lock", () => {
   const m = replayDoc(doc).match;
   assert.equal(m.picks[0].length, 1, "side 0 got an auto pick");
   assert.equal(doc.timeouts[0], 1);
-  let { doc: d, now } = toBout(10);
+  const { doc: d, now } = toBout(10);
   void d;
   // Order: only one side locks; the other gets its draft order when the 45 s clock runs out.
   let o = room();
@@ -244,7 +246,7 @@ test("draft and order clocks auto-pick and auto-lock", () => {
 });
 
 test("the between-rounds wait doesn't count as a timeout", () => {
-  let { doc } = playOut(room(), 5);
+  const { doc } = playOut(room(), 5);
   void doc;
   // Build a room where a bout just ended and nobody taps on.
   const r0 = room();

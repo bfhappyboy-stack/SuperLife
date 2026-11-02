@@ -153,7 +153,7 @@ export function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%"
       ) : (
         <>
           {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-40 saturate-50" />}
-          <span className="absolute inset-0" style={{ background: `radial-gradient(70% 55% at 50% 38%, ${f.color}bb, ${f.color}22 55%, transparent 75%), linear-gradient(180deg, #0c101955, #0c1019 95%)` }} />
+          <span className="absolute inset-0" style={{ background: `radial-gradient(70% 55% at 50% 38%, ${accentOf(f)}bb, ${accentOf(f)}22 55%, transparent 75%), linear-gradient(180deg, #0c101955, #0c1019 95%)` }} />
           <span className="absolute left-1/2 aspect-[240/490] -translate-x-1/2" style={{ width: figW, top: figTop }}>
             <FighterFigure f={f} pose="stand" />
           </span>
@@ -826,8 +826,8 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
         {city && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-30 saturate-[.6]" />}
         <div className="absolute inset-0" style={{ background: `radial-gradient(45% 55% at 22% 92%, color-mix(in srgb, ${fa.color} 38%, transparent), transparent 70%), radial-gradient(45% 55% at 78% 92%, color-mix(in srgb, ${fb.color} 38%, transparent), transparent 70%)` }} />
         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
-        <Stage side={0} lunging={lunge?.side === 0 ? lunge.key : 0} pose={poses[0]} glow={fa.color}><FighterFigure f={fa} pose={poses[0]} /></Stage>
-        <Stage side={1} lunging={lunge?.side === 1 ? lunge.key : 0} pose={poses[1]} glow={fb.color}><FighterFigure f={fb} pose={poses[1]} /></Stage>
+        <DuelCard f={fa} side={0} lunging={lunge?.side === 0 ? lunge.key : 0} pose={poses[0]} hitKey={impact?.on === 0 && impact.amount > 0 ? impact.key : 0} />
+        <DuelCard f={fb} side={1} lunging={lunge?.side === 1 ? lunge.key : 0} pose={poses[1]} hitKey={impact?.on === 1 && impact.amount > 0 ? impact.key : 0} />
         {shot && <Projectile key={shot.key} element={shot.element} reverse={shot.from === 1} seed={shot.key} />}
         {impact && (
           <span key={impact.key} className={`pointer-events-none absolute top-[12%] h-[62%] w-[34%] ${impact.on === 1 ? "right-[4%]" : "left-[4%]"}`}>
@@ -971,14 +971,49 @@ function HpCard({ f, hp, max, lead, hot, extra, right = false }: { f: ArenaFight
   );
 }
 
-function Stage({ side, lunging, pose, glow, children }: { side: Side; lunging: number; pose: Pose; glow: string; children: React.ReactNode }) {
+/** A backdrop glow that reads against the fighter: very dark suits (Venom, Batman) get a villain red or hero gold. */
+function accentOf(f: ArenaFighter): string {
+  const hex = /^#([0-9a-f]{6})$/i.exec(f.color)?.[1];
+  if (!hex) return f.side === "villain" ? "#d4382f" : "#e6b34d";
+  const n = parseInt(hex, 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum < 0.28 ? (f.side === "villain" ? "#d4382f" : "#e6b34d") : f.color;
+}
+
+/**
+ * A fighter on the battle stage as a living card: the legend's painted art, or (villains and saved lives)
+ * their figure over their world's skyline. The card lunges on attack, shakes and flashes red on a hit,
+ * raises a shield shimmer on a guard and greys out on a K.O. Painted art is never mirrored.
+ */
+function DuelCard({ f, side, lunging, pose, hitKey }: { f: ArenaFighter; side: Side; lunging: number; pose: Pose; hitKey: number }) {
   const me = side === 0;
+  const art = useArt(f.art ?? "");
+  const city = useArt(PRESETS.find((p) => p.id === f.world)?.cityId ?? "");
+  const painted = !!(f.art && art);
   return (
-    <div key={lunging || "rest"} className={`absolute bottom-2 h-[88%] w-[30%] ${me ? "left-[7%]" : "right-[7%]"} ${lunging ? "fx-lunge" : ""}`} style={{ "--lunge": me ? "70px" : "-70px" } as React.CSSProperties}>
-      <div className="h-full w-full origin-bottom transition-transform duration-500" style={{ transform: pose === "ko" ? `translateX(${me ? -30 : 30}%)` : undefined }}>
-        <div className={`h-full w-full ${pose === "idle" ? "anim-float" : ""}`} style={{ transform: me ? undefined : "scaleX(-1)", filter: `drop-shadow(0 0 1px rgb(255 255 255 / 0.35)) drop-shadow(0 0 8px color-mix(in srgb, ${glow} 55%, transparent))` }}>
-          {children}
-        </div>
+    <div key={lunging || "rest"} className={`duel-slot absolute top-[7%] bottom-[5%] w-[36%] ${me ? "left-[5%]" : "right-[5%]"} ${lunging ? "fx-lunge" : ""}`} style={{ "--lunge": me ? "64px" : "-64px" } as React.CSSProperties}>
+      <div className={`h-full w-full ${pose === "idle" || pose === "stand" ? "anim-float" : ""}`}>
+      <div className="duel-card" data-pose={pose} data-side={side} style={{ "--c": f.color } as React.CSSProperties}>
+        {painted ? (
+          <img src={art} alt="" className="absolute inset-0 size-full object-cover" style={{ objectPosition: "50% 14%" }} />
+        ) : (
+          <>
+            {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-55 saturate-[.7]" />}
+            <span className="absolute inset-0" style={{ background: `radial-gradient(75% 55% at 50% 36%, ${accentOf(f)}cc, ${accentOf(f)}33 58%, transparent 82%), linear-gradient(180deg, #0c101922, #0c1019 97%)` }} />
+            {/* Figures are front-facing, so they are never mirrored: Chrome blacks out the
+                SVG's volume filter under a scaleX(-1) parent. */}
+            <span className="absolute left-1/2 aspect-[240/490] w-[76%] top-[15%]" style={{ transform: "translateX(-50%)", filter: `drop-shadow(0 0 1px rgb(255 255 255 / .7)) drop-shadow(0 0 10px ${accentOf(f)})` }}>
+              <FighterFigure f={f} pose={pose === "idle" ? "stand" : pose} />
+            </span>
+          </>
+        )}
+        <span className="duel-shine" aria-hidden />
+        <span className="duel-plate">
+          <span className="block truncate font-display text-[13px] leading-none tracking-wide text-white">{f.name}</span>
+        </span>
+        {hitKey > 0 && <span key={hitKey} className="duel-hurt" aria-hidden />}
+        {pose === "guard" && <span className="duel-shield" aria-hidden />}
+      </div>
       </div>
     </div>
   );

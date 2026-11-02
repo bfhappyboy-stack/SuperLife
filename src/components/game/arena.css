@@ -127,3 +127,44 @@
 @media (prefers-reduced-motion: reduce) {
   .arena-radar::after, .arena-radar-rings, .arena-searching, .arena-tile.cur, .arena-urgent, .arena-wait-dot, .arena-conn[data-off="true"] { animation: none !important; }
 }
+
+/* Battle stage: fighters as living cards (painted legends, or a figure over their skyline). */
+.duel-slot { perspective: 700px; }
+.duel-card {
+  position: relative; width: 100%; height: 100%; overflow: hidden; isolation: isolate; border-radius: 1rem;
+  background: #0c1019;
+  border: 2px solid color-mix(in srgb, var(--c, #e6b34d) 70%, white 10%);
+  box-shadow: 0 10px 24px -10px rgba(0,0,0,.9), 0 0 22px -6px color-mix(in srgb, var(--c, #e6b34d) 80%, transparent), inset 0 0 0 1px rgba(255,255,255,.08);
+  transform: rotateY(var(--tilt, 0deg));
+  transition: filter 320ms ease, transform 420ms cubic-bezier(.2,.9,.3,1);
+}
+.duel-card[data-side="0"] { --tilt: 9deg; }
+.duel-card[data-side="1"] { --tilt: -9deg; }
+.duel-card[data-pose="attack"] { filter: brightness(1.18) saturate(1.15); }
+.duel-card[data-pose="hit"] { animation: duel-shake 360ms ease-out; }
+.duel-card[data-pose="ko"] { filter: grayscale(1) brightness(.5); transform: rotateY(var(--tilt)) rotate(calc(var(--tilt) * -0.7)) translateY(6%); }
+.duel-shine {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.16) 48%, transparent 60%);
+  mix-blend-mode: screen;
+}
+.duel-plate {
+  position: absolute; inset: auto 0 0 0; z-index: 2; padding: 1.5rem 0.45rem 0.4rem; text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(6,8,14,.78) 50%, rgba(6,8,14,.95));
+  text-shadow: 0 2px 0 rgba(0,0,0,.7);
+}
+.duel-plate::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 0; height: 3px; border-radius: 3px; background: var(--c, #e6b34d); box-shadow: 0 0 10px var(--c, #e6b34d); }
+.duel-hurt { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(70% 60% at 50% 40%, rgba(255,70,50,.0), rgba(255,40,30,.55)); animation: duel-hurt 420ms ease-out both; }
+.duel-shield {
+  position: absolute; inset: 6%; z-index: 2; pointer-events: none; border-radius: 0.8rem;
+  border: 2px solid rgba(140,220,255,.85);
+  background: radial-gradient(closest-side, rgba(140,220,255,.05), rgba(140,220,255,.28));
+  box-shadow: 0 0 18px rgba(140,220,255,.7), inset 0 0 18px rgba(140,220,255,.45);
+  animation: duel-shield 380ms cubic-bezier(.2,.9,.3,1.3) both;
+}
+@keyframes duel-shake { 0%, 100% { translate: 0 0; } 15% { translate: -7px 2px; } 35% { translate: 6px -2px; } 55% { translate: -4px 1px; } 75% { translate: 2px 0; } }
+@keyframes duel-hurt { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes duel-shield { 0% { opacity: 0; transform: scale(.7); } 100% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .duel-card, .duel-card[data-pose="hit"], .duel-hurt, .duel-shield { animation: none; }
+}

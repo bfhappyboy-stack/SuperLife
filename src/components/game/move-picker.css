@@ -88,7 +88,8 @@
   color: var(--color-muted); background: color-mix(in srgb, white 4%, transparent);
 }
 
-@keyframes mp-breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+/* The armed slot pulses its glow, never its position, so the tap target stays exactly under the finger. */
+@keyframes mp-breathe { 0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-gold) 55%, transparent), 0 0 22px -6px var(--color-gold); } 50% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-gold) 85%, transparent), 0 0 28px -4px var(--color-gold); } }
 @keyframes mp-land { 0% { transform: scale(0.92); filter: brightness(1.5); } 100% { transform: scale(1); filter: brightness(1); } }
 @media (prefers-reduced-motion: reduce) {
   .move-picker .mp-slot.is-armed, .move-picker .mp-slot.is-flash { animation: none; }
