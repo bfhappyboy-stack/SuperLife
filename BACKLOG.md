@@ -1,5 +1,15 @@
 # SuperLife — Backlog
 
+## From the 2026-11-02 night pass
+
+- **Done:** Arena online (pm) documented and verified two-phone; duel-card battle stage; right-card black silhouette fixed; armed move slot no longer moves under the finger; moves re-verified across 6 saves (0 fails).
+- **Painted villain art (needs an image source):** 18 Arena villains and saved lives still use figures. Painted cards for Goblin, Joker, Ultron, etc. would make the duel cards match the legends.
+- **Light Speed check:** fire + speed Build-your-own lives never combined in 3 sims. Confirm the mastery gate is reachable in a normal life, or surface a hint.
+- **Arena style drift:** a saved life's move can be a different style in Arena than in its life. Either show "Arena style" on the draft sheet or keep the life's styles and patch coverage another way.
+- **Online polish:** a rival "typing / choosing" indicator, an emote row, and a short sudden-death if both players time out.
+- **Owner's call:** should Arena wins feed back into a life (fame, a rival memory) or stay a separate mode?
+- **Low goals:** *friend@7* and *standing@7* still complete rarely.
+
 ## From the 2026-11-02 am (arena) pass
 
 1. **Arena online (P1, next).** The plan, using only Grok Build public APIs:

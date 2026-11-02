@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-11-02 (pm + night): Arena online, duel-card battle stage, moves re-check (`devbot/2026-11-02-pm` → `devbot/2026-11-02-night`)
+
+This branch stacks on `devbot/2026-11-02-pm` (head 2e0fac8). The pm pass pushed its online code but no docs, so this entry covers both.
+
+### Arena online 1v1 (pm pass: `arena.online.ts`, `arena.rooms.server.ts`, `arena.service.ts`, `arena-net.ts`, `OnlineArena.tsx`, `migrations/0002_arena_rooms.sql`)
+
+- **Rooms:** "Play a friend" creates a 6-letter room code (no I/O) and a share link. The friend joins by link (code prefilled) or by typing it. Rooms live 6 hours.
+- **Fair play by commit-reveal:** the room stores a public event log that both phones replay through the same seeded engine. Draft picks are public; fight orders, moves and leads stay hidden on the server until both sides have committed, then flip at once.
+- **Turn timer:** 30s a turn, 45s for the order, 20s for "ready". A missed turn auto-plays "Catch a breath" (or an auto pick/order); 3 timeouts forfeit the match. Each timeout shows a toast and a pip.
+- **Reconnects:** the client polls (slower when the tab is hidden), shows Live / Reconnecting, and flags "rival connection lost" after 8s. A reload drops you straight back into the same turn.
+- **Also:** rematch (back to the draft), leave = forfeit, and saved-life fighters are re-priced onto the 5–9 band server-side. Each phone sees itself on the left.
+
+### Battle stage: duel cards (night: `Arena.tsx`, `arena.css`)
+
+- The paper-doll stage was the weakest Arena screen. It is now two tilted **duel cards** facing each other, like a card-battler: painted legend art full-bleed, a name plate with the fighter's colour, a shine sweep, a red hurt flash on hits, a cyan shimmer when guarding, and a grey drop on a KO. Idle cards float gently.
+- Villains and saved lives (no painted art yet) get their home-city skyline, a glow in their colour and the full figure. Very dark colours fall back to villain red / hero gold so the card never goes muddy.
+- **Fixed:** figures on the right card rendered as solid black silhouettes. Chrome drops the SVG's volume filter under a `scaleX(-1)` parent, so figures are no longer mirrored (they face front anyway).
+
+### Moves (night: `move-picker.css`)
+
+- The armed slot's "breathe" animation bobbed the slot up and down, so the tap target moved under your finger (Playwright flagged it as never stable). It is now a gold glow pulse that stays put.
+
+### Housekeeping
+
+- Fixed 4 `prefer-const` lint errors in `arena.online.test.ts`.
+
 ## 2026-11-02 (am, arena): Arena mode, moves dock fix (`devbot/2026-11-02-am`)
 
 This branch stacks on `devbot/2026-11-01-night` (head 903f444), which is not merged yet.

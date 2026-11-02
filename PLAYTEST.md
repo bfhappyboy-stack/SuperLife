@@ -1,5 +1,22 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-02 night): moves re-check, Arena online + vs-AI end to end, new builds
+
+**Life sims (3 seeds each, new combos):**
+- Builds: a **Stacks / scientific-family** mystery hero, a **Crown / street** mystery hero, a **Build-your-own Metro / rural fire + speed** hero, plus **Captain America** and **The Flash** legends.
+- Lives ended at **70–91**. Mystery powers woke at **8–13**; Cap wakes at 21, Flash at 25 (canon ages).
+- Goals mostly complete. Low: *friend@7* 1/2 and *standing@7* 2/5.
+- The fire + speed Build-your-own never combined into **Light Speed** in 3 lives. The combo likely needs mastery the sim policy doesn't reach; worth a check.
+- Cap and Flash picked up off-kin powers (fire control, invisibility) at the expected ~15% rate.
+
+**Moves (P0), touch taps at 390×844:** mystery life before the reveal (age 7), just after the reveal (9, one move), a street-raised hero at 30 (full swaps), Captain America at 22 (5 moves), Flash at 40, Build-your-own at 17. Arm-slot→move, arm-move→slot, swaps both ways, a second tap disarms, a street slot with nothing to place stays put, a new power fills the 6th slot and survives reload. **0 fails.** One rough edge found and fixed: the armed slot bobbed under the finger.
+
+**Arena vs-AI:** Rookie with a saved 30-year-old life won 2–0 in 19 turns; Pro lost 1–2; Legend (Flash at 40) lost; Rookie with a villain draft won. Mid-battle reload resumed every time. 0 console errors.
+
+**Arena online (two phones):** create room → join by link → draft → secret orders → reveal → battle. The guest reloaded mid-battle and resumed; the guest idled 33s and got an auto breath with a timeout pip; round-over ready sync worked; results showed VICTORY / DEFEAT on opposite phones; rematch went back to the draft; host leaving showed a forfeit on the guest. 0 console errors.
+
+**Findings:** the paper-doll battle stage looked unfinished next to the painted draft cards (replaced with duel cards). Villains still have no painted art. A saved life's move can show a different style in Arena than in the life sim (Arena re-prices kits to cover all three styles).
+
 ## Arena pass (2026-11-02 am, arena): versus mode, moves check, a new build
 
 **Life sims (3 seeds each, new combos):**
