@@ -6,7 +6,7 @@ import { deleteSlot, firstEmptySlot, listSlots, loadScores, loadSlot, migrateLeg
 import { applyChapterText, type ChapterText } from "./chapters";
 import type { Game, GameMode, SkipSpan } from "./types";
 
-type Screen = "title" | "lives" | "mode" | "god" | "create" | "play";
+type Screen = "title" | "lives" | "mode" | "god" | "create" | "play" | "arena";
 
 interface Store {
   hydrated: boolean;
@@ -20,6 +20,8 @@ interface Store {
   scores: ScoreRow[];
   hydrate: () => void;
   openLives: () => void;
+  /** Arena: 1v1 versus mode, separate from any life. */
+  openArena: () => void;
   playSlot: (slot: number) => void;
   newLifeIn: (slot: number) => void;
   removeLife: (slot: number) => void;
@@ -193,6 +195,10 @@ export const useGame = create<Store>((set, get) => ({
     const game = get().game;
     if (!game) return;
     commit(set, get, applyHeroTalk(game, heroId, line, reply));
+  },
+  openArena: () => {
+    get().flush();
+    set({ screen: "arena" });
   },
   toTitle: () => {
     get().flush();

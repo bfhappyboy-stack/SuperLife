@@ -1,10 +1,11 @@
-import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, X } from "lucide-react";
+import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
 import { actMatches, type GoalRoute } from "@/game/chapters";
 import { CreateScreen } from "@/components/game/CreateScreen";
 import { SkipSheet, SkipSummary } from "@/components/game/FastForward";
 import { LivesScreen } from "@/components/game/Lives";
+import { ArenaScreen } from "@/components/game/Arena";
 import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
@@ -55,6 +56,7 @@ export function GameApp() {
         {screen === "god" && <GodScreen />}
         {screen === "create" && <CreateScreen />}
         {screen === "play" && <PlayScreen />}
+        {screen === "arena" && <ArenaScreen />}
       </div>
     </div>
   );
@@ -67,6 +69,7 @@ function TitleScreen() {
   const openCreate = useGame((s) => s.openCreate);
   const resume = useGame((s) => s.resume);
   const openLives = useGame((s) => s.openLives);
+  const openArena = useGame((s) => s.openArena);
   const lives = useGame((s) => s.lives);
   const used = lives.filter((row) => !row.empty).length;
   const full = used >= SLOT_COUNT;
@@ -130,6 +133,16 @@ function TitleScreen() {
             {full && <span className="text-[11px] font-extrabold tracking-[0.14em] text-muted">ALL SLOTS FULL</span>}
           </button>
         </div>
+        <button type="button" onClick={openArena} className="title-arena btn min-h-14 w-full !justify-between overflow-hidden px-4 text-left">
+          <span className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-lg bg-black/25"><Swords className="size-5" aria-hidden /></span>
+            <span className="flex flex-col leading-tight">
+              <span className="font-display text-xl tracking-wide">ARENA</span>
+              <span className="text-[11px] font-extrabold tracking-[0.12em] opacity-80">1V1 · DRAFT 3 · BEST OF 3</span>
+            </span>
+          </span>
+          <ChevronRight className="size-5" aria-hidden />
+        </button>
       </div>
     </main>
   );
