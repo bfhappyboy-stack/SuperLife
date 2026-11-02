@@ -409,6 +409,42 @@ export interface Game {
   reveal?: RevealNotice | null;
   /** Strange signs noticed before the power woke, oldest first. */
   omenLog?: string[];
+  /** What fast-forward plays for you: recent action and sub-choice picks, and how well you play minis. */
+  habits?: Habits;
+  /** The montage card from the last fast-forward. UI-only, cleared on dismiss. */
+  skipReport?: SkipReport | null;
+}
+
+export interface Habits {
+  /** Action id -> weight. Decays a little with each new action, so recent play leads. */
+  acts: Record<string, number>;
+  /** Sub-choice id (pending id) -> the choice you made last time. */
+  picks: Record<string, string>;
+  /** Rolling average of your minigame scores (0..1). */
+  mini: number;
+}
+
+export type SkipSpan = "season" | "year";
+
+export type SkipStopKind = "reveal" | "story" | "chapter" | "case" | "event" | "fight" | "health" | "bond" | "death";
+
+export interface SkipReport {
+  span: SkipSpan;
+  /** Months that actually passed, and how many the skip was going for. */
+  months: number;
+  planned: number;
+  from: { age: number; month: number };
+  to: { age: number; month: number };
+  /** Stat changes over the skip, biggest first. Power is in here too. */
+  stats: { stat: string; label: string; amount: number }[];
+  /** Power ranks that moved, e.g. Fire Control C -> B. */
+  ranks: { name: string; from: string; to: string }[];
+  /** What you did, by action, e.g. "Drill Fire Control ×6". */
+  did: { id: string; label: string; count: number }[];
+  /** Notable lines from the months that passed, oldest first. */
+  notes: string[];
+  /** Why it stopped early, if it did. */
+  stop: { kind: SkipStopKind; text: string } | null;
 }
 
 export type GameMode = "mystery" | "god";
