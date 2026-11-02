@@ -1,5 +1,68 @@
 # Changelog
 
+## 2026-11-02 (am, arena): Arena mode, moves dock fix (`devbot/2026-11-02-am`)
+
+This branch stacks on `devbot/2026-11-01-night` (head 903f444), which is not merged yet.
+
+### Arena: 1v1 versus, draft 3, best of 3 (`arena.ts`, `arena.roster.ts`, `arena.lives.ts`, `Arena.tsx`, `arena.css`)
+
+- **Way in:** a red/blue **ARENA** button on the title screen ("1V1 · DRAFT 3 · BEST OF 3").
+- **Flow:** hub (pick Rookie / Pro / Legend) → snake draft → secret fight order → both orders flip → round intro → battle → round result → match result. Each screen is built for 390px touch.
+  - **Draft:** 29 fighters. That is the 11 legends with their painted art plus 18 signature villains (Goblin, Venom, Doc Ock, Joker, Bane, Iron Monger, Ultron, Abomination, Lex, Zod, Doomsday, Cheetah, Red Skull, Loki, Hela, Killmonger, Sabretooth, Reverse-Flash). **Your own living heroes** (age 14+, with a power) can be drafted too, from a "Your lives" tab. The pick order is You, Rival, Rival, You, You, Rival. Tapping a card opens a sheet with HP, the passive and all six moves.
+  - **Order:** tap your three into rounds 1–2–3 and lock. The rival's order stays hidden until both are locked, then both flip at once.
+  - **Battle:** each fighter fights exactly once and the match is decided by the most rounds won. If a match is clinched 2–0 you can still play round 3 or skip it. Ties go to total HP margin.
+- **Rules (pure, seeded engine, deterministic):**
+  - Six moves each, using the game's own strike > trick > guard > strike triangle and its move kinds (burst, area, status, guard, dash).
+  - Hits land simultaneously.
+  - One side **leads** each turn and shows a **tell**: the style it is about to use. The lead alternates every turn and every round.
+  - The follower sees the tell and answers. The UI tags the answering moves "Answer".
+  - The leader may **fake the tell** for +2 energy.
+  - Energy starts at 7, caps at 10 and refills 3 a turn. "Catch a breath" gives +3 energy and blocks like a weak guard.
+  - Cooldowns apply to 8–10 power area and burst moves.
+  - Bouts have a 24-turn cap (decided on HP %) and last about 8–9 turns on average.
+- **Every fighter has one passive.** Examples:
+  - Spider-Sense sees through every feint.
+  - The Joker and Loki feint for free.
+  - Ultron revives once.
+  - Doc Ock's arms and Hela's Necrosword Rain chip you until an area hit lands.
+  - Venom's symbiote fogs his tells.
+  - Batman's Contingency Plan gives +1 energy a turn.
+  - The Flash leads the first turn.
+  - Wolverine and Sabretooth regenerate unless a trick or status move lands.
+  - Black Panther's kinetic suit stores damage.
+  - Hulk hits harder the more he is hurt, and Abomination, Goblin and others enrage.
+  - Thor's area moves are Worthy.
+  - Doomsday and Reverse-Flash adapt to repeated moves.
+  - Iron Monger and Lex wear armour.
+- **Villain kits** reuse their preset boss moves, so Arena and life-sim bosses always agree, plus 2 arena moves so every kit covers all three styles.
+- **Saved lives** bring their equipped six, re-priced onto the Arena 5–9 band so a veteran can't one-shot the roster. Their passive comes from their first power's element. They are drawn as the hero you built.
+- **Saves:** the match is saved to `superlife.arena.v1` after every action. A reload drops you straight back into the same turn, and the AI's seeded dice replay identically.
+- **AI:** expected-value move choice with softmax noise, feint baiting and tell-trust that learns your feint rate. The levels differ in how much they bluff and how much they use your tells:
+
+  | Level | Bluffing | Uses your tells |
+  |---|---|---|
+  | Rookie | rarely bluffs | reads 10% |
+  | Pro | bluffs | reads 25% |
+  | Legend | feints freely | reads 70% |
+
+- **Balance:**
+  - HP was auto-tuned on mixed-level AI-vs-AI sims.
+  - Pro AI-vs-AI, 40 bouts a pair, gives a **17.4-point spread**: 38.9% for Spider-Man to 56.3% for Thor, with 0% time-outs.
+  - On the mixed ladder, every fighter is within 22 points (this is a test).
+  - Spider-Man is the counter-pick to bluffers: weak against Pro, strongest against Legend.
+- **Difficulty ladder** (a scripted "follow the hints, bluff 30%" player, bout win rate): **Rookie 74%, Pro 46%, Legend 13%**.
+- **Online play is not in yet.** A "VS a friend online · Soon" card is shown and the plan is in BACKLOG. The engine is already lockstep-ready: same seed plus same actions gives the same match.
+- **Faces:** unmasked fighters get fixed faces, e.g. a green Hulk and Abomination, Doc Ock's glasses, the Joker's green hair and a bearded Thor and Zod.
+- **Tests:**
+  - `arena.test.ts` has 14 tests: roster integrity, preset-built villain kits, determinism, termination, RPS, energy and cooldowns, illegal-action fallback, feints, Sense, passives, the Flash leading, full match flow, draft refusals, the balance spread and the difficulty ladder.
+  - `arena.lives.test.ts` has 2 tests.
+
+### Moves: armed quick-dock fix (`move-picker.css`)
+
+- When a slot or move was armed, the sticky quick-dock let the slot outlines underneath peek through the 1rem gap above it, which looked like a double border while scrolling. The dock now masks that gap with a panel-coloured strip and fades its bottom edge.
+- Long move names in the dock wrap to two lines instead of being cut off.
+- **Verification:** touch-tap Playwright runs at 390×844 covered five saves: mystery life before the reveal, just after the reveal, at 28, a Wonder Woman legend at 30 and a Build-your-own life at 15. They tested slot→move, move→slot, reorder, 12 rapid swaps, double-taps, locked-move taps, scroll stability and reload persistence. **0 failures.** No logic bug was reproduced. The 11-01 atomic swap fix holds.
+
 ## 2026-11-02 (am): Fast age-up, slower kid power, five lives (`devbot/2026-11-01-night`)
 
 ### Fast-forward a season or a year (`skip.ts`, `engine.ts`, `FastForward.tsx`, `GameApp.tsx`)

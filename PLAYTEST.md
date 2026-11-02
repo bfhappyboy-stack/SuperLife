@@ -1,5 +1,50 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Arena pass (2026-11-02 am, arena): versus mode, moves check, a new build
+
+**Life sims (3 seeds each, new combos):**
+- Policies:
+  - a **Harbor Bay foster** mystery hero;
+  - a **Wonder Woman** legend run with heavy drilling;
+  - a **Build-your-own** life.
+- Lives ended at **70–82**.
+- Mystery powers manifested at **8 and 11**.
+- Power counts:
+  - Harbor mystery lives reached 22–23 powers.
+  - Build-your-own reached 21–23.
+  - Wonder Woman reached her **12-power canon cap**.
+- Goals that rarely complete: *standing* 0/4, *dark karma* 1/4, *quiet fame* 0/2 and *infamy* 0/1. These are candidates for clearer hints or easier routes.
+- The WW save at 30 had 10 HP because the policy drilled non-stop. That is policy, not a bug.
+
+**Moves (P0), touch taps at 390×844:**
+- Saves tested:
+  - a mystery life before the reveal (shows the "hasn't woken yet" state);
+  - just after the reveal (1 move, with street moves filling the rest);
+  - a mystery life at 28;
+  - Wonder Woman at 30;
+  - Build-your-own at 15.
+- Checks:
+  - arm slot → pick move;
+  - arm move → pick slot;
+  - reorder;
+  - 12 rapid swaps;
+  - double-tap;
+  - locked-move tap (explains the unlock rank);
+  - no jump under the finger after scrolling;
+  - reload persistence.
+- **0 failures.** The only glitch seen was visual: slot outlines peeking above the armed sticky dock. Fixed.
+
+**Arena: 4 full vs-AI matches through the UI with Playwright, plus engine sims:**
+- My first pro match was lost **0–2** with Wren (my own life) and Spider-Man.
+- Ladder sims then showed a **hint-following player won only 3% of bouts against Rookie**. The AI read my true tells and bluffed constantly. That was far too hard.
+- Fixed with per-level personas: Rookie rarely bluffs and barely reads tells, Pro bluffs and reads a little, Legend feints and reads.
+- After the fix, three Rookie matches gave **2–1, 2–0 and 2–1 wins**. The scripted ladder is now Rookie 74% / Pro 46% / Legend 13%.
+- Reloading mid-battle resumes the exact turn. No console errors.
+- **Fun:** the lead/tell/fake loop gives every turn a real decision. In one run a faked strike tell drew Hulk into a guard and a trick landed on it, which is exactly the read-and-bluff moment the mode is for. Spider-Man reading through a Legend's feints is a nice "counter-pick" moment.
+- **Rough edges:**
+  - Villains are Figure busts, not painted art.
+  - The battle stage figures are the life-sim's paper-doll style.
+
 ## Night pass (2026-11-01 night): the fight numbers, and bosses that were just bigger bars
 
 **What I played:**

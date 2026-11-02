@@ -1,5 +1,27 @@
 # SuperLife — Backlog
 
+## From the 2026-11-02 am (arena) pass
+
+1. **Arena online (P1, next).** The plan, using only Grok Build public APIs:
+   - A `createServerFn` room API plus one `arena_rooms` table (via `src/lib/db.ts`), keyed by a 6-letter invite code. Columns: seed, two player ids, the action log, and updated_at.
+   - The host creates a room. The friend joins by code or link.
+   - Draft picks, locked orders and each turn's actions are appended to the log. Hidden info (orders, this turn's action) is stored server-side and only revealed once both sides have committed.
+   - Clients poll every 1–1.5 s, or use `P2PRoom` once an `/api/rtc` relay exists. Both replay the log through the pure engine, so there is no game state to sync.
+   - Reconnect = re-fetch the log and replay.
+   - A 30 s turn timer auto-plays "Catch a breath". Forfeit after 3 timeouts.
+   - Saved-life fighters travel as their `ArenaFighter` JSON, registered on both clients.
+2. **Arena polish ideas:**
+   - Painted villain portraits (only heroes have art, villains use Figure busts).
+   - Arena records per life (wins, a "champion" title).
+   - A rematch-with-same-teams button.
+   - Haptics and sound on hits.
+   - A short first-match tutorial overlay explaining tells and fakes.
+3. **Balance watch:**
+   - Spider-Man is 39% vs Pro but strongest vs Legend, because Sense only matters against bluffers.
+   - Sabretooth vs Hela/Bane is the most lopsided pair (about 90/10).
+   - If players find Legend unwinnable (a scripted hint-follower wins 13% of bouts), lower its `read` in `PERSONA`.
+4. **Design decision for the user:** should Arena results feed back into lives (fame, rivals), or stay a separate mode?
+
 ## From the 2026-11-02 am pass
 
 1. **Fast age-up, five lives and slower kid power have shipped.** Open:
