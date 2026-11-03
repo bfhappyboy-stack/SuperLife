@@ -566,11 +566,14 @@
 .fx-lunge { animation: fx-lunge 360ms cubic-bezier(.3,.9,.3,1) both; }
 .ko-in { animation: ko-in 520ms cubic-bezier(.2,.9,.3,1.3) both; }
 .ko-rays { animation: rays 18s linear infinite; }
+@keyframes boss-card-in { 0% { opacity: 0; transform: translateX(70px) rotate(14deg) scale(.8); } 65% { opacity: 1; transform: translateX(-4px) rotate(-5deg) scale(1.04); } 100% { opacity: 1; transform: rotate(-4deg); } }
+.boss-card { animation: boss-card-in 460ms cubic-bezier(.2,.9,.3,1.2) both; }
 @media (prefers-reduced-motion: reduce) {
   .fx-travel, .fx-beam, .fx-flicker, .fx-flare, .fx-streak, .fx-spin, .fx-spin-rev, .fx-implode, .fx-quake, .fx-lunge, .ko-rays { animation: none !important; }
   .fx-travel, .fx-beam, .fx-streak, .fx-flicker { opacity: 0 !important; }
   .fx-flash { animation-duration: 1ms !important; }
   .ko-in { animation: none !important; transform: rotate(-6deg); }
+  .boss-card { animation: none !important; transform: rotate(-4deg); }
 }
 
 /* Mode select, God Mode picker and the power reveal (night pass). */
