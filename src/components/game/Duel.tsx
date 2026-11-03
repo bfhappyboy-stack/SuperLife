@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Bug, CloudFog, Coins, Crown, Dna, Drama, EyeOff, Flame, HeartPulse, RefreshCcw, RotateCcw, Shield, ShieldHalf, Siren, Skull, Sparkles, Swords, Trophy, Zap } from "lucide-react";
 import { Figure, type Pose } from "@/components/game/Figure";
 import { kitFor } from "@/components/game/duelKit";
+import { VillainArt } from "@/components/game/VillainArt";
+import { villainArtFor } from "@/components/game/villainArt.data";
 import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
@@ -121,8 +123,10 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const timers = useRef<number[]>([]);
   const stats = useRef({ dealt: 0, taken: 0, turns: 0, best: null as { name: string; dealt: number } | null });
 
+  // Signature rogues with illustrated cards get a boss-card reveal instead of just the word.
+  const rogueArt = board?.foeSide === "villain" ? villainArtFor(board.foeName) : null;
   useEffect(() => {
-    const id = window.setTimeout(() => setIntro(false), board?.gimmick && (board.gimmick.at ?? 0.55) >= 1 ? 1500 : 900);
+    const id = window.setTimeout(() => setIntro(false), (board?.gimmick && (board.gimmick.at ?? 0.55) >= 1) || (board?.foeSide === "villain" && villainArtFor(board.foeName)) ? 1500 : 900);
     const pending = timers.current;
     return () => {
       window.clearTimeout(id);
@@ -308,7 +312,14 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             <ElementIcon element={foeElement} className="size-3.5" />
             <span className="text-muted">{kit.type}</span>
           </p>
-          <p className="t-display truncate text-fg">{fight.foeName}</p>
+          <p className="flex min-w-0 items-center gap-2">
+            {rogueArt && (
+              <span className="relative size-9 shrink-0 overflow-hidden rounded-xl border-2" style={{ borderColor: rogueArt.color === "#2b2d3a" || rogueArt.color === "#1f3a2a" || rogueArt.color === "#2a2a3a" ? "#d4382f" : rogueArt.color }} aria-hidden>
+                <VillainArt id={rogueArt.id} color={rogueArt.color} crop="head" />
+              </span>
+            )}
+            <span className="t-display truncate text-fg">{fight.foeName}</span>
+          </p>
         </div>
         <span
           key={`${tell}-${hud.turns}`}
@@ -386,7 +397,20 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             {edge.edge === "you" ? "Your edge" : edge.edge === "them" ? "Their edge" : "Even trade"}
           </div>
         )}
-        {intro && (
+        {intro && rogueArt && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-3 bg-black/55 backdrop-blur-[2px]">
+            <span className="boss-card relative h-[150px] w-[106px] shrink-0 overflow-hidden rounded-xl border-2" style={{ borderColor: foeColor, boxShadow: `0 0 26px -4px ${foeColor}` }}>
+              <VillainArt id={rogueArt.id} color={rogueArt.color} />
+            </span>
+            <span className="ko-in flex flex-col items-start">
+              <span className="font-display text-5xl leading-none tracking-wide text-gold" style={{ textShadow: "0 3px 0 rgba(0,0,0,.6), 0 0 24px rgba(255,207,77,.7)" }}>
+                {fight.boss ? "BOSS!" : "FIGHT!"}
+              </span>
+              <span className="t-label mt-1 max-w-[9rem] truncate text-white/85">{fight.foeName}</span>
+            </span>
+          </div>
+        )}
+        {intro && !rogueArt && (
           <div className="ko-in pointer-events-none absolute inset-0 grid place-items-center">
             <span className="font-display text-5xl tracking-wide text-gold" style={{ textShadow: "0 3px 0 rgba(0,0,0,.6), 0 0 24px rgba(255,207,77,.7)" }}>
               {fight.boss ? "BOSS!" : "FIGHT!"}

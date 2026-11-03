@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import "./arena.css";
 import { Figure, type Pose } from "@/components/game/Figure";
+import { VillainArt, type VillainCrop } from "@/components/game/VillainArt";
+import { hasVillainArt } from "@/components/game/villainArt.data";
 import { useArt } from "@/components/game/Scene";
 import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
 import { ELEMENTS } from "@/game/elements";
@@ -142,14 +144,19 @@ export function ArenaScreen() {
 
 // ─── Art ──────────────────────────────────────────────────────────────────────────
 
-/** Painted art when the legend has it; otherwise a city backdrop with a figure bust. `figW` sizes the bust (wide frames want a smaller one). */
-export function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%", figTop = "7%" }: { f: ArenaFighter; className?: string; focus?: string; figW?: string; figTop?: string }) {
+/** Tiny square avatars pass a high focus ("50% 10%"): frame the villain's face rather than the whole card. */
+const headCrop = (focus: string) => Number(/\s(\d+)%/.exec(focus)?.[1] ?? 50) <= 12;
+
+/** Painted art when the legend has it, an illustrated card for signature villains; otherwise a city backdrop with a figure bust. `figW` sizes the bust (wide frames want a smaller one). */
+export function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%", figTop = "7%", crop }: { f: ArenaFighter; className?: string; focus?: string; figW?: string; figTop?: string; crop?: VillainCrop }) {
   const art = useArt(f.art ?? "");
   const city = useArt(PRESETS.find((p) => p.id === f.world)?.cityId ?? "");
   return (
     <span className={`absolute inset-0 block overflow-hidden ${className}`} style={{ background: f.color }} aria-hidden>
       {f.art && art ? (
         <img src={art} alt="" className="anim-fade size-full object-cover" style={{ objectPosition: focus }} />
+      ) : !f.custom && hasVillainArt(f.id) ? (
+        <VillainArt id={f.id} color={f.color} crop={crop ?? (headCrop(focus) ? "head" : "card")} />
       ) : (
         <>
           {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-40 saturate-50" />}
@@ -551,7 +558,7 @@ export function Reveal({ match, onGo, auto }: { match: ArenaMatch; onGo: () => v
           return (
             <div key={r} className="arena-flip relative flex items-center gap-2" style={{ animationDelay: `${r * 220}ms` }}>
               <span className="arena-card relative h-24 flex-1" style={{ "--c": fa.color } as React.CSSProperties}>
-                <FighterArt f={fa} focus="50% 14%" figW="56%" />
+                <FighterArt f={fa} focus="50% 14%" figW="56%" crop="wide" />
                 <span className="arena-plate !pt-4"><span className="block truncate font-display text-base leading-none text-fg">{fa.name}</span></span>
               </span>
               <span className="flex w-12 shrink-0 flex-col items-center">
@@ -559,7 +566,7 @@ export function Reveal({ match, onGo, auto }: { match: ArenaMatch; onGo: () => v
                 <span className="arena-vs text-3xl">VS</span>
               </span>
               <span className="arena-card relative h-24 flex-1" style={{ "--c": fb.color } as React.CSSProperties}>
-                <FighterArt f={fb} focus="50% 14%" figW="56%" />
+                <FighterArt f={fb} focus="50% 14%" figW="56%" crop="wide" />
                 <span className="arena-plate !pt-4 text-right"><span className="block truncate font-display text-base leading-none text-fg">{fb.name}</span></span>
               </span>
             </div>
@@ -606,8 +613,8 @@ export function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => voi
   return (
     <button type="button" onClick={onGo} className="arena-root relative flex h-full min-h-0 w-full flex-col overflow-hidden text-left" aria-label="Start the round">
       <div className="arena-split">
-        <div className="l"><FighterArt f={fa} focus="50% 14%" figW="92%" figTop="15%" /><span className="absolute inset-0" style={{ background: `linear-gradient(90deg, transparent 40%, ${fa.color}33), linear-gradient(0deg, #0c1019 8%, transparent 50%)` }} /></div>
-        <div className="r"><FighterArt f={fb} focus="50% 14%" figW="92%" figTop="15%" /><span className="absolute inset-0" style={{ background: `linear-gradient(270deg, transparent 40%, ${fb.color}33), linear-gradient(0deg, #0c1019 8%, transparent 50%)` }} /></div>
+        <div className="l"><FighterArt f={fa} focus="50% 14%" figW="92%" figTop="15%" crop="tall" /><span className="absolute inset-0" style={{ background: `linear-gradient(90deg, transparent 40%, ${fa.color}33), linear-gradient(0deg, #0c1019 8%, transparent 50%)` }} /></div>
+        <div className="r"><FighterArt f={fb} focus="50% 14%" figW="92%" figTop="15%" crop="tall" /><span className="absolute inset-0" style={{ background: `linear-gradient(270deg, transparent 40%, ${fb.color}33), linear-gradient(0deg, #0c1019 8%, transparent 50%)` }} /></div>
         <span className="arena-slash" />
       </div>
       <div className="arena-banner relative mt-8 py-2">
@@ -761,11 +768,12 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
     const mv = [moveByKey(fa.id, log.moves[0]), moveByKey(fb.id, log.moves[1])] as const;
     const el = (s: Side) => (mv[s] === BREATH ? "shield" : (mv[s].element ?? "force"));
     const name = (s: Side) => (s === 0 ? fa.name : fb.name);
-    const mname = (s: Side) => (mv[s] === BREATH ? "a breath" : mv[s].name);
+    const mname = (s: Side) => (mv[s] === BREATH ? (s === 0 ? "your breath" : `${name(s)}'s breath`) : mv[s].name);
+    const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
     const maxes = [b.fighters[0].maxHp, b.fighters[1].maxHp];
     const parts: string[] = [];
     if (log.tell.feint) parts.push(`${name(lead)} feinted a ${log.tell.style}!`);
-    parts.push(log.edge === null ? `${mname(0)} meets ${mname(1)}.` : `${mname(log.edge)} beats ${mname((1 - log.edge) as Side)}.`);
+    parts.push(cap(log.edge === null ? `${mname(0)} meets ${mname(1)}.` : `${mname(log.edge)} beats ${mname((1 - log.edge) as Side)}.`));
     parts.push(`You deal ${log.dealt[0]}, take ${log.dealt[1] + log.chip[0]}.`);
     if (log.notes.length) parts.push(log.notes.join(". ") + ".");
     setLine(parts.join(" "));
@@ -996,6 +1004,8 @@ function DuelCard({ f, side, lunging, pose, hitKey }: { f: ArenaFighter; side: S
       <div className="duel-card" data-pose={pose} data-side={side} style={{ "--c": f.color } as React.CSSProperties}>
         {painted ? (
           <img src={art} alt="" className="absolute inset-0 size-full object-cover" style={{ objectPosition: "50% 14%" }} />
+        ) : !f.custom && hasVillainArt(f.id) ? (
+          <VillainArt id={f.id} color={f.color} />
         ) : (
           <>
             {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-55 saturate-[.7]" />}
