@@ -1,8 +1,11 @@
-import { Banknote, ChevronRight, Heart, FastForward, Home, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, X } from "lucide-react";
+import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
 import { actMatches, type GoalRoute } from "@/game/chapters";
 import { CreateScreen } from "@/components/game/CreateScreen";
+import { SkipSheet, SkipSummary } from "@/components/game/FastForward";
+import { LivesScreen } from "@/components/game/Lives";
+import { ArenaScreen } from "@/components/game/Arena";
 import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
@@ -18,7 +21,7 @@ import { ELEMENTS, elementOfPower } from "@/game/elements";
 import { masteryLevel, powerRank } from "@/game/mastery";
 import { ELEMENT_ICON } from "@/components/game/Vfx";
 import { firstName, karmaLabel, money, tierLabel, MONTHS } from "@/game/format";
-import { saveGame } from "@/game/save";
+import { SLOT_COUNT } from "@/game/save";
 import { capeTheme } from "@/game/theme";
 import { useGame } from "@/game/store";
 import type { ActionItem, Delta, Game, Person } from "@/game/types";
@@ -30,10 +33,15 @@ export function GameApp() {
   const hydrate = useGame((s) => s.hydrate);
   useEffect(() => {
     hydrate();
-    const flush = () => {
-      const current = useGame.getState().game;
-      if (current) saveGame(current);
-    };
+    // An Arena invite link (?arena=CODE) goes straight to the online lobby.
+    try {
+      // So does reopening the app while you're still in an online room (reconnect and resume).
+      const room = (JSON.parse(localStorage.getItem("superlife.arena.net.v1") ?? "{}") as { code?: string } | null)?.code;
+      if (new URLSearchParams(window.location.search).get("arena") || room) useGame.getState().openArena();
+    } catch {
+      /* no URL access */
+    }
+    const flush = () => useGame.getState().flush();
     document.addEventListener("visibilitychange", flush);
     window.addEventListener("pagehide", flush);
     return () => {
@@ -51,10 +59,12 @@ export function GameApp() {
         className="phone-shell relative flex h-full min-h-0 w-full flex-col overflow-hidden"
       >
         {screen === "title" && <TitleScreen />}
+        {screen === "lives" && <LivesScreen />}
         {screen === "mode" && <ModeSelect />}
         {screen === "god" && <GodScreen />}
         {screen === "create" && <CreateScreen />}
         {screen === "play" && <PlayScreen />}
+        {screen === "arena" && <ArenaScreen />}
       </div>
     </div>
   );
@@ -66,6 +76,11 @@ function TitleScreen() {
   const hydrated = useGame((s) => s.hydrated);
   const openCreate = useGame((s) => s.openCreate);
   const resume = useGame((s) => s.resume);
+  const openLives = useGame((s) => s.openLives);
+  const openArena = useGame((s) => s.openArena);
+  const lives = useGame((s) => s.lives);
+  const used = lives.filter((row) => !row.empty).length;
+  const full = used >= SLOT_COUNT;
   return (
     <main className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <TitleArt className="anim-drift pointer-events-none absolute inset-0 size-full object-cover" />
@@ -112,8 +127,29 @@ function TitleScreen() {
             {game.phase !== "dead" && <span className="text-[11px] font-extrabold tracking-[0.14em] opacity-75">AGE {game.age} · {game.city.toUpperCase()}</span>}
           </button>
         )}
-        <button type="button" onClick={openCreate} className={`btn ${hydrated && game ? "btn-ghost" : "btn-primary"} min-h-14 text-lg`}>
-          New life
+        <div className="flex gap-2">
+          {hydrated && used > 0 && (
+            <button type="button" onClick={openLives} className="btn btn-ghost min-h-14 flex-1 flex-col !gap-0 text-base">
+              <span className="flex items-center gap-1.5">
+                <Layers className="size-4 text-gold" aria-hidden /> Your lives
+              </span>
+              <span className="t-num text-[11px] font-extrabold tracking-[0.14em] text-muted">{used}/{SLOT_COUNT} SLOTS</span>
+            </button>
+          )}
+          <button type="button" onClick={openCreate} className={`btn ${hydrated && game ? "btn-ghost" : "btn-primary"} min-h-14 flex-1 flex-col !gap-0 text-lg`}>
+            <span>New life</span>
+            {full && <span className="text-[11px] font-extrabold tracking-[0.14em] text-muted">ALL SLOTS FULL</span>}
+          </button>
+        </div>
+        <button type="button" onClick={openArena} className="title-arena btn min-h-14 w-full !justify-between overflow-hidden px-4 text-left">
+          <span className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-lg bg-black/25"><Swords className="size-5" aria-hidden /></span>
+            <span className="flex flex-col leading-tight">
+              <span className="font-display text-xl tracking-wide">ARENA</span>
+              <span className="text-[11px] font-extrabold tracking-[0.12em] opacity-80">1V1 · DRAFT 3 · BEST OF 3</span>
+            </span>
+          </span>
+          <ChevronRight className="size-5" aria-hidden />
         </button>
       </div>
     </main>
@@ -134,11 +170,12 @@ function PlayScreen() {
 
 function Life({ game }: { game: Game }) {
   const age = useGame((s) => s.age);
-  const skipYear = useGame((s) => s.skipYear);
+  const [ffOpen, setFfOpen] = useState(false);
   const pick = useGame((s) => s.pick);
   const act = useGame((s) => s.do);
   const finishMini = useGame((s) => s.finishMini);
   const toTitle = useGame((s) => s.toTitle);
+  const openLives = useGame((s) => s.openLives);
   const [desk, setDesk] = useState<Desk>("life");
   const [shelf, setShelf] = useState<string | null>(null);
   const [folded, setFolded] = useState(true);
@@ -410,7 +447,7 @@ function Life({ game }: { game: Game }) {
                 )}
                 {sections.length === 0 && !(desk === "gift" && (activeShelf === "Book" || activeShelf === "Teachers" || activeShelf === "Moves")) && !(desk === "cases" && activeShelf === "Files") && (
                   <div className="card px-4 py-4">
-                    <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? "Out of moves this month. Tap Next month, or skip ahead to your next birthday." : EMPTY[desk]}</p>
+                    <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? "Out of moves this month. Tap Next month, or Skip to fast-forward a season or a year." : EMPTY[desk]}</p>
                     {elsewhere.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         <p className="t-label w-full text-fg">Things you can do right now</p>
@@ -448,20 +485,18 @@ function Life({ game }: { game: Game }) {
                     <span className="ml-1">{game.majorsLeft > 0 ? `${game.majorsLeft} MOVE${game.majorsLeft === 1 ? "" : "S"} LEFT` : "OUT OF MOVES"}</span>
                   </span>
                 </button>
-                {game.month !== 11 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAck(`Skip to age ${game.age + 1} — pressed.`);
-                      skipYear();
-                    }}
-                    aria-label={`Skip ahead to age ${game.age + 1}. Stops if something needs you.`}
-                    className="btn btn-ghost min-h-14 w-[5.5rem] flex-col !gap-0 !px-2 text-sm"
-                  >
-                    <FastForward className="size-4" />
-                    <span>To {game.age + 1}</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAck("Fast-forward — pressed.");
+                    setFfOpen(true);
+                  }}
+                  aria-label="Fast-forward a season or to your next birthday. Stops if something needs you."
+                  className="btn btn-gold min-h-14 w-[6.25rem] flex-col !gap-0 !px-2 text-sm"
+                >
+                  <FastForward className="size-5" />
+                  <span className="text-[11px] font-extrabold tracking-[0.1em] uppercase">Skip</span>
+                </button>
               </div>
             </div>
           )}
@@ -510,6 +545,8 @@ function Life({ game }: { game: Game }) {
       {closet && <Closet game={game} onAct={act} onClose={() => setCloset(false)} />}
       {chat && <HeroChat game={game} heroId={chat} onClose={() => setChat(null)} onAct={act} />}
       <ChapterOverlay game={game} onGo={goTo} />
+      {ffOpen && game.phase === "live" && <SkipSheet game={game} onClose={() => setFfOpen(false)} />}
+      <SkipSummary game={game} />
       {sheet && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm" role="dialog" aria-modal="true" onClick={(event) => event.target === event.currentTarget && setSheet(null)}>
           <div className="card-glass anim-rise max-h-[78%] w-full max-w-[28rem] overflow-y-auto px-4 py-4">
@@ -531,7 +568,10 @@ function Life({ game }: { game: Game }) {
                 <button type="button" onClick={toTitle} className="btn btn-ghost !justify-start">
                   <Home className="size-5 text-gold" /> Main menu
                 </button>
-                <p className="mt-1 text-center text-xs text-muted">This life saves itself on this device.</p>
+                <button type="button" onClick={() => { setSheet(null); openLives(); }} className="btn btn-ghost !justify-start">
+                  <Layers className="size-5 text-gold" /> Your lives
+                </button>
+                <p className="mt-1 text-center text-xs text-muted">Each life saves itself on this device, in its own slot.</p>
               </div>
             ) : (
               <ol className="mt-4 flex flex-col gap-3">

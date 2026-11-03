@@ -35,11 +35,12 @@ import { BOND_DRIFT_FLOOR, bondStep, judgeTalk, mergeHeroes, seedHeroes, settleH
 import { arcById, availableArcs, currentCase, type ArcStep } from "./arcs";
 import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
-import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp } from "./mastery";
+import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp, youthGain } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
-import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
+import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
-import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, STREET_MOVES, toggleLoadout } from "./moves";
+import { powerGimmick } from "./gimmicks";
+import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
   asFace,
@@ -277,7 +278,9 @@ function applyEffects(d: Game, e: Effects | undefined, deltas: Delta[]) {
   if (e.powerLevel != null) {
     const before = s.powerLevel;
     const cap = powerLevelCap(d.age);
-    s.powerLevel = clamp(Math.round((before + e.powerLevel) * 100) / 100, 0, cap);
+    const gain = youthGain(e.powerLevel, before, d.age);
+    // A level already above the young cap (an old save) is kept, never pushed down by a gain.
+    s.powerLevel = clamp(Math.round((before + gain) * 100) / 100, 0, Math.max(cap, before));
     touch("Power", before, s.powerLevel);
   }
   if (e.closeness != null && e.personId) {
@@ -1197,7 +1200,7 @@ function openYear(d: Game): string[] {
       } else {
         pay -= school.tuition;
         applyEffects(d, { smarts: school.yearly.smarts || undefined }, []);
-        d.stats.powerLevel = clamp(Math.round((d.stats.powerLevel + (school.yearly.powerLevel ?? 0)) * 100) / 100, 0, powerLevelCap(d.age));
+        d.stats.powerLevel = clamp(Math.round((d.stats.powerLevel + youthGain(school.yearly.powerLevel ?? 0, d.stats.powerLevel, d.age)) * 100) / 100, 0, Math.max(powerLevelCap(d.age), d.stats.powerLevel));
         applyEffects(d, { fame: school.yearly.fame || undefined, reputation: school.yearly.reputation || undefined }, []);
         applyEffects(d, { happiness: school.yearly.happiness || undefined }, []);
         d.schoolYears += 1;
@@ -1586,7 +1589,8 @@ function playerMoves(d: Game): DuelMove[] {
   fillLoadout(d);
   if (equippedMoves(d).length) return battleMoves(d);
   // Unpowered life: the legacy street kit, still padded to the full six.
-  const legacy = movesFrom(d.powerId, d.stats.powerLevel).slice(0, 4);
+  // Slightly under a foe of the same level: an unpowered hero wins on reads and preparation, not numbers.
+  const legacy = movesFrom(d.powerId, d.stats.powerLevel).slice(0, 4).map((move) => ({ ...move, power: Math.max(2, move.power - 1 - Math.round(d.stats.powerLevel * 0.15)) }));
   const names = new Set(legacy.map((move) => move.name));
   const padding = STREET_MOVES.filter((move) => !names.has(move.name)).map((move) => ({ ...move }));
   return [...legacy, ...padding].slice(0, MOVESET_SIZE);
@@ -1598,7 +1602,8 @@ function foeLook(d: Game, foe: { name: string; personId?: string }): { foeSeed: 
   const cape = d.roster.find((row) => row.alias === foe.name || (foe.personId && row.id === foe.personId));
   let h = 2166136261;
   for (let i = 0; i < foe.name.length; i += 1) h = Math.imul(h ^ foe.name.charCodeAt(i), 16777619);
-  return { foeSeed: person?.portrait ?? cape?.portrait ?? ((h >>> 0) % 1_000_000_000) + 1, foeSex: person?.sex ?? cape?.sex };
+  const legend = villainSex(foe.name);
+  return { foeSeed: person?.portrait ?? cape?.portrait ?? ((h >>> 0) % 1_000_000_000) + 1, foeSex: person?.sex ?? cape?.sex ?? (legend === null ? undefined : legend) };
 }
 
 function makeDuel(
@@ -1608,6 +1613,9 @@ function makeDuel(
 ): MinigameSpec {
   const pl = foe.powerLevel;
   const suit = costumeMods(d);
+  // Named rogues always fight with their signature twist; other villains only get one as a boss.
+  const gimmick = foe.side === "villain" ? (villainGimmick(foe.name) ?? (foe.boss ? powerGimmick(foe.powerId, foe.name) : null)) : null;
+  const foeHp = 20 + Math.round(pl * 4);
   const moves = playerMoves(d).map((move) =>
     suit.strike ? { ...move, power: Math.max(1, Math.round(move.power * (1 + suit.strike / 100))) } : move,
   );
@@ -1629,7 +1637,7 @@ function makeDuel(
       foeTitle: foe.title,
       foeSide: foe.side,
       playerHp: 26 + Math.round(d.stats.health / 5) + Math.round(d.stats.powerLevel * 2) + (hasTrait(d, "martial") ? 6 : 0) + suit.hp,
-      foeHp: 20 + Math.round(pl * 4),
+      foeHp: foe.boss ? Math.round(foeHp * 1.25) : foeHp,
       playerMoves: moves,
       foeMoves: signatureMoves(foe.name, pl) ?? movesFrom(foe.powerId, pl),
       personId: foe.personId,
@@ -1637,6 +1645,7 @@ function makeDuel(
       foePower: foe.powerId,
       ...foeLook(d, foe),
       boss: foe.boss || undefined,
+      gimmick: gimmick ?? undefined,
     } satisfies DuelBoard,
   };
 }
@@ -1806,6 +1815,19 @@ function nextLegendRogue(d: Game): PresetVillain | null {
   const legend = presetById(d.preset);
   if (!legend) return null;
   return legend.villains.find((v) => villainDebut(legend, v.id) <= d.age && !d.relationships.some((r) => r.note === v.alias)) ?? null;
+}
+
+/** The legend rogue behind a story arc's boss: stable per arc, debut age passed. Null outside legend lives. */
+function arcPatron(d: Game, arcId: string): PresetVillain | null {
+  const legend = presetById(d.preset);
+  if (!legend) return null;
+  const ready = legend.villains.filter((v) => villainDebut(legend, v.id) <= d.age);
+  if (!ready.length) return null;
+  let h = 7;
+  for (const ch of arcId) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const key = `arcPatron:${arcId}`;
+  if (d.flags[key] === undefined) d.flags[key] = h % ready.length;
+  return ready[(d.flags[key] ?? 0) % ready.length] ?? null;
 }
 
 /** True when this person is one of the current legend's own rogues. */
@@ -1997,7 +2019,7 @@ function grantSecondGift(d: Game, deltas: Delta[]): string {
   d.secondaryId = next.id;
   unlockCombo(d, legacyComboId(next.id), true);
   const before = d.stats.powerLevel;
-  d.stats.powerLevel = clamp(Math.round((before + 0.35) * 100) / 100, 0, powerLevelCap(d.age));
+  d.stats.powerLevel = clamp(Math.round((before + youthGain(0.35, before, d.age)) * 100) / 100, 0, Math.max(powerLevelCap(d.age), before));
   deltas.push({ stat: "Power", amount: Math.round((d.stats.powerLevel - before) * 100) / 100 });
   return ` It braids in. ${fusionTitle(d.powerId, next.id)} — ${next.name} rides shotgun. ${next.tagline}`;
 }
@@ -2021,10 +2043,10 @@ function personFoe(d: Game, person: Person): { name: string; title: string; side
   };
 }
 
-function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
+function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): boolean {
   if (d.age < 8) return false;
   const arch = d.relationships.find((r) => r.arch && r.alive);
-  if (arch && roll(d) < 0.34) {
+  if (arch && roll(d) < 0.34 * calm) {
     const foe = personFoe(d, arch);
     showChoice(
       d,
@@ -2061,7 +2083,7 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
   }
   const heat = d.stats.fame;
   const knownCity = heat >= 4 || !!d.powerId || d.leagueRank > 0;
-  if (d.age >= 10 && knownCity && roll(d) < (forced ? 0.64 : 0.16 + heat / 380)) {
+  if (d.age >= 10 && knownCity && roll(d) < (forced ? 0.64 : (0.16 + heat / 380) * calm)) {
     if (roll(d) < 0.48) {
       const known = d.relationships.filter((r) => r.role === "hero" && r.alive);
       const person = known.length && (known.length >= 4 || roll(d) < 0.7) ? known[rollInt(d, known.length)]! : introduceCape(d, "hero");
@@ -2130,7 +2152,7 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
     return true;
   }
   // Legends get their gifts from canon, not from a stranger guarding a humming door.
-  if (d.powerId && !d.preset && d.age >= 12 && roll(d) < (forced ? 0.28 : d.secondaryId ? 0.06 : 0.14)) {
+  if (d.powerId && !d.preset && d.age >= 12 && roll(d) < (forced ? 0.28 : (d.secondaryId ? 0.06 : 0.14) * calm)) {
     const site = RELIC_SITES[rollInt(d, RELIC_SITES.length)] ?? RELIC_SITES[0]!;
     const guard = makeCape(d, "rogue");
     showChoice(
@@ -2170,18 +2192,13 @@ function maybeEncounter(d: Game, banners: string[], forced = false): boolean {
   return false;
 }
 
-/**
- * Fast-forward: advance month by month until the next birthday, stopping early the moment the game
- * needs the player (a choice, a minigame, a chapter card, or death). Cuts the ~960 taps of a long life.
- */
-export function skipToBirthday(game: Game): Game {
-  let g = ageUp(game);
-  let guard = 0;
-  while (g.phase === "live" && g.month !== 0 && guard++ < 12) g = ageUp(g);
-  return g;
-}
+/** Chance a quiet month throws a small choice event. Fast-forward lowers it: you are letting ordinary weeks go. */
+export const MONTH_EVENT_CHANCE = 0.46;
+export const SKIP_EVENT_CHANCE = 0.16;
+/** Fast-forward also scales city run-ins and arch-enemy pings down to this share. */
+export const SKIP_ENCOUNTER_CALM = 0.4;
 
-export function ageUp(game: Game): Game {
+export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
   d.month = ((d.month ?? 0) + 1) % 12;
@@ -2244,7 +2261,7 @@ export function ageUp(game: Game): Game {
     return d;
   }
   if (birthday && d.hiddenGift && !d.preset && d.age >= 3) banners.push(`Strange: ${noteOmen(d)}`);
-  if (maybeEncounter(d, banners)) {
+  if (maybeEncounter(d, banners, false, opts.quiet ? SKIP_ENCOUNTER_CALM : 1)) {
     peaks(d);
     return d;
   }
@@ -2257,7 +2274,7 @@ export function ageUp(game: Game): Game {
     peaks(d);
     return d;
   }
-  if (roll(d) < 0.46) {
+  if (roll(d) < (opts.quiet ? SKIP_EVENT_CHANCE : MONTH_EVENT_CHANCE)) {
     const event = pickEvent(d, roll(d));
     if (event) {
       coolHeat(d, banners);
@@ -2561,6 +2578,13 @@ export function act(game: Game, id: string): Game {
     d.card = { ...d.card, banner: [note] };
     return d;
   }
+  if (id.startsWith("slot|")) {
+    // slot|<index>|<moveId>: one atomic swap. No card banner, so the page under the player's finger never moves;
+    // the move picker shows its own feedback in a fixed-height line.
+    const [, index, ...rest] = id.split("|");
+    const res = placeInSlot(d, Number(index), rest.join("|"));
+    return res.ok ? d : game;
+  }
   if (id.startsWith("buy-fit|") || id.startsWith("wear-fit|") || id.startsWith("clear-fit|")) {
     return fitAct(d, id);
   }
@@ -2576,7 +2600,7 @@ export function act(game: Game, id: string): Game {
     const slot = d.moveSets[Number(id.slice(9))];
     if (!slot) return game;
     slot.moves = [...d.loadout];
-    d.card = { ...d.card, banner: [`${slot.name} remembers this six.`] };
+    // No card banner here or on set-load: the move picker answers in its own line, so the list doesn't jump.
     return d;
   }
   if (id.startsWith("set-load|")) {
@@ -2587,7 +2611,6 @@ export function act(game: Game, id: string): Game {
       return !!def && (d.unlockedPowers ?? []).includes(def.powerId);
     }).slice(0, 6);
     fillLoadout(d);
-    d.card = { ...d.card, banner: [`${slot.name} is what you bring.`] };
     return d;
   }
   if (id.startsWith("buy|") || id.startsWith("sell|")) {
@@ -3955,15 +3978,20 @@ export function act(game: Game, id: string): Game {
       return d;
     }
     if (step.kind === "fight" || step.kind === "boss") {
-      const foeName = step.foeName ?? current.arc.villain;
+      // In a legend life the case's real boss is one of the hero's own rogues, paying the city villain.
+      const patron = step.kind === "boss" ? arcPatron(d, current.arc.id) : null;
+      const foeName = patron?.alias ?? step.foeName ?? current.arc.villain;
+      const brief = patron ? `${current.arc.villain} was the front. ${patron.alias} was paying for it.` : step.brief;
       openMini(
         d,
         makeDuel(
           d,
-          { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.foeLevel ?? (step.kind === "boss" ? 6.4 : 4.2), boss: step.kind === "boss" },
+          patron
+            ? { name: patron.alias, title: patron.title, side: "villain", powerId: patron.powerId, powerLevel: Math.max(6.4, patron.level), boss: true }
+            : { name: foeName, title: step.foeTitle ?? current.arc.group, side: "villain", powerId: step.foePower ?? "strength", powerLevel: step.foeLevel ?? (step.kind === "boss" ? 6.4 : 4.2), boss: step.kind === "boss" },
           {
             title: foeName,
-            subtitle: `${step.brief} Your six moves.`,
+            subtitle: `${brief} Your six moves.`,
             win: `You put ${foeName} down. The case moves.`,
             partial: "You split it. The case stays on this page.",
             lose: `${foeName} writes this month's ending.`,

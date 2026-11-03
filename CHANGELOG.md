@@ -1,5 +1,276 @@
 # Changelog
 
+## 2026-11-03 (am): illustrated villain cards, life-sim boss reveal (`devbot/2026-11-03-am`)
+
+This branch stacks on `devbot/2026-11-02-night` (head 6f82bef), so it also carries the Nov 1 night and all three Nov 2 passes.
+
+### Illustrated villain cards (`VillainArt.tsx`, `villainArt.data.ts`, `Arena.tsx`)
+
+- **Why:** in Arena the 11 legends had painted portraits, but all 18 villains were paper-doll figures, so half the draft grid looked unfinished. No image-generation tool is connected, so these are hand-drawn vector busts. They're sharp at any size and add no download weight.
+- **What:** one data-driven spec per villain (suit, skin, rim light, eye shape and glow, silhouette pieces) over a shared bust. Some examples:
+  - Goblin: pointed hood, yellow slit eyes and a pumpkin bomb.
+  - Venom: white eye patches and fangs.
+  - Doc Ock: four tentacles.
+  - Loki: horns.
+  - Hela: a spiked crown.
+  - Ultron: a chrome face plate.
+  - Doomsday: bone spurs.
+  - Red Skull: a red skull.
+  - Killmonger: a fanged mask.
+  - Reverse-Flash: yellow with a lightning bolt.
+- **Backdrops:** each villain gets its own skyline, embers and swirl, seeded from its id so it never changes.
+- **Where:** the draft grid, the fighter sheet, order slots, the reveal, the round intro and the duel cards. Each view crops the bust to fit: `card`, `head`, `wide` or `tall`. Saved lives keep their figure.
+- The spec table is typed on `VILLAIN_ART_IDS`, so adding an Arena villain without art fails the typecheck. A new test (`villainart.test.ts`) also checks the roster.
+
+### Life-sim boss reveal (`Duel.tsx`, `styles.css`)
+
+- When a fight is against a named rogue with art (Green Goblin, The Joker, Iron Monger, Abomination, and all 18 others), the fight header shows the villain's face. The intro becomes a **"FIGHT!" card**: the villain card slides in tilted, in the foe's colour, and holds for 1.5s. With reduced motion on, it skips the slide.
+- Other foes keep the old intro.
+
+### Fixes
+
+- The Arena battle log said "a breath beats Necroswords" in lower case. It now says "Your breath…" / "Hela's breath…".
+
+### Playtest notes
+
+- The night backlog's "Light Speed never combines" came from bad gift ids in the playtest harness, not the game (see PLAYTEST).
+
+## 2026-11-02 (pm + night): Arena online, duel-card battle stage, moves re-check (`devbot/2026-11-02-pm` → `devbot/2026-11-02-night`)
+
+This branch stacks on `devbot/2026-11-02-pm` (head 2e0fac8). The pm pass pushed its online code but no docs, so this entry covers both.
+
+### Arena online 1v1 (pm pass: `arena.online.ts`, `arena.rooms.server.ts`, `arena.service.ts`, `arena-net.ts`, `OnlineArena.tsx`, `migrations/0002_arena_rooms.sql`)
+
+- **Rooms:** "Play a friend" creates a 6-letter room code (no I/O) and a share link. The friend joins by link (code prefilled) or by typing it. Rooms live 6 hours.
+- **Fair play by commit-reveal:** the room stores a public event log that both phones replay through the same seeded engine. Draft picks are public; fight orders, moves and leads stay hidden on the server until both sides have committed, then flip at once.
+- **Turn timer:** 30s a turn, 45s for the order, 20s for "ready". A missed turn auto-plays "Catch a breath" (or an auto pick/order); 3 timeouts forfeit the match. Each timeout shows a toast and a pip.
+- **Reconnects:** the client polls (slower when the tab is hidden), shows Live / Reconnecting, and flags "rival connection lost" after 8s. A reload drops you straight back into the same turn.
+- **Also:** rematch (back to the draft), leave = forfeit, and saved-life fighters are re-priced onto the 5–9 band server-side. Each phone sees itself on the left.
+
+### Battle stage: duel cards (night: `Arena.tsx`, `arena.css`)
+
+- The paper-doll stage was the weakest Arena screen. It is now two tilted **duel cards** facing each other, like a card-battler: painted legend art full-bleed, a name plate with the fighter's colour, a shine sweep, a red hurt flash on hits, a cyan shimmer when guarding, and a grey drop on a KO. Idle cards float gently.
+- Villains and saved lives (no painted art yet) get their home-city skyline, a glow in their colour and the full figure. Very dark colours fall back to villain red / hero gold so the card never goes muddy.
+- **Fixed:** figures on the right card rendered as solid black silhouettes. Chrome drops the SVG's volume filter under a `scaleX(-1)` parent, so figures are no longer mirrored (they face front anyway).
+
+### Moves (night: `move-picker.css`)
+
+- The armed slot's "breathe" animation bobbed the slot up and down, so the tap target moved under your finger (Playwright flagged it as never stable). It is now a gold glow pulse that stays put.
+
+### Housekeeping
+
+- Fixed 4 `prefer-const` lint errors in `arena.online.test.ts`.
+
+## 2026-11-02 (am, arena): Arena mode, moves dock fix (`devbot/2026-11-02-am`)
+
+This branch stacks on `devbot/2026-11-01-night` (head 903f444), which is not merged yet.
+
+### Arena: 1v1 versus, draft 3, best of 3 (`arena.ts`, `arena.roster.ts`, `arena.lives.ts`, `Arena.tsx`, `arena.css`)
+
+- **Way in:** a red/blue **ARENA** button on the title screen ("1V1 · DRAFT 3 · BEST OF 3").
+- **Flow:** hub (pick Rookie / Pro / Legend) → snake draft → secret fight order → both orders flip → round intro → battle → round result → match result. Each screen is built for 390px touch.
+  - **Draft:** 29 fighters. That is the 11 legends with their painted art plus 18 signature villains (Goblin, Venom, Doc Ock, Joker, Bane, Iron Monger, Ultron, Abomination, Lex, Zod, Doomsday, Cheetah, Red Skull, Loki, Hela, Killmonger, Sabretooth, Reverse-Flash). **Your own living heroes** (age 14+, with a power) can be drafted too, from a "Your lives" tab. The pick order is You, Rival, Rival, You, You, Rival. Tapping a card opens a sheet with HP, the passive and all six moves.
+  - **Order:** tap your three into rounds 1–2–3 and lock. The rival's order stays hidden until both are locked, then both flip at once.
+  - **Battle:** each fighter fights exactly once and the match is decided by the most rounds won. If a match is clinched 2–0 you can still play round 3 or skip it. Ties go to total HP margin.
+- **Rules (pure, seeded engine, deterministic):**
+  - Six moves each, using the game's own strike > trick > guard > strike triangle and its move kinds (burst, area, status, guard, dash).
+  - Hits land simultaneously.
+  - One side **leads** each turn and shows a **tell**: the style it is about to use. The lead alternates every turn and every round.
+  - The follower sees the tell and answers. The UI tags the answering moves "Answer".
+  - The leader may **fake the tell** for +2 energy.
+  - Energy starts at 7, caps at 10 and refills 3 a turn. "Catch a breath" gives +3 energy and blocks like a weak guard.
+  - Cooldowns apply to 8–10 power area and burst moves.
+  - Bouts have a 24-turn cap (decided on HP %) and last about 8–9 turns on average.
+- **Every fighter has one passive.** Examples:
+  - Spider-Sense sees through every feint.
+  - The Joker and Loki feint for free.
+  - Ultron revives once.
+  - Doc Ock's arms and Hela's Necrosword Rain chip you until an area hit lands.
+  - Venom's symbiote fogs his tells.
+  - Batman's Contingency Plan gives +1 energy a turn.
+  - The Flash leads the first turn.
+  - Wolverine and Sabretooth regenerate unless a trick or status move lands.
+  - Black Panther's kinetic suit stores damage.
+  - Hulk hits harder the more he is hurt, and Abomination, Goblin and others enrage.
+  - Thor's area moves are Worthy.
+  - Doomsday and Reverse-Flash adapt to repeated moves.
+  - Iron Monger and Lex wear armour.
+- **Villain kits** reuse their preset boss moves, so Arena and life-sim bosses always agree, plus 2 arena moves so every kit covers all three styles.
+- **Saved lives** bring their equipped six, re-priced onto the Arena 5–9 band so a veteran can't one-shot the roster. Their passive comes from their first power's element. They are drawn as the hero you built.
+- **Saves:** the match is saved to `superlife.arena.v1` after every action. A reload drops you straight back into the same turn, and the AI's seeded dice replay identically.
+- **AI:** expected-value move choice with softmax noise, feint baiting and tell-trust that learns your feint rate. The levels differ in how much they bluff and how much they use your tells:
+
+  | Level | Bluffing | Uses your tells |
+  |---|---|---|
+  | Rookie | rarely bluffs | reads 10% |
+  | Pro | bluffs | reads 25% |
+  | Legend | feints freely | reads 70% |
+
+- **Balance:**
+  - HP was auto-tuned on mixed-level AI-vs-AI sims.
+  - Pro AI-vs-AI, 40 bouts a pair, gives a **17.4-point spread**: 38.9% for Spider-Man to 56.3% for Thor, with 0% time-outs.
+  - On the mixed ladder, every fighter is within 22 points (this is a test).
+  - Spider-Man is the counter-pick to bluffers: weak against Pro, strongest against Legend.
+- **Difficulty ladder** (a scripted "follow the hints, bluff 30%" player, bout win rate): **Rookie 74%, Pro 46%, Legend 13%**.
+- **Online play is not in yet.** A "VS a friend online · Soon" card is shown and the plan is in BACKLOG. The engine is already lockstep-ready: same seed plus same actions gives the same match.
+- **Faces:** unmasked fighters get fixed faces, e.g. a green Hulk and Abomination, Doc Ock's glasses, the Joker's green hair and a bearded Thor and Zod.
+- **Tests:**
+  - `arena.test.ts` has 14 tests: roster integrity, preset-built villain kits, determinism, termination, RPS, energy and cooldowns, illegal-action fallback, feints, Sense, passives, the Flash leading, full match flow, draft refusals, the balance spread and the difficulty ladder.
+  - `arena.lives.test.ts` has 2 tests.
+
+### Moves: armed quick-dock fix (`move-picker.css`)
+
+- When a slot or move was armed, the sticky quick-dock let the slot outlines underneath peek through the 1rem gap above it, which looked like a double border while scrolling. The dock now masks that gap with a panel-coloured strip and fades its bottom edge.
+- Long move names in the dock wrap to two lines instead of being cut off.
+- **Verification:** touch-tap Playwright runs at 390×844 covered five saves: mystery life before the reveal, just after the reveal, at 28, a Wonder Woman legend at 30 and a Build-your-own life at 15. They tested slot→move, move→slot, reorder, 12 rapid swaps, double-taps, locked-move taps, scroll stability and reload persistence. **0 failures.** No logic bug was reproduced. The 11-01 atomic swap fix holds.
+
+## 2026-11-02 (am): Fast age-up, slower kid power, five lives (`devbot/2026-11-01-night`)
+
+### Fast-forward a season or a year (`skip.ts`, `engine.ts`, `FastForward.tsx`, `GameApp.tsx`)
+
+- **The gold Skip button** replaces the old "To N" button and opens a sheet with two choices: **Skip a season · 3 months** or **Skip to age N**.
+- **Each month resolves itself** with sensible defaults, biased by what you have been doing lately (`Game.habits`: action weights, sub-picks and your average minigame score).
+  - Only routine actions are auto-played: school, training, a job, rest, hobbies, books and friends.
+  - Training is skipped when health is low.
+  - Hobbies get more weight when joy is low.
+  - Repeating the same action in a month costs more, so a skip never grinds one thing.
+- **The skip stops by itself** for:
+  - the reveal, story beats and chapter changes;
+  - case files and any choice event;
+  - fights;
+  - health below 25;
+  - a bond falling below 20;
+  - death.
+  Fewer random events and encounters fire while skipping, but any event that would need a choice still stops the skip.
+- **A summary card** follows every skip. It shows:
+  - the months covered, with a track bar;
+  - why the skip stopped;
+  - stat changes and rank changes;
+  - a "What you did" list and a "Meanwhile" list.
+  Its buttons are Again and Back to life (or Take it from here).
+- **It can't be cheesed.** Auto-played minigames score your own average minus 8% (clamped to 30–72%). When both play the same plan, a skip ends slightly behind hand play on power, mastery, money and fame, with joy about equal. `ageup.test.ts` locks this in.
+- **Why:** the user said childhood and the teen years drag. Reaching 18 took about 1,176 taps month by month. It now takes about 145 with year skips. The old "To N" button took about 190 taps but wasted every month.
+
+### Kids grow slower (`mastery.ts`, `engine.ts`)
+
+- Young mastery caps are lower:
+  - under 8: 1.4 (was 1.6)
+  - under 12: 2.3 (was 2.6)
+  - under 16: 3.4 (was 3.8)
+  - under 19: 5 (was 5.6)
+- A new `youthGain` scales power gains before 18. The base multiplier is 0.6 under 12, 0.7 under 16 and 0.85 under 18. Gains also shrink as you near the age cap, down to a floor of 0.3. Losses are unchanged, and existing saves are never pushed below their current level.
+- Teen training EXP is now ×0.62 (was ×0.72).
+- **Power at 18:**
+  - random play: 2.21 → 1.87
+  - a grinder: 4.67 → 3.39
+- By 30, power is back level with before (7.70 vs 7.74).
+- Adult duel win rates are unchanged: about 96% with perfect play, about 75–84% at 60% play and about 40% with random play.
+
+### Five lives (`save.ts`, `store.ts`, `Lives.tsx`)
+
+- **Five save slots** (`superlife.life.N.v1`), with an index in `superlife.lives.v1`.
+- **The "Your lives" screen** is opened from the title screen or the menu. Each card shows:
+  - the portrait (or legend art), name and age;
+  - the mode: Mystery, God Mode · hero, or Build your own;
+  - when the life was last played.
+  From a card you can Continue (or read the obituary of a dead life). Deleting a life asks for confirmation in a bottom sheet. Empty slots offer "Start a new life".
+- **Migration:** the old single save moves into slot 1 once, and only when every slot is empty. The old key is kept as a backup. A deleted life never comes back.
+- **Slots are isolated:** a save only ever writes its own slot. When all five slots are full, New life opens Your lives instead of overwriting one.
+- Tests: `ageup.test.ts` has 12 new tests, covering youth growth, skip stops, fairness, migration, slot isolation and slot modes.
+
+## 2026-11-01 (night): Boss phases and villain gimmicks, fights that grow with you (`devbot/2026-11-01-night`)
+
+This branch is based on `main` at c41ff09, which already includes PR #3.
+
+### Every legend rogue fights like themselves (`duel.ts`, `presets.ts`, `gimmicks.ts`, `Duel.tsx`)
+
+- **Two-phase boss duels.** At 55% health (each villain can set its own point), a boss enters **Phase 2**. A full-screen card names the move, gives the villain's line, and tells you how to beat it. The arena then takes on the gimmick's colour.
+- **Ten gimmicks.** Each is a data row in `presets.ts`. All 49 legend rogues have a named one (`VILLAIN_GIMMICKS`):
+  - **armor:** Iron Monger's plating takes two trick hits to crack. Then he takes +20%.
+  - **enrage:** the Goblin and Abomination hit harder but leave openings.
+  - **fog:** Venom and Scarecrow hide some of their tells.
+  - **feint:** the Joker and Mysterio sometimes show a false tell.
+  - **adapt:** the Riddler soaks a repeated move.
+  - **regen:** heals each turn until a trick or status move stalls it.
+  - **revive:** Ultron's backup body gets up once at 40%.
+  - **coin:** Two-Face flips every turn. Heads, he hits ×1.6. Tails, he is open.
+  - **swarm:** Ock's arms and Penguin's goons chip damage each turn until an area move clears them.
+  - **charge:** Bane's Back Breaker is telegraphed every third turn. Guard it or eat it.
+- **Generic bosses** (case villains in ordinary and mystery lives) get a gimmick from their power: brute strength charges, ice armours up, healers regenerate, and so on.
+- **The HUD explains each gimmick:**
+  - a strip under the health bars with the gimmick icon, a `At 55%` / `Live` tag, and its live status ("1 plate left · trick cracks them", "Big hit in 2 turns" with three pips);
+  - a tick on the boss health bar where Phase 2 begins;
+  - a pulsing red tell when a charged hit is coming, and a `Tell: ???` chip in fog;
+  - a flipping HEADS/TAILS coin, armor plate pips, swarm motes, and green +N heal floats;
+  - `Cracks` / `Clears` / `Stalls` / `Adapted` tags on the move cards;
+  - on a loss, a "Next time, <gimmick>" tip on the K.O. card.
+- **Why:** BACKLOG #4 (villain gimmick phases), and the user's ask that signature villains be real bosses with fitting movesets. Before, every boss was a bigger health bar.
+
+### Legend cases end at a legend rogue (`engine.ts`)
+
+- In a legend life, the boss step of a city case is now fought against one of that hero's rogues whose debut has passed. "Cinder Mallory was the front. Whiplash was paying for it."
+- The pick is stable per case, so a retry faces the same rogue.
+- **Why:** Iron Man was fighting Cinder Mallory and Static Bishop as case bosses.
+
+### Fights scale with the hero (`moves.ts`, `engine.ts`, `duel.ts`)
+
+- **Playtest finding:** at perfect play, a mystery hero won only about 21% of fights and Iron Man about 40%, while an unpowered Batman won 100%. Player moves stayed at 4–6 power from age 11 to 70, while foes grew to 10–17.
+- **Power moves** now gain an edge from power level and mastery: round(PL × 0.55) + (rank − 1).
+- **Street moves** gain round(PL × 0.35).
+- **Unpowered legacy kits** (Batman) are trimmed by round(PL × 0.15).
+- **Boss health** is now ×1.25.
+- **Catch a breath** now counters a telegraphed strike for half your best move's power. Many loadouts had no guard move, so a strike tell could not be answered.
+- **Auto-filled loadouts and street padding** cover missing styles first. Hand-picked slots are never touched. Still exactly 6 moves.
+- **Sims** (perfect, 60% and random play):
+  - regular fights win 0.96 / 0.73–0.85 / 0.36–0.43;
+  - bosses win 0.82 / 0.63 / 0.29.
+- **Pure duel core:** `Duel.tsx` now runs on `duel.ts` (`startDuel`, `playTurn`), so the balance can be tested headless.
+
+### Small fixes
+
+- Female rogues (Hela, Cheetah, Circe, Medusa, Lady Deathstrike) were drawn as men. `villainSex` now follows the data.
+- New test file `night.test.ts` (11 tests). It checks that every rogue has a gimmick, that each gimmick mechanic fires, that a smart-play win band holds against all 49 rogues, edge scaling, loadouts of 6 with more than one style, and stable arc patrons.
+## 2026-11-01 (moves fix): a six-move picker that does what you tap (`devbot/2026-11-01-moves-fix`)
+
+Branches from main `c41ff09`. The player reported move selection felt buggy. It was reproduced at 390x844 with real touch taps in a mystery life before and after the reveal, a Spider-Man legend, Build your own, after a new power, and after reloading.
+
+### Bugs found
+
+- **Swapping was close to impossible.** Dropping a slot left the six at five. The next tap ran the auto top-up first, which put the first bench move straight back (often the one you'd just dropped). Then the move you tapped got "Six moves already". Re-adding a dropped move actually removed it again, while the picker said "is in the six".
+- **Wrong move under the thumb.** Every tap added a notice above the picker and changed the banner on the top card, so the list moved down by about one row. On iOS Safari, which doesn't anchor scrolling, the next tap landed on the wrong move.
+- **Mixed messages.** The picker's own note and the engine's banner could disagree ("Push is in the six" / "Push leaves the six").
+- **Reload changed your six.** A five-move loadout got silently refilled on load, so what you saw after a reload wasn't what you'd left.
+- **Blank Moves tab before your power wakes.** The shelf rendered nothing at all.
+- The street moves shown in empty slots didn't match the ones a fight actually used.
+
+### Fixes (`moves.ts`, `engine.ts`, new `MovePicker.tsx` + `move-picker.css`, `PowerLab.tsx`)
+
+- **Atomic swaps.** The new `slot|index|moveId` action uses `placeInSlot`. A bench move replaces the slot's move in one step, and an equipped move trades places, so you can reorder. The six never shrinks to five.
+- `toggleLoadout` (old `equip|`) now drops a move by swapping in the next bench move in the same slot. It's never the move you just dropped. If every move you know is already equipped, it refuses.
+- **New picker.**
+  - Numbered 6-slot grid with element icons, kind, energy and rank, plus a "5/6" counter.
+  - Swap either way: tap a slot then a move, or a move then a slot. A picked-up slot glows and the possible targets turn dashed.
+  - Tapping an equipped move in the list picks up its slot.
+  - When a bench move is picked, a quick-slot strip appears in the sticky status line so you never scroll back up.
+  - Cancel button. Haptic tick and sound on success, buzz on refusal. The slot that changed pops.
+- **No layout shift.** Feedback lives in a fixed-height sticky line inside the card. Slot swaps and Save/Load sets no longer change the card banner.
+- The list is split into **Ready** and a collapsible **Locked** list. A locked move tells you the power, the rank it needs and where to train it.
+- Before the reveal, or in an unpowered life, the Moves tab shows the six street moves and explains when your power's moves arrive. Padded slots use the same street moves as `battleMoves`.
+- Buttons use `touch-action: manipulation` and have no tap highlight.
+
+### Tests
+
+- New `src/game/test/loadout.test.ts` with 11 tests.
+  - Regressions for the drop/re-add flip and the first-bench-only refill.
+  - Atomic swap and reorder; locked, unknown and out-of-range picks.
+  - Full-six refusal; refused drop with no bench.
+  - Exact order kept across a JSON save and reload; save/load sets.
+  - 120 random swaps with reloads across five kinds of life, always exactly six.
+  - Pre-reveal street six; a new power never reshuffles a full six.
+- Game tests: 99/99. Typecheck, lint and build pass.
+- Touch checks at 390x844 with scroll anchoring off to act like iOS Safari: slot then move, move then slot, reorder, the element under the finger doesn't change, cancel works, reload keeps the exact six, and there are no console errors.
+- Screenshots: `superlife-shots/moves-fix/before` and `/after`.
+
 ## 2026-11-01 (pm): Legends grow in canon, goals that survive their decade, Chase run, legend grid (`devbot/2026-11-01-pm`)
 
 This branch stacks on the unmerged `devbot/2026-11-01-am`, `devbot/2026-10-31-night` and late Oct 31 work.

@@ -1,0 +1,170 @@
+/* Arena: 1v1 versus mode. A fighting-game skin over the shared tokens. */
+.arena-root {
+  background:
+    radial-gradient(80% 50% at 0% 0%, color-mix(in srgb, #3b7dff 26%, transparent), transparent 70%),
+    radial-gradient(80% 50% at 100% 100%, color-mix(in srgb, #ff3b30 24%, transparent), transparent 70%),
+    linear-gradient(160deg, #0b1020 0%, #121a30 48%, #1a0f18 100%);
+}
+.arena-root::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
+  background: repeating-linear-gradient(115deg, rgba(255,255,255,.035) 0 2px, transparent 2px 22px);
+}
+.arena-title {
+  font-family: var(--font-display); letter-spacing: 0.04em; line-height: 0.9;
+  background: linear-gradient(180deg, #fff6d8 0%, #ffd36a 45%, #e08a2a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 3px 0 rgba(0,0,0,.65)) drop-shadow(0 0 18px rgba(255,190,80,.35));
+}
+.arena-vs {
+  font-family: var(--font-display); letter-spacing: 0.02em; line-height: 1; color: #fff;
+  -webkit-text-stroke: 2px #e6b34d; text-shadow: 0 4px 0 rgba(0,0,0,.6), 0 0 22px rgba(255,190,80,.55);
+}
+.arena-card {
+  position: relative; overflow: hidden; border-radius: 1rem; isolation: isolate;
+  border: 1.5px solid color-mix(in srgb, var(--c, #e6b34d) 55%, rgba(255,255,255,.12));
+  background: #0c1019;
+  box-shadow: 0 6px 18px -8px rgba(0,0,0,.8), inset 0 0 0 1px rgba(255,255,255,.04);
+  transition: transform 160ms var(--ease-snappy, ease-out), box-shadow 160ms;
+}
+.arena-card:active { transform: scale(0.97); }
+.arena-card[aria-pressed="true"] {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 2px var(--color-gold), 0 0 22px -4px var(--color-gold);
+}
+.arena-card[data-taken="true"] { filter: grayscale(0.85) brightness(0.55); }
+.arena-plate {
+  position: absolute; inset: auto 0 0 0; padding: 1.4rem 0.4rem 0.35rem;
+  background: linear-gradient(180deg, transparent, rgba(6,8,14,.82) 45%, rgba(6,8,14,.96));
+}
+.arena-stripe { position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--c, #e6b34d); }
+.arena-sheet {
+  border-top-left-radius: 1.5rem; border-top-right-radius: 1.5rem;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c, #e6b34d) 16%, #161d2b), #121826 40%);
+  border-top: 1.5px solid color-mix(in srgb, var(--c, #e6b34d) 60%, transparent);
+  box-shadow: 0 -18px 40px -10px rgba(0,0,0,.85);
+  animation: arena-sheet-up 260ms var(--ease-snappy, cubic-bezier(.2,.9,.3,1)) both;
+}
+@keyframes arena-sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+.arena-pip { width: 0.7rem; height: 0.7rem; transform: rotate(45deg); border-radius: 2px; background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.arena-pip[data-r="win"] { background: var(--color-gold); box-shadow: 0 0 8px var(--color-gold); }
+.arena-pip[data-r="loss"] { background: #ef5d52; box-shadow: 0 0 8px #ef5d52; }
+.arena-pip[data-r="now"] { background: transparent; box-shadow: inset 0 0 0 2px #fff; animation: glow-pulse 1.4s ease-in-out infinite; }
+.arena-split { position: absolute; inset: 0; overflow: hidden; }
+.arena-split > .l { position: absolute; inset: 0 50% 0 0; animation: arena-in-l 520ms cubic-bezier(.2,.9,.3,1.1) both; }
+.arena-split > .r { position: absolute; inset: 0 0 0 50%; animation: arena-in-r 520ms cubic-bezier(.2,.9,.3,1.1) both; }
+@keyframes arena-in-l { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes arena-in-r { from { transform: translateX(100%); } to { transform: none; } }
+.arena-slash {
+  position: absolute; top: -10%; bottom: -10%; left: 50%; width: 10px; transform: translateX(-50%) skewX(-12deg);
+  background: linear-gradient(180deg, transparent, #fff 20%, #ffd36a 50%, #fff 80%, transparent);
+  box-shadow: 0 0 24px 6px rgba(255,211,106,.65);
+  animation: arena-slash 600ms 320ms ease-out both;
+}
+@keyframes arena-slash { from { opacity: 0; transform: translateX(-50%) skewX(-12deg) scaleY(0); } to { opacity: 1; transform: translateX(-50%) skewX(-12deg) scaleY(1); } }
+.arena-stamp { animation: ko-in 520ms 620ms cubic-bezier(.2,.9,.3,1.3) both; }
+.arena-flip { animation: arena-flip 520ms cubic-bezier(.2,.9,.3,1.1) both; transform-origin: 50% 50%; }
+@keyframes arena-flip { 0% { transform: perspective(600px) rotateY(90deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.arena-tell {
+  border-radius: 999px; padding: 0.35rem 0.8rem; font-weight: 800; font-size: 0.8125rem; color: #fff;
+  background: color-mix(in srgb, var(--tc, #fff) 22%, rgba(8,10,16,.88));
+  box-shadow: 0 0 0 1.5px var(--tc, #fff), 0 0 18px -4px var(--tc, #fff);
+}
+.arena-lead-ring { box-shadow: 0 0 0 2px var(--color-gold), 0 0 16px -2px var(--color-gold); }
+.arena-banner {
+  background: linear-gradient(90deg, transparent, rgba(8,10,16,.92) 12%, rgba(8,10,16,.92) 88%, transparent);
+  border-block: 1.5px solid color-mix(in srgb, var(--color-gold) 70%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .arena-split > .l, .arena-split > .r, .arena-slash, .arena-stamp, .arena-flip, .arena-sheet { animation: none !important; }
+}
+
+/* Title-screen entry. Lives here so the Arena's look ships with the Arena. */
+.title-arena {
+  color: #fff; border: 1.5px solid rgba(255,255,255,.18);
+  background:
+    linear-gradient(115deg, rgba(59,125,255,.85) 0%, rgba(59,125,255,.55) 46%, rgba(255,59,48,.6) 54%, rgba(255,59,48,.9) 100%);
+  box-shadow: 0 8px 22px -10px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+/* ─── Arena online ─────────────────────────────────────────────────────────────── */
+.arena-online-card { border-color: color-mix(in srgb, var(--color-spark) 45%, transparent) !important; box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-spark) 25%, transparent), 0 10px 28px -14px var(--color-spark); }
+.arena-online-card:active { transform: scale(0.985); }
+.arena-radar { position: relative; }
+.arena-radar::after { content: ""; position: absolute; inset: -3px; border-radius: 0.9rem; border: 2px solid var(--color-spark); animation: arena-ping 1.8s ease-out infinite; }
+@keyframes arena-ping { from { opacity: 0.8; transform: scale(0.9); } to { opacity: 0; transform: scale(1.35); } }
+.arena-online-hero {
+  background:
+    radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--color-spark) 30%, transparent), transparent 60%),
+    radial-gradient(70% 90% at 0% 100%, color-mix(in srgb, #ef5d52 30%, transparent), transparent 70%),
+    linear-gradient(135deg, #131c33, #1b1020);
+}
+.arena-radar-rings { border-radius: 9999px; background: repeating-radial-gradient(circle, transparent 0 14px, color-mix(in srgb, var(--color-spark) 28%, transparent) 14px 15.5px); mask: radial-gradient(circle, #000 30%, transparent 70%); animation: arena-spin 5s linear infinite; }
+.arena-radar-rings::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: conic-gradient(from 0deg, transparent 0 80%, color-mix(in srgb, var(--color-spark) 55%, transparent)); }
+@keyframes arena-spin { to { transform: rotate(360deg); } }
+.arena-searching { animation: glow-pulse 1.6s ease-in-out infinite; }
+.arena-input { border-radius: 0.75rem; background: rgba(0,0,0,.35); border: 1.5px solid rgba(255,255,255,.14); color: var(--color-fg, #fff); outline: none; }
+.arena-input:focus { border-color: var(--color-gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 25%, transparent); }
+.arena-tile {
+  display: grid; place-items: center; aspect-ratio: 4 / 5; border-radius: 0.7rem;
+  font-family: var(--font-display); font-size: 1.6rem; line-height: 1; color: #fff;
+  background: rgba(0,0,0,.35); border: 1.5px solid rgba(255,255,255,.14);
+}
+.arena-tile.on { background: linear-gradient(180deg, #23304f, #141b2e); border-color: color-mix(in srgb, var(--color-gold) 60%, transparent); text-shadow: 0 2px 0 rgba(0,0,0,.6); }
+.arena-tile.cur { border-color: var(--color-gold); animation: glow-pulse 1.2s ease-in-out infinite; }
+.arena-tile.big { font-size: 2.1rem; color: #ffe7a6; }
+.arena-toggle { position: relative; width: 2.6rem; height: 1.5rem; flex-shrink: 0; border-radius: 9999px; background: rgba(255,255,255,.15); transition: background 160ms; }
+.arena-toggle > span { position: absolute; top: 3px; left: 3px; width: 1.1rem; height: 1.1rem; border-radius: 9999px; background: #fff; transition: transform 160ms var(--ease-snappy, ease-out); }
+.arena-toggle.on { background: var(--color-gold); }
+.arena-toggle.on > span { transform: translateX(1.1rem); }
+.arena-netbar { background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.2)); border-bottom: 1px solid rgba(255,255,255,.07); }
+.arena-conn[data-off="true"] { animation: glow-pulse 1s ease-in-out infinite; }
+.arena-urgent { animation: arena-throb 0.5s ease-in-out infinite alternate; }
+@keyframes arena-throb { to { transform: scale(1.08); } }
+.arena-away { background: color-mix(in srgb, #2a0f12 88%, transparent); border: 1px solid color-mix(in srgb, #ef5d52 50%, transparent); backdrop-filter: blur(6px); animation: arena-sheet-up 260ms ease-out both; }
+.arena-wait-dot { display: inline-block; width: 0.55rem; height: 0.55rem; flex-shrink: 0; border-radius: 9999px; background: currentColor; animation: arena-blink 1s ease-in-out infinite; }
+@keyframes arena-blink { 50% { opacity: 0.25; transform: scale(0.7); } }
+.arena-found { background: radial-gradient(70% 50% at 50% 50%, rgba(20,24,40,.92), rgba(5,7,14,.97)); animation: ko-in 320ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .arena-radar::after, .arena-radar-rings, .arena-searching, .arena-tile.cur, .arena-urgent, .arena-wait-dot, .arena-conn[data-off="true"] { animation: none !important; }
+}
+
+/* Battle stage: fighters as living cards (painted legends, or a figure over their skyline). */
+.duel-slot { perspective: 700px; }
+.duel-card {
+  position: relative; width: 100%; height: 100%; overflow: hidden; isolation: isolate; border-radius: 1rem;
+  background: #0c1019;
+  border: 2px solid color-mix(in srgb, var(--c, #e6b34d) 70%, white 10%);
+  box-shadow: 0 10px 24px -10px rgba(0,0,0,.9), 0 0 22px -6px color-mix(in srgb, var(--c, #e6b34d) 80%, transparent), inset 0 0 0 1px rgba(255,255,255,.08);
+  transform: rotateY(var(--tilt, 0deg));
+  transition: filter 320ms ease, transform 420ms cubic-bezier(.2,.9,.3,1);
+}
+.duel-card[data-side="0"] { --tilt: 9deg; }
+.duel-card[data-side="1"] { --tilt: -9deg; }
+.duel-card[data-pose="attack"] { filter: brightness(1.18) saturate(1.15); }
+.duel-card[data-pose="hit"] { animation: duel-shake 360ms ease-out; }
+.duel-card[data-pose="ko"] { filter: grayscale(1) brightness(.5); transform: rotateY(var(--tilt)) rotate(calc(var(--tilt) * -0.7)) translateY(6%); }
+.duel-shine {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.16) 48%, transparent 60%);
+  mix-blend-mode: screen;
+}
+.duel-plate {
+  position: absolute; inset: auto 0 0 0; z-index: 2; padding: 1.5rem 0.45rem 0.4rem; text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(6,8,14,.78) 50%, rgba(6,8,14,.95));
+  text-shadow: 0 2px 0 rgba(0,0,0,.7);
+}
+.duel-plate::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 0; height: 3px; border-radius: 3px; background: var(--c, #e6b34d); box-shadow: 0 0 10px var(--c, #e6b34d); }
+.duel-hurt { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(70% 60% at 50% 40%, rgba(255,70,50,.0), rgba(255,40,30,.55)); animation: duel-hurt 420ms ease-out both; }
+.duel-shield {
+  position: absolute; inset: 6%; z-index: 2; pointer-events: none; border-radius: 0.8rem;
+  border: 2px solid rgba(140,220,255,.85);
+  background: radial-gradient(closest-side, rgba(140,220,255,.05), rgba(140,220,255,.28));
+  box-shadow: 0 0 18px rgba(140,220,255,.7), inset 0 0 18px rgba(140,220,255,.45);
+  animation: duel-shield 380ms cubic-bezier(.2,.9,.3,1.3) both;
+}
+@keyframes duel-shake { 0%, 100% { translate: 0 0; } 15% { translate: -7px 2px; } 35% { translate: 6px -2px; } 55% { translate: -4px 1px; } 75% { translate: 2px 0; } }
+@keyframes duel-hurt { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes duel-shield { 0% { opacity: 0; transform: scale(.7); } 100% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .duel-card, .duel-card[data-pose="hit"], .duel-hurt, .duel-shield { animation: none; }
+}

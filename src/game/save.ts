@@ -7,10 +7,45 @@ import { clamp } from "./format";
 import { mergeHeroes } from "./heroes";
 import { resolveLook } from "./look";
 import { STARTER_IDS } from "./powers.catalog";
+import { presetById } from "./presets";
 import type { Game } from "./types";
 
-const GAME_KEY = "superlife.save.v1";
+/** The original single save. Kept untouched after migration as a backup. */
+export const LEGACY_KEY = "superlife.save.v1";
 const SCORE_KEY = "superlife.scores.v1";
+/** Up to five lives at a time, one localStorage key each, plus a small index. */
+export const SLOT_COUNT = 5;
+export const LIVES_KEY = "superlife.lives.v1";
+export const slotKey = (slot: number) => `superlife.life.${slot}.v1`;
+
+export interface LivesIndex {
+  version: 1;
+  active: number | null;
+  lastPlayed: Record<string, number>;
+  /** True once the old single save has been copied into slot 1 (never copied twice). */
+  migrated: boolean;
+}
+
+export interface SlotSummary {
+  slot: number;
+  empty: boolean;
+  name?: string;
+  age?: number;
+  dead?: boolean;
+  score?: number;
+  mode?: string;
+  modeKind?: "mystery" | "legend" | "own" | "classic";
+  city?: string;
+  portrait?: number;
+  sex?: Game["sex"];
+  powerId?: Game["powerId"];
+  rank?: number;
+  mood?: number;
+  look?: Game["look"];
+  /** Legend preset id, so the card can show the painted portrait. */
+  preset?: string | null;
+  lastPlayed?: number;
+}
 
 export interface ScoreRow {
   name: string;
@@ -101,9 +136,17 @@ function pruneStarterBundle(game: Game) {
   if (Array.isArray(game.discovered)) game.discovered = game.discovered.filter((id) => !removed.has(id));
 }
 
-export function loadGame(): Game | null {
+function store(): Storage | null {
   try {
-    const raw = localStorage.getItem(GAME_KEY);
+    return typeof localStorage === "undefined" ? null : localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function readRaw(key: string): Game | null {
+  try {
+    const raw = store()?.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     return validGame(parsed) ? migrate(parsed) : null;
@@ -112,13 +155,153 @@ export function loadGame(): Game | null {
   }
 }
 
-export function saveGame(game: Game | null): void {
+const validSlot = (slot: unknown): slot is number => typeof slot === "number" && Number.isInteger(slot) && slot >= 1 && slot <= SLOT_COUNT;
+
+export function readIndex(): LivesIndex {
+  const blank: LivesIndex = { version: 1, active: null, lastPlayed: {}, migrated: false };
   try {
-    if (!game) localStorage.removeItem(GAME_KEY);
-    else localStorage.setItem(GAME_KEY, JSON.stringify(game));
+    const raw = store()?.getItem(LIVES_KEY);
+    if (!raw) return blank;
+    const parsed = JSON.parse(raw) as Partial<LivesIndex>;
+    return {
+      version: 1,
+      active: validSlot(parsed.active) ? parsed.active : null,
+      lastPlayed: parsed.lastPlayed && typeof parsed.lastPlayed === "object" ? { ...parsed.lastPlayed } : {},
+      migrated: parsed.migrated === true,
+    };
+  } catch {
+    return blank;
+  }
+}
+
+function writeIndex(index: LivesIndex): void {
+  try {
+    store()?.setItem(LIVES_KEY, JSON.stringify(index));
+  } catch {
+    /* quota — the lives themselves still saved */
+  }
+}
+
+/**
+ * One-time move from the single save to slot 1. The old key is left in place as a backup and
+ * the index remembers the move, so deleting slot 1 later never brings the old life back.
+ */
+export function migrateLegacySave(): LivesIndex {
+  const index = readIndex();
+  if (index.migrated) return index;
+  index.migrated = true;
+  const legacy = readRaw(LEGACY_KEY);
+  const taken = Array.from({ length: SLOT_COUNT }, (_, i) => i + 1).some((slot) => !!store()?.getItem(slotKey(slot)));
+  if (legacy && !taken) {
+    try {
+      store()?.setItem(slotKey(1), JSON.stringify(legacy));
+      index.active = 1;
+      index.lastPlayed["1"] = index.lastPlayed["1"] ?? Date.now();
+    } catch {
+      index.migrated = false;
+      return index;
+    }
+  }
+  writeIndex(index);
+  return index;
+}
+
+export function loadSlot(slot: number): Game | null {
+  return validSlot(slot) ? readRaw(slotKey(slot)) : null;
+}
+
+/** Writes one life into its own slot. Never touches any other slot. */
+export function saveSlot(slot: number, game: Game, now = Date.now()): void {
+  if (!validSlot(slot)) return;
+  try {
+    store()?.setItem(slotKey(slot), JSON.stringify(game));
   } catch {
     /* private mode / quota — keep playing in memory */
+    return;
   }
+  const index = readIndex();
+  index.lastPlayed[String(slot)] = now;
+  index.active = slot;
+  writeIndex(index);
+}
+
+export function deleteSlot(slot: number): void {
+  if (!validSlot(slot)) return;
+  try {
+    store()?.removeItem(slotKey(slot));
+  } catch {
+    /* ignore */
+  }
+  const index = readIndex();
+  delete index.lastPlayed[String(slot)];
+  if (index.active === slot) index.active = null;
+  writeIndex(index);
+}
+
+export function setActiveSlot(slot: number | null): void {
+  const index = readIndex();
+  index.active = validSlot(slot) ? slot : null;
+  writeIndex(index);
+}
+
+export function firstEmptySlot(): number | null {
+  for (let slot = 1; slot <= SLOT_COUNT; slot++) if (!store()?.getItem(slotKey(slot))) return slot;
+  return null;
+}
+
+export function modeOf(game: Game): { label: string; kind: NonNullable<SlotSummary["modeKind"]> } {
+  if (game.preset) {
+    const legend = presetById(game.preset);
+    return { label: legend ? `God Mode · ${legend.hero}` : "God Mode legend", kind: "legend" };
+  }
+  if (game.mode === "god") return { label: "Build your own", kind: "own" };
+  if (game.mode === "mystery") return { label: "Mystery", kind: "mystery" };
+  return { label: "Classic", kind: "classic" };
+}
+
+export function summarize(slot: number, game: Game | null, lastPlayed?: number): SlotSummary {
+  if (!game) return { slot, empty: true };
+  const mode = modeOf(game);
+  return {
+    slot,
+    empty: false,
+    name: game.name,
+    age: game.age,
+    dead: game.phase === "dead",
+    score: game.death?.score,
+    mode: mode.label,
+    modeKind: mode.kind,
+    city: game.city,
+    portrait: game.portrait,
+    sex: game.sex,
+    powerId: game.powerId,
+    rank: game.leagueRank,
+    mood: game.stats.happiness,
+    look: game.look,
+    preset: game.preset ?? null,
+    lastPlayed,
+  };
+}
+
+export function listSlots(): SlotSummary[] {
+  const index = readIndex();
+  return Array.from({ length: SLOT_COUNT }, (_, i) => summarize(i + 1, loadSlot(i + 1), index.lastPlayed[String(i + 1)]));
+}
+
+/** The life you were last playing (after the one-time migration). */
+export function loadGame(): Game | null {
+  const index = migrateLegacySave();
+  return index.active ? loadSlot(index.active) : null;
+}
+
+/** Saves into the given or active slot (else the first empty one; never over another life). Clearing just drops the active pointer. */
+export function saveGame(game: Game | null, slot?: number): void {
+  if (!game) {
+    setActiveSlot(null);
+    return;
+  }
+  const target = slot ?? readIndex().active ?? firstEmptySlot();
+  if (target) saveSlot(target, game);
 }
 
 export function loadScores(): ScoreRow[] {

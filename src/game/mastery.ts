@@ -58,14 +58,28 @@ export function nextMasteryExp(exp: number, generation: 0 | 1 | 2): number | nul
 }
 
 export function powerLevelCap(age: number): number {
-  if (age < 8) return 1.6;
-  if (age < 12) return 2.6;
-  if (age < 16) return 3.8;
-  if (age < 19) return 5.6;
+  // 2026-11-01 age-up pass: the young caps are lower (were 1.6 / 2.6 / 3.8 / 5.6) so a grinding teen
+  // doesn't arrive at 18 with most of an adult's power. Adults (19+) are unchanged.
+  if (age < 8) return 1.4;
+  if (age < 12) return 2.3;
+  if (age < 16) return 3.4;
+  if (age < 19) return 5;
   if (age < 26) return 6.8;
   if (age < 36) return 8;
   if (age < 50) return 8.9;
   return 9.5;
+}
+
+/** Before 18, power gains are trimmed by age and ease off as they near the age cap (diminishing returns). */
+export const YOUTH_GROWTH = { child: 0.6, early: 0.7, late: 0.85, floor: 0.3 } as const;
+
+export function youthGain(amount: number, before: number, age: number): number {
+  if (amount <= 0 || age >= 18) return amount;
+  const base = age < 12 ? YOUTH_GROWTH.child : age < 15 ? YOUTH_GROWTH.early : YOUTH_GROWTH.late;
+  const cap = powerLevelCap(age);
+  const fill = Math.min(1, Math.max(0, before) / cap);
+  const ease = Math.max(YOUTH_GROWTH.floor, 1 - fill * fill * 0.85);
+  return amount * base * ease;
 }
 
 export function trainCost(level: number, generation: 0 | 1 | 2): { health: number; money: number } {
@@ -92,7 +106,7 @@ export function trainExp(opts: {
   const base = opts.story ? 34 : opts.withHero ? 15 : 8;
   const genTax = opts.generation === 0 ? 1 : opts.generation === 1 ? 0.6 : 0.38;
   const diminish = 1 / (1 + Math.max(0, opts.level - 1) * 0.85);
-  const ageMod = opts.age < 12 ? 0.5 : opts.age < 18 ? 0.72 : 1;
+  const ageMod = opts.age < 12 ? 0.5 : opts.age < 18 ? 0.62 : 1;
   const bondMod = opts.withHero || opts.story ? Math.min(1.2, 0.75 + Math.max(0, opts.bond) / 180) : 1;
   return Math.max(2, Math.round(base * genTax * diminish * ageMod * bondMod));
 }

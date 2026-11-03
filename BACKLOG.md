@@ -1,11 +1,78 @@
 # SuperLife — Backlog
 
+## From the 2026-11-03 am pass
+
+- **Done:** illustrated vector cards for all 18 Arena villains (draft, sheet, order, reveal, intro, duel cards); life-sim "FIGHT!" boss card and header face for the same 18 rogues; breath log capitalised; moves re-verified across 6 saves (0 fails).
+- **Light Speed check: resolved.** It was a harness bug (wrong gift ids). Mixing fire control + super speed works from about age 12. **Owner's call:** is Light Speed that early OK, given the "early power in check" goal? One option is a soft mastery gate on mixes, e.g. both parents at mastery 2.
+- **Villain art, next steps:**
+  - (a) Raster painted portraits are still an option if an image source becomes available. The vector cards would then be the fallback.
+  - (b) About 31 legend rogues have no card yet (Mysterio, Vulture, Kraven, Riddler, Two-Face, Scarecrow, Penguin, Mandarin, Whiplash, Zemo, Namor and others). Add specs for them in `VillainArt.tsx` + `villainArt.data.ts`.
+  - (c) Inside a life-sim fight the rogue is still a generic figure. The duel stage could use the card, as Arena now does.
+- **Still open from the night pass:**
+  - Arena style drift.
+  - Online polish (choosing indicator, emotes).
+  - Whether Arena wins feed a life.
+  - Low goal: *family@4*.
+
+## From the 2026-11-02 night pass
+
+- **Done:** Arena online (pm) documented and verified two-phone; duel-card battle stage; right-card black silhouette fixed; armed move slot no longer moves under the finger; moves re-verified across 6 saves (0 fails).
+- **Painted villain art:** vector cards shipped 2026-11-03 for the 18 Arena villains; raster art still optional. Saved lives still use figures. Painted cards for Goblin, Joker, Ultron, etc. would make the duel cards match the legends.
+- **Light Speed check:** resolved 2026-11-03 (harness used wrong gift ids).
+- **Arena style drift:** a saved life's move can be a different style in Arena than in its life. Either show "Arena style" on the draft sheet or keep the life's styles and patch coverage another way.
+- **Online polish:** a rival "typing / choosing" indicator, an emote row, and a short sudden-death if both players time out.
+- **Owner's call:** should Arena wins feed back into a life (fame, a rival memory) or stay a separate mode?
+- **Low goals:** *friend@7* and *standing@7* still complete rarely.
+
+## From the 2026-11-02 am (arena) pass
+
+1. **Arena online (P1, next).** The plan, using only Grok Build public APIs:
+   - A `createServerFn` room API plus one `arena_rooms` table (via `src/lib/db.ts`), keyed by a 6-letter invite code. Columns: seed, two player ids, the action log, and updated_at.
+   - The host creates a room. The friend joins by code or link.
+   - Draft picks, locked orders and each turn's actions are appended to the log. Hidden info (orders, this turn's action) is stored server-side and only revealed once both sides have committed.
+   - Clients poll every 1–1.5 s, or use `P2PRoom` once an `/api/rtc` relay exists. Both replay the log through the pure engine, so there is no game state to sync.
+   - Reconnect = re-fetch the log and replay.
+   - A 30 s turn timer auto-plays "Catch a breath". Forfeit after 3 timeouts.
+   - Saved-life fighters travel as their `ArenaFighter` JSON, registered on both clients.
+2. **Arena polish ideas:**
+   - Painted villain portraits (only heroes have art, villains use Figure busts).
+   - Arena records per life (wins, a "champion" title).
+   - A rematch-with-same-teams button.
+   - Haptics and sound on hits.
+   - A short first-match tutorial overlay explaining tells and fakes.
+3. **Balance watch:**
+   - Spider-Man is 39% vs Pro but strongest vs Legend, because Sense only matters against bluffers.
+   - Sabretooth vs Hela/Bane is the most lopsided pair (about 90/10).
+   - If players find Legend unwinnable (a scripted hint-follower wins 13% of bouts), lower its `read` in `PERSONA`.
+4. **Design decision for the user:** should Arena results feed back into lives (fame, rivals), or stay a separate mode?
+
+## From the 2026-11-02 am pass
+
+1. **Fast age-up, five lives and slower kid power have shipped.** Open:
+   - Fame ends about 35% lower when skipping than by hand, because skips play no stunts or fights. Decide whether that is fine.
+   - Consider a "skip until something happens" option.
+   - When should the legacy `superlife.save.v1` backup be cleaned up?
+   - The boss win rate with perfect play dipped from 0.82 to 0.78. Watch it.
+   - Pre-existing lint error: `no-empty` at `src/lib/app-data/client.server.ts:281`. It is Grok Build plumbing, so it was left untouched.
+
+## From the 2026-11-01 night pass
+
+1. **Boss phases shipped** (gimmicks for all 49 rogues, plus generic bosses by power). Next:
+   - a second gimmick for Phase 3 on the final canon bosses (e.g. Ultron at 51+);
+   - authored gimmicks for the city-case villains in `arcs.ts` (they use the power fallback today).
+2. **Owner call:** are any gimmicks wrong for your version of a hero? They are one data row each in `VILLAIN_GIMMICKS` (`presets.ts`).
+3. **Thor's late bosses are walls.** Hela and Surtur at levels 9–10 (Surtur at 73 is about 3% at 60% play). Either cap the legend boss level near 8.5 or give Thor a guard move in canon.
+4. **Too easy:** Spider-Man, Hulk and Batman bosses are about 0.95 at 60% play. Consider a +10% boss health bump for those three, or a second gimmick.
+5. **Boss retries repeat.** Losing a case boss re-offers it the same month, up to 4–5 times. Add a one-month cooldown, or a "regroup" beat between tries.
+6. **Move catalog skew:** mastery-1 moves are 59 strike / 45 trick / 22 guard. Author more rank-1 guard moves so loadouts don't depend on street padding.
+7. **Fight injuries** (NEXT #3) are still open: a heavy boss loss should feed the collapse system.
+
 ## From the 2026-11-01 pm pass
 
 1. **Kin weight is 85%** (`KIN_WEIGHT` in `kin.ts`). Stretch lists in `presets.ts` are hand-picked. Owner: are any of them wrong for your version of a hero? Renaming or editing them is data only.
 2. **Off-kin chip in PowerLab.** Show a small "off-canon" tag on legend learn rows, so bending canon is a visible choice.
 3. **Chase next:** a villain-escape variant for arc "pursue" steps, and a flight skin (sky lanes) for flyers.
-4. **Villain gimmick phases** in boss duels are still open (NEXT #3).
+4. **Shipped 2026-11-01 night:** villain gimmick phases in boss duels.
 5. **Goals still soft:** friend@70s (1/2) when the circle has died off. Consider "Reconnect with 1 old friend" for the final phase.
 6. **Lint:** `src/lib/app-data/client.server.ts:281` has an empty block (`no-empty`). It is Grok Build plumbing, so I left it alone.
 
@@ -176,7 +243,7 @@ There are only three kinds today: `timing`, `pattern` and `duel`. Add these, eac
 7. **Stealth path:** a grid where you avoid vision cones. For invisibility and secret identity.
 8. **Press conference:** pick lines on a timer. For loud and celebrity, affecting fame.
 9. **Weight lift / hold:** press and hold within a zone. For strength and durability training.
-10. **Boss phases:** multi-phase duels with a gimmick per villain.
+10. **Shipped 2026-11-01 night:** boss phases, with multi-phase duels and a gimmick per villain.
 
 Also give each training action its own mini instead of only stat rolls, and add daily or seasonal challenge minis.
 

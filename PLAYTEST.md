@@ -1,5 +1,112 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-03 am): moves re-check, Arena vs Pro with a saved life, villain art
+
+**Life sims (3 seeds each, new combos):**
+- Builds: a **Dust Flats / celebrity-family** loud glory-hound mystery hero, a **Harbor Bay / military** Build-your-own **fire control + super speed** hero, plus **Black Panther** and **Superman** legends.
+- Lives ended at **70–86**. Mystery powers woke at **8, 10 and 13**; Superman wakes at 13 and Black Panther at 18 (canon ages).
+- Power counts: Dust Flats mystery 21–25, Harbor Build-your-own 23–24, Black Panther 12 (with his canon mixes), Superman in the expected band.
+- Goals nearly all complete. Low: *family@4* 2/4. Also below 100%: *holdfame* 7/8, *standing* 7/8, *quietfame* 3/4, *family* 5/9.
+- **Light Speed check (from the night backlog), resolved:** the night harness passed bad gift ids (`fire`, `speed`), so its "fire + speed" Build-your-own lives actually rolled random powers. With the right ids (`fire-control`, `super-speed`), mixing them into **Light Speed** works whenever the life is live and the power room is free, as early as **age 12**. The sim policy just never chooses to mix. Mixing has no mastery gate (`library(d).block` only).
+
+**Moves (P0), touch taps at 390×844:** mystery life before the reveal and just after it (age 9–10, one move), a celebrity-raised hero at 30, Black Panther at 25 (5 of 6 slots, with the street "Haymaker" in the auto slot as designed), Superman at 40, Build-your-own at 16. **0 fails, 0 console errors.**
+
+**Arena vs Pro:** a saved life (Lio Marsh, 30) + Spider-Man + Wonder Woman vs Sabretooth / Green Goblin / Cheetah. Lost the match in 27 turns. A mid-battle reload resumed. 0 errors.
+- **Main finding:** the villains were drawn as paper-doll figures (Goblin read as a green blob), which looked unfinished next to the painted heroes on the draft grid, sheet, reveal and duel cards. This pass fixes that.
+- After the fix, two villain drafts vs Rookie (Venom / Doc Ock / Loki and Hela / Goblin / Red Skull) also had 0 console errors.
+
+**Life-sim boss check:** Spider-Man at 23 vs Green Goblin, Iron Man at 25 vs Iron Monger (boss), Batman at 30 vs The Joker. The new boss card reveal shows, then hands off to the fight. 0 errors.
+- **Still rough:** inside the life-sim fight the rogue is still a generic figure (Goblin is a blue helmet figure). The header avatar now shows the real villain.
+
+## Night pass (2026-11-02 night): moves re-check, Arena online + vs-AI end to end, new builds
+
+**Life sims (3 seeds each, new combos):**
+- Builds: a **Stacks / scientific-family** mystery hero, a **Crown / street** mystery hero, a **Build-your-own Metro / rural fire + speed** hero, plus **Captain America** and **The Flash** legends.
+- Lives ended at **70–91**. Mystery powers woke at **8–13**; Cap wakes at 21, Flash at 25 (canon ages).
+- Goals mostly complete. Low: *friend@7* 1/2 and *standing@7* 2/5.
+- The fire + speed Build-your-own never combined into **Light Speed** in 3 lives. The combo likely needs mastery the sim policy doesn't reach; worth a check.
+- Cap and Flash picked up off-kin powers (fire control, invisibility) at the expected ~15% rate.
+
+**Moves (P0), touch taps at 390×844:** mystery life before the reveal (age 7), just after the reveal (9, one move), a street-raised hero at 30 (full swaps), Captain America at 22 (5 moves), Flash at 40, Build-your-own at 17. Arm-slot→move, arm-move→slot, swaps both ways, a second tap disarms, a street slot with nothing to place stays put, a new power fills the 6th slot and survives reload. **0 fails.** One rough edge found and fixed: the armed slot bobbed under the finger.
+
+**Arena vs-AI:** Rookie with a saved 30-year-old life won 2–0 in 19 turns; Pro lost 1–2; Legend (Flash at 40) lost; Rookie with a villain draft won. Mid-battle reload resumed every time. 0 console errors.
+
+**Arena online (two phones):** create room → join by link → draft → secret orders → reveal → battle. The guest reloaded mid-battle and resumed; the guest idled 33s and got an auto breath with a timeout pip; round-over ready sync worked; results showed VICTORY / DEFEAT on opposite phones; rematch went back to the draft; host leaving showed a forfeit on the guest. 0 console errors.
+
+**Findings:** the paper-doll battle stage looked unfinished next to the painted draft cards (replaced with duel cards). Villains still have no painted art. A saved life's move can show a different style in Arena than in the life sim (Arena re-prices kits to cover all three styles).
+
+## Arena pass (2026-11-02 am, arena): versus mode, moves check, a new build
+
+**Life sims (3 seeds each, new combos):**
+- Policies:
+  - a **Harbor Bay foster** mystery hero;
+  - a **Wonder Woman** legend run with heavy drilling;
+  - a **Build-your-own** life.
+- Lives ended at **70–82**.
+- Mystery powers manifested at **8 and 11**.
+- Power counts:
+  - Harbor mystery lives reached 22–23 powers.
+  - Build-your-own reached 21–23.
+  - Wonder Woman reached her **12-power canon cap**.
+- Goals that rarely complete: *standing* 0/4, *dark karma* 1/4, *quiet fame* 0/2 and *infamy* 0/1. These are candidates for clearer hints or easier routes.
+- The WW save at 30 had 10 HP because the policy drilled non-stop. That is policy, not a bug.
+
+**Moves (P0), touch taps at 390×844:**
+- Saves tested:
+  - a mystery life before the reveal (shows the "hasn't woken yet" state);
+  - just after the reveal (1 move, with street moves filling the rest);
+  - a mystery life at 28;
+  - Wonder Woman at 30;
+  - Build-your-own at 15.
+- Checks:
+  - arm slot → pick move;
+  - arm move → pick slot;
+  - reorder;
+  - 12 rapid swaps;
+  - double-tap;
+  - locked-move tap (explains the unlock rank);
+  - no jump under the finger after scrolling;
+  - reload persistence.
+- **0 failures.** The only glitch seen was visual: slot outlines peeking above the armed sticky dock. Fixed.
+
+**Arena: 4 full vs-AI matches through the UI with Playwright, plus engine sims:**
+- My first pro match was lost **0–2** with Wren (my own life) and Spider-Man.
+- Ladder sims then showed a **hint-following player won only 3% of bouts against Rookie**. The AI read my true tells and bluffed constantly. That was far too hard.
+- Fixed with per-level personas: Rookie rarely bluffs and barely reads tells, Pro bluffs and reads a little, Legend feints and reads.
+- After the fix, three Rookie matches gave **2–1, 2–0 and 2–1 wins**. The scripted ladder is now Rookie 74% / Pro 46% / Legend 13%.
+- Reloading mid-battle resumes the exact turn. No console errors.
+- **Fun:** the lead/tell/fake loop gives every turn a real decision. In one run a faked strike tell drew Hulk into a guard and a trick landed on it, which is exactly the read-and-bluff moment the mode is for. Spider-Man reading through a Legend's feints is a nice "counter-pick" moment.
+- **Rough edges:**
+  - Villains are Figure busts, not painted art.
+  - The battle stage figures are the life-sim's paper-doll style.
+
+## Night pass (2026-11-01 night): the fight numbers, and bosses that were just bigger bars
+
+**What I played:**
+- Engine sims, 3 seeds each:
+  - a **NYC skeptical / loud / idealistic** mystery hero;
+  - a **Metro legacy / secret / thrill** mystery hero;
+  - Batman, Iron Man, Hulk, Spider-Man, Flash and Thor.
+- Every duel board was dumped and replayed with a smart, tell-reading policy (`/workspace/playtest/duelsim.ts`) at perfect, 60% and random play.
+- At 390×844: boss duels against Iron Monger (25), Two-Face (30), Bane (38), Doc Ock (28), Venom (33), Ultron (51) and Abomination (33).
+
+**Findings (before):**
+- **Combat did not scale.** Player moves sat at 4–6 power from 11 to 70, while foes reached 10–17. Perfect-play win rates: mystery hero 21%, Iron Man 40%, bosses 34%. Unpowered Batman won 100%, because his legacy kit used foe-scale numbers.
+- **Missing styles.** Mastery-1 moves are mostly strike (59 strike, 45 trick, 22 guard). Thor's and Iron Man's six had **no guard**, so a strike tell had no answer.
+- **Generic case bosses in legend lives:** Iron Man vs "Cinder Mallory", "Static Bishop", "Second Skin".
+- **Bosses had no identity.** A boss was the same rock-paper-scissors loop with a bigger health bar.
+- **Female rogues drawn as men.** Hela, Cheetah and Lady Deathstrike defaulted to male figures.
+- **Boss retries repeat.** One case boss came up 4–5 times at the same age when the player keeps losing. Not changed; see BACKLOG.
+
+**After:**
+- **Win rates** (perfect / 60% / random): regular fights 0.96 / ~0.8 / ~0.4; bosses 0.82 / 0.63 / 0.29. Per gimmick at perfect play: 0.89 (feint) to 1.00.
+- **Outliers:** Thor's late bosses (Hela, Surtur at level 9–10) are still the hardest. Spider-Man, Hulk and Batman sit around 0.95 at 60% play.
+- **At 390×844:**
+  - the Phase 2 card reads cleanly over a blurred arena;
+  - the gimmick strip fits between the bars and the arena (the arena is 24px shorter on boss fights, so all 6 cards stay visible);
+  - Bane's charge turn glows red with "Charging!", and Iron Monger's plates show as pips by his figure.
+- Screenshots: `superlife-shots/2026-11-01-night/before/` and `.../after/`.
+
 ## Afternoon pass (2026-11-01 pm): grown-up mystery lives and legends in their 30s
 
 **What I played:**

@@ -219,17 +219,41 @@ export function toDuel(def: MoveDef, level = 1): DuelMove {
   };
 }
 
-export function equippedMoves(game: Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp">): DuelMove[] {
+type FightGame = Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp"> & { stats?: { powerLevel: number } };
+
+/**
+ * How much your training adds to a move in a real fight: power level (the slow lifetime grind, soft-capped
+ * by age) plus that power's mastery rank. Street moves get half the power-level part and no mastery.
+ * Without this, a 50-year-old hero swung the same 4–6 point moves as a 12-year-old against foes that scale.
+ */
+export function moveEdge(game: { stats?: { powerLevel: number }; mastery?: Record<string, number> }, powerId?: string): number {
+  const pl = Math.max(0, game.stats?.powerLevel ?? 0);
+  if (!powerId) return Math.round(pl * 0.35);
+  const power = getPower(powerId);
+  const rank = masteryLevel(game.mastery?.[powerId] ?? 0, power?.generation ?? 0);
+  return Math.round(pl * 0.55) + Math.max(0, rank - 1);
+}
+
+export function equippedMoves(game: FightGame): DuelMove[] {
   const picked = (game.loadout ?? []).map((id) => moveById(id)).filter((def): def is MoveDef => !!def && moveUnlocked(game, def));
-  return picked.slice(0, 6).map((def) => toDuel(def, moveLevel(game.moveExp?.[def.id] ?? 0)));
+  return picked.slice(0, 6).map((def) => {
+    const move = toDuel(def, moveLevel(game.moveExp?.[def.id] ?? 0));
+    const edge = game.stats ? moveEdge(game, def.powerId) : 0;
+    return edge ? { ...move, power: move.power + edge } : move;
+  });
 }
 
 /** The six a fight actually uses: the equipped moves, padded with street moves so it is always exactly six. */
-export function battleMoves(game: Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp">): DuelMove[] {
+export function battleMoves(game: FightGame): DuelMove[] {
   const picked = equippedMoves(game).slice(0, MOVESET_SIZE);
-  for (const move of STREET_MOVES) {
-    if (picked.length >= MOVESET_SIZE) break;
-    picked.push({ ...move });
+  const edge = game.stats ? moveEdge(game) : 0;
+  // Street padding answers whatever style the kit is missing first, so every tell has a reply.
+  const spare = [...STREET_MOVES];
+  while (picked.length < MOVESET_SIZE && spare.length) {
+    const styles = new Set(picked.map((move) => move.style));
+    const index = Math.max(0, spare.findIndex((move) => !styles.has(move.style)));
+    const move = spare.splice(index, 1)[0]!;
+    picked.push({ ...move, power: move.power + edge });
   }
   return picked;
 }
@@ -246,14 +270,28 @@ export function fillLoadout(game: Game): void {
     })
     .slice(0, MOVESET_SIZE);
   const have = new Set(game.loadout);
-  for (const entry of knownMoves(game)) {
-    if (game.loadout.length >= MOVESET_SIZE) break;
-    if (!entry.unlocked || have.has(entry.def.id)) continue;
-    game.loadout.push(entry.def.id);
-    have.add(entry.def.id);
+  // Auto top-up covers the three styles first (strike, guard, trick), so every tell has an answer.
+  // A slot the player filled by hand is never touched.
+  const pool = knownMoves(game).filter((entry) => entry.unlocked && !have.has(entry.def.id)).map((entry) => entry.def);
+  while (game.loadout.length < MOVESET_SIZE && pool.length) {
+    const styles = new Set(game.loadout.map((id) => moveById(id)?.style));
+    const index = Math.max(0, pool.findIndex((def) => !styles.has(def.style)));
+    const def = pool.splice(index, 1)[0]!;
+    game.loadout.push(def.id);
   }
 }
 
+/** Unlocked moves that are not in the six, in book order: what a dropped slot can be refilled from. */
+function benchMoves(game: Game, skip: readonly string[]): MoveDef[] {
+  const have = new Set([...(game.loadout ?? []), ...skip]);
+  return knownMoves(game).filter((entry) => entry.unlocked && !have.has(entry.def.id)).map((entry) => entry.def);
+}
+
+/**
+ * Tap-to-toggle, kept for old buttons and saved routes. The six stays exactly six whenever you know six:
+ * dropping a move swaps the next bench move into the same slot (never the one you just dropped), and when
+ * every move you know is already in, a drop is refused instead of leaving a hole that the next tap refills.
+ */
 export function toggleLoadout(game: Game, moveId: string): string {
   const def = moveById(moveId);
   if (!def) return "That move isn't in the book.";
@@ -262,11 +300,54 @@ export function toggleLoadout(game: Game, moveId: string): string {
     return `${def.name} wants ${power?.name ?? "that power"} at mastery ${def.minMastery}.`;
   }
   if (!Array.isArray(game.loadout)) game.loadout = [];
-  if (game.loadout.includes(moveId)) {
-    game.loadout = game.loadout.filter((id) => id !== moveId);
-    return `${def.name} leaves the six.`;
+  const at = game.loadout.indexOf(moveId);
+  if (at >= 0) {
+    const next = benchMoves(game, [moveId])[0];
+    if (!next) return `Every move you know is already in the six. Unlock another to swap ${def.name} out.`;
+    game.loadout = game.loadout.map((id, index) => (index === at ? next.id : id));
+    return `${def.name} leaves the six. ${next.name} takes slot ${at + 1}.`;
   }
-  if (game.loadout.length >= MOVESET_SIZE) return "Six moves already. Drop one first.";
+  if (game.loadout.length >= MOVESET_SIZE) return "Six moves already. Pick a slot to swap it into.";
   game.loadout = [...game.loadout, moveId];
-  return `${def.name} takes a slot.`;
+  return `${def.name} takes slot ${game.loadout.length}.`;
+}
+
+export interface SlotResult {
+  ok: boolean;
+  line: string;
+}
+
+/**
+ * Put a move into one slot in a single step, so a swap can never be half-done.
+ * - A bench move replaces whatever is in that slot (or fills the next open slot).
+ * - A move already in the six trades places with the slot's move, so you can reorder.
+ * The six never shrinks: a slot is only ever replaced, never emptied.
+ */
+export function placeInSlot(game: Game, slot: number, moveId: string): SlotResult {
+  const def = moveById(moveId);
+  if (!def) return { ok: false, line: "That move isn't in the book." };
+  if (!moveUnlocked(game, def)) {
+    const power = getPower(def.powerId);
+    return { ok: false, line: `${def.name} wants ${power?.name ?? "that power"} at mastery ${def.minMastery}.` };
+  }
+  if (!Number.isInteger(slot) || slot < 0 || slot >= MOVESET_SIZE) return { ok: false, line: "There are only six slots." };
+  if (!Array.isArray(game.loadout)) game.loadout = [];
+  const loadout = [...game.loadout];
+  const from = loadout.indexOf(moveId);
+  // Slots past the filled ones collapse onto the next open slot so there are never gaps.
+  const target = Math.min(slot, from >= 0 ? loadout.length - 1 : loadout.length);
+  if (from === target) return { ok: true, line: `${def.name} is already in slot ${target + 1}.` };
+  if (from >= 0) {
+    const other = loadout[target]!;
+    loadout[target] = moveId;
+    loadout[from] = other;
+    game.loadout = loadout;
+    const otherName = moveById(other)?.name ?? "That move";
+    return { ok: true, line: `${def.name} moves to slot ${target + 1}. ${otherName} takes slot ${from + 1}.` };
+  }
+  const out = loadout[target];
+  loadout[target] = moveId;
+  game.loadout = loadout.slice(0, MOVESET_SIZE);
+  const outName = out ? moveById(out)?.name : null;
+  return { ok: true, line: outName ? `${def.name} in, ${outName} out. Slot ${target + 1}.` : `${def.name} takes slot ${target + 1}.` };
 }
