@@ -1,5 +1,23 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-03 am): moves re-check, Arena vs Pro with a saved life, villain art
+
+**Life sims (3 seeds each, new combos):**
+- Builds: a **Dust Flats / celebrity-family** loud glory-hound mystery hero, a **Harbor Bay / military** Build-your-own **fire control + super speed** hero, plus **Black Panther** and **Superman** legends.
+- Lives ended at **70–86**. Mystery powers woke at **8, 10 and 13**; Superman wakes at 13 and Black Panther at 18 (canon ages).
+- Power counts: Dust Flats mystery 21–25, Harbor Build-your-own 23–24, Black Panther 12 (with his canon mixes), Superman in the expected band.
+- Goals nearly all complete. Low: *family@4* 2/4. Also below 100%: *holdfame* 7/8, *standing* 7/8, *quietfame* 3/4, *family* 5/9.
+- **Light Speed check (from the night backlog), resolved:** the night harness passed bad gift ids (`fire`, `speed`), so its "fire + speed" Build-your-own lives actually rolled random powers. With the right ids (`fire-control`, `super-speed`), mixing them into **Light Speed** works whenever the life is live and the power room is free, as early as **age 12**. The sim policy just never chooses to mix. Mixing has no mastery gate (`library(d).block` only).
+
+**Moves (P0), touch taps at 390×844:** mystery life before the reveal and just after it (age 9–10, one move), a celebrity-raised hero at 30, Black Panther at 25 (5 of 6 slots, with the street "Haymaker" in the auto slot as designed), Superman at 40, Build-your-own at 16. **0 fails, 0 console errors.**
+
+**Arena vs Pro:** a saved life (Lio Marsh, 30) + Spider-Man + Wonder Woman vs Sabretooth / Green Goblin / Cheetah. Lost the match in 27 turns. A mid-battle reload resumed. 0 errors.
+- **Main finding:** the villains were drawn as paper-doll figures (Goblin read as a green blob), which looked unfinished next to the painted heroes on the draft grid, sheet, reveal and duel cards. This pass fixes that.
+- After the fix, two villain drafts vs Rookie (Venom / Doc Ock / Loki and Hela / Goblin / Red Skull) also had 0 console errors.
+
+**Life-sim boss check:** Spider-Man at 23 vs Green Goblin, Iron Man at 25 vs Iron Monger (boss), Batman at 30 vs The Joker. The new boss card reveal shows, then hands off to the fight. 0 errors.
+- **Still rough:** inside the life-sim fight the rogue is still a generic figure (Goblin is a blue helmet figure). The header avatar now shows the real villain.
+
 ## Night pass (2026-11-02 night): moves re-check, Arena online + vs-AI end to end, new builds
 
 **Life sims (3 seeds each, new combos):**

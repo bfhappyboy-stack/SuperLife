@@ -1,10 +1,24 @@
 # SuperLife — Backlog
 
+## From the 2026-11-03 am pass
+
+- **Done:** illustrated vector cards for all 18 Arena villains (draft, sheet, order, reveal, intro, duel cards); life-sim "FIGHT!" boss card and header face for the same 18 rogues; breath log capitalised; moves re-verified across 6 saves (0 fails).
+- **Light Speed check: resolved.** It was a harness bug (wrong gift ids). Mixing fire control + super speed works from about age 12. **Owner's call:** is Light Speed that early OK, given the "early power in check" goal? One option is a soft mastery gate on mixes, e.g. both parents at mastery 2.
+- **Villain art, next steps:**
+  - (a) Raster painted portraits are still an option if an image source becomes available. The vector cards would then be the fallback.
+  - (b) About 31 legend rogues have no card yet (Mysterio, Vulture, Kraven, Riddler, Two-Face, Scarecrow, Penguin, Mandarin, Whiplash, Zemo, Namor and others). Add specs for them in `VillainArt.tsx` + `villainArt.data.ts`.
+  - (c) Inside a life-sim fight the rogue is still a generic figure. The duel stage could use the card, as Arena now does.
+- **Still open from the night pass:**
+  - Arena style drift.
+  - Online polish (choosing indicator, emotes).
+  - Whether Arena wins feed a life.
+  - Low goal: *family@4*.
+
 ## From the 2026-11-02 night pass
 
 - **Done:** Arena online (pm) documented and verified two-phone; duel-card battle stage; right-card black silhouette fixed; armed move slot no longer moves under the finger; moves re-verified across 6 saves (0 fails).
-- **Painted villain art (needs an image source):** 18 Arena villains and saved lives still use figures. Painted cards for Goblin, Joker, Ultron, etc. would make the duel cards match the legends.
-- **Light Speed check:** fire + speed Build-your-own lives never combined in 3 sims. Confirm the mastery gate is reachable in a normal life, or surface a hint.
+- **Painted villain art:** vector cards shipped 2026-11-03 for the 18 Arena villains; raster art still optional. Saved lives still use figures. Painted cards for Goblin, Joker, Ultron, etc. would make the duel cards match the legends.
+- **Light Speed check:** resolved 2026-11-03 (harness used wrong gift ids).
 - **Arena style drift:** a saved life's move can be a different style in Arena than in its life. Either show "Arena style" on the draft sheet or keep the life's styles and patch coverage another way.
 - **Online polish:** a rival "typing / choosing" indicator, an emote row, and a short sudden-death if both players time out.
 - **Owner's call:** should Arena wins feed back into a life (fame, a rival memory) or stay a separate mode?

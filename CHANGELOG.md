@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-11-03 (am): illustrated villain cards, life-sim boss reveal (`devbot/2026-11-03-am`)
+
+This branch stacks on `devbot/2026-11-02-night` (head 6f82bef), so it also carries the Nov 1 night and all three Nov 2 passes.
+
+### Illustrated villain cards (`VillainArt.tsx`, `villainArt.data.ts`, `Arena.tsx`)
+
+- **Why:** in Arena the 11 legends had painted portraits, but all 18 villains were paper-doll figures, so half the draft grid looked unfinished. No image-generation tool is connected, so these are hand-drawn vector busts. They're sharp at any size and add no download weight.
+- **What:** one data-driven spec per villain (suit, skin, rim light, eye shape and glow, silhouette pieces) over a shared bust. Some examples:
+  - Goblin: pointed hood, yellow slit eyes and a pumpkin bomb.
+  - Venom: white eye patches and fangs.
+  - Doc Ock: four tentacles.
+  - Loki: horns.
+  - Hela: a spiked crown.
+  - Ultron: a chrome face plate.
+  - Doomsday: bone spurs.
+  - Red Skull: a red skull.
+  - Killmonger: a fanged mask.
+  - Reverse-Flash: yellow with a lightning bolt.
+- **Backdrops:** each villain gets its own skyline, embers and swirl, seeded from its id so it never changes.
+- **Where:** the draft grid, the fighter sheet, order slots, the reveal, the round intro and the duel cards. Each view crops the bust to fit: `card`, `head`, `wide` or `tall`. Saved lives keep their figure.
+- The spec table is typed on `VILLAIN_ART_IDS`, so adding an Arena villain without art fails the typecheck. A new test (`villainart.test.ts`) also checks the roster.
+
+### Life-sim boss reveal (`Duel.tsx`, `styles.css`)
+
+- When a fight is against a named rogue with art (Green Goblin, The Joker, Iron Monger, Abomination, and all 18 others), the fight header shows the villain's face. The intro becomes a **"FIGHT!" card**: the villain card slides in tilted, in the foe's colour, and holds for 1.5s. With reduced motion on, it skips the slide.
+- Other foes keep the old intro.
+
+### Fixes
+
+- The Arena battle log said "a breath beats Necroswords" in lower case. It now says "Your breath…" / "Hela's breath…".
+
+### Playtest notes
+
+- The night backlog's "Light Speed never combines" came from bad gift ids in the playtest harness, not the game (see PLAYTEST).
+
 ## 2026-11-02 (pm + night): Arena online, duel-card battle stage, moves re-check (`devbot/2026-11-02-pm` → `devbot/2026-11-02-night`)
 
 This branch stacks on `devbot/2026-11-02-pm` (head 2e0fac8). The pm pass pushed its online code but no docs, so this entry covers both.
