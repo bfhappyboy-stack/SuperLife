@@ -25,8 +25,9 @@ import {
 } from "./data";
 import { pickEvent, type EventDef, type MiniTemplate } from "./events";
 import { clamp, firstName, money, whenLabel } from "./format";
-import { basePowers, getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
+import { basePowers, type CatalogPower, getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { kinOrder, kinPool, legendFits } from "./kin";
+import { MIX_AGE, mentorBondGain, mentorBoost, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, mixOpen } from "./mentors";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
 import { ELEMENTS, elementOfLegacy, elementOfPower } from "./elements";
@@ -1120,7 +1121,7 @@ function monthlyBody(d: Game, banners: string[]) {
 
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "omened" || key === "mentored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (key === "rested" || key === "omened" || key === "mentored" || key === "tutored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
   }
 }
 
@@ -1873,6 +1874,95 @@ function markArch(d: Game, personId?: string): Person | null {
   return foe;
 }
 
+/** Land a mixed power in the book: story card, small power bump. `extra` is appended to the card (mentor lessons). */
+function braidInto(d: Game, left: string, power: CatalogPower, extra: string): string {
+  const name = unlockCombo(d, power.id);
+  const deltas: Delta[] = [];
+  applyEffects(d, { powerLevel: power.generation === 0 ? 0.04 : power.generation === 2 ? 0.1 : 0.06, fame: 1, happiness: 2 }, deltas);
+  if (!d.powerId && d.age >= 8) {
+    const legacy = legacyFromCombo(left) ?? legacyFromCombo(power.id);
+    if (legacy) {
+      d.powerId = legacy;
+      d.powerless = false;
+      d.stats.powerLevel = Math.max(d.stats.powerLevel, 1.3);
+    }
+  }
+  setStory(d, `${name || power.name}. ${power.tierName} tier, generation ${power.generation}. ${power.description} A basic still hits softer than this.${extra}`, deltas, [`Braid: ${power.name}`], "major");
+  peaks(d);
+  return name;
+}
+
+/** The 15th birthday (or the first birthday after it on an old save): mixing opens and a mentor finds you. */
+function meetMentor(d: Game, banners: string[]) {
+  if (d.age < MIX_AGE || d.mentor || d.phase === "dead") return;
+  const mentor = mentorFor(d);
+  d.mentor = { id: mentor.id, since: d.age, lessons: 0, bond: 12 };
+  const first = d.age === MIX_AGE;
+  banners.push(first ? `You're ${MIX_AGE}. Power mixing unlocks, and ${mentor.name} wants to train you.` : `${mentor.name} offers to train you.`);
+  pushHistory(d, `${mentor.hello} ${mentor.name} becomes your mentor${first ? ", and the braid book opens" : ""}.`, "major");
+}
+
+/** One mentor lesson a month: a guided braid, a hard drill, or a study night. */
+function tutorLesson(game: Game, d: Game, kind: string): Game {
+  const state = d.mentor;
+  const mentor = mentorById(state?.id);
+  if (!state || !mentor || mixLock(d) || d.flags.tutored || noTime(d, true) || d.phase !== "live") return game;
+  const boost = mentorBoost(state.bond);
+  if (kind === "braid") {
+    const pick = mentorBraid(d);
+    if (!pick || library(d).block) return game;
+    spend(d);
+    d.flags.tutored = 1;
+    state.lessons += 1;
+    state.bond = clamp(state.bond + mentorBondGain(state.bond), 0, 100);
+    const name = braidInto(d, pick.left.id, pick.result, ` ${mentor.name} talks you through it: ${pick.left.name} into ${pick.right.name}.`);
+    // A guided braid lands a little drilled: the mentor's head start.
+    const drilled = name ? grantMastery(d, pick.result.id, Math.round(10 * boost)) : "";
+    if (drilled && d.card) d.card = { ...d.card, body: `${d.card.body}${drilled}` };
+    return d;
+  }
+  if (kind === "drill") {
+    const powerId = focusId(d);
+    const trained = getPower(powerId);
+    if (!trained || d.stats.health < 12) return game;
+    spend(d);
+    d.flags.tutored = 1;
+    state.lessons += 1;
+    state.bond = clamp(state.bond + mentorBondGain(state.bond), 0, 100);
+    const level = masteryLevel(d.mastery?.[powerId] ?? 0, trained.generation);
+    const exp = Math.round(trainExp({ level, generation: trained.generation, age: d.age, withHero: true, story: false, bond: state.bond }) * boost);
+    const deltas: Delta[] = [];
+    applyEffects(d, { health: -3, happiness: 1, powerLevel: 0.03 }, deltas);
+    const drilled = grantMastery(d, powerId, exp);
+    setStory(d, `${mentor.name} runs you through ${trained.name} until the form is boring, which is the point.${drilled}`, deltas, [`Lesson: ${trained.name}`]);
+    peaks(d);
+    return d;
+  }
+  if (kind === "study") {
+    spend(d);
+    d.flags.tutored = 1;
+    state.lessons += 1;
+    state.bond = clamp(state.bond + mentorBondGain(state.bond) + 1, 0, 100);
+    const recipe = mentorRecipe(d);
+    const power = recipe ? getPower(recipe) : null;
+    if (power) discoverPower(d, power.id);
+    const deltas: Delta[] = [];
+    applyEffects(d, { smarts: 2, happiness: 1 }, deltas);
+    const parents = power?.ingredients.map((id) => getPower(id)?.name).filter(Boolean) ?? [];
+    setStory(
+      d,
+      power
+        ? `${mentor.name} draws a recipe on a napkin: ${parents.join(" + ")} makes ${power.name}. It's in your book now.`
+        : `${mentor.name} talks theory all evening. Your book has nothing new to learn yet, but your head does.`,
+      deltas,
+      power ? [`Recipe: ${power.name}`] : [],
+    );
+    peaks(d);
+    return d;
+  }
+  return game;
+}
+
 function discoverPower(d: Game, id: string | null | undefined) {
   if (!id || !getPower(id)) return;
   if (!Array.isArray(d.discovered)) d.discovered = [];
@@ -2206,6 +2296,7 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   let banners: string[] = [];
   if (birthday) {
     banners = openYear(d);
+    meetMentor(d, banners);
     if (turnChapter(d)) banners.push(`Chapter ${(d.chapters?.length ?? 1)} begins: ${d.chapters?.[d.chapters.length - 1]?.title ?? "a new decade"}.`);
     if (d.stats.health <= 0) {
       collapse(d, "Your health gives out before the year can even pick a fight.");
@@ -2538,6 +2629,8 @@ export function freshen(game: Game): Game {
     if (!game.crew.motto) game.crew.motto = "No real names.";
   }
   ensureProgress(game);
+  // Saves from before the mentor pass: anyone already 15+ gets their mentor on load, quietly.
+  if (game.mentor === undefined && game.age >= MIX_AGE && game.phase !== "dead") meetMentor(game, []);
   return game;
 }
 
@@ -3349,32 +3442,16 @@ export function act(game: Game, id: string): Game {
 
   if (id.startsWith("mix|")) {
     const [, left, right] = id.split("|");
-    if (!left || !right || noTime(d, true)) return game;
+    if (!left || !right || noTime(d, true) || mixLock(d)) return game;
     const attempt = mix(left, right, d.unlockedPowers ?? []);
     if (!attempt.ok) return game;
     if (!(d.unlockedPowers ?? []).includes(attempt.power.id) && library(d).block) return game;
     spend(d);
-    const name = unlockCombo(d, attempt.power.id);
-    const deltas: Delta[] = [];
-    applyEffects(d, { powerLevel: attempt.power.generation === 0 ? 0.04 : attempt.power.generation === 2 ? 0.1 : 0.06, fame: 1, happiness: 2 }, deltas);
-    if (!d.powerId && d.age >= 8) {
-      const legacy = legacyFromCombo(left) ?? legacyFromCombo(attempt.power.id);
-      if (legacy) {
-        d.powerId = legacy;
-        d.powerless = false;
-        d.stats.powerLevel = Math.max(d.stats.powerLevel, 1.3);
-      }
-    }
-    setStory(
-      d,
-      `${name || attempt.power.name}. ${attempt.power.tierName} tier, generation ${attempt.power.generation}. ${attempt.power.description} A basic still hits softer than this.`,
-      deltas,
-      [`Braid: ${attempt.power.name}`],
-      "major",
-    );
-    peaks(d);
+    braidInto(d, left, attempt.power, "");
     return d;
   }
+
+  if (id.startsWith("tutor|")) return tutorLesson(game, d, id.slice(6));
 
   if (id === "seek-hero") {
     if (d.age < 10 || noTime(d, true)) return game;
@@ -3715,7 +3792,8 @@ export function act(game: Game, id: string): Game {
   if (id.startsWith("herotrain|")) {
     const hero = d.heroes.find((item) => item.id === id.slice(10) && item.met);
     if (!hero || hero.relationship < 36 || noTime(d, true)) return game;
-    const options = possibleMixes(d.unlockedPowers ?? []).filter((item) => hero.unlocked.includes(item.left.id) || hero.unlocked.includes(item.right.id));
+    // Braiding with a hero waits for 15 like every other mix (owner rule, mentors.ts).
+    const options = mixOpen(d) ? possibleMixes(d.unlockedPowers ?? []).filter((item) => hero.unlocked.includes(item.left.id) || hero.unlocked.includes(item.right.id)) : [];
     const taught = options[0];
     const bases = teachFrom(d, hero.unlocked);
     const base = bases[0];
