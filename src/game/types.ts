@@ -405,6 +405,10 @@ export interface Game {
   hiddenGift?: string | null;
   /** God Mode legend id (see presets.ts). */
   preset?: string | null;
+  /** The mentor who found you at 15 (mentors.ts). Missing before 15 and on old saves until their next birthday. */
+  mentor?: MentorState | null;
+  /** Arena purses paid into this life (anti-farm ledger). */
+  arenaPurse?: ArenaPurseLedger;
   /** The big reveal waiting to play. UI-only, cleared on dismiss. */
   reveal?: RevealNotice | null;
   /** Strange signs noticed before the power woke, oldest first. */
@@ -424,9 +428,9 @@ export interface Habits {
   mini: number;
 }
 
-export type SkipSpan = "season" | "year";
+export type SkipSpan = "season" | "year" | "fifteen";
 
-export type SkipStopKind = "reveal" | "story" | "chapter" | "case" | "event" | "fight" | "health" | "bond" | "death";
+export type SkipStopKind = "reveal" | "story" | "chapter" | "case" | "event" | "fight" | "health" | "bond" | "death" | "mentor";
 
 export interface SkipReport {
   span: SkipSpan;
@@ -467,4 +471,25 @@ export interface ActionItem {
   detail?: string;
   disabled?: string;
   accent?: boolean;
+}
+
+export interface MentorState {
+  id: string;
+  /** Age they found you. */
+  since: number;
+  lessons: number;
+  /** 0–100, grows with diminishing returns. Better lessons as it rises. */
+  bond: number;
+}
+
+export interface ArenaPurseLedger {
+  /** Local calendar day (YYYY-MM-DD) the count below belongs to. */
+  day: string;
+  /** Matches paid today (diminishing returns, daily cap). */
+  paidToday: number;
+  /** Recent match keys, so a reload never pays twice. */
+  keys: string[];
+  total: number;
+  wins: number;
+  matches: number;
 }
