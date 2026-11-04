@@ -1,11 +1,14 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Portrait } from "@/components/game/Portrait";
-import { Award, Check, Dumbbell, MessageCircle, Search, Shield, Skull, Swords, type LucideIcon } from "lucide-react";
+import { Award, BookOpen, Check, Crown, Dumbbell, Eye, FastForward, Flame, GraduationCap, Leaf, Lock, MessageCircle, Search, Shield, Skull, Star, Swords, Wrench, Zap, type LucideIcon } from "lucide-react";
 import { ElementIcon } from "@/components/game/Vfx";
 import { arcsCleared, availableArcs, currentCase, plotFor, type ArcDef, type ArcStep } from "@/game/arcs";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
-import { getPower, mix, teachableBases, viewPowers } from "@/game/combo";
+import { getPower, mix, possibleMixes, teachableBases, viewPowers } from "@/game/combo";
+import { MIX_AGE, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, type MentorDef } from "@/game/mentors";
+import { canSkipToFifteen } from "@/game/skip";
+import { focusId } from "@/game/engine";
 import { mergeHeroes, replyLocally } from "@/game/heroes";
 import { askHero } from "@/game/hero-talk";
 import { masteryCap, masteryLevel, nextMasteryExp, powerRank } from "@/game/mastery";
@@ -115,7 +118,11 @@ export function PowerLab({
       )}
       {pane === "book" && gift && (
         <>
+          {game.mentor && <MentorCard game={game} moves={moves} onAct={onAct} />}
           <MasteryBoard game={game} owned={owned} heard={heard} onAct={onAct} onNote={setNotice} />
+          {mixLock(game) ? (
+            <MixLocked game={game} />
+          ) : (
           <BraidBook
             owned={owned}
             mastery={game.mastery}
@@ -137,9 +144,11 @@ export function PowerLab({
             onPick={pick}
             onMix={() => left && right && attempt(left, right)}
           />
+          )}
         </>
       )}
       {pane === "moves" && gift && <MovePicker game={game} onAct={onAct} />}
+      {pane === "teachers" && gift && game.mentor && <MentorCard game={game} moves={moves} onAct={onAct} />}
       {pane === "teachers" && (
         <TrainerCircle game={game} met={met} unmet={unmet} unlocked={unlocked} knownIds={knownIds} moves={moves} onAct={onAct} onChat={onChat} onNote={setNotice} />
       )}
@@ -319,7 +328,7 @@ function Dormant({ game }: { game: Game }) {
       <p className="mt-2 text-sm text-muted">
         {human
           ? "Ordinary can still run a city. Cases, work, and people each have their own desk."
-          : "Keep aging. A gift usually arrives on its own. From 13, a birthday can offer one. Nothing here can be mixed before that."}
+          : `Keep aging. A gift usually arrives on its own. From 13, a birthday can offer one. Power mixing unlocks at ${MIX_AGE}, when a mentor finds you.`}
       </p>
     </section>
   );
@@ -738,4 +747,125 @@ export function HeroChat({
 
 function useGameTalk() {
   return useGame((s) => s.noteTalk);
+}
+
+const SIGIL: Record<MentorDef["sigil"], LucideIcon> = { shield: Shield, flame: Flame, book: BookOpen, star: Star, bolt: Zap, fist: Dumbbell, eye: Eye, crown: Crown, wrench: Wrench, leaf: Leaf };
+
+/** Before 15 the braid book is locked: a clear countdown, what's waiting, and the quick path there. */
+function MixLocked({ game }: { game: Game }) {
+  const skip = useGame((s) => s.skip);
+  const waiting = possibleMixes(game.unlockedPowers ?? []).length;
+  const ages = Array.from({ length: Math.max(1, MIX_AGE - game.age + 1) }, (_, i) => game.age + i);
+  const years = MIX_AGE - game.age;
+  const teaser = game.mode === "god" && game.preset ? mentorFor(game) : null;
+  return (
+    <section className="card relative overflow-hidden px-4 py-4" aria-label="Braid book locked">
+      <div className="pointer-events-none absolute -top-10 -right-10 size-36 rounded-full bg-[#7cf0c8]/10 blur-2xl" aria-hidden />
+      <div className="flex items-start gap-3">
+        <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[#7cf0c8]/50 bg-[#7cf0c8]/10 text-[#7cf0c8] shadow-[0_0_18px_rgba(124,240,200,0.25)]">
+          <Lock className="size-6" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h2 className="t-label text-[10px] text-[#7cf0c8]">BRAID BOOK · LOCKED</h2>
+          <p className="t-display !text-[1.6rem] leading-none text-fg">Mixing unlocks at {MIX_AGE}</p>
+          <p className="mt-1 text-sm text-fg/80">
+            {years} year{years === 1 ? "" : "s"} to go. Until then, drill what you have and learn from heroes.
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 flex items-end gap-1" aria-label={`Age ${game.age} of ${MIX_AGE}`}>
+        {ages.map((age) => (
+          <span key={age} className="flex flex-1 flex-col items-center gap-1">
+            <span className={`h-2 w-full rounded-full ${age === game.age ? "bg-gold shadow-[0_0_8px_var(--color-gold)]" : age === MIX_AGE ? "bg-[#7cf0c8]/80" : "bg-white/15"}`} />
+            {(ages.length <= 9 || age === game.age || age === MIX_AGE) && <span className={`t-num text-[10px] font-black ${age === MIX_AGE ? "text-[#7cf0c8]" : age === game.age ? "text-gold" : "text-muted"}`}>{age}</span>}
+          </span>
+        ))}
+      </div>
+      <ul className="mt-3 flex flex-col gap-1.5 text-[13px] text-fg/90">
+        <li className="flex items-center gap-2">
+          <GraduationCap className="size-4 shrink-0 text-[#7cf0c8]" aria-hidden />
+          {teaser ? `${teaser.name} will start your training at ${MIX_AGE}.` : `A mentor finds you at ${MIX_AGE} and guides your first braids.`}
+        </li>
+        <li className="flex items-center gap-2">
+          <BookOpen className="size-4 shrink-0 text-gold" aria-hidden />
+          {waiting ? `${waiting} recipe${waiting === 1 ? "" : "s"} already in your hands, waiting.` : "Learn more powers from heroes to have recipes ready."}
+        </li>
+      </ul>
+      {canSkipToFifteen(game) && (
+        <button type="button" onClick={() => skip("fifteen")} className="btn btn-gold mt-3 min-h-12 w-full !gap-2">
+          <FastForward className="size-4" aria-hidden /> Skip to {MIX_AGE}
+        </button>
+      )}
+    </section>
+  );
+}
+
+/** Your mentor (15+): bond, and this month's lesson. One lesson a month. */
+function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct: (id: string) => void }) {
+  const state = game.mentor;
+  const mentor = mentorById(state?.id);
+  if (!state || !mentor) return null;
+  const Sigil = SIGIL[mentor.sigil];
+  const braid = mentorBraid(game);
+  const room = library(game);
+  const focus = getPower(focusId(game));
+  const recipe = mentorRecipe(game);
+  const done = !!game.flags.tutored;
+  const why = done ? "Lesson done this month" : !moves ? "No moves left this month" : null;
+  const lessons: { id: string; icon: LucideIcon; title: string; detail: string; off: string | null }[] = [
+    {
+      id: "tutor|braid",
+      icon: Zap,
+      title: braid ? `Guided braid` : "Guided braid",
+      detail: braid ? `${braid.left.name} + ${braid.right.name}. Lands a little drilled.` : "No recipe in your hands yet.",
+      off: why ?? (!braid ? "Nothing to braid" : room.block ? "No room in the book" : null),
+    },
+    { id: "tutor|drill", icon: Dumbbell, title: focus ? `Drill ${focus.name}` : "Drill", detail: "Better gains than drilling alone.", off: why ?? (game.stats.health < 12 ? "Too gassed" : null) },
+    { id: "tutor|study", icon: BookOpen, title: "Study night", detail: recipe ? "Learn a new recipe for your book. +Mind." : "Theory and tea. +Mind.", off: why },
+  ];
+  return (
+    <section className="card relative overflow-hidden px-4 py-3" style={{ borderColor: `${mentor.color}88` }} aria-label={`Mentor ${mentor.name}`}>
+      <div className="pointer-events-none absolute -top-12 -left-8 size-40 rounded-full blur-2xl" style={{ background: `${mentor.color}22` }} aria-hidden />
+      <div className="relative flex items-center gap-3">
+        <span className="grid size-14 shrink-0 place-items-center rounded-full border-2" style={{ borderColor: mentor.color, background: `radial-gradient(circle at 35% 30%, ${mentor.color}55, ${mentor.color}11 70%)`, boxShadow: `0 0 18px ${mentor.color}55` }}>
+          <Sigil className="size-7" style={{ color: mentor.color }} aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="t-label text-[10px]" style={{ color: mentor.color }}>
+            YOUR MENTOR · {state.lessons} lesson{state.lessons === 1 ? "" : "s"}
+          </p>
+          <p className="truncate text-lg leading-tight font-extrabold text-fg">{mentor.name}</p>
+          <p className="truncate text-xs text-muted">{mentor.title}</p>
+        </div>
+        <span className="t-num shrink-0 text-right text-[11px] font-bold text-muted">
+          Bond
+          <b className="block text-base text-fg">{Math.round(state.bond)}</b>
+        </span>
+      </div>
+      <div className="stat-bar relative mt-2" aria-hidden>
+        <div className="stat-fill" style={{ width: `${Math.min(100, state.bond)}%`, "--fill": mentor.color } as React.CSSProperties} />
+      </div>
+      <p className="relative mt-2 text-[13px] text-fg/85 italic">&ldquo;{mentor.craft}&rdquo;</p>
+      <div className="relative mt-2.5 grid grid-cols-3 gap-1.5">
+        {lessons.map((row) => {
+          const Icon = row.icon;
+          return (
+            <button
+              key={row.id}
+              type="button"
+              disabled={!!row.off}
+              onClick={() => onAct(row.id)}
+              data-act={row.id}
+              className="flex min-h-[6.5rem] flex-col items-start gap-1 rounded-xl border border-white/10 bg-white/[0.05] px-2 py-2 text-left disabled:opacity-45"
+              style={!row.off ? { borderColor: `${mentor.color}77`, background: `${mentor.color}14` } : undefined}
+            >
+              <Icon className="size-4" style={{ color: mentor.color }} aria-hidden />
+              <span className="text-[13px] leading-tight font-extrabold text-fg">{row.title}</span>
+              <span className="line-clamp-3 text-[11px] leading-snug text-muted">{row.off ?? row.detail}</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
