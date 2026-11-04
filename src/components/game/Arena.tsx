@@ -6,7 +6,7 @@ import type React from "react";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { buzz, RivalName } from "@/components/game/arena-context";
 import {
-  Activity, ArrowLeft, Bot, Bug, Check, CloudFog, CloudLightning, Cpu, Crown, Dna, Drama, EyeOff, Flame, Gauge, HeartPulse,
+  Activity, ArrowLeft, Bot, Bug, Check, CloudFog, Coins, CloudLightning, Cpu, Crown, Dna, Drama, EyeOff, Flame, Gauge, HeartPulse,
   Info, Lightbulb, Lock, Medal, Radar, RefreshCcw, RotateCcw, Shield, ShieldCheck, ShieldHalf, Siren, Sparkles, Swords, Trophy, Users, Wifi, Zap,
 } from "lucide-react";
 import "./arena.css";
@@ -27,6 +27,8 @@ import { fighterFromLife } from "@/game/arena.lives";
 import { listSlots, loadSlot } from "@/game/save";
 import { PRESETS } from "@/game/presets";
 import { useGame } from "@/game/store";
+import { localDay, purseKey, PURSE_BASE, PURSE_DAILY, type PurseQuote } from "@/game/arena.purse";
+import { money } from "@/game/format";
 import type { DuelMove, MoveStyle } from "@/game/types";
 import { OnlineArena } from "@/components/game/OnlineArena";
 
@@ -139,7 +141,7 @@ export function ArenaScreen() {
   if (view === "reveal") return <Reveal match={saved.match} onGo={() => set(saved.match, "intro")} />;
   if (view === "intro") return <RoundIntro match={saved.match} onGo={() => set(saved.match, "battle")} />;
   if (view === "battle") return <Battle key={`r${saved.match.round}`} match={saved.match} level={saved.level} onMatch={(m) => set(m, "battle")} onRoundDone={(m) => set(m, m.stage === "done" ? "results" : "intro")} onQuit={quit} />;
-  return <Results match={saved.match} onRematch={start} onHub={() => update(null)} onTitle={() => { update(null); toTitle(); }} />;
+  return <Results match={saved.match} purse={{ level: saved.level }} onRematch={start} onHub={() => update(null)} onTitle={() => { update(null); toTitle(); }} />;
 }
 
 // ─── Art ──────────────────────────────────────────────────────────────────────────
@@ -256,7 +258,7 @@ function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiL
           <button type="button" onClick={onStart} className="btn btn-gold mt-3 min-h-14 w-full text-lg">
             <Swords className="size-5" aria-hidden /> Start the draft
           </button>
-          
+          <PurseHint lives={lives} level={level} />
         </section>
 
         <button type="button" onClick={onOnline} className="arena-online-card card-glass mt-3 flex w-full items-center gap-3 px-4 py-3 text-left">
@@ -287,6 +289,24 @@ function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiL
         </section>
       </div>
     </main>
+  );
+}
+
+/** Hub line: which life can earn purses, and what a win pays at this skill. */
+function PurseHint({ lives, level }: { lives: ArenaFighter[]; level: AiLevel }) {
+  const activeSlot = useGame((s) => s.activeSlot);
+  const slot = activeSlot();
+  const mine = lives.find((f) => f.id === `life-${slot}`);
+  if (!mine) return null;
+  const junior = (mine.life?.age ?? 18) < 18 ? 0.5 : 1;
+  const win = Math.round((PURSE_BASE[level] * junior) / 25) * 25;
+  return (
+    <p className="mt-2.5 flex items-start gap-1.5 text-xs font-semibold text-fg/85">
+      <Coins className="mt-px size-3.5 shrink-0 text-gold" aria-hidden />
+      <span>
+        Draft <b className="text-gold">{mine.name}</b> and the match pays their life: up to <b className="text-fg">{money(win)}</b> a win here. Purses shrink after a few a day.
+      </span>
+    </p>
   );
 }
 
@@ -1071,7 +1091,7 @@ function RoundOver({ match, ko, onNext, onSkip, net }: { match: ArenaMatch; ko: 
 
 // ─── Results ──────────────────────────────────────────────────────────────────────
 
-export function Results({ match, onRematch, onHub, onTitle, note, footer }: { match: ArenaMatch; onRematch: () => void; onHub: () => void; onTitle: () => void; note?: React.ReactNode; footer?: React.ReactNode }) {
+export function Results({ match, onRematch, onHub, onTitle, note, footer, purse }: { match: ArenaMatch; onRematch: () => void; onHub: () => void; onTitle: () => void; note?: React.ReactNode; footer?: React.ReactNode; purse?: { level: AiLevel; online?: boolean } }) {
   const won = match.winner === 0;
   const played = !!match.orders[0] && !!match.orders[1];
   const [w0, w1] = roundsWon(match);
@@ -1088,6 +1108,7 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer }: { ma
           <span className="font-display text-5xl text-cape">{w1}</span>
         </div>
         {note}
+        {purse && <PurseLine match={match} level={purse.level} online={purse.online} />}
         <ol className="mt-5 flex flex-col gap-2">
           {(played ? [0, 1, 2] : []).map((r) => {
             const a = fighterOf(match.orders[0]![r]!);
@@ -1118,6 +1139,65 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer }: { ma
         </div>
       </div>}
     </main>
+  );
+}
+
+/** Purses already shown this session, so React re-renders (and Strict Mode) show the payout, not "already paid". */
+const PURSE_SHOWN = new Map<string, { quote: PurseQuote; name: string }>();
+
+/**
+ * Arena purse (owner decision 2026-11-03): if your active life fought on your team, the match pays into
+ * that life. Shows the payout, the daily diminishing returns, or a hint to draft your own hero.
+ */
+function PurseLine({ match, level, online }: { match: ArenaMatch; level: AiLevel; online?: boolean }) {
+  const activeSlot = useGame((s) => s.activeSlot);
+  const payArena = useGame((s) => s.payArena);
+  const slot = activeSlot();
+  const lifeId = slot ? `life-${slot}` : null;
+  const fought = !!lifeId && match.picks[0].includes(lifeId);
+  const inPool = !!lifeId && match.pool.includes(lifeId);
+  const key = purseKey(match.seed, match.picks[0]);
+  const [paid, setPaid] = useState<{ quote: PurseQuote; name: string } | null>(() => PURSE_SHOWN.get(key) ?? null);
+  useEffect(() => {
+    if (!fought || match.stage !== "done" || match.winner === null || PURSE_SHOWN.has(key)) return;
+    const [w0, w1] = roundsWon(match);
+    const rival = match.picks[1][0] ? fighterOf(match.picks[1][0]).name : "the AI";
+    const result = payArena({ level, won: match.winner === 0, rounds: [w0, w1], key, day: localDay(), online, opponent: online ? `a friend's ${rival}` : `${rival} and co. (${level === "rookie" ? "Rookie" : level === "pro" ? "Pro" : "Legend"} AI)` });
+    if (!result) return;
+    PURSE_SHOWN.set(key, result);
+    setPaid(result);
+  }, [fought, key, level, match, online, payArena]);
+  if (!lifeId) return null;
+  if (!fought) {
+    if (!inPool) return null;
+    const name = fighterOf(lifeId).name;
+    return (
+      <p className="anim-rise mx-auto mt-3 flex w-fit max-w-full items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-center text-xs font-bold text-muted">
+        <Coins className="size-3.5 shrink-0 text-gold" aria-hidden /> Draft {name} to earn purses for that life.
+      </p>
+    );
+  }
+  if (!paid) return null;
+  const { quote, name } = paid;
+  const first = name.split(" ")[0] ?? name;
+  const line = quote.already
+    ? `Purse already paid into ${first}'s life.`
+    : quote.capped
+      ? `Purse office closed for today. ${first} fought for glory.`
+      : `Paid into ${first}'s life${match.winner === 0 ? "" : " · appearance fee"}`;
+  const sub = quote.already || quote.capped ? "Purses reset tomorrow." : quote.nth >= PURSE_DAILY.length ? "Last purse today." : quote.rate < 1 ? `Purse ${quote.nth} today · ${Math.round(quote.rate * 100)}% rate` : `Purse ${quote.nth} of ${PURSE_DAILY.length} today`;
+  return (
+    <section className="anim-pop mx-auto mt-4 flex w-full max-w-[22rem] items-center gap-3 rounded-2xl border border-gold/60 bg-[linear-gradient(135deg,rgba(230,179,77,0.22),rgba(230,179,77,0.06))] px-3 py-2.5 shadow-[0_0_24px_rgba(230,179,77,0.2)]" aria-label="Arena purse">
+      <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gold/25 text-gold shadow-[0_0_14px_rgba(230,179,77,0.45)]">
+        <Coins className="size-6" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="t-label block text-[10px] text-gold">ARENA PURSE</span>
+        {quote.amount > 0 && <span className="t-num block text-2xl leading-none font-black text-fg">+{money(quote.amount)}</span>}
+        <span className="block truncate text-xs font-bold text-fg/85">{line}</span>
+        <span className="block text-[11px] font-semibold text-muted">{sub}</span>
+      </span>
+    </section>
   );
 }
 

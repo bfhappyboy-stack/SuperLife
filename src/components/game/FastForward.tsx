@@ -1,7 +1,8 @@
-import { AlertTriangle, BookOpen, CalendarRange, FastForward as FfIcon, HeartCrack, HeartPulse, Scale, Sparkles, Swords, Target, X, Zap } from "lucide-react";
+import { AlertTriangle, BookOpen, CalendarRange, FastForward as FfIcon, GraduationCap, HeartCrack, HeartPulse, Scale, Sparkles, Swords, Target, X, Zap } from "lucide-react";
 import { STAT_COLOR, STAT_ICON } from "@/components/game/icons";
 import { MONTHS, money } from "@/game/format";
-import { skipMonths } from "@/game/skip";
+import { MIX_AGE } from "@/game/mentors";
+import { canSkipToFifteen, skipMonths } from "@/game/skip";
 import { useGame } from "@/game/store";
 import type { Game, SkipReport, SkipSpan, SkipStopKind } from "@/game/types";
 import type { CSSProperties } from "react";
@@ -16,6 +17,7 @@ const STOP: Record<SkipStopKind, { label: string; icon: typeof Zap; color: strin
   health: { label: "Low health", icon: HeartPulse, color: "#ff5d6c" },
   bond: { label: "Relationship crisis", icon: HeartCrack, color: "#ff8fd0" },
   death: { label: "The end", icon: AlertTriangle, color: "#9aa3b8" },
+  mentor: { label: "A mentor finds you", icon: GraduationCap, color: "#7cf0c8" },
 };
 
 const STAT_KEY: Record<string, string> = { powerLevel: "power", happiness: "happiness", health: "health", smarts: "smarts", looks: "looks", fame: "fame", reputation: "reputation", money: "money" };
@@ -48,6 +50,7 @@ export function SkipSheet({ game, onClose }: { game: Game; onClose: () => void }
           </button>
         </div>
         <p className="mt-2 text-pretty text-sm text-fg/85">Plays your usual months for you, leaning on what you&apos;ve been doing lately. Fights, stunts and big choices stay yours.</p>
+        {canSkipToFifteen(game) && <FifteenButton game={game} onGo={() => go("fifteen")} />}
         <div className="mt-3 grid grid-cols-2 gap-2">
           {options.map((row, i) => (
             <button key={row.span} type="button" onClick={() => go(row.span)} className={`btn ${i === 1 ? "btn-gold" : "btn-ghost"} min-h-[5.5rem] flex-col !items-start !gap-1 !px-3.5 text-left`}>
@@ -66,7 +69,7 @@ export function SkipSheet({ game, onClose }: { game: Game; onClose: () => void }
         </div>
         <p className="t-label mt-4 text-[10px] text-muted">Stops by itself for</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {(["reveal", "story", "chapter", "case", "event", "health", "bond"] as const).map((kind) => {
+          {(canSkipToFifteen(game) ? (["reveal", "story", "chapter", "case", "fight", "health", "bond"] as const) : (["reveal", "story", "chapter", "case", "event", "health", "bond"] as const)).map((kind) => {
             const Icon = STOP[kind].icon;
             return (
               <span key={kind} className="chip !py-1 text-[11px] text-fg">
@@ -75,6 +78,7 @@ export function SkipSheet({ game, onClose }: { game: Game; onClose: () => void }
             );
           })}
         </div>
+        {canSkipToFifteen(game) && <p className="mt-2 text-xs text-fg/80">Skip to {MIX_AGE} also settles small moments for you (rainy days, birthdays, friendly capes) and lists them after.</p>}
         <p className="mt-3 text-xs text-muted">Skipped months are quieter and a touch less sharp than playing them yourself, so it saves taps, not effort.</p>
       </div>
     </div>
@@ -90,13 +94,13 @@ export function SkipSummary({ game }: { game: Game }) {
   const stop = report.stop ? STOP[report.stop.kind] : null;
   const StopIcon = stop?.icon;
   const done = report.months >= report.planned && !report.stop;
-  const canAgain = !report.stop && game.phase === "live" && !game.reveal && !game.chapterNotice;
-  const title = report.months === 0 ? "Hold on" : done ? (report.span === "year" ? `Age ${report.to.age}` : "A season passes") : `${report.months} month${report.months === 1 ? "" : "s"} later`;
+  const canAgain = !report.stop && game.phase === "live" && !game.reveal && !game.chapterNotice && (report.span !== "fifteen" || canSkipToFifteen(game));
+  const title = report.months === 0 ? "Hold on" : done ? (report.span === "fifteen" ? `You're ${report.to.age}` : report.span === "year" ? `Age ${report.to.age}` : "A season passes") : `${report.months} month${report.months === 1 ? "" : "s"} later`;
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/85 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Fast-forward summary">
       <div className="card-glass anim-pop max-h-[92%] w-full max-w-[380px] overflow-y-auto px-5 pt-5 pb-5" style={stop ? ({ borderColor: `${stop.color}99` } as CSSProperties) : undefined}>
         <p className="t-label flex items-center gap-1.5 text-[10px] text-gold">
-          <FfIcon className="size-3.5" aria-hidden /> FAST-FORWARD · {report.span === "season" ? "SEASON" : "TO BIRTHDAY"}
+          <FfIcon className="size-3.5" aria-hidden /> FAST-FORWARD · {report.span === "season" ? "SEASON" : report.span === "fifteen" ? `TO ${MIX_AGE}` : "TO BIRTHDAY"}
         </p>
         <h2 className="t-display mt-1 !text-[2.3rem] leading-none text-fg">{title}</h2>
         <MonthTrack report={report} />
@@ -110,6 +114,17 @@ export function SkipSummary({ game }: { game: Game }) {
                 Stopped · {stop.label}
               </span>
               <span className="line-clamp-3 block text-sm font-semibold text-fg">{report.stop.text}</span>
+            </span>
+          </div>
+        )}
+        {done && report.span === "fifteen" && game.mentor && (
+          <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-[#7cf0c8]/50 bg-[#7cf0c8]/10 px-3 py-2.5">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#7cf0c8]/20 text-[#7cf0c8]">
+              <GraduationCap className="size-4" aria-hidden />
+            </span>
+            <span className="min-w-0">
+              <span className="t-label block text-[10px] text-[#7cf0c8]">Mixing unlocked</span>
+              <span className="block text-sm font-semibold text-fg">Your mentor is waiting in Powers. Braid your first mix with them.</span>
             </span>
           </div>
         )}
@@ -198,6 +213,33 @@ export function SkipSummary({ game }: { game: Game }) {
 }
 
 function MonthTrack({ report }: { report: SkipReport }) {
+  // Long skips (Skip to 15) draw one segment per year so the track stays readable on a phone.
+  if (report.planned > 24) {
+    const years = Math.ceil(report.planned / 12);
+    const filled = report.months / 12;
+    return (
+      <div className="mt-3">
+        <div className="flex items-center justify-between text-[11px] font-bold text-muted">
+          <span>{when(report.from)}</span>
+          <span className="t-num text-fg">
+            {Math.floor(report.months / 12)}y {report.months % 12}m / {Math.floor(report.planned / 12)}y {report.planned % 12}m
+          </span>
+          <span>{when(report.to)}</span>
+        </div>
+        <div className="mt-1.5 flex gap-1" aria-hidden>
+          {Array.from({ length: years }, (_, i) => {
+            const part = Math.max(0, Math.min(1, filled - i));
+            return (
+              <span key={i} className="anim-pop relative h-2 flex-1 overflow-hidden rounded-full bg-white/12" style={{ animationDelay: `${80 + i * 60}ms` }}>
+                <span className="absolute inset-y-0 left-0 rounded-full bg-gold shadow-[0_0_6px_var(--color-gold)]" style={{ width: `${part * 100}%` }} />
+                {report.stop && part > 0 && part < 1 && <span className="absolute inset-y-0 w-1 rounded-full bg-bad" style={{ left: `${part * 100}%` }} />}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="mt-3">
       <div className="flex items-center justify-between text-[11px] font-bold text-muted">
@@ -217,5 +259,35 @@ function MonthTrack({ report }: { report: SkipReport }) {
         ))}
       </div>
     </div>
+  );
+}
+
+/** The big "Skip to 15" card: the quick way through childhood to the age mixing opens. */
+function FifteenButton({ game, onGo }: { game: Game; onGo: () => void }) {
+  const months = skipMonths(game, "fifteen");
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  const span = `${years ? `${years} yr${years === 1 ? "" : "s"}` : ""}${years && rest ? " " : ""}${rest ? `${rest} mo` : ""}`;
+  const ages = Array.from({ length: MIX_AGE - game.age + 1 }, (_, i) => game.age + i);
+  return (
+    <button
+      type="button"
+      onClick={onGo}
+      className="relative mt-3 flex w-full flex-col items-start gap-1.5 overflow-hidden rounded-2xl border border-[#7cf0c8]/60 bg-[linear-gradient(135deg,rgba(124,240,200,0.22),rgba(77,216,255,0.10)_55%,rgba(230,179,77,0.16))] px-4 py-3 text-left shadow-[0_0_24px_rgba(124,240,200,0.18)] active:scale-[0.99]"
+    >
+      <span className="flex items-center gap-1.5 text-[10px] font-extrabold tracking-[0.14em] text-[#7cf0c8] uppercase">
+        <GraduationCap className="size-3.5" aria-hidden /> {span} · quick path
+      </span>
+      <span className="t-display !text-[1.7rem] leading-none text-fg">Skip to {MIX_AGE}</span>
+      <span className="text-[13px] leading-snug text-fg/85">Power mixing unlocks and a mentor finds you. Still stops for your reveal, story beats, cases and fights.</span>
+      <span className="mt-1 flex w-full items-center gap-1" aria-hidden>
+        {ages.map((age) => (
+          <span key={age} className="flex flex-1 flex-col items-center gap-0.5">
+            <span className={`h-1.5 w-full rounded-full ${age === MIX_AGE ? "bg-[#7cf0c8] shadow-[0_0_8px_#7cf0c8]" : "bg-white/25"}`} />
+            {(age === game.age || age === MIX_AGE || ages.length <= 8) && <span className={`t-num text-[9px] font-black ${age === MIX_AGE ? "text-[#7cf0c8]" : "text-muted"}`}>{age}</span>}
+          </span>
+        ))}
+      </span>
+    </button>
   );
 }

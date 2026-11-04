@@ -366,6 +366,7 @@ export function OnlineArena({ lives, onBack, onTitle }: { lives: ArenaFighter[];
     screen = (
       <Results
         match={match}
+        purse={{ level: "pro", online: true }}
         onRematch={() => undefined}
         onHub={() => undefined}
         onTitle={() => undefined}

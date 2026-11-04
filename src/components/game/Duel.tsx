@@ -294,7 +294,20 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
       label="You"
     />
   );
-  const foeFigure = (
+  // Illustrated rogues stand in the ring as their card (a "standee"), not the generic paper doll.
+  // The Fighter wrapper mirrors the foe side, so the card flips back to face the right way.
+  const foeFigure = rogueArt ? (
+    <div className="flex h-full w-full items-end justify-center" style={{ transform: "scaleX(-1)" }} role="img" aria-label={fight.foeName}>
+      <div
+        className={`duel-standee relative aspect-[3/4.4] h-[98%] w-auto max-w-none shrink-0 overflow-hidden rounded-2xl border-2 ${foePose === "hit" ? "duel-standee-hit" : ""} ${foePose === "attack" ? "duel-standee-attack" : ""} ${foePose === "ko" ? "grayscale" : ""}`}
+        style={{ borderColor: rogueArt.color === "#2b2d3a" || rogueArt.color === "#1f3a2a" || rogueArt.color === "#2a2a3a" ? "#d4382f" : rogueArt.color, boxShadow: `0 10px 28px -10px ${foeColor}, inset 0 0 0 1px rgb(255 255 255 / 0.12)` }}
+      >
+        <VillainArt id={rogueArt.id} color={rogueArt.color} crop="tall" />
+        {foePose === "guard" && <span className="absolute inset-0 rounded-2xl border-4 border-[#4dd8ff]/70 shadow-[inset_0_0_24px_#4dd8ff88]" aria-hidden />}
+        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-1.5 pt-5 pb-1 text-center text-[10px] leading-tight font-black tracking-wide text-fg uppercase">{fight.foeName}</span>
+      </div>
+    </div>
+  ) : (
     <Figure seed={foeSeed} age={34} sex={fight.foeSex} tint={kit} aura={foeColor} bare pose={foePose} mood={fight.foeSide === "villain" ? 30 : 70} label={fight.foeName} />
   );
   const TellIcon = tell === "hidden" ? EyeOff : STYLE_ICON[tell];
@@ -577,8 +590,11 @@ function Fighter({ side, lunging, idle, ko, glow, big = false, children }: { sid
       style={{ "--lunge": me ? "70px" : "-70px" } as React.CSSProperties}
     >
       <div className="h-full w-full origin-bottom transition-transform duration-500" style={{ transform: ko ? `translateX(${me ? 62 : -62}%)` : big ? "scale(1.08)" : undefined }}>
-        <div className={`h-full w-full ${idle ? "anim-float" : ""}`} style={{ transform: me ? undefined : "scaleX(-1)", filter: `drop-shadow(0 0 1px rgb(255 255 255 / 0.35)) drop-shadow(0 0 8px color-mix(in srgb, ${glow} 55%, transparent))` }}>
-          {children}
+        {/* Float and mirror live on separate layers: the float keyframes set `transform` and would wipe the foe's scaleX(-1). */}
+        <div className={`h-full w-full ${idle ? "anim-float" : ""}`} style={{ filter: `drop-shadow(0 0 1px rgb(255 255 255 / 0.35)) drop-shadow(0 0 8px color-mix(in srgb, ${glow} 55%, transparent))` }}>
+          <div className="h-full w-full" style={{ transform: me ? undefined : "scaleX(-1)" }}>
+            {children}
+          </div>
         </div>
       </div>
     </div>
