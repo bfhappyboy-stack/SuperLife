@@ -1,5 +1,98 @@
 # Changelog
 
+## 2026-11-03 (pm + night, shipped Nov 4 am): mixing at 15 with mentors, Skip to 15, Arena purses, every villain carded (`devbot/2026-11-04-am`)
+
+Built on `devbot/2026-11-03-am` (head 0de3abd, same content as main 702d68d). The 3 PM and 9 PM passes were cut off before pushing, so their work ships here. The Nov 4 am pass re-ran typecheck, lint, 166/166 game tests and the build, and reloaded it at 390x844 (Powers lock card and Skip to 15 sheet checked).
+
+### Power mixing unlocks at 15 (owner's call) (`mentors.ts`, `engine.ts`, `PowerLab.tsx`)
+
+- **Why:** heroes got too strong too early. Light Speed could be braided at about 12.
+- **The rule:** no mixing before **15**, in every mode. The engine refuses `mix|` and the mentor's braid lesson before then (`MIX_AGE`, `mixLock`). The required chain is unchanged: **Fire Control + Super Speed = Light Speed**, then **Light Speed + Super Strength = Lightning Strikes**. Generation 2 is still the hard cap.
+- **Lock card:** before 15, Powers ▸ Book shows **"Mixing unlocks at 15"**. It has the years to go, an age track, who will train you (God Mode legends name their teacher) and how many recipes you already hold. It also has a **Skip to 15** button.
+- The "Learn 1 new power" goal now says "Mix (15+)".
+
+### Mentors (15+) (`mentors.ts`)
+
+- On the 15th birthday a mentor finds you, with a banner and a major life-log line. Old saves already past 15 get their mentor when they load.
+- **Who:** God Mode legends get their canon teacher, bent for this universe:
+  - Spider-Man: Ben Parker
+  - Batman: Alfred
+  - Iron Man: Ho Yinsen
+  - Hulk: Leonard Samson
+  - Superman: Jonathan Kent
+  - Wonder Woman: Antiope
+  - Captain America: Erskine
+  - Thor: Odin
+  - Black Panther: Zuri
+  - Wolverine: Ogun
+  - The Flash: Jay Garrick
+- Other lives get a mentor matched to their upbringing (12 of them), then to their city (8), then a fallback coach. All of it is data: one row per mentor.
+- **Lessons:** one a month, on the mentor card. The card is in Powers ▸ Book, and **night:** now in Powers ▸ Teachers too, since that's where players look for a teacher. The three lessons:
+  - **Guided braid:** prefers the required chain, and the new power lands a little drilled.
+  - **Drill:** a mastery boost on your focus power.
+  - **Study night:** writes a recipe into your book.
+- Bond grows with each lesson, with diminishing gains, and raises the boost by up to +50%.
+
+### Skip to 15 (`skip.ts`, `FastForward.tsx`)
+
+- A big **Skip to 15** card in the Skip sheet and on the lock card. It's the quick way through childhood.
+- It still stops for:
+  - the power reveal (random age 7–15)
+  - chapters and story beats
+  - villain cases and fights
+  - low health
+  - the mentor's arrival
+- Small everyday moments (rainy days, birthdays, friendly cape drop-ins) are settled for you. The skip picks the answer that best fits your stats and lists it afterwards ("Small moments handled").
+- A long skip draws one track segment per year, so it stays readable on a phone.
+
+### Arena purses (`arena.purse.ts`, `store.ts`, `Arena.tsx`)
+
+- If one of your 3 picks is your **active life's** character, the match pays into that life.
+- **Win purse:** Rookie $600, Pro $1,500, Legend $3,500. Online counts as Pro.
+- **Adjustments:** +25% for a 2–0 sweep. A loss pays a 20% appearance fee. Under-18s get half.
+- **Anti-farm:** each day's purses run 100%, 100%, 70%, 50%, 30%, then close until tomorrow. Each match pays once, keyed by seed and picks, so reloads and rematches can't pay twice.
+- **Where it shows:**
+  - a gold **ARENA PURSE** line on the results screen
+  - a major line in the life log ("Arena loss, 0–2, against … An appearance fee of $300.")
+  - a card banner
+  - a hint in the Arena hub ("Draft Mara Quinn and the match pays their life")
+- Teams of only legends and villains earn nothing.
+
+### Every villain has a card (`VillainArt.tsx`, `villainArt.data.ts`)
+
+- **pm:** 16 legend rogues got cards: Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe and Malekith. In life-sim fights an illustrated rogue now **stands in the ring as its card**, with hit-flash and lean-in.
+- **night:** the last 15 got cards:
+  - Justin Hammer (drones, tinted glasses)
+  - Red Hulk
+  - The Maestro (grey beard, throne)
+  - Ares (fire-crested war helm, spear)
+  - Medusa (snake crown)
+  - Crossbones
+  - Surtur (horned fire crown, Twilight Sword)
+  - Man-Ape (white pelt, war club)
+  - Namor (trident, jade collar)
+  - Lady Deathstrike (talons)
+  - Omega Red (carbonadium coils)
+  - Silver Samurai (kabuto, glowing katana)
+  - Captain Cold (parka, cold gun)
+  - Gorilla Grodd (telepathy rings)
+  - Mirror Master (mirror visor, shards)
+- That makes **49 villains: all 18 Arena villains and every legend's rogues**. A new test makes sure every preset rogue maps to a card.
+- **Painted (AI) portraits are still blocked:** no image-generation tool is available to the dev bot, so these are the vector cards. Hero portraits are inlined webp data URIs (`src/assets/art`), so painted villains can drop in the same way later.
+
+### Fixes
+
+- The foe figure no longer loses its mirror while idle: float and mirror are now on separate layers (pm).
+
+### Verification
+
+- typecheck clean.
+- lint: 0 new errors. One pre-existing error in the Grok Build plumbing `src/lib/app-data/client.server.ts`, left alone.
+- 167/167 game tests pass.
+- The `scripts/` plumbing suite has the same 12 pre-existing failures as main.
+- Build OK.
+- Playtests are in PLAYTEST.md (night pass).
+
 ## 2026-11-03 (am): illustrated villain cards, life-sim boss reveal (`devbot/2026-11-03-am`)
 
 This branch stacks on `devbot/2026-11-02-night` (head 6f82bef), so it also carries the Nov 1 night and all three Nov 2 passes.

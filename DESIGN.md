@@ -7,6 +7,8 @@ This is the owner's design, written down as faithfully as possible. Where the co
 ## 1. Power combination
 
 - The player can mix **any 2 unlocked powers**.
+- **Mixing unlocks at 15** (owner's call, 2026-11-03). Before 15 the Braid Book shows a locked card with the years to go and a **Skip to 15** button; the engine refuses `mix|` and the Teachers' braid lesson (`mentors.ts` `MIX_AGE`, `mixLock`).
+- **Mentors (15+).** On the 15th birthday a mentor arrives, picked by God Mode legend first (Ben Parker, Alfred, Ho Yinsen, Leonard Samson, Jonathan Kent, Antiope, Erskine, Odin, Zuri, Ogun, Jay Garrick), then upbringing (12), then city (8), then a fallback coach. One lesson a month: a **guided braid** (prefers the required chain), a **drill** with a mastery boost, or a **study night** (learn a recipe). Bond grows with lessons and raises the boost (up to +50%), with diminishing gains.
 - **Generation = max(parent generations) + 1.**
 - **Generation 2 is the hard limit.** Nothing is ever Generation 3.
   - In code, a Generation 2 power is final and can never be a parent (`combo.ts` `MAX_GENERATION`, `childGeneration`).
@@ -211,3 +213,14 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - **Look and closet:** a portrait generator and costumes.
 - **Legacy power layer:** the older 15-power system (`data.ts` `POWERS`, fusion titles like "Cauter"). It is still used in the header and for some flavour, and is bridged to the combo catalog.
 - **Grok Build plumbing:** auth, app-data saves and multiplayer (`src/lib`). Game work leaves these alone.
+
+## Arena purses (owner's call, 2026-11-03)
+
+- If one of your 3 Arena picks is your **active life's** character, the match pays money into that life: win base Rookie $600, Pro $1,500, Legend $3,500 (online counts as Pro), +25% for a 2–0 sweep, a 20% appearance fee for a loss, half pay under 18.
+- **Diminishing returns:** purses 1–2 each day pay 100%, then 70%, 50%, 30%, then the purse is closed for the day. A match pays once (keyed by seed and picks), even after a reload.
+- The payout shows on the results screen, lands in the life's money, and adds a history line ("Arena win, 2–1, against X…"). Teams of only legends and villains earn nothing. Data and rules: `src/game/arena.purse.ts`.
+
+## Villain cards
+
+- Every villain is meant to get an illustrated card used in the Arena draft, round intros, the life-sim FIGHT! intro and the fight itself. 34 villains have vector cards now (`VillainArt.tsx`, typed on `VILLAIN_ART_IDS`). In life-sim fights an illustrated rogue stands in the ring as a card, with hit-flash and lean-in animations.
+

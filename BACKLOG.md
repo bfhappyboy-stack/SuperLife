@@ -1,5 +1,16 @@
 # SuperLife — Backlog
 
+## From the 2026-11-03 pm pass
+
+- **Done:** mixing locked until 15 with a lock card; mentors at 15 (legend, upbringing or city) with monthly lessons; **Skip to 15** in the Skip sheet (still stops for the reveal, chapters, story beats, cases, fights and the mentor); Arena purses into the active life (results line, history, daily taper); 16 more villain cards (Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith); illustrated rogues now stand in life-sim fights as cards; fixed the foe figure losing its mirror while idle.
+- **Villain cards: remaining rogues (15).** Justin Hammer, Red Hulk, The Maestro, Ares, Medusa, Crossbones, Surtur, Man-Ape, Namor, Lady Deathstrike, Omega Red, Silver Samurai, Captain Cold, Gorilla Grodd, Mirror Master. Add a spec in `VillainArt.tsx` + the id in `villainArt.data.ts` (+ `ROGUE_COLORS`).
+- **Painted (raster) villain art is blocked:** no image-generation tool is connected to the dev bot. The vector cards are the stand-in; swap in painted webp art when a generator is available.
+- **Owner's calls:**
+  - Purse amounts ($600 / $1,500 / $3,500 a win, 20% for a loss, 5 purses a day tapering).
+  - Skip to 15 auto-settles small moments (rainy days, birthdays, friendly cape drop-ins) by picking the choice that best fits your history. Story beats, villains and cases still stop. OK, or should drop-ins stop too?
+  - Thor's powers wake at 16 (canon), so his mentor (Odin) card appears a year after he's assigned.
+- **Next:** Arena purse for online matches is wired (Pro rate) but not yet tested with two real players; mentor quests (a mentor-specific case at bond 60+).
+
 ## From the 2026-11-03 am pass
 
 - **Done:** illustrated vector cards for all 18 Arena villains (draft, sheet, order, reveal, intro, duel cards); life-sim "FIGHT!" boss card and header face for the same 18 rogues; breath log capitalised; moves re-verified across 6 saves (0 fails).
