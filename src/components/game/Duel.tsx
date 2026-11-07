@@ -8,7 +8,8 @@ import { villainArtFor } from "@/components/game/villainArt.data";
 import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
-import { answerOf, BREATH, duelRatio, gimmickStatus, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
+import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
+import { answerOf, BREATH, canBurst, duelRatio, gimmickStatus, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
 /** The player's look, so the duel draws the same hero as the closet. */
@@ -453,14 +454,33 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
           {log}
         </p>
       </div>
-      <div className="flex items-center justify-between gap-3">
-        <p className="t-label flex items-center gap-1 text-muted">
-          <Zap className="size-3.5 text-gold" aria-hidden /> Energy <span className="t-num text-fg">{now.energy}/10</span>
-        </p>
-        <div className="flex gap-1" aria-hidden="true">
-          {Array.from({ length: 10 }, (_, index) => (
-            <span key={index} className={`h-2.5 w-2.5 rotate-45 rounded-[3px] transition-colors ${index < now.energy ? "bg-gold shadow-[0_0_6px_var(--color-gold)]" : "bg-panel-2"}`} />
-          ))}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="t-label flex items-center gap-1 text-muted">
+            <Zap className="size-3.5 text-gold" aria-hidden /> Energy <span className="t-num text-fg">{now.energy}/10</span>
+          </p>
+          <div className="flex gap-1" aria-hidden="true">
+            {Array.from({ length: 10 }, (_, index) => (
+              <span key={index} className={`h-2.5 w-2.5 rotate-45 rounded-[3px] transition-colors duration-300 ${index < now.energy ? "bg-gold shadow-[0_0_6px_var(--color-gold)]" : "bg-panel-2"}`} />
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <p className="t-label flex items-center gap-1 text-muted">
+            <Flame className="size-3.5 text-[#ff7a3d]" aria-hidden /> Momentum{" "}
+            <span className="t-num text-fg">
+              {now.momentum}/{MOMENTUM_CAP}
+            </span>
+            {canBurst(now) ? <span className="ml-1 rounded-full bg-[#ff7a3d]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#ffb08a]">BURST READY</span> : null}
+          </p>
+          <div className="flex gap-1" aria-label={`${now.momentum} momentum`} role="meter" aria-valuenow={now.momentum} aria-valuemin={0} aria-valuemax={MOMENTUM_CAP}>
+            {Array.from({ length: MOMENTUM_CAP }, (_, index) => (
+              <span
+                key={index}
+                className={`size-2.5 rounded-full transition-all duration-300 ${index < now.momentum ? "scale-110 bg-[#ff7a3d] shadow-[0_0_8px_#ff7a3d]" : "bg-panel-2"} ${canBurst(now) && index < BURST_COST ? "ring-1 ring-[#ffb08a]/70" : ""}`}
+              />
+            ))}
+          </div>
         </div>
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-2 overflow-y-auto">
@@ -473,6 +493,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             picked={last === keyOf(move)}
             answers={!!answer && move.style === answer}
             tag={moveTag(fight, hud, move)}
+            burst={canBurst(now)}
             busy={busy}
             onPick={() => swing(move)}
           />
@@ -601,7 +622,7 @@ function Fighter({ side, lunging, idle, ko, glow, big = false, children }: { sid
   );
 }
 
-function MoveCard({ move, cooling, energy, picked, answers, tag, busy, onPick }: { move: DuelMove; cooling: number; energy: number; picked: boolean; answers: boolean; tag?: string | null; busy: boolean; onPick: () => void }) {
+function MoveCard({ move, cooling, energy, picked, answers, tag, burst, busy, onPick }: { move: DuelMove; cooling: number; energy: number; picked: boolean; answers: boolean; tag?: string | null; burst?: boolean; busy: boolean; onPick: () => void }) {
   const cost = move.energy ?? 1;
   const short = energy < cost;
   const blocked = cooling > 0 || short;
@@ -614,7 +635,7 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, busy, onPick }:
       aria-pressed={picked}
       aria-disabled={blocked || busy}
       onClick={onPick}
-      className={`card relative flex min-h-[5.5rem] flex-col gap-1 overflow-hidden px-2.5 py-2 text-left transition-transform ${picked ? "!border-gold !bg-panel-2" : answers && !blocked ? "!border-gold/70 shadow-[0_0_16px_-6px_var(--color-gold)]" : ""} ${blocked ? "opacity-55" : ""}`}
+      className={`card relative flex min-h-[5.5rem] flex-col gap-1 overflow-hidden px-2.5 py-2 text-left transition-transform ${picked ? "!border-gold !bg-panel-2" : answers && !blocked ? "!border-gold/70 shadow-[0_0_16px_-6px_var(--color-gold)]" : burst && !blocked ? "!border-[#ff7a3d]/70 shadow-[0_0_16px_-6px_#ff7a3d]" : ""} ${blocked ? "opacity-55" : ""}`}
     >
       <span className="absolute inset-y-0 left-0 w-1" style={{ background: HEX[move.style] }} />
       {cooling > 0 && <span className="absolute inset-0 bg-ink/50" style={{ clipPath: `inset(${100 - Math.min(100, cooling * 33)}% 0 0 0)` }} />}
@@ -637,8 +658,9 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, busy, onPick }:
         {move.rank ? <span className="rounded bg-white/10 px-1 text-[10px] text-fg">R{move.rank}</span> : null}
         {answers && !blocked && <span className="t-label rounded-full bg-gold px-1.5 py-px text-[8px] text-paper-ink">Answer</span>}
         {tag && !blocked && <span className={`t-label rounded-full px-1.5 py-px text-[8px] ${tag === "Adapted" ? "bg-cape text-white" : "bg-spark text-paper-ink"}`}>{tag}</span>}
+        {burst && !blocked && <span className="t-label rounded-full bg-[#ff7a3d] px-1.5 py-px text-[8px] text-white">Burst ×1.45</span>}
       </span>
-      <span className="relative text-[11px] leading-snug text-muted">{cooling > 0 ? "Cooling down." : short ? "Not enough energy." : mechanicLine(move)}</span>
+      <span className="relative text-[11px] leading-snug text-muted">{cooling > 0 ? "Cooling down." : short ? "Not enough energy." : burst ? `${mechanicLine(move)} Burst ready.` : mechanicLine(move)}</span>
     </button>
   );
 }
@@ -770,8 +792,8 @@ function Bar({ label, value, max, color, hot, kick, right = false, mark, lives }
           {value}/{max}
         </span>
       </div>
-      <div className="stat-bar mt-1 !h-3.5" style={{ transform: right ? "scaleX(-1)" : undefined }}>
-        <div className="absolute inset-y-0 left-0 rounded-full bg-white/40 transition-[width] delay-300 duration-700" style={{ width: `${pct}%` }} />
+      <div className={`stat-bar duel-hp-bar mt-1 !h-3.5 ${hot ? "duel-hp-kick" : ""}`} style={{ transform: right ? "scaleX(-1)" : undefined }}>
+        <div className="duel-hp-ghost absolute inset-y-0 left-0 rounded-full bg-white/35" style={{ width: `${pct}%` }} />
         <div key={hot ? kick : "still"} className={`stat-fill ${hot ? "hp-flash" : ""}`} style={{ width: `${pct}%`, "--fill": pct < 25 ? "#ff3b30" : color } as React.CSSProperties} />
         {mark !== undefined && <span className="absolute inset-y-[-3px] w-[2px] rounded-full bg-white/85 shadow-[0_0_4px_white]" style={{ left: `${mark * 100}%` }} aria-hidden />}
       </div>

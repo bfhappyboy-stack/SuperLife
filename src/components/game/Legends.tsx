@@ -10,6 +10,8 @@ import { ElementBurst, ElementIcon } from "@/components/game/Vfx";
 import { getPower } from "@/game/combo";
 import { ELEMENTS, elementOfPower } from "@/game/elements";
 import { PRESETS, presetById, type HeroPreset } from "@/game/presets";
+import { DifficultyPicker } from "@/components/game/DifficultyPicker";
+import { DIFFICULTY, DEFAULT_DIFFICULTY, type LifeDifficulty } from "@/game/difficulty";
 import { useGame } from "@/game/store";
 import type { Game } from "@/game/types";
 
@@ -136,6 +138,7 @@ function LegendPoster({ legend, thumb = false }: { legend: HeroPreset; thumb?: b
 export function GodScreen() {
   const toMode = useGame((s) => s.openCreate);
   const beginLegend = useGame((s) => s.beginLegend);
+  const [difficulty, setDifficulty] = useState<LifeDifficulty>(DEFAULT_DIFFICULTY);
   const buildOwn = useGame((s) => s.buildOwn);
   const [index, setIndex] = useState(0);
   const [grid, setGrid] = useState(false);
@@ -218,10 +221,13 @@ export function GodScreen() {
       </div>
       <footer className="relative shrink-0 px-4 pt-1 pb-24">
         {legend ? (
-          <button type="button" onClick={() => beginLegend(legend.id)} className="btn btn-gold min-h-14 w-full flex-col !gap-0 text-lg">
-            <span>Begin as {legend.hero}</span>
-            <span className="text-[11px] font-extrabold tracking-[0.14em] opacity-75">{legend.earth.toUpperCase()} · AGE 0</span>
-          </button>
+          <div className="flex flex-col gap-2">
+            <DifficultyPicker value={difficulty} onPick={setDifficulty} />
+            <button type="button" onClick={() => beginLegend(legend.id, difficulty)} className="btn btn-gold min-h-14 w-full flex-col !gap-0 text-lg">
+              <span>Begin as {legend.hero}</span>
+              <span className="text-[11px] font-extrabold tracking-[0.14em] opacity-75">{legend.earth.toUpperCase()} · {DIFFICULTY[difficulty].title.toUpperCase()} · AGE 0</span>
+            </button>
+          </div>
         ) : (
           <button type="button" onClick={buildOwn} className="btn btn-primary min-h-14 w-full text-lg">Build your own</button>
         )}

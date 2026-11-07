@@ -14,6 +14,8 @@ import { DRIVE_TRAITS, EARNED_TRAITS, FACE_TRAITS } from "@/game/origin";
 import { godPicks } from "@/game/engine";
 import { SealedOrb } from "@/components/game/Legends";
 import { useGame } from "@/game/store";
+import { DifficultyPicker } from "@/components/game/DifficultyPicker";
+import { DIFFICULTY, DEFAULT_DIFFICULTY, type LifeDifficulty } from "@/game/difficulty";
 import type { Look, Sex, TraitId, UpbringingId } from "@/game/types";
 
 /**
@@ -60,6 +62,7 @@ export function CreateScreen() {
   const [giftId, setGiftId] = useState(() => pickOne(allPowers().filter((p) => p.generation === 0)).id);
   const [picks, setPicks] = useState<string[]>(() => [pickOne(allPowers().filter((p) => p.generation === 0)).id]);
   const [extras, setExtras] = useState<TraitId[]>([]);
+  const [difficulty, setDifficulty] = useState<LifeDifficulty>(DEFAULT_DIFFICULTY);
 
   const city = CITIES.find((c) => c.id === cityId) ?? CITIES[0];
   const house = UPBRINGINGS.find((u) => u.id === upbringing) ?? UPBRINGINGS[0];
@@ -105,8 +108,8 @@ export function CreateScreen() {
   const last = step === STEPS.length - 1;
   const start = () => {
     const who = { name: name.trim(), cityId: city?.id ?? "nyc", upbringing, portrait, sex, face, drive, look };
-    if (mode === "god") begin({ ...who, mode: "god", giftIds: godPicks(picks), giftId: godPicks(picks)[0] ?? null, extraTraits: extras });
-    else begin({ ...who, mode: "mystery", giftId: null });
+    if (mode === "god") begin({ ...who, mode: "god", giftIds: godPicks(picks), giftId: godPicks(picks)[0] ?? null, extraTraits: extras, difficulty });
+    else begin({ ...who, mode: "mystery", giftId: null, difficulty });
   };
   const giftSummary = mode === "god" ? (godPicks(picks).map((id) => allPowers().find((p) => p.id === id)?.name ?? id).join(" + ") || "No powers") : "Sealed gift";
 
@@ -153,14 +156,17 @@ export function CreateScreen() {
         <div className="mb-2 flex items-center gap-3">
           <Portrait seed={portrait} age={16} sex={sex} look={look} className="size-12 shrink-0 overflow-hidden rounded-2xl border border-gold/40" />
           <p className="line-clamp-2 min-w-0 flex-1 text-xs leading-snug text-muted">
-            <span className="font-bold text-fg">{name.trim() || "Unnamed"}</span> · {house?.title} · {city?.name} · {faceT?.title} · {driveT?.title} · {mode === "mystery" || mode === "god" ? giftSummary : gift && tier !== "none" ? gift.name : "No gift"}
+            <span className="font-bold text-fg">{name.trim() || "Unnamed"}</span> · {house?.title} · {city?.name} · {faceT?.title} · {driveT?.title} · {DIFFICULTY[difficulty].title} · {mode === "mystery" || mode === "god" ? giftSummary : gift && tier !== "none" ? gift.name : "No gift"}
           </p>
         </div>
         {last ? (
-          <button type="button" disabled={!name.trim()} onClick={start} className="btn btn-primary min-h-14 w-full gap-2 text-lg disabled:opacity-40">
-            <Check className="size-5" aria-hidden />
-            Begin at age 0
-          </button>
+          <>
+            <DifficultyPicker value={difficulty} onPick={setDifficulty} />
+            <button type="button" disabled={!name.trim()} onClick={start} className="btn btn-primary mt-2 min-h-14 w-full gap-2 text-lg disabled:opacity-40">
+              <Check className="size-5" aria-hidden />
+              Begin at age 0 · {DIFFICULTY[difficulty].title}
+            </button>
+          </>
         ) : (
           <button type="button" disabled={step === 0 && !name.trim()} onClick={() => setStep(step + 1)} className="btn btn-primary min-h-14 w-full gap-1 text-lg disabled:opacity-40">
             Next: {stepLabel(STEPS[step + 1].id, STEPS[step + 1].label)}
@@ -463,6 +469,7 @@ function GiftStep({ tier, giftId, onTier, onGift }: { tier: Tier; giftId: string
     </>
   );
 }
+
 
 /** Mystery Life: no pick. The power is sealed, and the childhood you just built shapes the odds. */
 function DestinyStep({ upbringing, face, drive }: { upbringing: string; face: string; drive: string }) {
