@@ -5,6 +5,7 @@ import { AUTHORED, type AuthoredMove } from "./moves.authored";
 import { elementOfPower } from "./elements";
 import type { CatalogPower } from "./combo";
 import type { DuelMove, Game, MoveStyle } from "./types";
+import { markUltimate } from "./battle";
 
 const HAND = new Map<string, MoveDef[]>();
 for (const entry of MOVE_BOOK) {
@@ -234,6 +235,8 @@ export function knownMoves(game: Pick<Game, "unlockedPowers" | "mastery">): { de
 
 export function toDuel(def: MoveDef, level = 1): DuelMove {
   const rank = Math.max(1, Math.min(5, level));
+  // Stage 3: signature / high-mastery moves cost real Energy so the bar is a choice.
+  const energy = def.minMastery >= 4 ? Math.max(def.energy, 3) : def.minMastery >= 3 ? Math.max(def.energy, 2) : def.energy;
   return {
     id: def.id,
     name: def.name,
@@ -241,7 +244,7 @@ export function toDuel(def: MoveDef, level = 1): DuelMove {
     power: scaledPower(def, rank),
     style: def.style,
     kind: def.kind,
-    energy: def.energy,
+    energy,
     effect: def.effect,
     cooldown: def.cooldown,
     element: def.element ?? elementOfPower(def.powerId),
@@ -249,7 +252,7 @@ export function toDuel(def: MoveDef, level = 1): DuelMove {
   };
 }
 
-type FightGame = Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp"> & { stats?: { powerLevel: number } };
+type FightGame = Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp"> & { focusPower?: string | null; stats?: { powerLevel: number } };
 
 /**
  * How much your training adds to a move in a real fight: power level (the slow lifetime grind, soft-capped
@@ -302,7 +305,11 @@ export function battleMoves(game: FightGame): DuelMove[] {
     if (at >= 0) spare.splice(at, 1);
     picked[victim.index] = { ...cover, power: cover.power + edge };
   }
-  return picked;
+  const focus = game.focusPower && (game.unlockedPowers ?? []).includes(game.focusPower) ? game.focusPower : (game.unlockedPowers ?? [])[0];
+  const power = focus ? getPower(focus) : null;
+  const rank = focus && power ? masteryLevel(game.mastery?.[focus] ?? 0, power.generation) : 0;
+  const focusMoveIds = power ? movesForPower(power).map((def) => def.id) : [];
+  return markUltimate(picked, { focusPowerId: focus, masteryRank: rank, focusMoveIds });
 }
 
 export function fillLoadout(game: Game): void {

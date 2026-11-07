@@ -179,3 +179,78 @@ export function baitFor(habit: MoveStyle): MoveStyle {
   if (habit === "trick") return "guard";
   return "trick";
 }
+
+// ─── Stage 3: environment + Ultimates ─────────────────────────────────────────────
+
+/** Momentum spent to fire an Ultimate (full bar). */
+export const ULTIMATE_COST = 5;
+/** Damage multiplier on an Ultimate hit (does not stack with Burst). */
+export const ULTIMATE_MULT = 2;
+/** Stage chip: +10% when that element's move wins the edge. */
+export const STAGE_EDGE_BONUS = 1.1;
+
+export interface StageTag {
+  tag: string;
+  element: string;
+  blurb: string;
+}
+
+/** City → stage chip. Arena uses `arena`. */
+export const CITY_STAGE: Record<string, StageTag> = {
+  nyc: { tag: "rooftop", element: "force", blurb: "City roof · force +10% on edge" },
+  metro: { tag: "rooftop", element: "speed", blurb: "Billboard roof · speed +10% on edge" },
+  harbor: { tag: "pier", element: "ice", blurb: "Pier fog · ice +10% on edge" },
+  neon: { tag: "alley", element: "energy", blurb: "Neon alley · energy +10% on edge" },
+  dust: { tag: "open", element: "fire", blurb: "Open flats · fire +10% on edge" },
+  crown: { tag: "throne", element: "arcane", blurb: "Old stone · arcane +10% on edge" },
+  hood: { tag: "alley", element: "shadow", blurb: "Corner alley · shadow +10% on edge" },
+  stacks: { tag: "lab", element: "energy", blurb: "Corp yard · energy +10% on edge" },
+  arena: { tag: "arena", element: "energy", blurb: "Arena lights · energy +10% on edge" },
+};
+
+export function stageForCity(cityId: string | null | undefined): StageTag {
+  return CITY_STAGE[cityId ?? ""] ?? CITY_STAGE.arena!;
+}
+
+/** True when this move is the armed Ultimate and Momentum is full. */
+export function canUltimate(momentum: number, move: DuelMove | null | undefined): boolean {
+  return !!move?.ultimate && (move.id ?? "") !== "breath" && momentum >= ULTIMATE_COST;
+}
+
+/**
+ * Mark exactly one Ultimate among a kit. Prefer moves whose id belongs to `focusPowerId`
+ * once that power is mastery 4+; otherwise (Arena) mark the strongest non-breath move.
+ */
+export function markUltimate(
+  moves: readonly DuelMove[],
+  opts: { focusPowerId?: string | null; masteryRank?: number; forceStrongest?: boolean; focusMoveIds?: readonly string[] } = {},
+): DuelMove[] {
+  const cleared = moves.map((m) => ({ ...m, ultimate: false }));
+  const ready = opts.forceStrongest || ((opts.masteryRank ?? 0) >= 4 && !!opts.focusPowerId);
+  if (!ready) return cleared;
+  const pool = cleared
+    .map((m, i) => ({ m, i }))
+    .filter(({ m }) => (m.id ?? "") !== "breath" && !(m.id ?? "").startsWith("street::"));
+  let candidates = pool;
+  if (!opts.forceStrongest && opts.focusPowerId) {
+    const focus = opts.focusPowerId;
+    const allowed = new Set(opts.focusMoveIds ?? []);
+    const focused = pool.filter(({ m }) => {
+      const id = m.id ?? "";
+      return allowed.has(id) || id.startsWith(`${focus}::`);
+    });
+    if (focused.length) candidates = focused;
+  }
+  if (!candidates.length) return cleared;
+  candidates.sort((a, b) => b.m.power - a.m.power || (b.m.energy ?? 0) - (a.m.energy ?? 0));
+  const pick = candidates[0]!;
+  const out = cleared.map((m) => ({ ...m }));
+  out[pick.i] = { ...out[pick.i]!, ultimate: true, energy: Math.max(out[pick.i]!.energy ?? 1, 3) };
+  return out;
+}
+
+/** Stage element nudge: only on a won style edge. */
+export function stageBonus(stage: StageTag | null | undefined, move: DuelMove | null | undefined, wonEdge: boolean): number {
+  if (!stage || !move || !wonEdge || move.id === "breath") return 1;
+  return move.element === stage.element ? STAGE_EDGE_BONUS : 1;
+}

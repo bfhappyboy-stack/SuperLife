@@ -14,6 +14,10 @@ import {
   cleanseOne,
   FINISHER_MOMENTUM,
   finisherDamage,
+  canUltimate,
+  stageBonus,
+  ULTIMATE_COST,
+  ULTIMATE_MULT,
   habitOf,
   hasStatus,
   inMult,
@@ -134,6 +138,8 @@ export interface TurnResult {
   refused?: string;
   /** True when this turn spent momentum on a Burst. */
   burst?: boolean;
+  /** True when this turn spent full Momentum on an Ultimate. */
+  ultimate?: boolean;
   /** Momentum gained this turn (0 if none). */
   momentumGain?: number;
   /** Statuses that landed this turn. */
@@ -290,9 +296,13 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   const counter = breath && beats("guard", foeMove.style) ? Math.max(1, Math.round(Math.max(...board.playerMoves.map((m) => m.power), 3) * 0.5)) : 0;
   let dealt = breath ? counter : baseDamage(move, foeMove, rand);
   if (counter) notes.push("Counter off the breath");
-  // Burst: banked momentum spends itself on your next WINNING hit (never wasted on a lost or even trade).
-  const burst = !breath && prev.momentum >= BURST_COST && beats(move.style, foeMove.style);
-  if (burst) {
+  // Ultimate (full Momentum) beats Burst on the same swing; both need a won edge.
+  const ultimate = !breath && canUltimate(prev.momentum, move) && beats(move.style, foeMove.style);
+  const burst = !ultimate && !breath && prev.momentum >= BURST_COST && beats(move.style, foeMove.style);
+  if (ultimate) {
+    dealt = Math.max(1, Math.round(dealt * ULTIMATE_MULT));
+    notes.push("Ultimate");
+  } else if (burst) {
     dealt = Math.max(1, Math.round(dealt * BURST_MULT));
     notes.push("Burst");
   }
@@ -327,6 +337,13 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   const myMult = outMult(prev.playerStatus) * inMult(prev.foeStatus);
   if (dealt > 0) dealt = Math.max(1, Math.round(dealt * myMult));
   const edge: Edge = breath ? "them" : beats(move.style, foeMove.style) ? "you" : beats(foeMove.style, move.style) ? "them" : "even";
+  if (dealt > 0 && edge === "you") {
+    const sb = stageBonus(board.stage, move, true);
+    if (sb > 1) {
+      dealt = Math.max(1, Math.round(dealt * sb));
+      notes.push(`${board.stage?.tag ?? "Stage"} boost`);
+    }
+  }
   // Mix-up combo: three won edges, never the same style twice running, fire a Finisher.
   const combo = advanceCombo(prev.combo, breath ? null : move.style, edge === "you" ? "won" : edge === "even" ? "even" : "lost");
   const finisher = combo.finisher ? finisherDamage(board.playerMoves, myMult) : 0;
@@ -420,7 +437,8 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   // Momentum: edge wins bank it; Burst spends; breath never builds.
   let momentum = prev.momentum;
   let momentumGain = 0;
-  if (burst) momentum = Math.max(0, momentum - BURST_COST);
+  if (ultimate) momentum = Math.max(0, momentum - ULTIMATE_COST);
+  else if (burst) momentum = Math.max(0, momentum - BURST_COST);
   if (finisher) momentumGain += FINISHER_MOMENTUM;
   if (!breath && edge === "you") {
     momentumGain += 1;
@@ -447,7 +465,7 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   state.done = foeHp <= 0 || playerHp <= 0;
   if (!state.done) commit(board, state, state.lastStyle, rand);
   const burn = { you: myBurn, foe: foeBurn };
-  return { state, move, foeMove, dealt, taken, edge, shift, healed, chip, notes, burst: burst || undefined, momentumGain: momentumGain || undefined, applied, burn, finisher, cleansed, read: !!prev.faked };
+  return { state, move, foeMove, dealt, taken, edge, shift, healed, chip, notes, burst: burst || undefined, ultimate: ultimate || undefined, momentumGain: momentumGain || undefined, applied, burn, finisher, cleansed, read: !!prev.faked };
 }
 
 /** 1 for a win, 0.5 for a double knockout, 0 for a loss. */

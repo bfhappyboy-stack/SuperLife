@@ -20,16 +20,21 @@ import {
   addStatus,
   advanceCombo,
   burnChip,
+  canUltimate,
   cleanseOne,
   FINISHER_MOMENTUM,
   finisherDamage,
   hasStatus,
   inMult,
+  markUltimate,
   outMult,
   shockDrain,
   spendWard,
+  stageBonus,
   statusOfMove,
   tickStatuses,
+  ULTIMATE_COST,
+  ULTIMATE_MULT,
   type StatusInst,
 } from "./battle";
 import { BURST_COST, BURST_MULT, GUARD_BREAK_BONUS, MOMENTUM_CAP } from "./difficulty";
@@ -220,7 +225,8 @@ export function startBout(a: string, b: string, seed: number, firstLeader: Side 
 }
 
 export function movesOf(id: string): DuelMove[] {
-  return fighterOf(id).moves;
+  // Arena: each fighter's strongest move is their Ultimate (armed at full Momentum).
+  return markUltimate(fighterOf(id).moves, { forceStrongest: true });
 }
 
 export function moveByKey(id: string, key: string): DuelMove {
@@ -384,13 +390,16 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
   const styleOf = (m: DuelMove): MoveStyle => (m === BREATH ? "guard" : m.style);
   const edgeNow: Side | null = beats(styleOf(moves[0]), styleOf(moves[1])) ? 0 : beats(styleOf(moves[1]), styleOf(moves[0])) ? 1 : null;
   const burst: [boolean, boolean] = [false, false];
+  const ultimate: [boolean, boolean] = [false, false];
   const mult: [number, number] = [1, 1];
   for (const s of [0, 1] as Side[]) {
     const me = fighters[s];
     const them = fighters[(1 - s) as Side];
-    burst[s] = moves[s] !== BREATH && edgeNow === s && (me.momentum ?? 0) >= BURST_COST;
-    mult[s] = (burst[s] ? BURST_MULT : 1) * outMult(me.status) * inMult(them.status);
-    if (burst[s]) notes.push(`${fighterOf(me.id).name} Bursts`);
+    ultimate[s] = moves[s] !== BREATH && edgeNow === s && canUltimate(me.momentum ?? 0, moves[s]);
+    burst[s] = !ultimate[s] && moves[s] !== BREATH && edgeNow === s && (me.momentum ?? 0) >= BURST_COST;
+    mult[s] = (ultimate[s] ? ULTIMATE_MULT : burst[s] ? BURST_MULT : 1) * outMult(me.status) * inMult(them.status);
+    if (ultimate[s]) notes.push(`${fighterOf(me.id).name} Ultimates`);
+    else if (burst[s]) notes.push(`${fighterOf(me.id).name} Bursts`);
   }
   const combos = ([0, 1] as Side[]).map((s) =>
     advanceCombo(fighters[s].combo, moves[s] === BREATH ? null : moves[s].style, moves[s] === BREATH ? "lost" : edgeNow === s ? "won" : edgeNow === null ? "even" : "lost"),
@@ -398,6 +407,12 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
   const dealt: [number, number] = [0, 0];
   dealt[0] = hit(prev, 0, fighters[0], fighters[1], moves[0], moves[1], rng.next, notes, mult[0]);
   dealt[1] = hit(prev, 1, fighters[1], fighters[0], moves[1], moves[0], rng.next, notes, mult[1]);
+  for (const s of [0, 1] as Side[]) {
+    if (edgeNow === s && dealt[s] > 0) {
+      const sb = stageBonus({ tag: "arena", element: "energy", blurb: "" }, moves[s], true);
+      if (sb > 1) dealt[s] = Math.max(1, Math.round(dealt[s] * sb));
+    }
+  }
   const finisher: [number, number] = [0, 0];
   for (const s of [0, 1] as Side[]) {
     if (!combos[s]!.finisher) continue;
@@ -469,7 +484,7 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
   // Momentum: edge wins bank it (+1 more for a guard break and a finisher); a Burst spends 3.
   for (const s of [0, 1] as Side[]) {
     const me = fighters[s];
-    let mo = (me.momentum ?? 0) - (burst[s] ? BURST_COST : 0);
+    let mo = (me.momentum ?? 0) - (ultimate[s] ? ULTIMATE_COST : burst[s] ? BURST_COST : 0);
     if (edgeNow === s && moves[s] !== BREATH) {
       mo += 1;
       if (moves[s].style === "trick" && styleOf(moves[(1 - s) as Side]) === "guard") mo += GUARD_BREAK_BONUS;
