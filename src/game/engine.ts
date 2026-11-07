@@ -43,6 +43,7 @@ import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHidde
 import { powerGimmick } from "./gimmicks";
 import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, tuneOf } from "./difficulty";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
+import { stageForCity } from "./battle";
 import {
   asDrive,
   asFace,
@@ -1656,6 +1657,7 @@ function makeDuel(
       foeDamage: tune.foeDamage,
       aiHate: tune.aiHate,
       aiRead: tune.aiRead,
+      stage: stageForCity(d.cityId),
     } satisfies DuelBoard,
   };
 }

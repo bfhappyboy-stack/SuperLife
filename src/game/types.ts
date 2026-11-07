@@ -142,6 +142,8 @@ export interface DuelMove {
   rank?: number;
   /** Status this move leaves when it wins the edge (overrides its element's; null = none). See battle.ts. */
   applies?: StatusId | null;
+  /** Stage 3 Ultimate: one of the six, armed at full Momentum. See battle.ts. */
+  ultimate?: boolean;
 }
 
 /** Battle statuses (battle.ts). */
@@ -207,6 +209,8 @@ export interface DuelBoard {
   aiHate?: number;
   /** Chance the AI fakes a tell to bait a habit (same style twice running). Default 0. */
   aiRead?: number;
+  /** Stage tag from the city (or Arena). Nudges one element. */
+  stage?: { tag: string; element: string; blurb: string };
 }
 
 export interface Cape {
