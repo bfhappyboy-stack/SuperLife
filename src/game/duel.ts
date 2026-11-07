@@ -369,8 +369,8 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
     foeStatus = addStatus(foeStatus, "ward");
     applied.push({ on: "foe", id: "ward" });
   }
-  // Burn ticks at the end of the turn, so it never "kills" a foe your hit already dropped.
-  const foeBurn = prev.foeHp - dealt > 0 ? burnChip(foeStatus, maxF) : 0;
+  // Burn ticks at the end of the turn and never lands the knockout: it stops at 1 HP.
+  const foeBurn = prev.foeHp - dealt > 1 ? Math.min(burnChip(foeStatus, maxF), prev.foeHp - dealt - 1) : 0;
 
   let foeHp = Math.max(0, prev.foeHp - dealt - foeBurn);
   let shift: TurnResult["shift"] = null;
@@ -414,7 +414,8 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
     playerStatus = addStatus(playerStatus, theirs);
     applied.push({ on: "you", id: theirs });
   }
-  const myBurn = foeHp > 0 ? burnChip(playerStatus, board.playerHp) : 0;
+  const myLeft = prev.playerHp - taken - chip;
+  const myBurn = foeHp > 0 && myLeft > 1 ? Math.min(burnChip(playerStatus, board.playerHp), myLeft - 1) : 0;
   const playerHp = Math.max(0, prev.playerHp - taken - chip - myBurn);
   // Momentum: edge wins bank it; Burst spends; breath never builds.
   let momentum = prev.momentum;

@@ -8,14 +8,33 @@
  * move, showing a tell (its true style, or a feint for 2 energy). The other side sees the tell and
  * ANSWERS. Both hits land at once with the duel's rock-paper-scissors maths (`baseDamage`): strike beats
  * trick, trick beats guard, guard beats strike. Energy, cooldowns, status slow, guard soak and the
- * "catch a breath" counter all work as in the story duel.
+ * "catch a breath" counter all work as in the story duel. Since 2026-11-07 pm Arena also shares the
+ * life sim's Stage 2 rules (battle.ts): Momentum + Burst + guard break, element statuses and the
+ * mix-up Finisher, for both sides.
  *
  * Everything (rng included) lives in plain JSON state, so an online match only needs to sync the two
  * players' actions: both clients replay the same pure functions and land on the same state.
  */
 import { BREATH, answerOf, baseDamage, beats, keyOf } from "./duel";
+import {
+  addStatus,
+  advanceCombo,
+  burnChip,
+  cleanseOne,
+  FINISHER_MOMENTUM,
+  finisherDamage,
+  hasStatus,
+  inMult,
+  outMult,
+  shockDrain,
+  spendWard,
+  statusOfMove,
+  tickStatuses,
+  type StatusInst,
+} from "./battle";
+import { BURST_COST, BURST_MULT, GUARD_BREAK_BONUS, MOMENTUM_CAP } from "./difficulty";
 import { ARENA_BY_ID, ARENA_ROSTER, type ArenaFighter, type PassiveKind } from "./arena.roster";
-import type { DuelMove, MoveStyle } from "./types";
+import type { DuelMove, MoveStyle, StatusId } from "./types";
 
 export type Side = 0 | 1;
 export const STYLES: MoveStyle[] = ["strike", "trick", "guard"];
@@ -84,6 +103,10 @@ export interface FighterState {
   /** Turns this fighter has led (for charge). */
   leads: number;
   dealt: number;
+  /** Shared battle rules (optional so a saved pre-Stage-2 bout still loads). */
+  momentum?: number;
+  status?: StatusInst[];
+  combo?: MoveStyle[];
 }
 
 /** What one player does on a turn. `feint` only matters for the leader. */
@@ -112,6 +135,14 @@ export interface TurnLog {
   edge: Side | null;
   notes: string[];
   revive: Side | null;
+  /** Which side spent a Burst this turn. */
+  burst?: [boolean, boolean];
+  /** Finisher bonus each side landed (0 if none). */
+  finisher?: [number, number];
+  /** Statuses that landed this turn (`on` = the side that now has it). */
+  applied?: { on: Side; id: StatusId }[];
+  /** Burn each side took at the end of the turn. */
+  burn?: [number, number];
 }
 
 export interface BoutState {
@@ -164,6 +195,9 @@ function freshFighter(id: string): FighterState {
     lastHitBy: null,
     leads: 0,
     dealt: 0,
+    momentum: 0,
+    status: [],
+    combo: [],
   };
 }
 
@@ -233,6 +267,8 @@ export function tellOf(bout: BoutState, action: ArenaAction): Tell {
   const feinting = !!action.feint && action.feint !== move.style;
   const charged = isCharged(bout, lead);
   if (sense) return { style: move.style, feint: false, charged };
+  // A shocked leader can't hide or fake its tell.
+  if (hasStatus(bout.fighters[lead].status, "shock")) return { style: move.style, feint: false, charged };
   if (passiveOf(leaderId) === "fog") {
     const [v] = rngNext(hashSeed(bout.rng, bout.turn, "fog"));
     if (v < 0.4) return { style: null, feint: false, charged };
@@ -257,6 +293,7 @@ function hit(
   other: DuelMove,
   rand: () => number,
   notes: string[],
+  extra = 1,
 ): number {
   const breath = move === BREATH;
   const mine = passiveOf(me.id);
@@ -269,7 +306,7 @@ function hit(
     if (dmg) notes.push(`${fighter.name} counters off the breath`);
   } else dmg = baseDamage(move, other, rand);
   if (!dmg) return 0;
-  let mult = ARENA_SCALE * me.slow;
+  let mult = ARENA_SCALE * me.slow * (breath ? 1 : extra);
   // Attacker passives.
   if (!breath) {
     if (mine === "rage") mult *= 1 + 0.4 * (1 - me.hp / me.maxHp);
@@ -328,7 +365,7 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
     const fs = fighters[side];
     const a = actions[side];
     let move = moveByKey(fs.id, a.move);
-    let feint = side === lead && a.feint && a.feint !== move.style ? a.feint : null;
+    let feint = side === lead && a.feint && a.feint !== move.style && !hasStatus(fs.status, "shock") ? a.feint : null;
     if (arenaRefusal(fs, move, feint)) {
       if (feint && !arenaRefusal(fs, move)) feint = null;
       else {
@@ -343,9 +380,31 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
   const moves: [DuelMove, DuelMove] = [p0.move, p1.move];
   const tell = tellOf(prev, { move: keyOf(moves[lead]) === "breath" ? "breath" : keyOf(moves[lead]), feint: lead === 0 ? p0.feint : p1.feint });
 
+  // Shared rules: the edge decides Bursts, combos and statuses (breath stands as a guard).
+  const styleOf = (m: DuelMove): MoveStyle => (m === BREATH ? "guard" : m.style);
+  const edgeNow: Side | null = beats(styleOf(moves[0]), styleOf(moves[1])) ? 0 : beats(styleOf(moves[1]), styleOf(moves[0])) ? 1 : null;
+  const burst: [boolean, boolean] = [false, false];
+  const mult: [number, number] = [1, 1];
+  for (const s of [0, 1] as Side[]) {
+    const me = fighters[s];
+    const them = fighters[(1 - s) as Side];
+    burst[s] = moves[s] !== BREATH && edgeNow === s && (me.momentum ?? 0) >= BURST_COST;
+    mult[s] = (burst[s] ? BURST_MULT : 1) * outMult(me.status) * inMult(them.status);
+    if (burst[s]) notes.push(`${fighterOf(me.id).name} Bursts`);
+  }
+  const combos = ([0, 1] as Side[]).map((s) =>
+    advanceCombo(fighters[s].combo, moves[s] === BREATH ? null : moves[s].style, moves[s] === BREATH ? "lost" : edgeNow === s ? "won" : edgeNow === null ? "even" : "lost"),
+  );
   const dealt: [number, number] = [0, 0];
-  dealt[0] = hit(prev, 0, fighters[0], fighters[1], moves[0], moves[1], rng.next, notes);
-  dealt[1] = hit(prev, 1, fighters[1], fighters[0], moves[1], moves[0], rng.next, notes);
+  dealt[0] = hit(prev, 0, fighters[0], fighters[1], moves[0], moves[1], rng.next, notes, mult[0]);
+  dealt[1] = hit(prev, 1, fighters[1], fighters[0], moves[1], moves[0], rng.next, notes, mult[1]);
+  const finisher: [number, number] = [0, 0];
+  for (const s of [0, 1] as Side[]) {
+    if (!combos[s]!.finisher) continue;
+    finisher[s] = finisherDamage(fighterOf(fighters[s].id).moves, ARENA_SCALE * outMult(fighters[s].status) * inMult(fighters[(1 - s) as Side].status));
+    dealt[s] += finisher[s];
+    notes.push(`${fighterOf(fighters[s].id).name} lands a combo finisher`);
+  }
   // Swarm is scattered by an area move.
   for (const s of [0, 1] as Side[]) {
     if (fighters[s].swarmed > 0 && moves[s].kind === "area") {
@@ -377,6 +436,49 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
       }
     }
   }
+  // Statuses: Ward is spent by a hit, old ones tick, breath shakes one off, then this turn's land.
+  const applied: { on: Side; id: StatusId }[] = [];
+  const nextStatus: [StatusInst[], StatusInst[]] = [[], []];
+  for (const s of [0, 1] as Side[]) {
+    let list = tickStatuses(spendWard(fighters[s].status, dealt[(1 - s) as Side]));
+    if (moves[s] === BREATH) {
+      const clean = cleanseOne(list);
+      list = clean.list;
+      if (clean.cleared) notes.push(`${fighterOf(fighters[s].id).name} shakes off ${clean.cleared}`);
+    }
+    nextStatus[s] = list;
+  }
+  for (const s of [0, 1] as Side[]) {
+    const m = moves[s];
+    const st = statusOfMove(m);
+    if (!st || (edgeNow !== s && !(edgeNow === null && m.kind === "status"))) continue;
+    const on = st === "ward" ? s : ((1 - s) as Side);
+    nextStatus[on] = addStatus(nextStatus[on], st);
+    applied.push({ on, id: st });
+  }
+  const burn: [number, number] = [0, 0];
+  for (const s of [0, 1] as Side[]) {
+    const me = fighters[s];
+    me.status = nextStatus[s];
+    if (me.hp > 0 && fighters[(1 - s) as Side].hp > 0) {
+      // Burn never lands the knockout: it stops at 1 HP.
+      burn[s] = Math.min(burnChip(me.status, me.maxHp), me.hp - 1);
+      me.hp -= burn[s];
+    }
+  }
+  // Momentum: edge wins bank it (+1 more for a guard break and a finisher); a Burst spends 3.
+  for (const s of [0, 1] as Side[]) {
+    const me = fighters[s];
+    let mo = (me.momentum ?? 0) - (burst[s] ? BURST_COST : 0);
+    if (edgeNow === s && moves[s] !== BREATH) {
+      mo += 1;
+      if (moves[s].style === "trick" && styleOf(moves[(1 - s) as Side]) === "guard") mo += GUARD_BREAK_BONUS;
+    }
+    if (finisher[s]) mo += FINISHER_MOMENTUM;
+    me.momentum = Math.max(0, Math.min(MOMENTUM_CAP, mo));
+    me.combo = combos[s]!.chain;
+  }
+
   // Energy, cooldowns, slow.
   for (const s of [0, 1] as Side[]) {
     const me = fighters[s];
@@ -384,11 +486,11 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
     const breath = m === BREATH;
     const feint = s === 0 ? p0.feint : p1.feint;
     const spent = breath ? 0 : (m.energy ?? 1) + feintCost(me.id, feint, m);
-    let gain = ENERGY_REGEN;
+    let gain = ENERGY_REGEN - shockDrain(prev.fighters[s].status);
     const kind = passiveOf(me.id);
     if (kind === "prep") gain += 1;
     if (kind === "arc" && (breath || m.kind === "guard")) gain += 1;
-    me.energy = Math.min(energyCap(me.id), me.energy - spent + gain);
+    me.energy = Math.max(0, Math.min(energyCap(me.id), me.energy - spent + gain));
     me.cool = breath ? tick(me.cool) : tick(me.cool, keyOf(m), m.cooldown ?? 0);
     // A status move slows the OTHER side's next hit.
     fighters[(1 - s) as Side].slow = !breath && m.kind === "status" ? 0.75 : 1;
@@ -411,6 +513,10 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
     edge,
     notes,
     revive,
+    burst,
+    finisher,
+    applied,
+    burn,
   };
   let done = false;
   let winner: Side | null = null;
@@ -508,7 +614,9 @@ function moveValue(bout: BoutState, side: Side, move: DuelMove, odds: Record<Mov
   for (const s of STYLES) {
     const p = odds[s];
     if (!p) continue;
-    const mine = breath ? (beats("guard", s) ? 4 : 0) : move.power * rawMod(move, s);
+    let mine = breath ? (beats("guard", s) ? 4 : 0) : move.power * rawMod(move, s);
+    // A banked Burst makes a winning hit worth more.
+    if (!breath && beats(move.style, s) && (me.momentum ?? 0) >= BURST_COST) mine *= BURST_MULT;
     const theirsPow = avgPower(bout, opp, s);
     let theirs = theirsPow * rawMod({ ...STYLE_DUMMY[s], power: 1 }, breath ? "guard" : move.style);
     if (breath) theirs *= 0.8;
@@ -519,6 +627,8 @@ function moveValue(bout: BoutState, side: Side, move: DuelMove, odds: Record<Mov
     // Energy is a resource: pricey moves must earn it; keep enough for next turn.
     v -= (move.energy ?? 1) * 0.55;
     if (move.kind === "status") v += 2.2;
+    const st = statusOfMove(move);
+    if (st && st !== "ward" && !hasStatus(them.status, st)) v += 0.8;
     if (move.kind === "area" && me.swarmed > 0) v += 4;
     if (passiveOf(them.id) === "adapt" && them.lastHitBy === keyOf(move)) v -= move.power * 0.5;
     if (passiveOf(them.id) === "regen" && (move.style === "trick" || move.kind === "status")) v += 1.5;
@@ -547,7 +657,7 @@ function weighted<T>(items: T[], score: (t: T) => number, skill: number, rand: (
 export function aiLead(bout: BoutState, side: Side, level: AiLevel, rand: () => number): ArenaAction {
   const skill = SKILL[level];
   const fs = bout.fighters[side];
-  const oppSense = passiveOf(bout.fighters[(1 - side) as Side].id) === "sense";
+  const oppSense = passiveOf(bout.fighters[(1 - side) as Side].id) === "sense" || hasStatus(fs.status, "shock");
   type Opt = { move: DuelMove; feint: MoveStyle | null };
   const opts: Opt[] = [{ move: BREATH, feint: null }];
   for (const m of usable(bout, side)) {
@@ -713,11 +823,11 @@ export function aiOrder(m: ArenaMatch, side: Side, rand: () => number): string[]
 
 /** Win rates from the balance sim (filled by the tuning pass; 0.5 = average). */
 export const TIER: Record<string, number> = {
-  thor: 0.563, zod: 0.56, "red-skull": 0.559, lex: 0.534, cheetah: 0.532, abomination: 0.529, hela: 0.529,
-  killmonger: 0.52, loki: 0.513, superman: 0.512, goblin: 0.512, doomsday: 0.512, "black-panther": 0.511,
-  stane: 0.505, ultron: 0.5, sabretooth: 0.5, batman: 0.499, "iron-man": 0.495, joker: 0.494, "wonder-woman": 0.487,
-  venom: 0.487, flash: 0.487, "reverse-flash": 0.487, "captain-america": 0.485, bane: 0.467, ock: 0.46,
-  wolverine: 0.437, hulk: 0.436, "spider-man": 0.389,
+  // Re-run 2026-11-07 pm with the shared Stage 2 rules (Momentum, statuses, Finisher).
+  thor: 0.574, ultron: 0.551, loki: 0.551, "red-skull": 0.539, "spider-man": 0.527, "captain-america": 0.527, ock: 0.521,
+  zod: 0.521, batman: 0.515, joker: 0.515, stane: 0.515, "wonder-woman": 0.512, goblin: 0.512, lex: 0.506, killmonger: 0.506,
+  "reverse-flash": 0.5, wolverine: 0.497, hela: 0.494, superman: 0.488, "iron-man": 0.485, "black-panther": 0.482, bane: 0.473,
+  abomination: 0.47, doomsday: 0.47, sabretooth: 0.467, hulk: 0.464, flash: 0.455, venom: 0.449, cheetah: 0.414,
 };
 
 /** Run a whole bout AI vs AI (for sims and tests). */

@@ -159,3 +159,62 @@ test("difficulty: aiRead rises with difficulty and fights get more runway", () =
   for (let i = 1; i < reads.length; i++) assert.ok(reads[i]! > reads[i - 1]!);
   assert.ok(DUEL_HP_SCALE > 1);
 });
+
+// ---- Arena shares the Stage 2 rules (2026-11-07 pm, increment 3) ----
+import { playArenaTurn as aTurn, registerFighter, startBout as aStart, tellOf as aTell, type BoutState as ABout } from "../arena.ts";
+import { keyOf as kOf } from "../duel.ts";
+import type { DuelMove as DM } from "../types.ts";
+
+const am = (name: string, style: DM["style"], element: string, power = 6): DM =>
+  ({ name, style, kind: style === "guard" ? "guard" : "attack", power, energy: 1, element } as unknown as DM);
+const kit: DM[] = [
+  am("Heat", "strike", "fire"), am("Zap", "trick", "lightning"), am("Wall", "guard", "shield"),
+  am("Punch", "strike", "force"), am("Feint", "trick", "speed"), am("Block", "guard", "force"),
+];
+for (const id of ["t-a", "t-b"])
+  registerFighter({
+    id, name: id, title: "test", side: "hero", world: "spider-man" as never, color: "#fff", sex: "male", hp: 120,
+    passive: { kind: "prep", name: "Prep", text: "" }, moves: kit, tint: { suit: "#000", trim: "#fff" },
+  });
+const k = (n: string) => kOf(kit.find((m) => m.name === n)!);
+
+test("Arena: a winning Fire hit Burns, Momentum builds, Burst fires on the next winning hit", () => {
+  let b: ABout = aStart("t-a", "t-b", 7, 0);
+  b = aTurn(b, [{ move: k("Heat") }, { move: k("Feint") }]); // strike beats trick
+  const l1 = b.log.at(-1)!;
+  assert.equal(l1.edge, 0);
+  assert.ok(l1.applied?.some((a) => a.on === 1 && a.id === "burn"));
+  assert.ok((b.fighters[0].momentum ?? 0) >= 1);
+  b = { ...b, fighters: [{ ...b.fighters[0], momentum: 3, energy: 10 }, b.fighters[1]] };
+  b = aTurn(b, [{ move: k("Punch") }, { move: k("Feint") }]);
+  assert.equal(b.log.at(-1)!.burst?.[0], true);
+  assert.ok((b.fighters[0].momentum ?? 0) < 3);
+});
+
+test("Arena: a Shocked leader can't fake its tell, and Burn never knocks out", () => {
+  let b: ABout = aStart("t-a", "t-b", 9, 0);
+  b = { ...b, leader: 0, fighters: [{ ...b.fighters[0], status: [{ id: "shock", turns: 2 }] }, b.fighters[1]] };
+  const t = aTell(b, { move: k("Heat"), feint: "guard" });
+  assert.equal(t.style, "strike");
+  assert.equal(t.feint, false);
+  b = { ...b, fighters: [b.fighters[0], { ...b.fighters[1], hp: 2, status: [{ id: "burn", turns: 2 }] }] };
+  b = aTurn(b, [{ move: k("Wall") }, { move: k("Block") }]);
+  const l = b.log.at(-1)!;
+  // Either the hit itself did the knockout (no Burn tick), or Burn left them at 1+.
+  if (b.fighters[1].hp <= 0) assert.equal(l.burn?.[1] ?? 0, 0);
+  else assert.ok(b.fighters[1].hp >= 1);
+  let c: ABout = aStart("t-a", "t-b", 11, 0);
+  c = { ...c, fighters: [c.fighters[0], { ...c.fighters[1], hp: 1, status: [{ id: "burn", turns: 2 }] }] };
+  c = aTurn(c, [{ move: k("Block") }, { move: k("Wall") }]);
+  assert.equal(c.log.at(-1)!.burn?.[1] ?? 0, 0, "Burn can't take the last HP");
+});
+
+test("Arena: same seed and actions replay to the same bout (online-safe)", () => {
+  const run = () => {
+    let b: ABout = aStart("t-a", "t-b", 42, 0);
+    const seq = ["Heat", "Zap", "Wall", "Punch", "Feint", "Block", "Heat", "Zap"];
+    for (let i = 0; i < seq.length && !b.done; i++) b = aTurn(b, [{ move: k(seq[i]) }, { move: k(seq[(i + 3) % 8]) }]);
+    return JSON.stringify(b);
+  };
+  assert.equal(run(), run());
+});

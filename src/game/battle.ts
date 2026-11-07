@@ -24,7 +24,7 @@ export interface StatusDef {
 }
 
 export const STATUSES: Record<StatusId, StatusDef> = {
-  burn: { id: "burn", title: "Burn", blurb: "Loses 4% max HP a turn", turns: 2, color: "#ff6a2b", good: false },
+  burn: { id: "burn", title: "Burn", blurb: "Loses 4% max HP a turn (never the knockout)", turns: 2, color: "#ff6a2b", good: false },
   frost: { id: "frost", title: "Frost", blurb: "Hits 15% weaker", turns: 2, color: "#7fd8ff", good: false },
   shock: { id: "shock", title: "Shock", blurb: "Tells can't lie · −1 energy a turn", turns: 2, color: "#ffe14d", good: false },
   expose: { id: "expose", title: "Expose", blurb: "Takes 15% more damage", turns: 2, color: "#d48cff", good: false },
