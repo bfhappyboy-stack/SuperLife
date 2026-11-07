@@ -4,6 +4,15 @@
 
 Built on `origin/devbot/2026-11-07-am` (f9179b9). `main` is unchanged since 702d68d. Each increment below was typechecked, linted, tested, built and loaded at 390×844 before it was pushed.
 
+### Increment 3: Arena shares the battle book
+
+- **Same rules in both modes:** Arena bouts (vs AI and online) now use the life sim's Momentum (+1 on a won edge, +1 guard break, +1 Finisher; cap 5), **Burst** (×1.45 on your next winning hit at 3+), the five **statuses** (same element table, max 2, non-lethal Burn, breath clears one) and the mix-up **Finisher**. Shock also stops a leader from faking its tell.
+- **AI:** values a winning hit higher with Burst banked and likes landing a status the rival doesn't have yet. A Shocked AI leader stops planning feints.
+- **HUD:** Momentum pips next to Energy, status pills on both HP cards, combo pips in the scene, the BURST / FINISHER banner, status words on the fighter they hit, status/Burn lines in the turn log, a "true" mark on a Shocked rival's tell, "Shocked · no fakes" in place of the tell picker, and status icons on move cards. The tell picker is slimmer so it fits beside the Momentum pips at 390px.
+- **Balance:** bouts are ~7.3 turns (was 8.1). Pro AI vs the ladder stand-in is 0.44 / 0.33 at perfect / 60% play (was 0.46 / 0.35). Roster spread 16 points (Thor 57% … Cheetah 41%), within the 22-point test limit. The `TIER` table is re-run on the new rules.
+- **Burn never lands the knockout** in either mode (it stops at 1 HP), so a revive or a last hit always decides the fight.
+- **Tests:** 3 more in `battle.test.ts` (Arena status + Burst, Shock vs feint + non-lethal Burn, deterministic replay for online). 183 pass.
+
 ### Increment 2: battle Stage 2 in the life sim — statuses, combos, habit reading
 
 - **Statuses** (`battle.ts`, shared): a move that wins the style edge leaves its element's status. Burn (fire, arcane), Frost (ice, storm), Shock (lightning, energy: tells can't lie, −1 energy), Expose (psychic, shadow, warp, light, gravity), Ward (shield, life: lands on you, next hit −35%). Two a side at most. Breath shakes off your oldest harmful status. Foes inflict them too.

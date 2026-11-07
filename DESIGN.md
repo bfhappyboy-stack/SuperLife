@@ -277,6 +277,8 @@ Shared rules live in `src/game/battle.ts` (pure, deterministic), so Arena can us
 - **Runway.** Both sides' HP ×1.35 (`DUEL_HP_SCALE`) and case bosses ×1.45 HP (`BOSS_HP_MULT`), so a fight lasts ~6 turns instead of ~4.5 and bosses are a real step up.
 - **Feel.** BURST and FINISHER get a cinematic slash + word over the stage with shake and haptics; statuses pop as words on the fighter they hit and sit as pills under the HP bars; move cards show the status they leave.
 
+**Arena (shipped 2026-11-07 pm, increment 3).** Arena bouts use the same book: Momentum (edge +1, guard break +1, Finisher +1), Burst on the next winning hit at 3+, the status table above, and the mix-up Finisher (scaled by `ARENA_SCALE`). A Shocked leader can't fake its tell. Passives still stack on top. All of it sits in the bout state, so online replay stays deterministic.
+
 ### Signature system (full vision — later stages)
 
 Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship complete and playable.

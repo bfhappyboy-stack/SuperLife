@@ -41,6 +41,19 @@
 - Build spread is still wide (Spider-Man 0.95, Superman 0.44 at Normal / 60%) because of lopsided default sixes; see BACKLOG.
 - Phone: Metro God Mode vs Glassjaw (Hard) and Crownbridge vs The Auditor (Legendary) played through the Answer hints at 390×844. Expose/Ward pills, the combo pips, the habit warning and the BURST beat all read cleanly; 0 console errors. Screenshots: `/workspace/superlife-screens/1107pm-inc2/` (`crown-t6.png` BURST, `metro-5.png` habit warning).
 
+### Arena after increment 3 (shared rules)
+
+Pro AI vs the ladder stand-in, all bouts, 29 fighters (`/workspace/playtest/pm1107/ladder.ts`):
+
+| | Rookie | Pro | Legend |
+|---|---|---|---|
+| Perfect play, before → after | 0.81 → 0.77 | 0.46 → 0.44 | 0.03 → 0.01 |
+| 60% play, before → after | 0.63 → 0.63 | 0.35 → 0.33 | 0.03 → 0.02 |
+
+- Turns per bout 8.1 → 7.3. Per bout: ~1 Burst, ~0.4 Finishers, ~3.4 statuses.
+- Roster spread 9.5 → 16.1 points (limit 22). Top Thor 0.57, Loki/Ultron 0.55; bottom Cheetah 0.41, Venom 0.45.
+- Browser at 390×844 (Superman / Hulk / Thor / Wonder Woman vs Pro AI, all 3 rounds): Shock, Expose and Ward pills showed on the cards, "Shocked · no fakes" replaced the tell picker, combo pips filled, and the purse paid out at the end. No console errors. The first pass had the tell picker overflowing beside the new Momentum pips and the combo pips covering fighter names; both were fixed before the push.
+
 ## Morning pass (2026-11-07 am): battle Stage 1 — difficulty + Momentum
 
 **Life sims (new combos, not used in recent passes):**
