@@ -149,7 +149,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 
 ## 12. Duel presentation and elements
 
-- 16 elements (`game/elements.ts`) each with a colour, glow and travel type (orb, beam, bolt, ripple, streak). Every power and move resolves to an element; unknown falls back to force.
+- 16 elements (`game/elements.ts`) each with a colour, glow and travel type (orb, beam, bolt, ripple, streak). Every power and move resolves to an element; unknown falls back to force. Since Stage 2 the element also picks the status a winning hit leaves (`battle.ts` `ELEMENT_STATUS`).
 - Moves are hand-authored in `moves.authored.ts`; the generator only fills gaps and never uses "Stem Noun" names.
 - A turn reads in about a second: hit (230ms), swap (520ms), counter (760ms), rest (1040ms). Big hits (≥10 or 20% max HP) shake and flash. A KO ends the turn.
 - Foe looks come from `duelKit.ts` (villain/hero kit per legacy power, street fallback).
@@ -236,9 +236,11 @@ Chosen at life start (mystery, God Mode builder, and legend pickers). Persisted 
 | Id | Feel | Foe HP | Foe damage | AI hate-read |
 |---|---|---|---|---|
 | Story | Learn the tells | ×0.88 | ×0.82 | 0.30 |
-| Normal | Harder than the old baseline | ×1.10 | ×1.06 | 0.48 |
-| Hard | Mistakes hurt | ×1.24 | ×1.16 | 0.58 |
-| Legendary | Punishes greed | ×1.40 | ×1.30 | 0.70 |
+| Normal | Harder than the old baseline | ×1.20 | ×1.15 | 0.48 |
+| Hard | Mistakes hurt | ×1.30 | ×1.24 | 0.58 |
+| Legendary | Punishes greed | ×1.45 | ×1.36 | 0.70 |
+
+(Retuned 2026-11-07 pm with statuses and combos in: Normal lands ~0.58 for a 60% player. Habit-bait chance `aiRead`: 0 / 0.25 / 0.40 / 0.55.)
 
 Hard and Legendary also bump the foe's power level slightly before HP is rolled. Arena's Rookie / Pro / Legend ladder is separate — this curve is for life-sim fights only.
 
@@ -250,22 +252,42 @@ A second resource on the life-sim duel, next to Energy:
 - **+1** when you win the style edge (strike > trick > guard > strike).
 - **+1 extra** (guard break) when a Trick beats a Guard.
 - Breath never builds momentum; a successful breath-counter still does not (breath is recovery).
-- At **3+** momentum, the next real move (not breath) can **Burst**: spend 3 for **×1.45** damage. The UI marks ready Burst moves with a Momentum pip.
+- At **3+** momentum, your next **winning** hit (not breath) **Bursts**: spend 3 for **×1.45** damage. Since 2026-11-07 pm a lost or even trade no longer wastes it; the momentum stays banked. The UI says "Burst on next edge" and marks the answer cards.
 - Pure and deterministic: same seed + move log → same fight. Safe for future Arena online replay.
 
 Energy stays (cost per move, +3 on every turn including breath, cap 10). Momentum is the "am I pressing or banking?" decision Energy never gave.
+
+### Statuses, combos and habit reading (Stage 2 — life sim shipped 2026-11-07 pm)
+
+Shared rules live in `src/game/battle.ts` (pure, deterministic), so Arena can use the same book.
+
+- **Statuses ride on elements.** A move that **wins the style edge** leaves its element's status on the loser; a status-kind move also lands it on an even trade. Ward lands on the winner instead. A move can override with `applies` (data). Foes use their move's element, or their power's.
+
+  | Status | Elements | Effect (2 turns) |
+  |---|---|---|
+  | Burn | fire, arcane | loses 4% max HP at the end of each turn |
+  | Frost | ice, storm | hits 15% weaker |
+  | Shock | lightning, energy | tells can't lie (beats fog, feint and habit bait); −1 energy a turn |
+  | Expose | psychic, shadow, warp, light, gravity | takes 15% more damage |
+  | Ward | shield, life | next hit taken −35%, then spent; landing it burns off Burn |
+
+  Force, speed and stretch are pure damage. Max **2** statuses a side (a third pushes out the oldest). **Catch a breath** also shakes off your oldest harmful status.
+- **Mix-up combo.** Win the edge three times, **never the same style twice running**, with no lost edge or breath between (an even trade holds the chain): a **Finisher** adds 60% of your strongest move's power and +1 Momentum. The stage shows three combo pips.
+- **Habit reading.** Throw the same style twice running (breath doesn't count) and Normal / Hard / Legendary foes may fake a tell that baits it (25% / 40% / 55%, `aiRead`; Story never). The stage warns "Habit: Guard ×2 · tells may be bait", and the log owns up when a tell was bait. Shock cancels it.
+- **Runway.** Both sides' HP ×1.35 (`DUEL_HP_SCALE`) and case bosses ×1.45 HP (`BOSS_HP_MULT`), so a fight lasts ~6 turns instead of ~4.5 and bosses are a real step up.
+- **Feel.** BURST and FINISHER get a cinematic slash + word over the stage with shake and haptics; statuses pop as words on the fighter they hit and sit as pills under the HP bars; move cards show the status they leave.
 
 ### Signature system (full vision — later stages)
 
 Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship complete and playable.
 
 1. **Resources (Stage 1 done):** Energy + Momentum. Later: Stamina (optional third bar for long boss phases) only if phone HUD still reads clean.
-2. **Status effects (Stage 2):** Burn, Frost, Shock, Slow, Expose, Ward. Max 2 statuses a side. Data on moves (`applies` / `clears`), never hard-coded per villain.
-3. **Combos / chains (Stage 2):** Landing Strike → Trick → Guard (or a power-tagged chain) in order within 3 turns grants a Chain bonus (+Momentum or a free small hit). Gen1/Gen2 synergies: owning both parents of a braid tags those moves as "Kin" and slightly boosts chain windows.
+2. **Status effects (Stage 2 — life sim done):** Burn, Frost, Shock, Expose, Ward (Slow stays the one-turn status-move effect). Max 2 a side. Element-driven with a per-move `applies` override, never hard-coded per villain.
+3. **Combos / chains (Stage 2 — life sim done):** shipped as the mix-up Finisher (three won edges, never the same style twice running). Still to do: Gen1/Gen2 "Kin" synergy (owning both parents of a braid tags its moves and widens the chain).
 4. **Counters & guard breaks (Stage 1 partial):** Breath still counters Strike. Trick-vs-Guard now pays Momentum. Stage 2: Guard Break at Momentum 4+ ignores 50% of a Guard stance once.
 5. **Environment / stage (Stage 3):** City and arena tags (`alley`, `rooftop`, `lab`, `throne`) nudge one element. Readable chip on the fight header, not a second rules sheet.
 6. **Signature ultimates (Stage 3):** One Ultimate per focus power, unlocked at mastery 4+. Costs full Momentum (5) + its Energy. Cinematic beat (1.2s pose + element burst) then a big deterministic hit. Still one of the 6 equipped slots when armed — never a 7th button.
-7. **Enemy AI (Stage 2–3):** Tells and fakes already exist (gimmick fog/feint + Arena lead/fake). Add pattern memory: after you use the same answer twice, Legend/Hard AI starts feinting that answer. Life-sim AI aggression already scales with difficulty.
+7. **Enemy AI (Stage 2 — life sim done):** habit reading with a fair on-screen warning (see above). Arena's lead/fake AI is separate.
 8. **Multi-phase bosses (done, deepen in Stage 2):** Existing gimmicks stay. Stage 2 adds a Phase 3 on final canon bosses and a one-month regroup cooldown after a boss loss.
 9. **Tempo / initiative (Stage 3):** Winner of the previous edge acts "fast" (their projectile travels first visually; already true). Optional: Momentum ≥ 4 lets you interrupt a Charge gimmick.
 10. **Strategic loadouts (ongoing):** Exactly 6 moves, two sets (A/B). Future: a "Burst window" tag on authored finishers so the Momentum spend feels authored, not generic.

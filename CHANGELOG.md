@@ -4,6 +4,16 @@
 
 Built on `origin/devbot/2026-11-07-am` (f9179b9). `main` is unchanged since 702d68d. Each increment below was typechecked, linted, tested, built and loaded at 390×844 before it was pushed.
 
+### Increment 2: battle Stage 2 in the life sim — statuses, combos, habit reading
+
+- **Statuses** (`battle.ts`, shared): a move that wins the style edge leaves its element's status. Burn (fire, arcane), Frost (ice, storm), Shock (lightning, energy: tells can't lie, −1 energy), Expose (psychic, shadow, warp, light, gravity), Ward (shield, life: lands on you, next hit −35%). Two a side at most. Breath shakes off your oldest harmful status. Foes inflict them too.
+- **Mix-up combo:** three won edges, never the same style twice running, fire a **Finisher** (bonus hit + Momentum). An even trade holds the chain; a lost edge or a breath drops it.
+- **Habit reading:** the same style twice running lets Normal / Hard / Legendary foes fake a tell that baits it (25 / 40 / 55%). The stage shows a "Habit · tells may be bait" warning first, so it's fair; Shock cancels it.
+- **Runway and bosses:** both HP pools ×1.35 and case bosses ×1.45 HP, so fights last ~6 turns and bosses are harder than street foes. Retuned difficulty so Normal lands ~58% for a 60% player (was ~66%). Win rates per difficulty and play style are in `PLAYTEST.md`.
+- **Burst no longer wastes itself:** banked momentum (3+) now spends on your next **winning** hit, not on whatever move comes next (it used to fire on a guard that lost the exchange). Still automatic, so the owner's "manual arm" question stays open.
+- **Feel:** a cinematic BURST / FINISHER slash and word with shake and haptics; status words pop on the fighter they hit; status pills under both HP bars; combo pips in the stage (the stage is 10–18px shorter so all six moves still fit beside a boss gimmick strip); move cards show the status they leave; the breath button says what it will clear; a "true" mark on a Shocked foe's tell.
+- **Tests:** `battle.test.ts` (9): element table, status cap/refresh/expiry, Ward vs Burn, cleanse, combo rules, habit bait, Burn/Frost/Ward/Shock in real duel turns, Finisher determinism, difficulty read curve.
+
 ### Increment 1: playtest + move-card fix
 
 - Playtest of new builds (Crownbridge wealthy mystery, Metro God Mode lightning + force field, Spider-Man / Batman / Superman) at all four difficulties. Results and the Stage 2 plan are in `PLAYTEST.md` and `BACKLOG.md`.

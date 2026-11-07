@@ -26,6 +26,21 @@
 
 **Screenshots (before):** `/workspace/superlife-screens/1107pm-before/` (`crown-leg-b.png`, `superman.png`).
 
+**After increment 2 (statuses, combos, habit reading, HP runway, retune), same 450 boards per difficulty, street / boss:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random | Avg turns (60%) |
+|---|---|---|---|---|---|
+| Story | 1.00 / 0.98 | 0.96 / 0.88 | 0.85 / 0.79 | 0.65 / 0.51 | 5.5 |
+| Normal | 0.88 / 0.70 | 0.61 / 0.53 | 0.42 / 0.33 | 0.20 / 0.15 | 6.0 |
+| Hard | 0.80 / 0.61 | 0.49 / 0.39 | 0.30 / 0.22 | 0.13 / 0.06 | 6.1 |
+| Legendary | 0.54 / 0.50 | 0.29 / 0.20 | 0.15 / 0.12 | 0.05 / 0.00 | 5.9 |
+
+- "Perfect" answers every tell and, on Hard and up, breaks a habit when the bait warning shows. Boss rows are 18 bosses × 12 seeds each, so ±0.08.
+- Per fight at Normal / 60%: 0.74 Bursts, 0.27 Finishers (0.42 for perfect play), 0.19 habit baits, ~1.5 statuses landed (Expose, Ward, Burn and Shock most common).
+- Bosses are now a clear step above street foes (Normal 60%: 0.61 street vs 0.53 boss; it was 0.66 vs 0.64).
+- Build spread is still wide (Spider-Man 0.95, Superman 0.44 at Normal / 60%) because of lopsided default sixes; see BACKLOG.
+- Phone: Metro God Mode vs Glassjaw (Hard) and Crownbridge vs The Auditor (Legendary) played through the Answer hints at 390×844. Expose/Ward pills, the combo pips, the habit warning and the BURST beat all read cleanly; 0 console errors. Screenshots: `/workspace/superlife-screens/1107pm-inc2/` (`crown-t6.png` BURST, `metro-5.png` habit warning).
+
 ## Morning pass (2026-11-07 am): battle Stage 1 — difficulty + Momentum
 
 **Life sims (new combos, not used in recent passes):**
