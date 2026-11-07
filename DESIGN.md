@@ -292,7 +292,7 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 7. **Enemy AI (Stage 2 — life sim done):** habit reading with a fair on-screen warning (see above). Arena's lead/fake AI is separate.
 8. **Multi-phase bosses (done, deepen in Stage 2):** Existing gimmicks stay. Stage 2 adds a Phase 3 on final canon bosses and a one-month regroup cooldown after a boss loss.
 9. **Tempo / initiative (Stage 3):** Winner of the previous edge acts "fast" (their projectile travels first visually; already true). Optional: Momentum ≥ 4 lets you interrupt a Charge gimmick.
-10. **Strategic loadouts (ongoing):** Exactly 6 moves, two sets (A/B). Future: a "Burst window" tag on authored finishers so the Momentum spend feels authored, not generic.
+10. **Strategic loadouts (Stage 3 start — coverage shipped 2026-11-07 night):** Exactly 6 moves, two sets (A/B). Auto-fill and street padding prefer a missing strike/guard/trick so every tell has an answer; the Moves shelf warns when the equipped six still lacks a style (e.g. "No guard move: strike tells have no answer"). Authored early moves for durability / force-field / aegis / strength favour coverage. Future: a "Burst window" tag on authored finishers so the Momentum spend feels authored, not generic.
 
 ### Feel on phone (Stage 1 partial)
 

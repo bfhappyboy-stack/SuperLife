@@ -119,3 +119,15 @@
   background: linear-gradient(var(--color-panel), color-mix(in srgb, var(--color-panel) 0%, transparent)); pointer-events: none;
 }
 .move-picker .mp-quick-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+
+.mp-coverage-warn {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in oklab, #f0a040 55%, transparent);
+  background: color-mix(in oklab, #f0a040 16%, transparent);
+  color: #f6d7a8;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+}

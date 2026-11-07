@@ -5,7 +5,7 @@ import { buzz } from "@/components/game/haptics";
 import { blip } from "@/components/game/sfx";
 import { getPower } from "@/game/combo";
 import { powerRank } from "@/game/mastery";
-import { battleMoves, knownMoves, moveLevel, MOVESET_SIZE, placeInSlot, scaledPower, STREET_MOVES } from "@/game/moves";
+import { battleMoves, knownMoves, loadoutWarnings, moveLevel, MOVESET_SIZE, placeInSlot, scaledPower, STREET_MOVES } from "@/game/moves";
 import type { MoveDef } from "@/game/moves.catalog";
 import type { Game } from "@/game/types";
 import "./move-picker.css";
@@ -160,6 +160,12 @@ export function MovePicker({ game, onAct }: { game: Game; onAct: (id: string) =>
           </button>
         )}
       </div>
+
+      {loadoutWarnings(game).map((warn) => (
+        <p key={warn} className="mp-coverage-warn mt-2" role="status">
+          {warn}
+        </p>
+      ))}
 
       <div ref={slotsRef} className="mp-slots mt-2 grid grid-cols-2 gap-2" role="list" aria-label="Equipped moves">
         {Array.from({ length: MOVESET_SIZE }, (_, index) => {
