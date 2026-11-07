@@ -1,6 +1,7 @@
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { Bug, CloudFog, Coins, Crown, Dna, Drama, EyeOff, Flame, HeartPulse, RefreshCcw, RotateCcw, Shield, ShieldHalf, Siren, Skull, Sparkles, Swords, Trophy, Zap } from "lucide-react";
+import { ComboPips, StatusIcon, StatusPills, StrikeBanner } from "@/components/game/BattleHud";
 import { Figure, type Pose } from "@/components/game/Figure";
 import { kitFor } from "@/components/game/duelKit";
 import { VillainArt } from "@/components/game/VillainArt";
@@ -9,6 +10,7 @@ import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
+import { habitOf, hasStatus, STATUSES, statusOfMove } from "@/game/battle";
 import { answerOf, BREATH, canBurst, duelRatio, gimmickStatus, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
@@ -68,6 +70,8 @@ interface Shot { key: number; from: Side; element: string; }
 interface Impact { key: number; on: Side; element: string; amount: number; big: boolean; crit: boolean }
 interface Result { ratio: number; dealt: number; taken: number; turns: number; best: { name: string; dealt: number } | null }
 interface PhaseBanner { key: number; title: string; name: string; line: string; hint: string; color: string }
+interface BeatFx { key: number; word: string; sub?: string; color: string }
+interface StatusTag { key: number; on: Side; text: string; color: string }
 
 const T = { hit1: 230, swap: 520, hit2: 760, rest: 1040 };
 
@@ -101,7 +105,9 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const board = spec.duel;
   const [state, setState] = useState<DuelState | null>(() => (board ? startDuel(board) : null));
   const [shownHp, setShownHp] = useState(() => ({ me: board?.playerHp ?? 1, foe: board?.foeHp ?? 1 }));
-  const [log, setLog] = useState(board?.gimmick ? `${board.gimmick.name}: ${board.gimmick.hint}` : "Read their tell, then answer it.");
+  const [log, setLog] = useState(board?.gimmick ? `${board.gimmick.name}: ${board.gimmick.hint}` : "Read their tell, then answer it. Winning hits leave a status.");
+  const [beatFx, setBeatFx] = useState<BeatFx | null>(null);
+  const [tags, setTags] = useState<StatusTag[]>([]);
   const [last, setLast] = useState<string | null>(null);
   const [edge, setEdge] = useState<{ key: number; edge: Edge } | null>(null);
   const [mePose, setMePose] = useState<Pose>("idle");
@@ -223,8 +229,8 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
     setState(next);
     const s = stats.current;
     s.turns += 1;
-    s.dealt += dealt;
-    s.taken += taken + turn.chip;
+    s.dealt += dealt + turn.burn.foe;
+    s.taken += taken + turn.chip + turn.burn.you;
     if (!breath && (!s.best || dealt > s.best.dealt)) s.best = { name: move.name, dealt };
     setLast(breath ? "breath" : keyOf(move));
     setEdge({ key: ++beat.current, edge: turn.edge });
@@ -235,6 +241,8 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
     const flavor = move.effect ? ` ${move.effect}` : "";
     const extra = notes.length ? ` ${notes.join(". ")}.` : "";
     const chip = turn.chip ? ` ${gimmick?.name ?? "Chip"} −${turn.chip}.` : "";
+    const statusLine = turn.applied.length ? ` ${turn.applied.map((a) => (a.id === "ward" ? (a.on === "you" ? "Ward up." : `${fight.foeName} is Warded.`) : a.on === "foe" ? `${STATUSES[a.id].title} on ${fight.foeName}.` : `${STATUSES[a.id].title} on you.`)).join(" ")}` : "";
+    const burnLine = turn.burn.foe || turn.burn.you ? ` Burn${turn.burn.foe ? ` −${turn.burn.foe} them` : ""}${turn.burn.you ? ` −${turn.burn.you} you` : ""}.` : "";
     const line = breath
       ? `You catch a breath${dealt ? ` and counter for ${dealt}` : ""}. ${fight.foeName} lands ${foeMove.name} for ${taken}.`
       : turn.edge === "you"
@@ -242,7 +250,25 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
         : turn.edge === "them"
           ? `${foeMove.name} had the angle on ${move.name}. ${taken} in, ${dealt} out.`
           : `${move.name} meets ${foeMove.name}. You trade ${dealt} for ${taken}.`;
-    setLog(next.foeHp <= 0 ? `${move.name} puts ${fight.foeName} down.${flavor}` : `${line}${extra}${chip}`);
+    setLog(next.foeHp <= 0 ? `${move.name} puts ${fight.foeName} down.${turn.finisher ? " Combo finisher!" : ""}${flavor}` : `${turn.read ? "That tell was bait: they read your habit. " : ""}${line}${extra}${statusLine}${chip}${burnLine}`);
+    // Cinematic beat for a Burst or a combo Finisher, timed to the first hit.
+    if (turn.finisher || turn.burst) {
+      const key = ++beat.current;
+      later(breath ? 80 : T.hit1 - 60, () => {
+        setBeatFx(turn.finisher ? { key, word: "FINISHER", sub: turn.burst ? `Burst + combo · +${turn.finisher}` : `Mix-up combo · +${turn.finisher}`, color: "#ffcf4d" } : { key, word: "BURST", sub: "×1.45 · 3 momentum", color: "#ff7a3d" });
+        setQuake({ key, color: turn.finisher ? "#ffcf4d" : "#ff7a3d" });
+        buzz(turn.finisher ? [20, 30, 40, 30, 70] : [30, 20, 60]);
+      });
+      later(1000, () => setBeatFx((b) => (b && b.key === key ? null : b)));
+    }
+    // Status pops land with the hit that caused them.
+    for (const a of turn.applied) {
+      const key = ++beat.current;
+      const on: Side = a.on === "foe" ? "foe" : "me";
+      const at = (a.on === "foe") === (a.id !== "ward") ? (breath ? 160 : T.hit1 + 80) : breath ? 520 : T.hit2 + 80;
+      later(at, () => setTags((list) => [...list.slice(-2), { key, on, text: STATUSES[a.id].title.toUpperCase(), color: STATUSES[a.id].color }]));
+      later(at + 1100, () => setTags((list) => list.filter((t) => t.key !== key)));
+    }
     if (foeMove.id === "charge" && taken > maxP * 0.2) buzz([60, 30, 90]);
 
     if (breath) setMePose("guard");
@@ -314,6 +340,9 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const TellIcon = tell === "hidden" ? EyeOff : STYLE_ICON[tell];
   const tellColor = tell === "hidden" ? "#9aa3b8" : charging ? "#ff3b30" : HEX[tell];
   const breathAnswers = answer === "guard";
+  const habit = (fight.aiRead ?? 0) > 0 ? habitOf(hud.habits) : null;
+  const foeShocked = hasStatus(hud.foeStatus, "shock");
+  const myHarm = (now.playerStatus ?? []).find((st) => !STATUSES[st.id].good);
 
   return (
     <div className="relative flex h-full min-h-0 flex-col gap-2 overflow-hidden px-4 pt-3 pb-4">
@@ -342,10 +371,20 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
         >
           <TellIcon className="size-3.5" style={{ color: tellColor }} />
           {tell === "hidden" ? "Tell: ???" : charging ? "Charging!" : `Tell: ${STYLE[tell]}`}
+          {foeShocked && tell !== "hidden" && !charging && (
+            <span className="flex items-center text-[10px] font-extrabold text-[#ffe14d]" title="Shocked: this tell is true">
+              <Zap className="size-3" aria-hidden />
+              true
+            </span>
+          )}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Bar label="You" value={shownHp.me} max={maxP} color={heroAura} hot={impact?.on === "me" && impact.amount > 0} kick={impact?.key ?? 0} />
+      <div className="grid grid-cols-2 gap-x-3">
+        <div className="min-w-0">
+          <Bar label="You" value={shownHp.me} max={maxP} color={heroAura} hot={impact?.on === "me" && impact.amount > 0} kick={impact?.key ?? 0} />
+          <StatusPills list={hud.playerStatus} />
+        </div>
+        <div className="min-w-0">
         <Bar
           label={fight.foeName}
           value={shownHp.foe}
@@ -357,10 +396,12 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
           mark={gimmick && gimmick.kind !== "revive" && (gimmick.at ?? 0.55) < 1 && hud.phase === 1 ? (gimmick.at ?? 0.55) : undefined}
           lives={gimmick?.kind === "revive" ? (hud.revived ? 1 : 2) : undefined}
         />
+          <StatusPills list={hud.foeStatus} right />
+        </div>
       </div>
       {gimmick && <GimmickStrip gimmick={gimmick} live={live} status={status} state={hud} />}
 
-      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[164px]" : "h-[188px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[146px]" : "h-[178px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
         <div className="absolute inset-0" style={{ background: `radial-gradient(45% 55% at 22% 92%, color-mix(in srgb, ${heroAura} 32%, transparent), transparent 70%), radial-gradient(45% 55% at 78% 92%, color-mix(in srgb, ${foeColor} ${live ? 52 : 34}%, transparent), transparent 70%)` }} />
         {fight.boss && <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(255,59,48,0.35)]" />}
         {live && gimmick && <div className="duel-phase-aura pointer-events-none absolute inset-0" style={{ "--aura": GIMMICK_COLOR[gimmick.kind] } as React.CSSProperties} />}
@@ -388,6 +429,19 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
           </span>
         )}
 
+        <ComboPips chain={hud.combo} className="absolute top-11 left-1/2 -translate-x-1/2" />
+        {habit && (
+          <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-xl border border-[#d48cff]/60 bg-black/60 px-2 py-0.5 text-center text-[10px] leading-tight font-extrabold text-white" role="status">
+            <span className="block text-[#e2ccff]">Habit: {STYLE[habit]} ×2</span>
+            <span className="block font-semibold text-white/80">tells may be bait</span>
+          </span>
+        )}
+        {tags.map((t) => (
+          <span key={t.key} className={`pointer-events-none absolute top-[50%] ${t.on === "foe" ? "right-[7%]" : "left-[7%]"}`}>
+            <FloatNumber text={t.text} color={t.color} className={`!text-lg whitespace-nowrap ${t.on === "foe" ? "right-0" : "left-0"}`} />
+          </span>
+        ))}
+        {beatFx && <StrikeBanner key={beatFx.key} word={beatFx.word} sub={beatFx.sub} color={beatFx.color} />}
         {shot && <Projectile key={shot.key} element={shot.element} reverse={shot.from === "foe"} seed={shot.key} />}
 
         {impact && (
@@ -471,7 +525,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             <span className="t-num text-fg">
               {now.momentum}/{MOMENTUM_CAP}
             </span>
-            {canBurst(now) ? <span className="ml-1 rounded-full bg-[#ff7a3d]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#ffb08a]">BURST READY</span> : null}
+            {canBurst(now) ? <span className="ml-1 rounded-full bg-[#ff7a3d]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#ffb08a]">BURST ON NEXT EDGE</span> : null}
           </p>
           <div className="flex gap-1" aria-label={`${now.momentum} momentum`} role="meter" aria-valuenow={now.momentum} aria-valuemin={0} aria-valuemax={MOMENTUM_CAP}>
             {Array.from({ length: MOMENTUM_CAP }, (_, index) => (
@@ -493,14 +547,14 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             picked={last === keyOf(move)}
             answers={!!answer && move.style === answer}
             tag={moveTag(fight, hud, move)}
-            burst={canBurst(now)}
+            burst={canBurst(now) && !!answer && move.style === answer}
             busy={busy}
             onPick={() => swing(move)}
           />
         ))}
       </div>
       <button type="button" aria-pressed={last === "breath"} disabled={busy} onClick={() => swing(BREATH)} className={`btn btn-ghost min-h-12 shrink-0 text-sm ${last === "breath" ? "!border-gold" : ""} ${breathAnswers ? "!border-gold/70" : ""}`}>
-        <RotateCcw className="size-4" aria-hidden /> {breathAnswers ? "Breath · +3 energy · counters" : "Catch a breath · +3 energy"}
+        <RotateCcw className="size-4" aria-hidden /> {breathAnswers ? (myHarm ? `Breath · +3 · counters · clears ${STATUSES[myHarm.id].title}` : "Breath · +3 energy · counters") : myHarm ? `Breath · +3 energy · clears ${STATUSES[myHarm.id].title}` : "Catch a breath · +3 energy"}
       </button>
 
       {banner && <PhaseOverlay banner={banner} />}
@@ -629,6 +683,7 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, busy, on
   const el = elementOf(move.element);
   const meta = ELEMENTS[el];
   const StyleIcon = STYLE_ICON[move.style];
+  const leaves = statusOfMove(move);
   return (
     <button
       type="button"
@@ -657,8 +712,14 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, busy, on
         {(move.cooldown ?? 0) > 0 && <span className="text-muted">{cooling > 0 ? `${cooling}t left` : `cd ${move.cooldown}`}</span>}
         {answers && !blocked && <span className="t-label rounded-full bg-gold px-1.5 py-px text-[8px] text-paper-ink">Answer</span>}
         {tag && !blocked && <span className={`t-label rounded-full px-1.5 py-px text-[8px] ${tag === "Adapted" ? "bg-cape text-white" : "bg-spark text-paper-ink"}`}>{tag}</span>}
+        {leaves && (
+          <span className="flex items-center gap-0.5" style={{ color: STATUSES[leaves].color }} title={`Wins the edge: ${STATUSES[leaves].title} (${STATUSES[leaves].blurb})`}>
+            <StatusIcon id={leaves} />
+            <span className="text-[10px]">{STATUSES[leaves].title}</span>
+          </span>
+        )}
       </span>
-      <span className="relative truncate text-[11px] leading-snug text-muted">{cooling > 0 ? "Cooling down." : short ? "Not enough energy." : burst ? `${mechanicLine(move)} Burst ready.` : mechanicLine(move)}</span>
+      <span className="relative truncate text-[11px] leading-snug text-muted">{cooling > 0 ? "Cooling down." : short ? "Not enough energy." : burst && answers ? `Bursts ×1.45 if it wins. ${mechanicLine(move)}` : mechanicLine(move)}</span>
     </button>
   );
 }

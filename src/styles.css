@@ -671,3 +671,10 @@
   .phase-in, .duel-phase-aura, .duel-gimmick-live, .duel-charge, .duel-charge-chip, .duel-fog, .duel-coin, .duel-swarm { animation: none; }
   .phase-in { opacity: 1; }
 }
+
+/* Battle Stage 2: Burst / Finisher cinematic beat (BattleHud.tsx). */
+@keyframes battle-slash { 0% { transform: translateY(-50%) skewY(-8deg) scaleX(0); opacity: 0; } 25% { transform: translateY(-50%) skewY(-8deg) scaleX(1); opacity: 0.95; } 75% { opacity: 0.85; } 100% { transform: translateY(-50%) skewY(-8deg) scaleX(1.05); opacity: 0; } }
+.battle-slash { background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--slash) 85%, white) 35%, var(--slash) 65%, transparent); transform-origin: 0 50%; animation: battle-slash 900ms cubic-bezier(.2,.8,.3,1) both; mix-blend-mode: screen; }
+@keyframes battle-word { 0% { opacity: 0; transform: scale(2.2) rotate(-8deg); } 30% { opacity: 1; transform: scale(.94) rotate(-5deg); } 80% { opacity: 1; transform: scale(1) rotate(-5deg); } 100% { opacity: 0; transform: scale(1.06) rotate(-5deg); } }
+.battle-word { animation: battle-word 900ms cubic-bezier(.2,.9,.3,1.2) both; }
+@media (prefers-reduced-motion: reduce) { .battle-slash, .battle-word { animation-duration: 1ms !important; } }

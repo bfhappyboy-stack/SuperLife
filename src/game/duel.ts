@@ -6,8 +6,29 @@
  * Most switch on in phase 2, when the boss drops to `at` of its health. `revive` instead fires on the
  * first knockout. Every gimmick has a readable answer, shown in the fight as a hint.
  */
+import {
+  addStatus,
+  advanceCombo,
+  baitFor,
+  burnChip,
+  cleanseOne,
+  FINISHER_MOMENTUM,
+  finisherDamage,
+  habitOf,
+  hasStatus,
+  inMult,
+  outMult,
+  rememberStyle,
+  shockDrain,
+  spendWard,
+  STATUSES,
+  statusOfMove,
+  tickStatuses,
+  type StatusInst,
+} from "./battle";
 import { BURST_COST, BURST_MULT, GUARD_BREAK_BONUS, MOMENTUM_CAP } from "./difficulty";
-import type { BossGimmick, DuelBoard, DuelMove, MoveStyle } from "./types";
+import { elementOfLegacy } from "./elements";
+import type { BossGimmick, DuelBoard, DuelMove, MoveStyle, StatusId } from "./types";
 
 export type Edge = "you" | "them" | "even";
 export type Rand = () => number;
@@ -85,6 +106,15 @@ export interface DuelState {
   charge: number;
   turns: number;
   done: boolean;
+  /** Stage 2 statuses on each side (battle.ts). Optional so older states still load. */
+  playerStatus?: StatusInst[];
+  foeStatus?: StatusInst[];
+  /** Your mix-up chain: styles of consecutive won edges. */
+  combo?: MoveStyle[];
+  /** Your last few real-move styles, for habit reading. */
+  habits?: MoveStyle[];
+  /** This turn's tell is a habit fake (hidden from the HUD; revealed after the exchange). */
+  faked?: boolean;
 }
 
 export interface TurnResult {
@@ -106,6 +136,16 @@ export interface TurnResult {
   burst?: boolean;
   /** Momentum gained this turn (0 if none). */
   momentumGain?: number;
+  /** Statuses that landed this turn. */
+  applied: { on: "you" | "foe"; id: StatusId }[];
+  /** Burn damage at the end of the turn. */
+  burn: { you: number; foe: number };
+  /** Bonus damage from a combo finisher (0 if none). */
+  finisher: number;
+  /** A status your breath shook off. */
+  cleansed: StatusId | null;
+  /** The tell you just answered was a fake that baited your habit. */
+  read: boolean;
 }
 
 const PHASE_AT = 0.55;
@@ -146,8 +186,30 @@ function commit(board: DuelBoard, state: DuelState, hated: MoveStyle | null, ran
     }
   }
   if (g?.kind === "coin" && state.phase === 2) state.coin = rand() < 0.5 ? "heads" : "tails";
+  state.faked = false;
+  const shocked = hasStatus(state.foeStatus, "shock");
+  // Habit reading: you threw the same style twice, so the foe baits it with a fake tell and brings the answer.
+  const habit = habitOf(state.habits);
+  const read = board.aiRead ?? 0;
+  if (habit && read > 0 && !shocked && rand() < read) {
+    const answer = board.foeMoves.filter((move) => beats(move.style, habit));
+    if (answer.length) {
+      state.intent = answer[Math.floor(rand() * answer.length)] ?? answer[0]!;
+      state.shown = baitFor(habit);
+      state.faked = true;
+      return;
+    }
+  }
   state.intent = pickFoe(board.foeMoves, hated, rand, board.aiHate ?? 0.42);
   state.shown = show(board, state, state.intent, rand);
+  // Shock: a jolted foe can't hide or fake its tell.
+  if (shocked) state.shown = state.intent.style;
+}
+
+/** The status the foe's move leaves (its own element, or the foe's power element). */
+function foeStatusOf(board: DuelBoard, move: DuelMove): StatusId | null {
+  if (move.id === "charge") return null;
+  return statusOfMove(move, board.foePower ? elementOfLegacy(board.foePower) : undefined);
 }
 
 export function startDuel(board: DuelBoard, rand: Rand = Math.random): DuelState {
@@ -172,6 +234,11 @@ export function startDuel(board: DuelBoard, rand: Rand = Math.random): DuelState
     charge: 0,
     turns: 0,
     done: false,
+    playerStatus: [],
+    foeStatus: [],
+    combo: [],
+    habits: [],
+    faked: false,
   };
   // A gimmick with at >= 1 is live from the opening bell.
   if (board.gimmick && (board.gimmick.at ?? PHASE_AT) >= 1 && board.gimmick.kind !== "revive") enterPhase(board, state);
@@ -198,7 +265,7 @@ export function refusal(state: DuelState, move: DuelMove): string | null {
   return null;
 }
 
-/** True when the next real move can spend momentum for a Burst. */
+/** True when momentum is banked for a Burst (it fires on your next winning hit). */
 export function canBurst(state: DuelState): boolean {
   return state.momentum >= BURST_COST;
 }
@@ -208,7 +275,7 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   const state: DuelState = { ...prev, cool: { ...prev.cool } };
   const foeMove = prev.intent;
   const notes: string[] = [];
-  const empty = { state: prev, move, foeMove, dealt: 0, taken: 0, edge: "even" as Edge, shift: null, healed: 0, chip: 0, notes };
+  const empty = { state: prev, move, foeMove, dealt: 0, taken: 0, edge: "even" as Edge, shift: null, healed: 0, chip: 0, notes, applied: [], burn: { you: 0, foe: 0 }, finisher: 0, cleansed: null, read: false };
   if (prev.done) return { ...empty, refused: "The fight is over." };
   const no = refusal(prev, move);
   if (no) return { ...empty, refused: no };
@@ -223,8 +290,8 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   const counter = breath && beats("guard", foeMove.style) ? Math.max(1, Math.round(Math.max(...board.playerMoves.map((m) => m.power), 3) * 0.5)) : 0;
   let dealt = breath ? counter : baseDamage(move, foeMove, rand);
   if (counter) notes.push("Counter off the breath");
-  // Burst: spend momentum on a real move for a readable damage spike.
-  const burst = !breath && prev.momentum >= BURST_COST;
+  // Burst: banked momentum spends itself on your next WINNING hit (never wasted on a lost or even trade).
+  const burst = !breath && prev.momentum >= BURST_COST && beats(move.style, foeMove.style);
   if (burst) {
     dealt = Math.max(1, Math.round(dealt * BURST_MULT));
     notes.push("Burst");
@@ -256,12 +323,24 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
     }
   }
   if (state.exposed && !breath) dealt = Math.round(dealt * 1.2);
+  // Statuses: Frost weakens the hitter; Expose and Ward change what the target takes.
+  const myMult = outMult(prev.playerStatus) * inMult(prev.foeStatus);
+  if (dealt > 0) dealt = Math.max(1, Math.round(dealt * myMult));
+  const edge: Edge = breath ? "them" : beats(move.style, foeMove.style) ? "you" : beats(foeMove.style, move.style) ? "them" : "even";
+  // Mix-up combo: three won edges, never the same style twice running, fire a Finisher.
+  const combo = advanceCombo(prev.combo, breath ? null : move.style, edge === "you" ? "won" : edge === "even" ? "even" : "lost");
+  const finisher = combo.finisher ? finisherDamage(board.playerMoves, myMult) : 0;
+  if (finisher) {
+    dealt += finisher;
+    notes.push("Combo finisher");
+  }
 
   // --- their hit ---
   const dmgMul = board.foeDamage ?? 1;
   let taken = Math.round(baseDamage(foeMove, breath ? BREATH : move, rand) * state.slow * (1 - Math.min(0.4, (board.guard ?? 0) / 100)) * dmgMul);
   if (breath) taken = Math.max(1, Math.round(taken * 0.8));
   else if (move.kind === "guard") taken = Math.round(taken * 0.8);
+  if (taken > 0) taken = Math.max(1, Math.round(taken * outMult(prev.foeStatus) * inMult(prev.playerStatus)));
   if (active && g) {
     if (g.kind === "enrage") taken = Math.round(taken * 1.35);
     if (g.kind === "coin") taken = Math.round(taken * (state.coin === "heads" ? 1.6 : 0.6));
@@ -273,7 +352,27 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
     }
   }
 
-  let foeHp = Math.max(0, prev.foeHp - dealt);
+  // --- statuses on the foe: Ward is spent by a hit, old ones tick, then this turn's land ---
+  const applied: TurnResult["applied"] = [];
+  let foeStatus = tickStatuses(spendWard(prev.foeStatus, dealt));
+  let playerStatus = prev.playerStatus ?? [];
+  const mine = statusOfMove(move);
+  const theirs = foeStatusOf(board, foeMove);
+  const foeWins = beats(foeMove.style, breath ? "guard" : move.style);
+  const myLands = !breath && mine && (edge === "you" || (edge === "even" && move.kind === "status"));
+  const theirLands = theirs && (foeWins || (!breath && edge === "even" && foeMove.kind === "status"));
+  if (myLands && mine !== "ward") {
+    foeStatus = addStatus(foeStatus, mine);
+    applied.push({ on: "foe", id: mine });
+  }
+  if (theirLands && theirs === "ward") {
+    foeStatus = addStatus(foeStatus, "ward");
+    applied.push({ on: "foe", id: "ward" });
+  }
+  // Burn ticks at the end of the turn, so it never "kills" a foe your hit already dropped.
+  const foeBurn = prev.foeHp - dealt > 0 ? burnChip(foeStatus, maxF) : 0;
+
+  let foeHp = Math.max(0, prev.foeHp - dealt - foeBurn);
   let shift: TurnResult["shift"] = null;
   if (foeHp <= 0 && g?.kind === "revive" && !state.revived) {
     state.revived = true;
@@ -298,23 +397,46 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
     shift = "phase";
   }
 
-  const playerHp = Math.max(0, prev.playerHp - taken - chip);
-  const edge: Edge = breath ? "them" : beats(move.style, foeMove.style) ? "you" : beats(foeMove.style, move.style) ? "them" : "even";
+  // --- statuses on you ---
+  playerStatus = tickStatuses(spendWard(playerStatus, taken));
+  let cleansed: StatusId | null = null;
+  if (breath) {
+    const clean = cleanseOne(playerStatus);
+    playerStatus = clean.list;
+    cleansed = clean.cleared;
+    if (cleansed) notes.push(`Shook off ${STATUSES[cleansed].title}`);
+  }
+  if (myLands && mine === "ward") {
+    playerStatus = addStatus(playerStatus, "ward");
+    applied.push({ on: "you", id: "ward" });
+  }
+  if (theirLands && theirs !== "ward" && foeHp > 0) {
+    playerStatus = addStatus(playerStatus, theirs);
+    applied.push({ on: "you", id: theirs });
+  }
+  const myBurn = foeHp > 0 ? burnChip(playerStatus, board.playerHp) : 0;
+  const playerHp = Math.max(0, prev.playerHp - taken - chip - myBurn);
   // Momentum: edge wins bank it; Burst spends; breath never builds.
   let momentum = prev.momentum;
   let momentumGain = 0;
   if (burst) momentum = Math.max(0, momentum - BURST_COST);
+  if (finisher) momentumGain += FINISHER_MOMENTUM;
   if (!breath && edge === "you") {
-    momentumGain = 1;
+    momentumGain += 1;
     if (move.style === "trick" && foeMove.style === "guard") {
       momentumGain += GUARD_BREAK_BONUS;
       notes.push("Guard break");
     }
-    momentum = Math.min(MOMENTUM_CAP, momentum + momentumGain);
   }
+  momentum = Math.min(MOMENTUM_CAP, momentum + momentumGain);
   state.foeHp = foeHp;
   state.playerHp = playerHp;
-  state.energy = Math.min(10, prev.energy - (breath ? 0 : (move.energy ?? 1)) + 3);
+  state.energy = Math.max(0, Math.min(10, prev.energy - (breath ? 0 : (move.energy ?? 1)) + 3 - shockDrain(prev.playerStatus)));
+  state.playerStatus = playerStatus;
+  state.foeStatus = foeStatus;
+  state.combo = combo.chain;
+  state.habits = breath ? (prev.habits ?? []) : rememberStyle(prev.habits, move.style);
+  if (prev.faked) notes.push("They read your habit");
   state.momentum = momentum;
   state.cool = breath ? tick(prev.cool) : tick(prev.cool, key, move.cooldown ?? 0);
   state.slow = !breath && move.kind === "status" ? 0.75 : 1;
@@ -323,7 +445,8 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   state.turns = prev.turns + 1;
   state.done = foeHp <= 0 || playerHp <= 0;
   if (!state.done) commit(board, state, state.lastStyle, rand);
-  return { state, move, foeMove, dealt, taken, edge, shift, healed, chip, notes, burst: burst || undefined, momentumGain: momentumGain || undefined };
+  const burn = { you: myBurn, foe: foeBurn };
+  return { state, move, foeMove, dealt, taken, edge, shift, healed, chip, notes, burst: burst || undefined, momentumGain: momentumGain || undefined, applied, burn, finisher, cleansed, read: !!prev.faked };
 }
 
 /** 1 for a win, 0.5 for a double knockout, 0 for a loss. */

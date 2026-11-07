@@ -41,7 +41,7 @@ import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapte
 import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
-import { asDifficulty, DEFAULT_DIFFICULTY, tuneOf } from "./difficulty";
+import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, tuneOf } from "./difficulty";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
@@ -1642,8 +1642,8 @@ function makeDuel(
       foeName: foe.name,
       foeTitle: foe.title,
       foeSide: foe.side,
-      playerHp: 26 + Math.round(d.stats.health / 5) + Math.round(d.stats.powerLevel * 2) + (hasTrait(d, "martial") ? 6 : 0) + suit.hp,
-      foeHp: foe.boss ? Math.round(foeHp * 1.25) : foeHp,
+      playerHp: Math.round((26 + Math.round(d.stats.health / 5) + Math.round(d.stats.powerLevel * 2) + (hasTrait(d, "martial") ? 6 : 0) + suit.hp) * DUEL_HP_SCALE),
+      foeHp: Math.round((foe.boss ? foeHp * BOSS_HP_MULT : foeHp) * DUEL_HP_SCALE),
       playerMoves: moves,
       foeMoves: signatureMoves(foe.name, pl) ?? movesFrom(foe.powerId, pl),
       personId: foe.personId,
@@ -1655,6 +1655,7 @@ function makeDuel(
       difficulty: tune.id,
       foeDamage: tune.foeDamage,
       aiHate: tune.aiHate,
+      aiRead: tune.aiRead,
     } satisfies DuelBoard,
   };
 }
