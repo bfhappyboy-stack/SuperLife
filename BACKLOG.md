@@ -2,6 +2,9 @@
 
 ## From the 2026-11-07 pm pass (in progress)
 
+- **Done (increment 2):** statuses, mix-up Finisher, habit reading, HP runway, boss step-up and a Normal retune in the life-sim duel. Burst now fires on your next *winning* hit instead of the next move.
+- **Energy is rarely a decision:** with +3 a turn and 1-cost moves, the bar sits at 10/10 most fights. Candidate for Stage 3: costlier signature moves, or Ultimates that spend Energy and full Momentum.
+
 - **Plan (battle Stage 2, in order):** shared status effects (Burn / Frost / Shock / Expose / Ward) and mix-up combos in the life-sim duel; the same Momentum / Burst / status / combo rules in Arena (vs AI and online); AI habit reading with a fair warning chip; a little more fight runway (6–8 turns) and bosses a clear step above street foes; Normal tuned toward ~58% at 60% play.
 - **Found in the playtest:** lopsided default sixes (Superman five strikes, Crownbridge mystery no guard) make some lives much harder than others. Candidate: the Moves shelf warns "No guard move: strike tells have no answer" and the auto-fill prefers covering a missing style.
 
