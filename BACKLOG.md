@@ -3,8 +3,9 @@
 ## From the 2026-11-07 night pass (in progress)
 
 - **Done (increment 1):** loadout coverage — Moves shelf warns on a missing style; auto-fill / street padding prefer covering strike/guard/trick; durability / force-field / aegis unlock a guard first; Ground Pound is a trick; Receipt is a trick. Superman / mystery kits catch up without a difficulty retune.
-- **Next (Stage 3):** Cheetah `applies: expose` on a pounce; signature Ultimates (mastery 4+, full Momentum 5 + Energy, one of the 6 slots); optional environment tag chip; optional tempo interrupt on Charge at Momentum ≥4.
-- **Owner's calls (unchanged):** Normal ~55% vs the new Normal 60% boss 0.54?; auto vs manual Burst; Skip-to-15 auto-settles; purse amounts.
+- **Done (increment 2):** Cheetah Pounce applies Expose (Arena 41% → 45%); signature Ultimates (focus mastery 4+ / Arena strongest move; full Momentum 5 + Energy; ×2; one of the six); city environment chips (+10% element on edge); higher energy floors on signature moves.
+- **Still open (Stage 3 / polish):** optional tempo interrupt on Charge at Momentum ≥4; Phase-3/regroup cooldown; remaining 15 villain vector cards; Flash now weakest Arena pick (44%).
+- **Owner's calls (unchanged):** Normal ~55%? (night Normal 60% boss now 0.55); auto vs manual Burst; Skip-to-15 auto-settles; purse amounts.
 
 ## From the 2026-11-07 pm pass
 

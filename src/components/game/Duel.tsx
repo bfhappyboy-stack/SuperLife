@@ -10,7 +10,7 @@ import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
-import { habitOf, hasStatus, STATUSES, statusOfMove } from "@/game/battle";
+import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST } from "@/game/battle";
 import { answerOf, BREATH, canBurst, duelRatio, gimmickStatus, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
@@ -252,14 +252,19 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
           : `${move.name} meets ${foeMove.name}. You trade ${dealt} for ${taken}.`;
     setLog(next.foeHp <= 0 ? `${move.name} puts ${fight.foeName} down.${turn.finisher ? " Combo finisher!" : ""}${flavor}` : `${turn.read ? "That tell was bait: they read your habit. " : ""}${line}${extra}${statusLine}${chip}${burnLine}`);
     // Cinematic beat for a Burst or a combo Finisher, timed to the first hit.
-    if (turn.finisher || turn.burst) {
+    if (turn.finisher || turn.burst || turn.ultimate) {
       const key = ++beat.current;
       later(breath ? 80 : T.hit1 - 60, () => {
-        setBeatFx(turn.finisher ? { key, word: "FINISHER", sub: turn.burst ? `Burst + combo · +${turn.finisher}` : `Mix-up combo · +${turn.finisher}`, color: "#ffcf4d" } : { key, word: "BURST", sub: "×1.45 · 3 momentum", color: "#ff7a3d" });
-        setQuake({ key, color: turn.finisher ? "#ffcf4d" : "#ff7a3d" });
-        buzz(turn.finisher ? [20, 30, 40, 30, 70] : [30, 20, 60]);
+        const fx = turn.finisher
+          ? { key, word: "FINISHER", sub: turn.ultimate ? `Ultimate + combo · +${turn.finisher}` : turn.burst ? `Burst + combo · +${turn.finisher}` : `Mix-up combo · +${turn.finisher}`, color: "#ffcf4d" }
+          : turn.ultimate
+            ? { key, word: "ULTIMATE", sub: `×2 · ${ULTIMATE_COST} momentum`, color: "#c48bff" }
+            : { key, word: "BURST", sub: "×1.45 · 3 momentum", color: "#ff7a3d" };
+        setBeatFx(fx);
+        setQuake({ key, color: fx.color });
+        buzz(turn.finisher || turn.ultimate ? [20, 30, 40, 30, 70] : [30, 20, 60]);
       });
-      later(1000, () => setBeatFx((b) => (b && b.key === key ? null : b)));
+      later(turn.ultimate ? 1200 : 1000, () => setBeatFx((b) => (b && b.key === key ? null : b)));
     }
     // Status pops land with the hit that caused them.
     for (const a of turn.applied) {
@@ -363,6 +368,11 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             )}
             <span className="t-display truncate text-fg">{fight.foeName}</span>
           </p>
+          {fight.stage && (
+            <p className="t-label mt-0.5 truncate text-[10px] text-gold/90" title={fight.stage.blurb}>
+              {fight.stage.tag} · {fight.stage.element} +10%
+            </p>
+          )}
         </div>
         <span
           key={`${tell}-${hud.turns}`}
@@ -525,7 +535,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             <span className="t-num text-fg">
               {now.momentum}/{MOMENTUM_CAP}
             </span>
-            {canBurst(now) ? <span className="ml-1 rounded-full bg-[#ff7a3d]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#ffb08a]">BURST ON NEXT EDGE</span> : null}
+            {now.momentum >= ULTIMATE_COST && fight.playerMoves.some((m) => m.ultimate) ? <span className="ml-1 rounded-full bg-[#c48bff]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#e2c6ff]">ULTIMATE READY</span> : canBurst(now) ? <span className="ml-1 rounded-full bg-[#ff7a3d]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#ffb08a]">BURST ON NEXT EDGE</span> : null}
           </p>
           <div className="flex gap-1" aria-label={`${now.momentum} momentum`} role="meter" aria-valuenow={now.momentum} aria-valuemin={0} aria-valuemax={MOMENTUM_CAP}>
             {Array.from({ length: MOMENTUM_CAP }, (_, index) => (
@@ -547,7 +557,8 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             picked={last === keyOf(move)}
             answers={!!answer && move.style === answer}
             tag={moveTag(fight, hud, move)}
-            burst={canBurst(now) && !!answer && move.style === answer}
+            burst={canBurst(now) && !!answer && move.style === answer && !canUltimate(now.momentum, move)}
+            ultimate={canUltimate(now.momentum, move)}
             busy={busy}
             onPick={() => swing(move)}
           />
@@ -676,7 +687,7 @@ function Fighter({ side, lunging, idle, ko, glow, big = false, children }: { sid
   );
 }
 
-function MoveCard({ move, cooling, energy, picked, answers, tag, burst, busy, onPick }: { move: DuelMove; cooling: number; energy: number; picked: boolean; answers: boolean; tag?: string | null; burst?: boolean; busy: boolean; onPick: () => void }) {
+function MoveCard({ move, cooling, energy, picked, answers, tag, burst, ultimate, busy, onPick }: { move: DuelMove; cooling: number; energy: number; picked: boolean; answers: boolean; tag?: string | null; burst?: boolean; ultimate?: boolean; busy: boolean; onPick: () => void }) {
   const cost = move.energy ?? 1;
   const short = energy < cost;
   const blocked = cooling > 0 || short;
@@ -690,7 +701,7 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, busy, on
       aria-pressed={picked}
       aria-disabled={blocked || busy}
       onClick={onPick}
-      className={`card relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden px-2.5 py-1.5 text-left transition-transform ${picked ? "!border-gold !bg-panel-2" : answers && !blocked ? "!border-gold/70 shadow-[0_0_16px_-6px_var(--color-gold)]" : burst && !blocked ? "!border-[#ff7a3d]/70 shadow-[0_0_16px_-6px_#ff7a3d]" : ""} ${blocked ? "opacity-55" : ""}`}
+      className={`card relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden px-2.5 py-1.5 text-left transition-transform ${picked ? "!border-gold !bg-panel-2" : ultimate && !blocked ? "!border-[#c48bff]/80 shadow-[0_0_18px_-4px_#c48bff]" : answers && !blocked ? "!border-gold/70 shadow-[0_0_16px_-6px_var(--color-gold)]" : burst && !blocked ? "!border-[#ff7a3d]/70 shadow-[0_0_16px_-6px_#ff7a3d]" : ""} ${blocked ? "opacity-55" : ""}`}
     >
       <span className="absolute inset-y-0 left-0 w-1" style={{ background: HEX[move.style] }} />
       {cooling > 0 && <span className="absolute inset-0 bg-ink/50" style={{ clipPath: `inset(${100 - Math.min(100, cooling * 33)}% 0 0 0)` }} />}
@@ -710,16 +721,16 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, busy, on
           {cost}
         </span>
         {(move.cooldown ?? 0) > 0 && <span className="text-muted">{cooling > 0 ? `${cooling}t left` : `cd ${move.cooldown}`}</span>}
-        {answers && !blocked && <span className="t-label rounded-full bg-gold px-1.5 py-px text-[8px] text-paper-ink">Answer</span>}
+        {ultimate && !blocked && <span className="t-label rounded-full bg-[#c48bff] px-1.5 py-px text-[8px] text-paper-ink">Ultimate</span>}{answers && !blocked && !ultimate && <span className="t-label rounded-full bg-gold px-1.5 py-px text-[8px] text-paper-ink">Answer</span>}
         {tag && !blocked && <span className={`t-label rounded-full px-1.5 py-px text-[8px] ${tag === "Adapted" ? "bg-cape text-white" : "bg-spark text-paper-ink"}`}>{tag}</span>}
-        {leaves && (
+        {move.ultimate && !ultimate && <span className="t-label rounded-full bg-[#c48bff]/30 px-1.5 py-px text-[8px] text-[#e2c6ff]">Ult</span>}{leaves && (
           <span className="flex items-center gap-0.5" style={{ color: STATUSES[leaves].color }} title={`Wins the edge: ${STATUSES[leaves].title} (${STATUSES[leaves].blurb})`}>
             <StatusIcon id={leaves} />
             <span className="text-[10px]">{STATUSES[leaves].title}</span>
           </span>
         )}
       </span>
-      <span className="relative truncate text-[11px] leading-snug text-muted">{cooling > 0 ? "Cooling down." : short ? "Not enough energy." : burst && answers ? `Bursts ×1.45 if it wins. ${mechanicLine(move)}` : mechanicLine(move)}</span>
+      <span className="relative truncate text-[11px] leading-snug text-muted">{cooling > 0 ? "Cooling down." : short ? "Not enough energy." : ultimate ? `Ultimate ×2 if it wins. ${mechanicLine(move)}` : burst && answers ? `Bursts ×1.45 if it wins. ${mechanicLine(move)}` : mechanicLine(move)}</span>
     </button>
   );
 }

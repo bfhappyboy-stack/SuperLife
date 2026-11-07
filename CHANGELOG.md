@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-07-pm` (1f40f97). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
 
+### Increment 2: Cheetah Expose + Ultimates + environment chips
+
+- **Cheetah:** Pounce now `applies: expose`, so her kit lands a status. Arena ladder win rate 41% → 45% (spread 13 pts; Flash is now the floor at 44%).
+- **Signature Ultimates** (`battle.ts`, shared): one of the six moves, never a 7th button. Life-sim marks the strongest equipped move of your focus power once that power is mastery 4+; Arena marks each fighter's strongest move. Armed only at full Momentum (5); costs all 5 Momentum + the move's Energy; deals ×2.0 and does not stack with Burst. Cinematic ULTIMATE beat + purple card glow when ready.
+- **Energy matters more:** mastery-3 moves cost at least 2 energy, mastery-4+ at least 3; Ultimates also floor at 3.
+- **Environment chips:** each city maps to a stage tag that nudges one element (+10% damage on a won edge). Readable chip under the foe name (`pier · ice +10%`, etc.). Arena uses the energy tag.
+- **Sims:** Normal 60% street 0.74 / boss 0.55 (design target ~55% boss). 194 tests.
+
 ### Increment 1: loadout coverage
 
 - **Why:** pm playtest found Superman's six at five strikes and mystery lives with no guard, so a strike tell had no answer but breath. Win rates swung more with the build than with the difficulty.
