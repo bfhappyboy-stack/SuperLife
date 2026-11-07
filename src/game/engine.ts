@@ -41,6 +41,7 @@ import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapte
 import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
+import { asDifficulty, DEFAULT_DIFFICULTY, tuneOf } from "./difficulty";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
 import {
   asDrive,
@@ -105,6 +106,8 @@ export interface NewLifeOpts {
   extraTraits?: TraitId[];
   /** God Mode legend (presets.ts). Overrides name, city, upbringing, traits and look. */
   preset?: string | null;
+  /** Life-sim fight difficulty. Defaults to Normal. */
+  difficulty?: import("./types").LifeDifficulty;
   seed?: number;
   heir?: { fame: number; powerBias: PowerId | null; belief: number; trust?: number };
 }
@@ -1467,6 +1470,7 @@ export function createGame(input: NewLifeOpts): Game {
   biasHeroes(d);
   d.stats.fame = clamp(d.stats.fame, 0, 28);
   if (opts.mode) d.mode = opts.mode;
+  d.difficulty = asDifficulty(opts.difficulty ?? DEFAULT_DIFFICULTY);
   for (const id of legend?.extra ?? []) grantTrait(d, id, "mark");
   for (const id of (opts.extraTraits ?? []).slice(0, 2)) if (traitById(id)?.slot === "earned") grantTrait(d, id);
   if (legend?.boost) applyEffects(d, legend.boost, []);
@@ -1612,11 +1616,12 @@ function makeDuel(
   foe: { name: string; title: string; side: "hero" | "villain"; powerId: PowerId; powerLevel: number; personId?: string; boss?: boolean },
   flavor: { title: string; subtitle: string; win: string; partial: string; lose: string; tag: "duel" | "relic"; winEffects: Effects; loseEffects: Effects; partialEffects: Effects; specialWin?: Special },
 ): MinigameSpec {
-  const pl = foe.powerLevel;
+  const tune = tuneOf(d);
+  const pl = foe.powerLevel + tune.foeLevelBump;
   const suit = costumeMods(d);
   // Named rogues always fight with their signature twist; other villains only get one as a boss.
   const gimmick = foe.side === "villain" ? (villainGimmick(foe.name) ?? (foe.boss ? powerGimmick(foe.powerId, foe.name) : null)) : null;
-  const foeHp = 20 + Math.round(pl * 4);
+  const foeHp = Math.round((20 + Math.round(pl * 4)) * tune.foeHp);
   const moves = playerMoves(d).map((move) =>
     suit.strike ? { ...move, power: Math.max(1, Math.round(move.power * (1 + suit.strike / 100))) } : move,
   );
@@ -1647,6 +1652,9 @@ function makeDuel(
       ...foeLook(d, foe),
       boss: foe.boss || undefined,
       gimmick: gimmick ?? undefined,
+      difficulty: tune.id,
+      foeDamage: tune.foeDamage,
+      aiHate: tune.aiHate,
     } satisfies DuelBoard,
   };
 }
@@ -2623,6 +2631,7 @@ function powerOffer(d: Game, hero: AiHero, discovered: readonly string[]): strin
 export function freshen(game: Game): Game {
   game.heroes = mergeHeroes(game.heroes);
   migrateChapters(game);
+  if (!game.difficulty) game.difficulty = DEFAULT_DIFFICULTY;
   if (game.crew) {
     if (typeof game.crew.heat !== "number") game.crew.heat = 15;
     if (typeof game.crew.loyalty !== "number") game.crew.loyalty = 55;

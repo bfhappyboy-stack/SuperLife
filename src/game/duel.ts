@@ -1,11 +1,12 @@
 /**
- * Pure duel rules: the rock-paper-scissors core, energy and cooldowns, and boss gimmick phases.
+ * Pure duel rules: the rock-paper-scissors core, energy, momentum, cooldowns, and boss gimmick phases.
  * The Duel screen draws whatever this returns, and tests can play thousands of fights headless.
  *
  * Boss gimmicks are data (see `BossGimmick` on a board, set from presets.ts or `arcGimmick`).
  * Most switch on in phase 2, when the boss drops to `at` of its health. `revive` instead fires on the
  * first knockout. Every gimmick has a readable answer, shown in the fight as a hint.
  */
+import { BURST_COST, BURST_MULT, GUARD_BREAK_BONUS, MOMENTUM_CAP } from "./difficulty";
 import type { BossGimmick, DuelBoard, DuelMove, MoveStyle } from "./types";
 
 export type Edge = "you" | "them" | "even";
@@ -33,10 +34,10 @@ export function baseDamage(move: DuelMove, other: DuelMove, rand: Rand): number 
   return Math.max(1, Math.round(move.power * mod * jitter));
 }
 
-export function pickFoe(pool: readonly DuelMove[], hated: MoveStyle | null, rand: Rand): DuelMove {
+export function pickFoe(pool: readonly DuelMove[], hated: MoveStyle | null, rand: Rand, hate = 0.42): DuelMove {
   const fallback: DuelMove = { name: "Shove", blurb: "", power: 3, style: "strike" };
   if (!pool.length) return fallback;
-  if (hated && rand() < 0.42) {
+  if (hated && rand() < hate) {
     const answer = pool.filter((move) => beats(move.style, hated));
     if (answer.length) return answer[Math.floor(rand() * answer.length)] ?? pool[0]!;
   }
@@ -59,6 +60,8 @@ export interface DuelState {
   playerHp: number;
   foeHp: number;
   energy: number;
+  /** 0–MOMENTUM_CAP. Builds on edge wins; spends for a Burst. */
+  momentum: number;
   cool: Record<string, number>;
   slow: number;
   /** What the foe will actually throw next. */
@@ -99,6 +102,10 @@ export interface TurnResult {
   notes: string[];
   /** The move was refused (cooldown, energy) and no turn was spent. */
   refused?: string;
+  /** True when this turn spent momentum on a Burst. */
+  burst?: boolean;
+  /** Momentum gained this turn (0 if none). */
+  momentumGain?: number;
 }
 
 const PHASE_AT = 0.55;
@@ -139,7 +146,7 @@ function commit(board: DuelBoard, state: DuelState, hated: MoveStyle | null, ran
     }
   }
   if (g?.kind === "coin" && state.phase === 2) state.coin = rand() < 0.5 ? "heads" : "tails";
-  state.intent = pickFoe(board.foeMoves, hated, rand);
+  state.intent = pickFoe(board.foeMoves, hated, rand, board.aiHate ?? 0.42);
   state.shown = show(board, state, state.intent, rand);
 }
 
@@ -148,6 +155,7 @@ export function startDuel(board: DuelBoard, rand: Rand = Math.random): DuelState
     playerHp: board.playerHp,
     foeHp: board.foeHp,
     energy: 10,
+    momentum: 0,
     cool: {},
     slow: 1,
     intent: board.foeMoves[0] ?? BREATH,
@@ -190,6 +198,12 @@ export function refusal(state: DuelState, move: DuelMove): string | null {
   return null;
 }
 
+/** True when the next real move can spend momentum for a Burst. */
+export function canBurst(state: DuelState): boolean {
+  return state.momentum >= BURST_COST;
+}
+
+
 export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand: Rand = Math.random): TurnResult {
   const state: DuelState = { ...prev, cool: { ...prev.cool } };
   const foeMove = prev.intent;
@@ -209,6 +223,12 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   const counter = breath && beats("guard", foeMove.style) ? Math.max(1, Math.round(Math.max(...board.playerMoves.map((m) => m.power), 3) * 0.5)) : 0;
   let dealt = breath ? counter : baseDamage(move, foeMove, rand);
   if (counter) notes.push("Counter off the breath");
+  // Burst: spend momentum on a real move for a readable damage spike.
+  const burst = !breath && prev.momentum >= BURST_COST;
+  if (burst) {
+    dealt = Math.max(1, Math.round(dealt * BURST_MULT));
+    notes.push("Burst");
+  }
   if (active && g) {
     if (g.kind === "armor" && state.plates > 0) {
       if (move.style === (g.style ?? "trick")) {
@@ -238,7 +258,8 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   if (state.exposed && !breath) dealt = Math.round(dealt * 1.2);
 
   // --- their hit ---
-  let taken = Math.round(baseDamage(foeMove, breath ? BREATH : move, rand) * state.slow * (1 - Math.min(0.4, (board.guard ?? 0) / 100)));
+  const dmgMul = board.foeDamage ?? 1;
+  let taken = Math.round(baseDamage(foeMove, breath ? BREATH : move, rand) * state.slow * (1 - Math.min(0.4, (board.guard ?? 0) / 100)) * dmgMul);
   if (breath) taken = Math.max(1, Math.round(taken * 0.8));
   else if (move.kind === "guard") taken = Math.round(taken * 0.8);
   if (active && g) {
@@ -263,7 +284,7 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   // A knockout lands first: there is no counter from the floor.
   if (foeHp <= 0) taken = 0;
   let chip = 0;
-  if (foeHp > 0 && active && g?.kind === "swarm" && state.swarm > 0) chip = state.swarm;
+  if (foeHp > 0 && active && g?.kind === "swarm" && state.swarm > 0) chip = Math.max(1, Math.round(state.swarm * dmgMul));
   let healed = 0;
   if (foeHp > 0 && active && g?.kind === "regen") {
     if (state.regenBlock > 0) state.regenBlock -= 1;
@@ -279,9 +300,22 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
 
   const playerHp = Math.max(0, prev.playerHp - taken - chip);
   const edge: Edge = breath ? "them" : beats(move.style, foeMove.style) ? "you" : beats(foeMove.style, move.style) ? "them" : "even";
+  // Momentum: edge wins bank it; Burst spends; breath never builds.
+  let momentum = prev.momentum;
+  let momentumGain = 0;
+  if (burst) momentum = Math.max(0, momentum - BURST_COST);
+  if (!breath && edge === "you") {
+    momentumGain = 1;
+    if (move.style === "trick" && foeMove.style === "guard") {
+      momentumGain += GUARD_BREAK_BONUS;
+      notes.push("Guard break");
+    }
+    momentum = Math.min(MOMENTUM_CAP, momentum + momentumGain);
+  }
   state.foeHp = foeHp;
   state.playerHp = playerHp;
   state.energy = Math.min(10, prev.energy - (breath ? 0 : (move.energy ?? 1)) + 3);
+  state.momentum = momentum;
   state.cool = breath ? tick(prev.cool) : tick(prev.cool, key, move.cooldown ?? 0);
   state.slow = !breath && move.kind === "status" ? 0.75 : 1;
   state.lastStyle = breath ? "guard" : move.style;
@@ -289,7 +323,7 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   state.turns = prev.turns + 1;
   state.done = foeHp <= 0 || playerHp <= 0;
   if (!state.done) commit(board, state, state.lastStyle, rand);
-  return { state, move, foeMove, dealt, taken, edge, shift, healed, chip, notes };
+  return { state, move, foeMove, dealt, taken, edge, shift, healed, chip, notes, burst: burst || undefined, momentumGain: momentumGain || undefined };
 }
 
 /** 1 for a win, 0.5 for a double knockout, 0 for a loss. */

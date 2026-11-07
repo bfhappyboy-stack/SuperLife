@@ -194,6 +194,12 @@ export interface DuelBoard {
   boss?: boolean;
   /** Signature twist; most switch on in phase 2. */
   gimmick?: BossGimmick;
+  /** Life difficulty id, for HUD and AI. */
+  difficulty?: LifeDifficulty;
+  /** Multiplier on damage the foe deals (from difficulty.ts). Default 1. */
+  foeDamage?: number;
+  /** Chance the AI answers your last style (from difficulty.ts). Default 0.42. */
+  aiHate?: number;
 }
 
 export interface Cape {
@@ -401,6 +407,8 @@ export interface Game {
   market?: MarketState;
   /** "mystery" (the default for new lives) or "god". Missing on classic saves. */
   mode?: GameMode;
+  /** Life-sim fight difficulty. Missing on old saves → Normal. */
+  difficulty?: LifeDifficulty;
   /** The sealed power that has not woken yet (mystery lives and God Mode legends). Cleared at the reveal. */
   hiddenGift?: string | null;
   /** God Mode legend id (see presets.ts). */
@@ -452,6 +460,9 @@ export interface SkipReport {
 }
 
 export type GameMode = "mystery" | "god";
+
+/** Life-sim fight curve. Chosen at birth; see difficulty.ts. */
+export type LifeDifficulty = "story" | "normal" | "hard" | "legendary";
 
 export interface RevealNotice {
   /** Catalog ids that woke, the headline power first. */
