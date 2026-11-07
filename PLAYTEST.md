@@ -31,6 +31,12 @@
 - Probe: Superman @19 loadout now includes Stand Firm (guard); Harbor/Dustreach auto-fill starts with Dome (guard).
 - Screenshots after: `/workspace/superlife-screens/1107night-inc1/`.
 
+**After Increment 2 (Ultimates + Cheetah + stage chips):**
+- Normal 60%: street 0.74 / boss 0.55. Arena roster spread 13.1 pts; Cheetah 0.45 (was 0.41); Flash 0.44 is the new floor.
+- Harbor Bay duel shows `pier · ice +10%` under the foe name. Wonder Woman vs Cheetah still plays clean with Aegis + Expose tags.
+- Screenshots: `/workspace/superlife-screens/1107night-inc2/`.
+
+
 
 ## Afternoon pass (2026-11-07 pm): battle Stage 2 — playtest first
 
