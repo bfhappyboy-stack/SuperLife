@@ -1,5 +1,17 @@
 # SuperLife — Backlog
 
+## From the 2026-11-07 am pass
+
+- **Done (battle Stage 1):** DESIGN.md §17 signature system; life difficulty Story/Normal/Hard/Legendary at birth; Momentum + Burst + guard-break on the life-sim duel; harder Normal; HP/Momentum HUD polish; engine sims + tests.
+- **Battle Stage 2 (next):** status effects (Burn/Frost/Shock/Slow/Expose/Ward), combo chains, AI pattern memory, Phase 3 on final canon bosses, boss-loss regroup cooldown. Keep shipping in complete increments.
+- **Battle Stage 3:** environment tags, signature Ultimates (mastery 4+, full Momentum), tempo interrupt on Charge.
+- **Still open from prior:** mentor quests at bond 60+; Arena style-drift fix; online choosing indicator; painted raster villain art (GenerateImage now available — only after Stage 1 is green).
+- **Owner's calls:**
+  - Are Story 94% / Normal 67% / Hard 29% / Legendary 10% (60% play vs case boss) the right bands, or should Normal sit closer to 55%?
+  - Burst auto-spends at 3 Momentum on the next real move (bank by breathing). Prefer a manual arm toggle instead?
+  - Skip-to-15 auto-settles and purse amounts still await a nod (from Nov 4).
+
+
 ## From the 2026-11-03 pm pass
 
 - **Done:** mixing locked until 15 with a lock card; mentors at 15 (legend, upbringing or city) with monthly lessons; **Skip to 15** in the Skip sheet (still stops for the reveal, chapters, story beats, cases, fights and the mentor); Arena purses into the active life (results line, history, daily taper); 16 more villain cards (Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith); illustrated rogues now stand in life-sim fights as cards; fixed the foe figure losing its mirror while idle.

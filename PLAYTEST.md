@@ -1,5 +1,29 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-07 am): battle Stage 1 — difficulty + Momentum
+
+**Life sims (new combos, not used in recent passes):**
+- Builds: **Neon Spire / alien** mystery (secret + idealistic), **Hood / tragic** God Mode ice+telepathy (loud + vengeful), plus **Iron Man**, **Wolverine** and **Thor** legends.
+- Seeds 11/22/33 for the two custom builds; seed 44 for legends. Aged to 35–40.
+- Mystery wakes at **8–10** (energy-projection, super-strength, flight). Mentors: Vael (alien/Neon), Nora Vance (tragic/Hood), Yinsen / Ogun / Odin for legends.
+- Power counts at 35–40: Neon mystery 10–12, Hood own 10–11, Iron Man 5 (book-capped), Wolverine 9, Thor 8.
+- Chapter goals mid-life still soft on mood/mastery/fame — unchanged finding, not this pass's focus.
+
+**Battle Stage 1 balance (engine, case-boss board, 60% play, N=48):**
+| Difficulty | Win rate | Smart@Normal |
+|---|---|---|
+| Story | 0.94 | — |
+| Normal | 0.67 | 1.00 |
+| Hard | 0.29 | — |
+| Legendary | 0.10 | — |
+
+Normal is now clearly harder than the old baseline. Legendary is a wall for messy play, which matches the design target band. Tune lives in `src/game/difficulty.ts`.
+
+**UI (390×844):** difficulty picker on mystery/God create footer and legend Begin; duel shows Momentum diamonds + Burst-ready chip; HP bars use a delayed ghost trail. **0 console errors.**
+
+**Screenshots:** `/workspace/superlife-screens/1107am-01-title.png` … `1107am-10-legend-difficulty.png` (create Hard pick, first month, duel Momentum HUD, legend picker).
+
+
 ## Morning pass (2026-11-03 am): moves re-check, Arena vs Pro with a saved life, villain art
 
 **Life sims (3 seeds each, new combos):**

@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-11-07 (am): battle redesign Stage 1 — life difficulty + Momentum (`devbot/2026-11-07-am`)
+
+Built on `origin/devbot/2026-11-04-am` (2aed31b). Full signature system written into `DESIGN.md` §17; Stage 1 ships complete and playable.
+
+### Life difficulty (`difficulty.ts`, CreateScreen, Legends, engine, save)
+
+- Chosen at birth: **Story / Normal / Hard / Legendary** (default Normal). Persisted on the save; old saves migrate to Normal.
+- Scales every life-sim duel: foe HP, foe damage, AI hate-read, and a small foe level bump on Hard/Legendary.
+- **Normal is harder than the previous baseline** (foe HP ×1.10, damage ×1.06, AI 0.48 vs old ×1.0 / 0.42).
+- Picker on the new-life stepper footer and on the legend Begin button.
+
+### Momentum (`duel.ts`, Duel.tsx)
+
+- Second resource next to Energy. Cap 5. Builds +1 on style-edge wins, +1 extra on Trick-vs-Guard (guard break). Breath never builds.
+- At 3+ Momentum the next real move **Bursts** automatically (spend 3, ×1.45 damage). UI marks Burst-ready moves.
+- Pure and deterministic — safe for future Arena online replay.
+
+### Feel
+
+- Animated HP bars with a delayed ghost trail and a kick flash on hit.
+- Momentum diamonds under the Energy row; Burst chip on move cards.
+
+### Tests
+
+- `difficulty.test.ts`: catalog, persistence, momentum/Burst/guard-break, foeDamage, balance sims per difficulty.
+
+### Verification
+
+- typecheck clean; 171 game tests (5 new in difficulty.test.ts); lint (plumbing `no-empty` left alone); production build; 390×844 screenshots in PLAYTEST.
+
+
 ## 2026-11-03 (pm + night, shipped Nov 4 am): mixing at 15 with mentors, Skip to 15, Arena purses, every villain carded (`devbot/2026-11-04-am`)
 
 Built on `devbot/2026-11-03-am` (head 0de3abd, same content as main 702d68d). The 3 PM and 9 PM passes were cut off before pushing, so their work ships here. The Nov 4 am pass re-ran typecheck, lint, 166/166 game tests and the build, and reloaded it at 390x844 (Powers lock card and Skip to 15 sheet checked).

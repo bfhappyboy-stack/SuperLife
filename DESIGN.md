@@ -224,3 +224,76 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 
 - Every villain is meant to get an illustrated card used in the Arena draft, round intros, the life-sim FIGHT! intro and the fight itself. 34 villains have vector cards now (`VillainArt.tsx`, typed on `VILLAIN_ART_IDS`). In life-sim fights an illustrated rogue stands in the ring as a card, with hit-flash and lean-in animations.
 
+
+## 17. Battle redesign (owner's call, 2026-11-04 — Stage 1 ships 2026-11-07)
+
+Fights are shared by the life sim and Arena (same 6 equipped moves, same strike/guard/trick core). The owner gave free rein to make them creative, unique, finely polished, harder and deeper. **Polished beats sprawling.** Exactly 6 equipped moves stay. Online Arena stays a pure engine: deterministic from seed + action log.
+
+### Life difficulty (Stage 1 — shipped)
+
+Chosen at life start (mystery, God Mode builder, and legend pickers). Persisted on the save as `difficulty`. Default **Normal**. Old saves without the field migrate to Normal.
+
+| Id | Feel | Foe HP | Foe damage | AI hate-read |
+|---|---|---|---|---|
+| Story | Learn the tells | ×0.88 | ×0.82 | 0.30 |
+| Normal | Harder than the old baseline | ×1.10 | ×1.06 | 0.48 |
+| Hard | Mistakes hurt | ×1.24 | ×1.16 | 0.58 |
+| Legendary | Punishes greed | ×1.40 | ×1.30 | 0.70 |
+
+Hard and Legendary also bump the foe's power level slightly before HP is rolled. Arena's Rookie / Pro / Legend ladder is separate — this curve is for life-sim fights only.
+
+### Momentum (Stage 1 — shipped)
+
+A second resource on the life-sim duel, next to Energy:
+
+- Cap **5**. Starts at **0**.
+- **+1** when you win the style edge (strike > trick > guard > strike).
+- **+1 extra** (guard break) when a Trick beats a Guard.
+- Breath never builds momentum; a successful breath-counter still does not (breath is recovery).
+- At **3+** momentum, the next real move (not breath) can **Burst**: spend 3 for **×1.45** damage. The UI marks ready Burst moves with a Momentum pip.
+- Pure and deterministic: same seed + move log → same fight. Safe for future Arena online replay.
+
+Energy stays (cost per move, +3 on every turn including breath, cap 10). Momentum is the "am I pressing or banking?" decision Energy never gave.
+
+### Signature system (full vision — later stages)
+
+Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship complete and playable.
+
+1. **Resources (Stage 1 done):** Energy + Momentum. Later: Stamina (optional third bar for long boss phases) only if phone HUD still reads clean.
+2. **Status effects (Stage 2):** Burn, Frost, Shock, Slow, Expose, Ward. Max 2 statuses a side. Data on moves (`applies` / `clears`), never hard-coded per villain.
+3. **Combos / chains (Stage 2):** Landing Strike → Trick → Guard (or a power-tagged chain) in order within 3 turns grants a Chain bonus (+Momentum or a free small hit). Gen1/Gen2 synergies: owning both parents of a braid tags those moves as "Kin" and slightly boosts chain windows.
+4. **Counters & guard breaks (Stage 1 partial):** Breath still counters Strike. Trick-vs-Guard now pays Momentum. Stage 2: Guard Break at Momentum 4+ ignores 50% of a Guard stance once.
+5. **Environment / stage (Stage 3):** City and arena tags (`alley`, `rooftop`, `lab`, `throne`) nudge one element. Readable chip on the fight header, not a second rules sheet.
+6. **Signature ultimates (Stage 3):** One Ultimate per focus power, unlocked at mastery 4+. Costs full Momentum (5) + its Energy. Cinematic beat (1.2s pose + element burst) then a big deterministic hit. Still one of the 6 equipped slots when armed — never a 7th button.
+7. **Enemy AI (Stage 2–3):** Tells and fakes already exist (gimmick fog/feint + Arena lead/fake). Add pattern memory: after you use the same answer twice, Legend/Hard AI starts feinting that answer. Life-sim AI aggression already scales with difficulty.
+8. **Multi-phase bosses (done, deepen in Stage 2):** Existing gimmicks stay. Stage 2 adds a Phase 3 on final canon bosses and a one-month regroup cooldown after a boss loss.
+9. **Tempo / initiative (Stage 3):** Winner of the previous edge acts "fast" (their projectile travels first visually; already true). Optional: Momentum ≥ 4 lets you interrupt a Charge gimmick.
+10. **Strategic loadouts (ongoing):** Exactly 6 moves, two sets (A/B). Future: a "Burst window" tag on authored finishers so the Momentum spend feels authored, not generic.
+
+### Feel on phone (Stage 1 partial)
+
+- Animated HP bars with delayed ghost trail + hit flash (refined Stage 1).
+- Momentum diamonds next to Energy.
+- Impact numbers and stage shake already exist; keep them.
+- Console-quality direction: every new widget must work at 390×844 with ≥44px targets and no horizontal overflow.
+
+### Balance targets (engine sims)
+
+With a hint-following player (answer the tell, Burst when it wins the edge):
+
+| Difficulty | Target win rate vs street foes | vs case bosses |
+|---|---|---|
+| Story | ~90% | ~80% |
+| Normal | ~70% | ~55% |
+| Hard | ~50% | ~35% |
+| Legendary | ~30% | ~18% |
+
+Report actuals in PLAYTEST.md each pass. Tune `DIFFICULTY` in `src/game/difficulty.ts` — data only.
+
+### What must never break
+
+- Exactly 6 equipped moves; street padding when empty.
+- Gen 2 hard cap; required Light Speed → Lightning Strikes chain.
+- Mixing locked until 15.
+- Online Arena: pure engine, seed + action log.
+- Fully playable without `XAI_API_KEY`.
