@@ -27,6 +27,8 @@ export interface DifficultyTune {
   aiHate: number;
   /** Extra foe power level baked into the board before HP math (Hard/Legendary). */
   foeLevelBump: number;
+  /** Chance the AI fakes a tell to bait a habit (same style twice running). Stage 2. */
+  aiRead: number;
 }
 
 export const DIFFICULTY: Record<LifeDifficulty, DifficultyTune> = {
@@ -38,33 +40,37 @@ export const DIFFICULTY: Record<LifeDifficulty, DifficultyTune> = {
     foeDamage: 0.82,
     aiHate: 0.3,
     foeLevelBump: 0,
+    aiRead: 0,
   },
   normal: {
     id: "normal",
     title: "Normal",
     blurb: "Harder than before. Read every tell.",
-    foeHp: 1.1,
-    foeDamage: 1.06,
+    foeHp: 1.2,
+    foeDamage: 1.15,
     aiHate: 0.48,
     foeLevelBump: 0.1,
+    aiRead: 0.25,
   },
   hard: {
     id: "hard",
     title: "Hard",
     blurb: "Thicker HP, sharper AI. Mistakes hurt.",
-    foeHp: 1.24,
-    foeDamage: 1.16,
+    foeHp: 1.3,
+    foeDamage: 1.24,
     aiHate: 0.58,
     foeLevelBump: 0.35,
+    aiRead: 0.4,
   },
   legendary: {
     id: "legendary",
     title: "Legendary",
     blurb: "Bosses that punish greed. Bring a plan.",
-    foeHp: 1.4,
-    foeDamage: 1.3,
+    foeHp: 1.45,
+    foeDamage: 1.36,
     aiHate: 0.7,
     foeLevelBump: 0.65,
+    aiRead: 0.55,
   },
 };
 
@@ -89,3 +95,11 @@ export const BURST_MULT = 1.45;
 /** Extra momentum for beating a Guard with a Trick (guard break). */
 export const GUARD_BREAK_BONUS = 1;
 
+
+/**
+ * Fight runway (Stage 2): both sides' HP are scaled so a life-sim duel lasts ~6–8 turns instead of
+ * 4–5, which gives Momentum, statuses and combos time to matter. Damage is unchanged.
+ */
+export const DUEL_HP_SCALE = 1.35;
+/** Case bosses get this much more HP than a street foe of the same level. */
+export const BOSS_HP_MULT = 1.45;

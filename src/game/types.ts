@@ -140,7 +140,12 @@ export interface DuelMove {
   element?: string;
   /** Move rank 1–5 for player moves. */
   rank?: number;
+  /** Status this move leaves when it wins the edge (overrides its element's; null = none). See battle.ts. */
+  applies?: StatusId | null;
 }
+
+/** Battle statuses (battle.ts). */
+export type StatusId = "burn" | "frost" | "shock" | "expose" | "ward";
 
 export interface Look {
   skin: number;
@@ -200,6 +205,8 @@ export interface DuelBoard {
   foeDamage?: number;
   /** Chance the AI answers your last style (from difficulty.ts). Default 0.42. */
   aiHate?: number;
+  /** Chance the AI fakes a tell to bait a habit (same style twice running). Default 0. */
+  aiRead?: number;
 }
 
 export interface Cape {
