@@ -134,6 +134,36 @@ export const STREET_MOVES: readonly DuelMove[] = [
 
 export const MOVESET_SIZE = 6;
 
+/** The three duel styles every six should try to cover. */
+export const MOVE_STYLES = ["strike", "guard", "trick"] as const;
+
+export function styleCounts(styles: Iterable<MoveStyle | undefined | null>): Record<MoveStyle, number> {
+  const counts: Record<MoveStyle, number> = { strike: 0, guard: 0, trick: 0 };
+  for (const style of styles) if (style === "strike" || style === "guard" || style === "trick") counts[style]++;
+  return counts;
+}
+
+/** Styles with zero count, in strike → guard → trick order. */
+export function missingStyles(counts: Record<MoveStyle, number>): MoveStyle[] {
+  return MOVE_STYLES.filter((style) => (counts[style] ?? 0) <= 0);
+}
+
+/**
+ * Clear shelf warnings when the equipped six cannot answer a tell.
+ * Street padding may still cover the gap in a fight; this is about what you packed.
+ */
+export function loadoutWarnings(game: Pick<Game, "loadout">): string[] {
+  const equipped = (game.loadout ?? []).map((id) => moveById(id)?.style).filter(Boolean) as MoveStyle[];
+  if (!equipped.length) return [];
+  const missing = missingStyles(styleCounts(equipped));
+  const out: string[] = [];
+  if (missing.includes("guard")) out.push("No guard move: strike tells have no answer.");
+  if (missing.includes("strike")) out.push("No strike move: trick tells have no answer.");
+  if (missing.includes("trick")) out.push("No trick move: guard tells have no answer.");
+  return out;
+}
+
+
 export function allMoveDefs(): MoveDef[] {
   const out: MoveDef[] = [];
   for (const power of allPowers()) out.push(...movesForPower(power));
@@ -250,10 +280,27 @@ export function battleMoves(game: FightGame): DuelMove[] {
   // Street padding answers whatever style the kit is missing first, so every tell has a reply.
   const spare = [...STREET_MOVES];
   while (picked.length < MOVESET_SIZE && spare.length) {
-    const styles = new Set(picked.map((move) => move.style));
-    const index = Math.max(0, spare.findIndex((move) => !styles.has(move.style)));
-    const move = spare.splice(index, 1)[0]!;
+    const gap = missingStyles(styleCounts(picked.map((move) => move.style)));
+    const index = gap.length ? Math.max(0, spare.findIndex((move) => move.style === gap[0])) : 0;
+    const move = spare.splice(index >= 0 ? index : 0, 1)[0]!;
     picked.push({ ...move, power: move.power + edge });
+  }
+  // Full six with a hole (five strikes + a trick, no guard): swap the weakest surplus for a street cover.
+  for (;;) {
+    const counts = styleCounts(picked.map((move) => move.style));
+    const gap = missingStyles(counts)[0];
+    if (!gap) break;
+    const surplus = MOVE_STYLES.find((style) => (counts[style] ?? 0) >= 2);
+    if (!surplus) break;
+    const victim = picked
+      .map((move, index) => ({ move, index }))
+      .filter((row) => row.move.style === surplus && !(row.move.id ?? "").startsWith("street::"))
+      .sort((a, b) => a.move.power - b.move.power)[0];
+    const cover = spare.find((move) => move.style === gap) ?? STREET_MOVES.find((move) => move.style === gap);
+    if (!victim || !cover) break;
+    const at = spare.indexOf(cover);
+    if (at >= 0) spare.splice(at, 1);
+    picked[victim.index] = { ...cover, power: cover.power + edge };
   }
   return picked;
 }
@@ -274,10 +321,27 @@ export function fillLoadout(game: Game): void {
   // A slot the player filled by hand is never touched.
   const pool = knownMoves(game).filter((entry) => entry.unlocked && !have.has(entry.def.id)).map((entry) => entry.def);
   while (game.loadout.length < MOVESET_SIZE && pool.length) {
-    const styles = new Set(game.loadout.map((id) => moveById(id)?.style));
-    const index = Math.max(0, pool.findIndex((def) => !styles.has(def.style)));
-    const def = pool.splice(index, 1)[0]!;
+    const gap = missingStyles(styleCounts(game.loadout.map((id) => moveById(id)?.style)));
+    let pick = gap.length ? pool.findIndex((def) => def.style === gap[0]) : -1;
+    if (pick < 0) pick = 0;
+    const def = pool.splice(pick, 1)[0]!;
     game.loadout.push(def.id);
+    have.add(def.id);
+  }
+  // Once the six is full, if a style is still missing and the bench has one, swap out a surplus style.
+  // Keeps authored defaults (and late unlocks) from locking a hero into five strikes.
+  for (;;) {
+    const counts = styleCounts(game.loadout.map((id) => moveById(id)?.style));
+    const gap = missingStyles(counts)[0];
+    if (!gap) break;
+    const cover = pool.find((def) => def.style === gap);
+    if (!cover) break;
+    const surplus = MOVE_STYLES.find((style) => (counts[style] ?? 0) >= 2);
+    if (!surplus) break;
+    const victimAt = game.loadout.findIndex((id) => moveById(id)?.style === surplus);
+    if (victimAt < 0) break;
+    game.loadout[victimAt] = cover.id;
+    pool.splice(pool.indexOf(cover), 1);
   }
 }
 
