@@ -1,5 +1,31 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-07 pm): battle Stage 2 — playtest first
+
+**Life sims (builds not used in recent passes), aged to 60, seed 1, every difficulty:**
+- **Crownbridge / wealthy** mystery (reluctant + pragmatic): wakes at 8, 18 powers by 60, mentor Kessler.
+- **Metro City / supportive** God Mode **lightning control + force field** (loud + team): 18 powers, mentor Skyline.
+- **Spider-Man**, **Batman** (no powers, by vow) and **Superman** legends: canon wakes 15 / — / 13, mentors Ben Parker / Alfred / Jonathan Kent.
+- 450 villain duel boards per difficulty were dumped from those lives and replayed with the tell-reading policy (`/workspace/playtest/pm1107/`).
+
+**Baseline (before this pass), win rate vs street foes / case bosses:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random |
+|---|---|---|---|---|
+| Story | 1.00 / 0.97 | 0.94 / 0.93 | 0.86 / 0.82 | 0.71 / 0.74 |
+| Normal | 0.94 / 0.89 | 0.66 / 0.64 | 0.50 / 0.49 | 0.27 / 0.25 |
+| Hard | 0.81 / 0.71 | 0.49 / 0.50 | 0.35 / 0.31 | 0.16 / 0.13 |
+| Legendary | 0.54 / 0.55 | 0.30 / 0.36 | 0.18 / 0.19 | 0.06 / 0.06 |
+
+**Findings:**
+- **Fights are over in 4–5 turns** (average 4.4–5.1). Momentum needs 3 edge wins to Burst, so most fights end before a Burst can happen, and there is no room for statuses or combos to matter. Stage 2 needs a little more runway (target 6–8 turns, still under a minute).
+- **Bosses are no harder than street foes** (Normal 60%: 0.66 street vs 0.64 boss). DESIGN §17 wants bosses a clear step up.
+- **Build spread is wider than the difficulty spread.** At Normal / 60%: Batman 0.92, Spider-Man 0.88, Metro God Mode 0.68, Crownbridge mystery 0.54 (bosses 0.29), Superman 0.39. The weak lives have lopsided sixes: Superman's default six is five strikes and one guard; the Crownbridge hero at 22 has no guard move at all, so a strike tell has no answer but a breath.
+- **Phone (390×844):** on a gimmick fight the move grid squeezed its rows to fit, so the bottom line of each move card was cut off (overflow-hidden cards in a fixed-height grid shrink to 0 min-height). Fixed in increment 1.
+- Duel at Legendary vs The Auditor (Crownbridge, 22) and Superman vs Lex Luthor (Warsuit armor phase) both played clean, 0 console errors.
+
+**Screenshots (before):** `/workspace/superlife-screens/1107pm-before/` (`crown-leg-b.png`, `superman.png`).
+
 ## Morning pass (2026-11-07 am): battle Stage 1 — difficulty + Momentum
 
 **Life sims (new combos, not used in recent passes):**

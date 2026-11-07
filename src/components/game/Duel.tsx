@@ -483,7 +483,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
           </div>
         </div>
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-2 overflow-y-auto">
+      <div className="grid min-h-0 flex-1 auto-rows-max grid-cols-2 content-start gap-2 overflow-y-auto overscroll-contain">
         {fight.playerMoves.map((move) => (
           <MoveCard
             key={keyOf(move)}
@@ -635,17 +635,17 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, busy, on
       aria-pressed={picked}
       aria-disabled={blocked || busy}
       onClick={onPick}
-      className={`card relative flex min-h-[5.5rem] flex-col gap-1 overflow-hidden px-2.5 py-2 text-left transition-transform ${picked ? "!border-gold !bg-panel-2" : answers && !blocked ? "!border-gold/70 shadow-[0_0_16px_-6px_var(--color-gold)]" : burst && !blocked ? "!border-[#ff7a3d]/70 shadow-[0_0_16px_-6px_#ff7a3d]" : ""} ${blocked ? "opacity-55" : ""}`}
+      className={`card relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden px-2.5 py-1.5 text-left transition-transform ${picked ? "!border-gold !bg-panel-2" : answers && !blocked ? "!border-gold/70 shadow-[0_0_16px_-6px_var(--color-gold)]" : burst && !blocked ? "!border-[#ff7a3d]/70 shadow-[0_0_16px_-6px_#ff7a3d]" : ""} ${blocked ? "opacity-55" : ""}`}
     >
       <span className="absolute inset-y-0 left-0 w-1" style={{ background: HEX[move.style] }} />
       {cooling > 0 && <span className="absolute inset-0 bg-ink/50" style={{ clipPath: `inset(${100 - Math.min(100, cooling * 33)}% 0 0 0)` }} />}
       <span className="relative flex items-start gap-2">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg" style={{ background: `color-mix(in srgb, ${meta.color} 18%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${meta.color} 45%, transparent)` }} title={meta.label}>
+        <span className="grid size-7 shrink-0 place-items-center rounded-lg" style={{ background: `color-mix(in srgb, ${meta.color} 18%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${meta.color} 45%, transparent)` }} title={meta.label}>
           <ElementIcon element={el} className="size-[18px]" />
         </span>
         <span className="line-clamp-2 min-w-0 text-[13px] leading-tight font-extrabold text-fg">{move.name}</span>
       </span>
-      <span className="relative flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold">
+      <span className="relative flex flex-nowrap items-center gap-x-2 overflow-hidden text-[11px] font-bold whitespace-nowrap">
         <span className="flex items-center gap-0.5" style={{ color: HEX[move.style] }}>
           <StyleIcon className="size-3" aria-hidden />
           {STYLE[move.style]}
@@ -655,12 +655,10 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, busy, on
           {cost}
         </span>
         {(move.cooldown ?? 0) > 0 && <span className="text-muted">{cooling > 0 ? `${cooling}t left` : `cd ${move.cooldown}`}</span>}
-        {move.rank ? <span className="rounded bg-white/10 px-1 text-[10px] text-fg">R{move.rank}</span> : null}
         {answers && !blocked && <span className="t-label rounded-full bg-gold px-1.5 py-px text-[8px] text-paper-ink">Answer</span>}
         {tag && !blocked && <span className={`t-label rounded-full px-1.5 py-px text-[8px] ${tag === "Adapted" ? "bg-cape text-white" : "bg-spark text-paper-ink"}`}>{tag}</span>}
-        {burst && !blocked && <span className="t-label rounded-full bg-[#ff7a3d] px-1.5 py-px text-[8px] text-white">Burst ×1.45</span>}
       </span>
-      <span className="relative text-[11px] leading-snug text-muted">{cooling > 0 ? "Cooling down." : short ? "Not enough energy." : burst ? `${mechanicLine(move)} Burst ready.` : mechanicLine(move)}</span>
+      <span className="relative truncate text-[11px] leading-snug text-muted">{cooling > 0 ? "Cooling down." : short ? "Not enough energy." : burst ? `${mechanicLine(move)} Burst ready.` : mechanicLine(move)}</span>
     </button>
   );
 }

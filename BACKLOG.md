@@ -1,5 +1,10 @@
 # SuperLife — Backlog
 
+## From the 2026-11-07 pm pass (in progress)
+
+- **Plan (battle Stage 2, in order):** shared status effects (Burn / Frost / Shock / Expose / Ward) and mix-up combos in the life-sim duel; the same Momentum / Burst / status / combo rules in Arena (vs AI and online); AI habit reading with a fair warning chip; a little more fight runway (6–8 turns) and bosses a clear step above street foes; Normal tuned toward ~58% at 60% play.
+- **Found in the playtest:** lopsided default sixes (Superman five strikes, Crownbridge mystery no guard) make some lives much harder than others. Candidate: the Moves shelf warns "No guard move: strike tells have no answer" and the auto-fill prefers covering a missing style.
+
 ## From the 2026-11-07 am pass
 
 - **Done (battle Stage 1):** DESIGN.md §17 signature system; life difficulty Story/Normal/Hard/Legendary at birth; Momentum + Burst + guard-break on the life-sim duel; harder Normal; HP/Momentum HUD polish; engine sims + tests.

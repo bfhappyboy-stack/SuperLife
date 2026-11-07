@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-07 (pm): battle Stage 2 (`devbot/2026-11-07-pm`)
+
+Built on `origin/devbot/2026-11-07-am` (f9179b9). `main` is unchanged since 702d68d. Each increment below was typechecked, linted, tested, built and loaded at 390×844 before it was pushed.
+
+### Increment 1: playtest + move-card fix
+
+- Playtest of new builds (Crownbridge wealthy mystery, Metro God Mode lightning + force field, Spider-Man / Batman / Superman) at all four difficulties. Results and the Stage 2 plan are in `PLAYTEST.md` and `BACKLOG.md`.
+- **Fix:** in gimmick fights the six move cards were squeezed to fit, cutting off their bottom line. The grid now keeps each card's full height (`auto-rows-max`), and the cards are more compact (one-line effect, no rank chip in fights, the Burst hint moves to the glow and the effect line), so all six fit on a 390×844 screen even with a boss gimmick strip.
+
 ## 2026-11-07 (am): battle redesign Stage 1 — life difficulty + Momentum (`devbot/2026-11-07-am`)
 
 Built on `origin/devbot/2026-11-04-am` (2aed31b). Full signature system written into `DESIGN.md` §17; Stage 1 ships complete and playable.
