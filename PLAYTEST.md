@@ -1,5 +1,37 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-07 night): battle Stage 3 — playtest first
+
+**Builds (different from am/pm):** Harbor Bay / military mystery (Mara Quinn), Dustreach / celebrity mystery (Rex Vale), Neon Spire God Mode fire-control + super-speed (Sable Ortiz), Black Panther, Wonder Woman, Hulk, Flash. (Superman added to the after-boards for the coverage check.) Aged to 55, seed 1, all four difficulties. Harness: `/workspace/playtest/night1107/`.
+
+**Baseline (before night changes), street / boss at each skill:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random |
+|---|---|---|---|---|
+| Story | 1.00 / 0.99 | 0.97 / 0.90 | 0.87 / 0.76 | 0.69 / 0.44 |
+| Normal | 0.87 / 0.81 | 0.61 / 0.46 | 0.35 / 0.19 | 0.15 / 0.03 |
+| Hard | 0.84 / 0.72 | 0.50 / 0.35 | 0.27 / 0.15 | 0.10 / 0.00 |
+| Legendary | 0.71 / 0.45 | 0.34 / 0.16 | 0.16 / 0.02 | 0.02 / 0.00 |
+
+**Findings before Increment 1:**
+- Superman @19 known styles strike 3 / guard 0 / trick 2; @31 still no guard unlocked in the early kit (Stand Firm sat at mastery 3). Dustreach celebrity six was five strikes + one trick. Harbor military mystery likewise had no guard in the six.
+- fillLoadout already preferred missing styles on *empty* slots, but a full six of strikes never got a street guard, and late-unlocked guards stayed on the bench.
+- Phone before shots: `/workspace/superlife-screens/1107night-before/` (Harbor/Neon/BP/WW/Hulk/Flash duels + title/create). Energy still sits at 10/10 on openers — Stage 3 Ultimates still needed.
+
+**After Increment 1 (coverage), same policy, boards now include Superman:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random | Avg turns (60%) |
+|---|---|---|---|---|---|
+| Story | 1.00 / 1.00 | 0.97 / 0.97 | 0.87 / 0.81 | 0.73 / 0.55 | ~4.9 |
+| Normal | 0.96 / 0.88 | 0.74 / 0.54 | 0.47 / 0.31 | 0.20 / 0.10 | ~5.7 |
+| Hard | 0.96 / 0.86 | 0.68 / 0.50 | 0.37 / 0.22 | 0.12 / 0.03 | ~5.8 |
+| Legendary | 0.92 / 0.74 | 0.53 / 0.31 | 0.24 / 0.11 | 0.05 / 0.01 | ~5.8 |
+
+- Per-build Normal 60%: Wonder Woman 0.93, Black Panther 0.87, Hulk 0.87, Neon fire+speed 0.87, Harbor 0.79, Superman 0.63, Flash 0.56, Dustreach 0.54. Superman is no longer the floor.
+- Probe: Superman @19 loadout now includes Stand Firm (guard); Harbor/Dustreach auto-fill starts with Dome (guard).
+- Screenshots after: `/workspace/superlife-screens/1107night-inc1/`.
+
+
 ## Afternoon pass (2026-11-07 pm): battle Stage 2 — playtest first
 
 **Life sims (builds not used in recent passes), aged to 60, seed 1, every difficulty:**

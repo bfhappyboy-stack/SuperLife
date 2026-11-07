@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-07 (night): battle Stage 3 start — loadout coverage (`devbot/2026-11-07-night`)
+
+Built on `origin/devbot/2026-11-07-pm` (1f40f97). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
+
+### Increment 1: loadout coverage
+
+- **Why:** pm playtest found Superman's six at five strikes and mystery lives with no guard, so a strike tell had no answer but breath. Win rates swung more with the build than with the difficulty.
+- **Auto-fill:** `fillLoadout` still prefers a missing style when topping up empty slots, and once the six is full it will swap a surplus-style slot for a bench move of the missing style (so a late-unlocked Stand Firm actually lands in the six).
+- **Street padding:** `battleMoves` still pads empty slots by missing style first; if a full six still lacks a style, the weakest surplus-style move is swapped for a street cover of the missing style for that fight only.
+- **Moves shelf warning:** clear amber line when the equipped six has no guard / strike / trick (e.g. "No guard move: strike tells have no answer").
+- **Authored / catalog defaults:** Stand Firm, Dome and Aegis unlock as the *first* move of durability / force-field / aegis-shell; Ground Pound is a trick; Black Panther's Receipt is a trick. Superman / Wonder Woman / Harbor Bay kits now ship with a guard in the six.
+- **Sims (new builds: Harbor military mystery, Dustreach celebrity, Neon fire+speed God Mode, Black Panther, Wonder Woman, Hulk, Flash, Superman), Normal 60% play:** street 0.74 / boss 0.54 (was 0.61 / 0.46 on the night baseline before this fix). Superman street 0.63 (was the weak outlier). Design target for Normal boss is ~55%.
+- **Tests:** +6 in `coverage.test.ts`. 189 pass.
+
+
 ## 2026-11-07 (pm): battle Stage 2 (`devbot/2026-11-07-pm`)
 
 Built on `origin/devbot/2026-11-07-am` (f9179b9). `main` is unchanged since 702d68d. Each increment below was typechecked, linted, tested, built and loaded at 390×844 before it was pushed.
