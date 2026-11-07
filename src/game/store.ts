@@ -33,7 +33,7 @@ interface Store {
   openCreate: () => void;
   pickMode: (mode: GameMode) => void;
   buildOwn: () => void;
-  beginLegend: (presetId: string) => void;
+  beginLegend: (presetId: string, difficulty?: import("./types").LifeDifficulty) => void;
   closeReveal: (firstMove?: number) => void;
   begin: (opts: NewLifeOpts) => void;
   resume: () => void;
@@ -134,11 +134,11 @@ export const useGame = create<Store>((set, get) => ({
   },
   pickMode: (mode) => set({ createMode: mode, screen: mode === "god" ? "god" : "create" }),
   buildOwn: () => set({ createMode: "god", screen: "create" }),
-  beginLegend: (presetId) => {
+  beginLegend: (presetId, difficulty) => {
     const legend = presetById(presetId);
     if (!legend) return;
     // createGame fills name, city, upbringing, traits and look from the legend.
-    get().begin({ name: legend.name, cityId: legend.cityId, upbringing: legend.upbringing, portrait: legend.portrait, sex: legend.sex, face: legend.face, drive: legend.drive, preset: legend.id, mode: "god" });
+    get().begin({ name: legend.name, cityId: legend.cityId, upbringing: legend.upbringing, portrait: legend.portrait, sex: legend.sex, face: legend.face, drive: legend.drive, preset: legend.id, mode: "god", difficulty });
   },
   closeReveal: (firstMove) => {
     const game = get().game;
