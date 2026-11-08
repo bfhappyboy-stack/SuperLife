@@ -2,7 +2,7 @@
 
 ## From the 2026-11-08 pm pass (in progress)
 
-- **Batman has no battle kit in the life sim** (six street moves for life). Planned this pass: a gadget belt that grows with age.
+- **Done (increment 2):** Batman's Utility Belt — 8 age-gated gadgets replace his lifelong street six; Ultimate from 30; saved Batman lives can enter the Arena. Candidate: kits for future powerless legends (e.g. Hawkeye, Black Widow) are one data entry each.
 - **Hard / Legendary street fights are too soft** (60% play 0.75 / 0.56 vs targets 0.50 / 0.30). Planned this pass: more than bigger numbers.
 - **Legend heroes are drawn as civilians on the duel stage** (Hulk in glasses vs a painted Red Hulk card). Candidate: use the legend's hero card art on the left, like the foe card.
 

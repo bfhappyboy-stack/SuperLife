@@ -311,6 +311,26 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
    - Charge cadence (fixed 2026-11-08 am): the charged hit comes on the second turn of phase 2 and then every third turn (`CHARGE_EVERY = 3`). Before, it charged every turn after the first.
 10. **Strategic loadouts (Stage 3 start — coverage shipped 2026-11-07 night):** Exactly 6 moves, two sets (A/B). Auto-fill and street padding prefer a missing strike/guard/trick so every tell has an answer; the Moves shelf warns when the equipped six still lacks a style (e.g. "No guard move: strike tells have no answer"). Authored early moves for durability / force-field / aegis / strength favour coverage. Future: a "Burst window" tag on authored finishers so the Momentum spend feels authored, not generic.
 
+### Legend kits (shipped 2026-11-08 pm)
+
+A legend with **no powers** fights with a gear kit instead of street moves forever. Data in `src/game/kits.ts` (`KITS`), one entry per legend; today only **Batman — Utility Belt**.
+
+- Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More gadgets than slots (8 for 6), so the six stays a choice.
+- Strength: base power + 0.30 × power level (powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
+- From `ultimateAge` (Batman 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6).
+- Saved kit lives can enter the Arena (passive Read the Room).
+
+| Age | Gadget | Style | Element / status |
+|---|---|---|---|
+| 10 | Keysi Guard | guard | force |
+| 12 | Batarang | strike | shadow · Expose |
+| 14 | Smoke Pellet | trick (status) | shadow · Expose |
+| 18 | Grapnel Swing | trick (dash) | speed |
+| 22 | Armored Cape | guard | shield · Ward |
+| 25 | Explosive Gel | strike | fire · Burn |
+| 28 | Detective Mode | trick (status) | psychic · **Shock** override |
+| 32 | I Am Vengeance | strike | shadow · Expose |
+
 ### Feel on phone (Stage 1 partial)
 
 - Animated HP bars with delayed ghost trail + hit flash (refined Stage 1).
