@@ -4,6 +4,16 @@
 
 Built on `origin/devbot/2026-11-08-am` (b2fe5d3). `main` is unchanged since 702d68d. Each increment is typechecked, linted, tested, built and loaded at 390×844 before push.
 
+### Increment 2: Batman's Utility Belt (legend kits)
+
+- **Why:** Batman has no powers, so from 8 to 60 his six was street moves (Haymaker, Slip, Brace…). The Joker was fought with "Haymaker", no Ultimate, nothing that said Batman.
+- **Kits (`src/game/kits.ts`, data):** a legend with no powers gets a gear kit. Batman's **Utility Belt** grows on birthdays: Keysi Guard (10), Batarang (12, Expose), Smoke Pellet (14), Grapnel Swing (18), Armored Cape (22, Ward), Explosive Gel (25, Burn), Detective Mode (28, `applies: shock`, so tells can't lie), I Am Vengeance (32). Eight gadgets for six slots, so from 28 you choose. Each covers strike / guard / trick by 14.
+- **Rules:** kit moves are normal moves with a `kit:batman` source: they unlock by age, rank up by use, wear in by decade (+1 at 25 / 35 / 45) and take 0.30 of power level (powers 0.55, street 0.35). From **30** the belt's strongest equipped gadget is his **Ultimate**. Only Batman's own life can equip them.
+- **Phone:** the Moves shelf now opens the real six-slot picker for Batman (it showed the read-only street six); locked gadgets say "Age 28" and "Detective Mode joins the Utility Belt at 28". A birthday card says "New on the Utility Belt: Batarang." and at 30 that the strongest gadget is now his Ultimate.
+- **Arena:** a saved Batman life (14+) can now be drafted as himself with his belt (before, saved lives needed a power). Passive: Read the Room (+1 energy a turn).
+- **Sims (Batman to 60, 70 villain boards, 60% play, street / boss):** Normal 0.79 / 0.75 → 0.90 / 0.81, Hard 0.86 / 0.64 → 0.84 / 0.78, Legendary 0.64 / 0.44 → 0.70 / 0.67. A notch above other heroes on Normal (statuses and full coverage do most of it, not raw power: his gadgets hit for less than the old padded street kit); increment 3 retunes Hard / Legendary for every build.
+- **Tests:** +4 (`kits.test.ts`: data, age/legend gating, Shock override, a real Batman life to 31 + Arena fighter). 212 game tests pass.
+
 ### Increment 1: playtest
 
 - Batman / Hulk / Crownbridge mystery / Metro mystery to 60 on all four difficulties; Hard phone screens. Notes and baseline table in PLAYTEST.md. No code changes.

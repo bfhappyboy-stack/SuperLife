@@ -17,6 +17,7 @@ import { hasGift } from "@/game/theme";
 import { library, type LibraryState } from "@/game/library";
 import { SealedGift } from "@/components/game/SealedGift";
 import { MovePicker, StreetSix } from "@/components/game/MovePicker";
+import { kitFor } from "@/game/kits";
 import { useGame } from "@/game/store";
 import type { AiHero, Game } from "@/game/types";
 
@@ -107,7 +108,8 @@ export function PowerLab({
     );
   }
 
-  if (!gift && pane === "moves") return <StreetSix game={game} />;
+  // A legend kit (Batman's Utility Belt) gets the real picker even without a power.
+  if (!gift && pane === "moves") return kitFor(game.preset) ? <MovePicker game={game} onAct={onAct} /> : <StreetSix game={game} />;
 
   return (
     <div className="flex flex-col gap-4">

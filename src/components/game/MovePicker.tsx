@@ -5,7 +5,8 @@ import { buzz } from "@/components/game/haptics";
 import { blip } from "@/components/game/sfx";
 import { getPower } from "@/game/combo";
 import { powerRank } from "@/game/mastery";
-import { battleMoves, knownMoves, loadoutWarnings, moveLevel, MOVESET_SIZE, placeInSlot, scaledPower, STREET_MOVES } from "@/game/moves";
+import { battleMoves, knownMoves, loadoutWarnings, lockedLine, moveLevel, moveSource, MOVESET_SIZE, placeInSlot, scaledPower, STREET_MOVES } from "@/game/moves";
+import { isKitPower, kitFor, type KitMove } from "@/game/kits";
 import type { MoveDef } from "@/game/moves.catalog";
 import type { Game } from "@/game/types";
 import "./move-picker.css";
@@ -84,7 +85,7 @@ export function MovePicker({ game, onAct }: { game: Game; onAct: (id: string) =>
       return;
     }
     if (ready.length <= equipped.length && equipped.length < 2) {
-      feedback("This is the only move you know. Drill your power to unlock another.", false);
+      feedback(kitFor(game.preset) && !(game.unlockedPowers ?? []).length ? "This is the only gadget on the belt so far. More join as you grow." : "This is the only move you know. Drill your power to unlock another.", false);
       return;
     }
     setArmed({ kind: "slot", index });
@@ -94,6 +95,10 @@ export function MovePicker({ game, onAct }: { game: Game; onAct: (id: string) =>
 
   function tapMove(def: MoveDef, unlocked: boolean) {
     if (!unlocked) {
+      if (isKitPower(def.powerId)) {
+        feedback(`${lockedLine(def)} Keep patrolling; the belt grows with you.`, false);
+        return;
+      }
       const power = getPower(def.powerId);
       feedback(`${def.name} unlocks at ${power?.name ?? "that power"} rank ${powerRank(def.minMastery)}. Train it in Powers › Drill.`, false);
       return;
@@ -269,7 +274,7 @@ export function MovePicker({ game, onAct }: { game: Game; onAct: (id: string) =>
                   <span className={`mp-tag ${on ? "is-on" : ""}`}>{on ? `Slot ${at + 1}` : picked ? "Picked" : armed?.kind === "slot" ? "Swap in" : equipped.length < MOVESET_SIZE ? "Add" : "Swap"}</span>
                 </span>
                 <span className="mp-move-body">
-                  {getPower(def.powerId)?.name ?? ""} · {def.kind} · {def.style} · Pow {scaledPower(def, level)} · {def.energy}e{def.cooldown ? ` · ${def.cooldown}t cd` : ""} · Rank {level}
+                  {moveSource(def)} · {def.kind} · {def.style} · Pow {scaledPower(def, level)} · {def.energy}e{def.cooldown ? ` · ${def.cooldown}t cd` : ""} · Rank {level}
                 </span>
                 <span className="mp-move-effect">{def.effect}</span>
               </button>
@@ -292,10 +297,10 @@ export function MovePicker({ game, onAct }: { game: Game; onAct: (id: string) =>
                     <span className="mp-move-head">
                       <ElementIcon element={def.element} className="size-4 shrink-0 opacity-60" />
                       <span className="truncate font-semibold">{def.name}</span>
-                      <span className="mp-tag">Rank {powerRank(def.minMastery)}</span>
+                      <span className="mp-tag">{isKitPower(def.powerId) ? `Age ${(def as KitMove).minAge}` : `Rank ${powerRank(def.minMastery)}`}</span>
                     </span>
                     <span className="mp-move-body">
-                      {getPower(def.powerId)?.name ?? ""} · {def.kind} · {def.effect}
+                      {moveSource(def)} · {def.kind} · {def.effect}
                     </span>
                   </button>
                 </li>
