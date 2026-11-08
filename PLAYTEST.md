@@ -1,5 +1,27 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-08 am): battle Stage 4 — playtest first
+
+**Builds (new this pass):** NYC / foster-care mystery (Jo Reyes; wakes at 15), Stacks / lab-program God Mode **elasticity + super strength** (Theo Kade), and **Captain America**. Aged to 45, seed 1, all four difficulties; 178 villain boards per difficulty (only 2 were case bosses: Slipstream for Stacks, Red Skull for Cap). Replayed with the same tell-reading policy as the night pass (`/workspace/playtest/am1108/`).
+
+**Baseline (before this pass), street / boss:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random |
+|---|---|---|---|---|
+| Story | 1.00 / 1.00 | 0.98 / 1.00 | 0.93 / 0.88 | 0.79 / 0.67 |
+| Normal | 0.99 / 0.96 | 0.84 / 0.75 | 0.62 / 0.33 | 0.36 / 0.00 |
+| Hard | 0.98 / 1.00 | 0.74 / 0.50 | 0.46 / 0.04 | 0.23 / 0.00 |
+| Legendary | 0.95 / 0.71 | 0.57 / 0.25 | 0.30 / 0.00 | 0.13 / 0.00 |
+
+(Boss column is n=2 here, so it is noise. Night's 717-board pool stays the reference for bosses.) Normal 60% street by build: Cap 0.88, Stacks 0.86, NYC foster 0.79. Cap's fights are short (4.7 turns): his six at 34–35 is four guards, one strike, one trick, and Holy Hull hits for 19.
+
+**Findings:**
+- **Bug: a Charge boss charged every turn once it started.** After the first charged hit the countdown sat at 0, so Crossbones / Bane / Zod / Kraven / Whiplash / Ares / Surtur / Klaw (and strength, blast and lightning bosses) threw the charged hit every turn for the rest of the fight, while the hint said "every third turn". Seen on the phone: Crossbones at 34 showed "Charging!" with all three pips lit four turns running. A tell-reader just guarded every turn, so it made the fight easier, not harder (lab: Bane gimmick on 717 real Normal boards, perfect play 0.99, 60% play 0.64). **Fixed in increment 1:** charge comes on turn 2 after phase 2 starts, then every third turn (perfect 0.95, 60% 0.61, 30% 0.37; 1.0 charged hit a fight instead of 2.0).
+- **Move-select still works** on the NYC, Stacks and Cap saves: cards tap, ANSWER / status / ULT tags show, no console errors, no horizontal overflow at 390×844.
+- **UI nit:** on a 3-energy, cooldown-1 guard card (Holy Hull) the ANSWER tag is clipped at the right edge. Cosmetic; left for a later pass.
+- **Arena (night rules):** roster spread 13.1 pts. Bottom three: Abomination 0.45, Cheetah 0.45, **Flash 0.44**. Pro AI vs the ladder stand-in 0.43 / 0.32 at perfect / 60%.
+- Screens before: `/workspace/superlife-screens/1108am/before/` (NYC 24 vs The Auditor, Stacks 28, Cap 35 vs Winter Soldier, Cap 34 vs Crossbones mid-charge).
+
 ## Night pass (2026-11-07 night): battle Stage 3 — playtest first
 
 **Builds (different from am/pm):** Harbor Bay / military mystery (Mara Quinn), Dustreach / celebrity mystery (Rex Vale), Neon Spire God Mode fire-control + super-speed (Sable Ortiz), Black Panther, Wonder Woman, Hulk, Flash. (Superman added to the after-boards for the coverage check.) Aged to 55, seed 1, all four difficulties. Harness: `/workspace/playtest/night1107/`.

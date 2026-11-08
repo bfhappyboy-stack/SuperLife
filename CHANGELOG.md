@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-08 (am): battle Stage 4 (`devbot/2026-11-08-am`)
+
+Built on `origin/devbot/2026-11-07-night` (c98aa83). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
+
+### Increment 1: playtest + Charge cadence fix
+
+- **Playtest:** NYC foster mystery, Stacks lab-program God Mode (elasticity + super strength), Captain America; to 45 on all four difficulties. Notes in PLAYTEST.md.
+- **Fix:** a Charge boss now throws its charged hit every third turn (`CHARGE_EVERY = 3` in `duel.ts`). Before, the countdown stuck at 0 after the first charged hit, so every turn after it was charged. Same hint, same answer (guard or breath).
+- **Effect (lab, Bane's gimmick on 717 real Normal boards):** perfect play 0.99 → 0.95, 60% play 0.64 → 0.61. One charged hit a fight instead of two.
+- **Tests:** +1 (`stage4.test.ts`). 195 pass.
+
 ## 2026-11-07 (night): battle Stage 3 start — loadout coverage (`devbot/2026-11-07-night`)
 
 Built on `origin/devbot/2026-11-07-pm` (1f40f97). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.

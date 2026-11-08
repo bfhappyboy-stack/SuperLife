@@ -1,5 +1,10 @@
 # SuperLife — Backlog
 
+## From the 2026-11-08 am pass (in progress)
+
+- **Done (increment 1):** Charge bosses charged every turn after the first wind-up; now every third turn as the hint says.
+- **UI nit:** the ANSWER tag clips on a guard card that also shows "cd 1" and 3 energy (Holy Hull). Cosmetic.
+
 ## From the 2026-11-07 night pass (in progress)
 
 - **Done (increment 1):** loadout coverage — Moves shelf warns on a missing style; auto-fill / street padding prefer covering strike/guard/trick; durability / force-field / aegis unlock a guard first; Ground Pound is a trick; Receipt is a trick. Superman / mystery kits catch up without a difficulty retune.
