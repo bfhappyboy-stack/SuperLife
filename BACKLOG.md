@@ -8,7 +8,8 @@
 - **Done (increment 3):** Phase 3 on the 11 final canon bosses; one-month regroup after a boss loss.
 - **Done (increment 4):** Flash Arena 0.44 → 0.49 (Infinite Mass Punch applies Expose); spread 11.9. Cheetah 0.45 and Abomination 0.46 are now the floor.
 - **Regen hint is a trap (found in the Phase 3 lab):** a player who obeys "A trick move stalls it" every time throws tricks into strike tells. On real Normal boards Deathstrike / Sabretooth / Vulture drop to 0.15 win at perfect play that way, against 0.90 if you just answer tells. Candidate: let any won edge also stall regen, or reword the hint to "a trick that wins the edge stalls it". Needs a quick owner nod since it changes six bosses.
-- **UI nit:** the ANSWER tag clips on a guard card that also shows "cd 1" and 3 energy (Holy Hull). Cosmetic.
+- **Done (increment 5):** ANSWER pill no longer clips (cooldown length yields to the pill). Villain cards were already complete (49/49); DESIGN count fixed.
+- **Guard Break pierce (§17 item 4) — not built:** at Momentum 4+ ignore half a Guard stance once. Skipped because auto-Burst at 3 keeps Momentum under 4 most fights and life-sim foes have no guard-stance damage cut to pierce. Revisit together with the manual-Burst owner's call.
 
 ## From the 2026-11-07 night pass (in progress)
 

@@ -222,7 +222,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 
 ## Villain cards
 
-- Every villain is meant to get an illustrated card used in the Arena draft, round intros, the life-sim FIGHT! intro and the fight itself. 34 villains have vector cards now (`VillainArt.tsx`, typed on `VILLAIN_ART_IDS`). In life-sim fights an illustrated rogue stands in the ring as a card, with hit-flash and lean-in animations.
+- Every villain is meant to get an illustrated card used in the Arena draft, round intros, the life-sim FIGHT! intro and the fight itself. All 49 villains (the 18 Arena villains plus every legend rogue) have vector cards now (`VillainArt.tsx`, typed on `VILLAIN_ART_IDS`; the last 15 landed 2026-11-03 night). In life-sim fights an illustrated rogue stands in the ring as a card, with hit-flash and lean-in animations.
 
 
 ## 17. Battle redesign (owner's call, 2026-11-04 — Stage 1 ships 2026-11-07)
@@ -286,7 +286,7 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 1. **Resources (Stage 1 done):** Energy + Momentum. Later: Stamina (optional third bar for long boss phases) only if phone HUD still reads clean.
 2. **Status effects (Stage 2 — life sim done):** Burn, Frost, Shock, Expose, Ward (Slow stays the one-turn status-move effect). Max 2 a side. Element-driven with a per-move `applies` override, never hard-coded per villain.
 3. **Combos / chains (Stage 2 — life sim done):** shipped as the mix-up Finisher (three won edges, never the same style twice running). Still to do: Gen1/Gen2 "Kin" synergy (owning both parents of a braid tags its moves and widens the chain).
-4. **Counters & guard breaks (Stage 1 partial):** Breath still counters Strike. Trick-vs-Guard now pays Momentum. Stage 2: Guard Break at Momentum 4+ ignores 50% of a Guard stance once.
+4. **Counters & guard breaks (Stage 1 partial):** Breath still counters Strike. Trick-vs-Guard now pays Momentum. Stage 2: Guard Break at Momentum 4+ ignores 50% of a Guard stance once. (Not built as of 2026-11-08 am: with auto-Burst at 3, Momentum rarely reaches 4, and life-sim foes have no guard-stance cut to pierce. Revisit with the manual-Burst call.)
 5. **Environment / stage (Stage 3 — shipped 2026-11-07 night):** Each city maps to one stage tag (`alley`, `rooftop`, `lab`, `throne`, `pier`, `open`) that nudges one element (+10% damage when that element's move wins the edge). Readable chip on the fight header. Arena uses a neutral `arena` tag (energy). Data in `battle.ts` (`CITY_STAGE`).
 6. **Signature ultimates (Stage 3 — shipped 2026-11-07 night):** One Ultimate among the six, never a 7th button. Life-sim: the strongest equipped move of your **focus** power, once that power is mastery 4+. Arena: each fighter's strongest move. Armed only at full Momentum (5); costs all 5 Momentum + the move's Energy; deals ×2.0 (no Burst stack on the same swing). Cinematic ULTIMATE beat on the stage. Shared helpers in `battle.ts`.
 7. **Enemy AI (Stage 2 — life sim done):** habit reading with a fair on-screen warning (see above). Arena's lead/fake AI is separate.

@@ -733,7 +733,8 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, ultimate
           <Zap className="size-3" aria-hidden />
           {cost}
         </span>
-        {(move.cooldown ?? 0) > 0 && <span className="text-muted">{cooling > 0 ? `${cooling}t left` : `cd ${move.cooldown}`}</span>}
+        {/* Cooldown length gives way to an Answer / Ultimate / gimmick pill so the pill never clips at 390px. */}
+        {(move.cooldown ?? 0) > 0 && (cooling > 0 || !((answers || ultimate || tag) && !blocked)) && <span className="text-muted">{cooling > 0 ? `${cooling}t left` : `cd ${move.cooldown}`}</span>}
         {ultimate && !blocked && <span className="t-label rounded-full bg-[#c48bff] px-1.5 py-px text-[8px] text-paper-ink">Ultimate</span>}{answers && !blocked && !ultimate && <span className="t-label rounded-full bg-gold px-1.5 py-px text-[8px] text-paper-ink">Answer</span>}
         {tag && !blocked && <span className={`t-label rounded-full px-1.5 py-px text-[8px] ${tag === "Adapted" ? "bg-cape text-white" : "bg-spark text-paper-ink"}`}>{tag}</span>}
         {move.ultimate && !ultimate && <span className="t-label rounded-full bg-[#c48bff]/30 px-1.5 py-px text-[8px] text-[#e2c6ff]">Ult</span>}{leaves && (

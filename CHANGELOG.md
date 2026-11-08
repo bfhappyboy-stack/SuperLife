@@ -4,6 +4,13 @@
 
 Built on `origin/devbot/2026-11-07-night` (c98aa83). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
 
+### Increment 5: move-card polish + doc fixes
+
+- **Move cards:** on a card that shows an Answer / Ultimate / gimmick pill, the cooldown length ("cd 1") gives way, so the pill no longer clips at 390px (Holy Hull at 3 energy, cd 1). A cooling move still shows "1t left".
+- **Villain cards:** checked: all 49 villains (18 Arena + every legend rogue, including the 15 drawn 2026-11-03 night) already have vector cards. DESIGN's "34" count was stale and is fixed.
+- **Skipped on purpose:** Guard Break pierce (§17 item 4). With auto-Burst at 3, Momentum only sits at 4+ in about one fight in ten, and life-sim foes have no guard-stance damage cut to pierce, so it would be an Arena-only rule that rarely fires. Logged in BACKLOG next to the Burst owner's call.
+- **Tests:** 208 pass (no new rules).
+
 ### Increment 4: Flash Arena balance
 
 - **Why:** after Cheetah's Expose buff, Flash was the weakest Arena pick (0.44). His dash punch, area jabs and phase are all speed, which leaves no status, so his best hits never set anything up.
