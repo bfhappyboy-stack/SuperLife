@@ -6,6 +6,7 @@ import { elementOfPower } from "./elements";
 import type { CatalogPower } from "./combo";
 import type { DuelMove, Game, MoveStyle } from "./types";
 import { markUltimate } from "./battle";
+import { isKitPower, KIT_EDGE, kitById, kitFor, kitMoveById, kitMoveUnlocked, kitRank, type KitMove } from "./kits";
 
 const HAND = new Map<string, MoveDef[]>();
 for (const entry of MOVE_BOOK) {
@@ -172,6 +173,8 @@ export function allMoveDefs(): MoveDef[] {
 }
 
 export function moveById(id: string): MoveDef | null {
+  const kit = kitMoveById(id);
+  if (kit) return kit;
   for (const list of HAND.values()) {
     const found = list.find((entry) => entry.id === id);
     if (found) return found;
@@ -201,7 +204,9 @@ export function scaledPower(def: MoveDef, level: number): number {
   return def.power + tier + (rank - 1) * step;
 }
 
-export function grantMoveExp(game: Pick<Game, "moveExp" | "unlockedPowers" | "mastery">, ids: readonly string[], amount: number): string[] {
+type UnlockGame = Pick<Game, "unlockedPowers" | "mastery"> & { preset?: string | null; age?: number };
+
+export function grantMoveExp(game: Pick<Game, "moveExp" | "unlockedPowers" | "mastery"> & { preset?: string | null; age?: number }, ids: readonly string[], amount: number): string[] {
   if (!game.moveExp || typeof game.moveExp !== "object") game.moveExp = {};
   const notes: string[] = [];
   for (const id of [...new Set(ids)]) {
@@ -216,20 +221,23 @@ export function grantMoveExp(game: Pick<Game, "moveExp" | "unlockedPowers" | "ma
   return notes;
 }
 
-export function moveUnlocked(game: Pick<Game, "unlockedPowers" | "mastery">, def: MoveDef): boolean {
+export function moveUnlocked(game: UnlockGame, def: MoveDef): boolean {
+  if (isKitPower(def.powerId)) return kitMoveUnlocked(game, def as KitMove);
   if (!(game.unlockedPowers ?? []).includes(def.powerId)) return false;
   const power = getPower(def.powerId);
   const level = masteryLevel(game.mastery?.[def.powerId] ?? 0, power?.generation ?? 0);
   return level >= def.minMastery;
 }
 
-export function knownMoves(game: Pick<Game, "unlockedPowers" | "mastery">): { def: MoveDef; unlocked: boolean }[] {
+export function knownMoves(game: UnlockGame): { def: MoveDef; unlocked: boolean }[] {
   const out: { def: MoveDef; unlocked: boolean }[] = [];
   for (const id of game.unlockedPowers ?? []) {
     const power = getPower(id);
     if (!power) continue;
     for (const def of movesForPower(power)) out.push({ def, unlocked: moveUnlocked(game, def) });
   }
+  // A legend kit (Batman's belt) sits on the shelf beside any powers, locked moves showing their age.
+  for (const def of kitFor(game.preset)?.moves ?? []) out.push({ def, unlocked: moveUnlocked(game, def) });
   return out;
 }
 
@@ -249,19 +257,22 @@ export function toDuel(def: MoveDef, level = 1): DuelMove {
     cooldown: def.cooldown,
     element: def.element ?? elementOfPower(def.powerId),
     rank,
+    ...((def as KitMove).applies !== undefined ? { applies: (def as KitMove).applies } : {}),
   };
 }
 
-type FightGame = Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp"> & { focusPower?: string | null; stats?: { powerLevel: number } };
+type FightGame = Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp"> & { focusPower?: string | null; stats?: { powerLevel: number }; preset?: string | null; age?: number };
 
 /**
  * How much your training adds to a move in a real fight: power level (the slow lifetime grind, soft-capped
  * by age) plus that power's mastery rank. Street moves get half the power-level part and no mastery.
  * Without this, a 50-year-old hero swung the same 4–6 point moves as a 12-year-old against foes that scale.
  */
-export function moveEdge(game: { stats?: { powerLevel: number }; mastery?: Record<string, number> }, powerId?: string): number {
+export function moveEdge(game: { stats?: { powerLevel: number }; mastery?: Record<string, number>; age?: number }, powerId?: string): number {
   const pl = Math.max(0, game.stats?.powerLevel ?? 0);
   if (!powerId) return Math.round(pl * 0.35);
+  // Kit gear trains like a power (full power-level share) and wears in by decade instead of mastery.
+  if (isKitPower(powerId)) return Math.round(pl * KIT_EDGE) + kitRank(game.age ?? 0) - 1;
   const power = getPower(powerId);
   const rank = masteryLevel(game.mastery?.[powerId] ?? 0, power?.generation ?? 0);
   return Math.round(pl * 0.55) + Math.max(0, rank - 1);
@@ -309,6 +320,11 @@ export function battleMoves(game: FightGame): DuelMove[] {
   const power = focus ? getPower(focus) : null;
   const rank = focus && power ? masteryLevel(game.mastery?.[focus] ?? 0, power.generation) : 0;
   const focusMoveIds = power ? movesForPower(power).map((def) => def.id) : [];
+  if (!focus) {
+    // No power to focus: a legend kit arms its own Ultimate once the hero is old enough.
+    const kit = kitFor(game.preset);
+    if (kit) return markUltimate(picked, { focusPowerId: kit.id, masteryRank: (game.age ?? 0) >= kit.ultimateAge ? 4 : 0, focusMoveIds: kit.moves.map((def) => def.id) });
+  }
   return markUltimate(picked, { focusPowerId: focus, masteryRank: rank, focusMoveIds });
 }
 
@@ -366,10 +382,7 @@ function benchMoves(game: Game, skip: readonly string[]): MoveDef[] {
 export function toggleLoadout(game: Game, moveId: string): string {
   const def = moveById(moveId);
   if (!def) return "That move isn't in the book.";
-  if (!moveUnlocked(game, def)) {
-    const power = getPower(def.powerId);
-    return `${def.name} wants ${power?.name ?? "that power"} at mastery ${def.minMastery}.`;
-  }
+  if (!moveUnlocked(game, def)) return lockedLine(def);
   if (!Array.isArray(game.loadout)) game.loadout = [];
   const at = game.loadout.indexOf(moveId);
   if (at >= 0) {
@@ -397,10 +410,7 @@ export interface SlotResult {
 export function placeInSlot(game: Game, slot: number, moveId: string): SlotResult {
   const def = moveById(moveId);
   if (!def) return { ok: false, line: "That move isn't in the book." };
-  if (!moveUnlocked(game, def)) {
-    const power = getPower(def.powerId);
-    return { ok: false, line: `${def.name} wants ${power?.name ?? "that power"} at mastery ${def.minMastery}.` };
-  }
+  if (!moveUnlocked(game, def)) return { ok: false, line: lockedLine(def) };
   if (!Number.isInteger(slot) || slot < 0 || slot >= MOVESET_SIZE) return { ok: false, line: "There are only six slots." };
   if (!Array.isArray(game.loadout)) game.loadout = [];
   const loadout = [...game.loadout];
@@ -421,4 +431,16 @@ export function placeInSlot(game: Game, slot: number, moveId: string): SlotResul
   game.loadout = loadout.slice(0, MOVESET_SIZE);
   const outName = out ? moveById(out)?.name : null;
   return { ok: true, line: outName ? `${def.name} in, ${outName} out. Slot ${target + 1}.` : `${def.name} takes slot ${target + 1}.` };
+}
+
+/** Where a move comes from, for shelf labels: the power's name, or the legend kit's (Utility Belt). */
+export function moveSource(def: MoveDef): string {
+  if (isKitPower(def.powerId)) return kitById(def.powerId)?.name ?? "Gear";
+  return getPower(def.powerId)?.name ?? "";
+}
+
+/** Why a move can't go in the six yet. */
+export function lockedLine(def: MoveDef): string {
+  if (isKitPower(def.powerId)) return `${def.name} joins the ${moveSource(def)} at ${(def as KitMove).minAge}.`;
+  return `${def.name} wants ${getPower(def.powerId)?.name ?? "that power"} at mastery ${def.minMastery}.`;
 }

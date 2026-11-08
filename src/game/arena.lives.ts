@@ -4,6 +4,7 @@
  * Batman and a fresh teen isn't useless. Unranked: they never feed the roster balance numbers.
  */
 import { battleMoves } from "./moves";
+import { kitFor } from "./kits";
 import { elementOfPower, type ElementId } from "./elements";
 import { arenaCooldown, arenaCost, type ArenaFighter, type ArenaPassive, type PassiveKind } from "./arena.roster";
 import type { DuelMove, Game, MoveStyle } from "./types";
@@ -28,7 +29,8 @@ const FALLBACK: [PassiveKind, string, string] = ["prep", "Read the Room", "+1 en
 const BAND = [5, 6, 7, 7, 8, 9];
 
 export function fighterFromLife(slot: number, game: Game): ArenaFighter | null {
-  if (!game || game.phase === "dead" || game.age < 14 || !game.powerId) return null;
+  // A power, or a legend kit (Batman's Utility Belt), earns a seat in the Arena.
+  if (!game || game.phase === "dead" || game.age < 14 || (!game.powerId && !kitFor(game.preset))) return null;
   const raw = battleMoves(game).slice(0, 6);
   if (raw.length < 6) return null;
   const order = raw.map((m, i) => [m.power, i] as const).sort((a, b) => a[0] - b[0]);
@@ -46,8 +48,8 @@ export function fighterFromLife(slot: number, game: Game): ArenaFighter | null {
     const idx = moves.reduce((best, m, i) => ((counts.get(m.style) ?? 0) > 1 && (best < 0 || m.power < moves[best]!.power) ? i : best), -1);
     if (idx >= 0) moves[idx] = { ...moves[idx]!, style, kind: style === "guard" ? "guard" : moves[idx]!.kind === "guard" ? undefined : moves[idx]!.kind };
   }
-  const el = elementOfPower(game.unlockedPowers?.[0] ?? game.powerId);
-  const [kind, name, text] = PASSIVE_BY_ELEMENT[el] ?? FALLBACK;
+  const source = game.unlockedPowers?.[0] ?? game.powerId;
+  const [kind, name, text] = (source ? PASSIVE_BY_ELEMENT[elementOfPower(source)] : undefined) ?? FALLBACK;
   const passive: ArenaPassive = { kind, name, text };
   return {
     id: `life-${slot}`,

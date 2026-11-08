@@ -42,6 +42,7 @@ import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villa
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
 import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, tuneOf } from "./difficulty";
+import { kitFor } from "./kits";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
 import { stageForCity } from "./battle";
 import {
@@ -2334,6 +2335,17 @@ export const SKIP_EVENT_CHANCE = 0.16;
 /** Fast-forward also scales city run-ins and arch-enemy pings down to this share. */
 export const SKIP_ENCOUNTER_CALM = 0.4;
 
+/** A legend kit (Batman's belt) gains its gadgets on birthdays; say so and slot them in. */
+function beltBirthday(d: Game, banners: string[]) {
+  const kit = kitFor(d.preset);
+  if (!kit) return;
+  const fresh = kit.moves.filter((move) => move.minAge === d.age);
+  if (!fresh.length) return;
+  fillLoadout(d);
+  banners.push(`New on the ${kit.name}: ${fresh.map((move) => move.name).join(", ")}.`);
+  if (d.age === kit.ultimateAge) banners.push(`The ${kit.name}'s strongest gadget is now your Ultimate at full Momentum.`);
+}
+
 export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
@@ -2343,6 +2355,7 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   if (birthday) {
     banners = openYear(d);
     meetMentor(d, banners);
+    beltBirthday(d, banners);
     if (turnChapter(d)) banners.push(`Chapter ${(d.chapters?.length ?? 1)} begins: ${d.chapters?.[d.chapters.length - 1]?.title ?? "a new decade"}.`);
     if (d.stats.health <= 0) {
       collapse(d, "Your health gives out before the year can even pick a fight.");
