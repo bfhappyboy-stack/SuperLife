@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-07-night` (c98aa83). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
 
+### Increment 2: Tempo interrupt on Charge
+
+- **Rule (DESIGN §17 item 9):** when a Charge boss's charged hit is coming and you hold Momentum 4+, a Strike cuts in first. The charge deals nothing, your Strike counts as a won edge (×1.55, its status, a combo link, +1 Momentum), and it costs 1 Momentum, paid before the Burst check. Guard still braces as before. Shared helper `canInterrupt` in `battle.ts`; `interruptReady` in `duel.ts`.
+- **Arena:** same rule for the follower against a charged Strike lead (Bane's Venom Pump, Zod's Kryptonian Soldier). The AI follower values the interrupt when it has the Momentum. Logged as `interrupt` on the turn, so online replay stays deterministic.
+- **Phone HUD:** the gimmick strip reads "Incoming! Guard, or Strike to interrupt"; during the wind-up it adds "Momentum 4 interrupts it" once you're at 3+. The tell card says "Guard to brace, or Strike to interrupt (−1 momentum)", the Momentum row shows INTERRUPT READY, strike cards get an Interrupt tag, and a cyan INTERRUPT beat plays when it lands.
+- **Sims (Bane's gimmick on 717 real Normal boards):** a perfect player who takes every interrupt gets one in 11% of charge fights (14% on Hard); win rates do not move (Normal perfect 0.95, 60% 0.63). Auto-Burst at 3 means Momentum rarely sits at 4, so this is a skill reward, not a balance lever. Arena ladder unchanged (spread 13.1; Bane 0.48 → 0.46).
+- **Tests:** +4 (helper, life-sim interrupt + Burst on the rest, determinism + wind-up restart, Arena interrupt + replay). 199 pass.
+
 ### Increment 1: playtest + Charge cadence fix
 
 - **Playtest:** NYC foster mystery, Stacks lab-program God Mode (elasticity + super strength), Captain America; to 45 on all four difficulties. Notes in PLAYTEST.md.

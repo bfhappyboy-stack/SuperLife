@@ -3,6 +3,8 @@
 ## From the 2026-11-08 am pass (in progress)
 
 - **Done (increment 1):** Charge bosses charged every turn after the first wind-up; now every third turn as the hint says.
+- **Done (increment 2):** Tempo interrupt on Charge (Momentum 4+, Strike, −1 Momentum; life sim + Arena).
+- **Note for the owner's Burst call:** with auto-Burst at 3, Momentum only reaches 4 through a guard break or a Finisher, so the interrupt shows up in ~11% of charge fights. A manual Burst arm would make banking for an interrupt a real plan.
 - **UI nit:** the ANSWER tag clips on a guard card that also shows "cd 1" and 3 energy (Holy Hull). Cosmetic.
 
 ## From the 2026-11-07 night pass (in progress)
