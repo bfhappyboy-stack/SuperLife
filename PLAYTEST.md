@@ -1,5 +1,9 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-08): short check
+
+Re-opened the pm Hulk 35 (Red Hulk boss) and Batman 27 (Joker boss) Hard saves at 390×844 after the legend-standee change: both heroes now stand as painted cards, no overflow or console errors (`/workspace/playtest/night1108/`). Hero art loads lazily, so the first ~1s of a duel can still show the intro card only. Balance numbers unchanged from the pm table (no engine change this pass).
+
 ## Afternoon pass (2026-11-08 pm): playtest first — Hard lives, Batman, Hulk, Crownbridge, Metro
 
 **Builds (new this pass):** **Batman** and **Hulk** God Mode presets, a Crownbridge / wealthy mystery (Ines Varga) and a Metro City / rural mystery (Cal Brody). Aged to 60, seed 1, all four difficulties; 349 villain boards per difficulty (15 case bosses). Same tell-reading policy as the am pass (`/workspace/playtest/pm1108/`). Phone screens at 390×844 on **Hard**: Batman 27 vs The Joker (boss), Hulk 35 vs Red Hulk (boss), Crownbridge 19 vs Saltwidow (`/workspace/playtest/pm1108/pt/`).
