@@ -1,7 +1,7 @@
 // Battle Stage 4 (2026-11-08 am): charge cadence, Tempo interrupt, Phase 3 on final canon bosses, regroup.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canInterrupt, INTERRUPT_COST, INTERRUPT_MIN } from "../battle.ts";
+import { canInterrupt, INTERRUPT_COST, INTERRUPT_MIN, statusOfMove } from "../battle.ts";
 import { activeGimmick, BREATH, CHARGE_EVERY, gimmickStatus, interruptReady, PHASE3_AT, playTurn, startDuel, type Rand } from "../duel.ts";
 import { hashSeed, isCharged, movesOf, playArenaTurn, startBout } from "../arena.ts";
 import { finalCanonBoss, PRESETS, VILLAIN_GIMMICKS, VILLAIN_PHASE3, villainPhase3 } from "../presets.ts";
@@ -245,4 +245,13 @@ test("save round-trip keeps a regroup; a malformed one from an old build is drop
   delete old.regroup;
   saveSlot(3, old as Game);
   assert.equal(loadSlot(3)?.regroup, undefined);
+});
+
+// ─── Arena: Flash ──────────────────────────────────────────────────────────────────
+
+test("Arena Flash: Infinite Mass Punch leaves Expose (speed is otherwise pure damage)", () => {
+  const punch = movesOf("flash").find((m) => m.id === "fl-punch")!;
+  assert.equal(punch.applies, "expose");
+  assert.equal(statusOfMove(punch), "expose");
+  assert.equal(statusOfMove({ ...punch, applies: undefined }), null);
 });

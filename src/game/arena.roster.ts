@@ -224,7 +224,8 @@ export const ARENA_ROSTER: ArenaFighter[] = [
     { kind: "speedster", name: "Speed Force", text: "Dash moves hit 25% harder, and he leads the first turn." },
     { suit: "#d8241c", trim: "#ffd23a", mask: "cowl", maskColor: "#d8241c", glove: "#d8241c" },
     [
-      am("fl-punch", "Infinite Mass Punch", "Near light speed, into one fist.", 9, "strike", "speed", "dash"),
+      // Speed is pure damage, so the punch carries Expose (they reel and take +15%). Arena 44% → 49%.
+      { ...am("fl-punch", "Infinite Mass Punch", "Near light speed, into one fist.", 9, "strike", "speed", "dash"), applies: "expose" },
       am("fl-jab", "Thousand Jabs", "You felt all of them at once.", 6, "strike", "speed", "area"),
       am("fl-bolt", "Lightning Throw", "He threw the lightning.", 7, "strike", "lightning"),
       am("fl-tornado", "Speed Tornado", "Run in circles. Literally.", 7, "trick", "wind", "area"),

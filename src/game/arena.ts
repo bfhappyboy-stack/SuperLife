@@ -853,11 +853,12 @@ export function aiOrder(m: ArenaMatch, side: Side, rand: () => number): string[]
 
 /** Win rates from the balance sim (filled by the tuning pass; 0.5 = average). */
 export const TIER: Record<string, number> = {
-  // Re-run 2026-11-07 pm with the shared Stage 2 rules (Momentum, statuses, Finisher).
-  thor: 0.574, ultron: 0.551, loki: 0.551, "red-skull": 0.539, "spider-man": 0.527, "captain-america": 0.527, ock: 0.521,
-  zod: 0.521, batman: 0.515, joker: 0.515, stane: 0.515, "wonder-woman": 0.512, goblin: 0.512, lex: 0.506, killmonger: 0.506,
-  "reverse-flash": 0.5, wolverine: 0.497, hela: 0.494, superman: 0.488, "iron-man": 0.485, "black-panther": 0.482, bane: 0.473,
-  abomination: 0.47, doomsday: 0.47, sabretooth: 0.467, hulk: 0.464, flash: 0.455, venom: 0.449, cheetah: 0.414,
+  // Re-run 2026-11-08 am (Stage 3 Ultimates/stage chips, Cheetah Expose, Flash punch Expose, tempo interrupt).
+  thor: 0.565, ultron: 0.560, "red-skull": 0.554, killmonger: 0.539, "spider-man": 0.533, "wonder-woman": 0.530, loki: 0.527,
+  batman: 0.521, lex: 0.518, "captain-america": 0.515, ock: 0.506, stane: 0.506, zod: 0.506, goblin: 0.500,
+  joker: 0.500, wolverine: 0.491, "iron-man": 0.488, superman: 0.488, flash: 0.488, "reverse-flash": 0.482, doomsday: 0.479,
+  "black-panther": 0.476, hela: 0.473, hulk: 0.464, bane: 0.464, sabretooth: 0.464, venom: 0.461, abomination: 0.455,
+  cheetah: 0.446,
 };
 
 /** Run a whole bout AI vs AI (for sims and tests). */
