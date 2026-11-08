@@ -708,6 +708,8 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, ultimate
   const meta = ELEMENTS[el];
   const StyleIcon = STYLE_ICON[move.style];
   const leaves = statusOfMove(move);
+  // With a pill on the row, the status shows as its icon only, so nothing clips at 390px.
+  const pill = (!blocked && (answers || ultimate || !!tag)) || (!!move.ultimate && !ultimate);
   return (
     <button
       type="button"
@@ -740,7 +742,7 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, ultimate
         {move.ultimate && !ultimate && <span className="t-label rounded-full bg-[#c48bff]/30 px-1.5 py-px text-[8px] text-[#e2c6ff]">Ult</span>}{leaves && (
           <span className="flex items-center gap-0.5" style={{ color: STATUSES[leaves].color }} title={`Wins the edge: ${STATUSES[leaves].title} (${STATUSES[leaves].blurb})`}>
             <StatusIcon id={leaves} />
-            <span className="text-[10px]">{STATUSES[leaves].title}</span>
+            {pill ? <span className="sr-only">{STATUSES[leaves].title}</span> : <span className="text-[10px]">{STATUSES[leaves].title}</span>}
           </span>
         )}
       </span>

@@ -1631,7 +1631,7 @@ export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
   venom: G("fog", "Sense Blind", "Your spider-sense goes quiet. That is the attack.", "Some tells are hidden. When you can't read him, go big."),
   kraven: G("charge", "Trophy Hunt", "Kraven sinks low. He has been waiting an hour for this.", "Every third turn he winds up. Guard when it comes."),
   mysterio: G("feint", "Stagecraft", "The room flickers. Which Mysterio is real?", "One tell in three is a lie. Don't trust a sure thing."),
-  vulture: G("regen", "Updraft", "He climbs out of reach and catches his breath on the wind.", "He recovers each turn. A trick move pulls him down.", { style: "trick" }),
+  vulture: G("regen", "Updraft", "He climbs out of reach and catches his breath on the wind.", "He recovers each turn. Win edges to stop it.", { style: "trick" }),
   // Batman
   joker: G("feint", "Punchline", "\"Why so serious?\" Every grin means something else now.", "Some tells are lies. Trade even when unsure."),
   "two-face": G("coin", "Heads or Tails", "The coin goes up. It decides how hard he hits.", "Heads: guard up, he hits ×1.6. Tails: go for it.", { at: 1 }),
@@ -1648,7 +1648,7 @@ export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
   // Hulk
   abomination: G("enrage", "Gamma Fury", "The scales split. Blonsky stops fighting like a soldier.", "He hits much harder below half. Answer every tell.", { at: 0.5 }),
   leader: G("swarm", "Humanoids", "Rubber soldiers pour out of the walls.", "Humanoids chip you each turn. An area move clears them."),
-  "ross-red": G("regen", "Absorb the Gamma", "Red Hulk drinks the heat off you and gets bigger.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  "ross-red": G("regen", "Absorb the Gamma", "Red Hulk drinks the heat off you and gets bigger.", "He heals each turn. Win edges to stop it.", { style: "trick" }),
   maestro: G("adapt", "He Knows You", "\"I have watched you do that a thousand times.\"", "He reads repeats. Never use the same move twice in a row.", { at: 0.7 }),
   // Superman
   lex: G("armor", "Warsuit", "Lex seals the warsuit. Green light hums under the plates.", "The suit soaks hits. Two trick moves crack it.", { style: "trick" }),
@@ -1674,10 +1674,10 @@ export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
   killmonger: G("enrage", "Golden Jaguar", "The suit flares gold. He fights like he has nothing left to lose.", "He hits harder below half. Answer every tell.", { at: 0.5 }),
   klaw: G("charge", "Sonic Cannon", "The arm hums up to a pitch you feel in your teeth.", "Every third turn he fires. Guard when it comes."),
   mbaku: G("armor", "Jabari Guard", "M'Baku plants his feet. You will not move the mountain.", "His guard soaks hits. Two trick moves break it.", { style: "trick" }),
-  namor: G("regen", "Tide's Return", "He dives into the water and comes up whole.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  namor: G("regen", "Tide's Return", "He dives into the water and comes up whole.", "He heals each turn. Win edges to stop it.", { style: "trick" }),
   // Wolverine
-  sabretooth: G("regen", "Healing Factor", "The cuts close while you watch. He grins.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
-  deathstrike: G("regen", "Cyborg Repair", "Her hand reforms around the claws.", "She heals each turn. A trick move stalls it.", { style: "trick" }),
+  sabretooth: G("regen", "Healing Factor", "The cuts close while you watch. He grins.", "He heals each turn. Win edges to stop it.", { style: "trick" }),
+  deathstrike: G("regen", "Cyborg Repair", "Her hand reforms around the claws.", "She heals each turn. Win edges to stop it.", { style: "trick" }),
   "omega-red": G("swarm", "Carbonadium Coils", "The coils whip out and start draining you.", "The coils drain you each turn. An area move throws them off."),
   "silver-samurai": G("armor", "Tachyon Blade Stance", "Harada raises the sword. The edge glows.", "His stance soaks hits. Two trick moves slip it.", { style: "trick" }),
   // Flash
@@ -1697,7 +1697,7 @@ export const VILLAIN_PHASE3: Record<string, BossGimmick> = {
   joker: G("fog", "Laughing Gas", "\"Smile!\" The flower hisses and the room goes green.", "Some tells are hidden. When you can't read him, hit hard."),
   ultron: G("adapt", "Learning Algorithm", "The last body has studied every fight you had with the others.", "He punishes repeats. Change your move every turn."),
   maestro: G("enrage", "Gamma Overload", "The old king stops being clever. Now he is only the Hulk.", "He hits much harder now, and takes more. Answer every tell."),
-  zod: G("regen", "Yellow Sun", "Zod turns his face to the sun. The wounds close.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  zod: G("regen", "Yellow Sun", "Zod turns his face to the sun. The wounds close.", "He heals each turn. Win edges to stop it.", { style: "trick" }),
   ares: G("swarm", "Phobos and Deimos", "His sons, Fear and Terror, step out of the smoke.", "They chip you each turn. An area move drives them off."),
   "red-skull": G("feint", "Cosmic Cube", "The Cube glows in his hand. The room rewrites itself around you.", "Some tells lie. Trade even when unsure."),
   loki: G("armor", "Jotun Ice", "The glamour drops. Loki's skin goes blue and frost comes up like plate.", "The ice soaks hits. Two trick moves crack it.", { style: "trick" }),
