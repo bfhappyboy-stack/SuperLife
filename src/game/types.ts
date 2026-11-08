@@ -201,6 +201,8 @@ export interface DuelBoard {
   boss?: boolean;
   /** Signature twist; most switch on in phase 2. */
   gimmick?: BossGimmick;
+  /** Final canon bosses only: a second twist that replaces the first as Phase 3 (at `at`, default 25% HP). */
+  phase3?: BossGimmick;
   /** Life difficulty id, for HUD and AI. */
   difficulty?: LifeDifficulty;
   /** Multiplier on damage the foe deals (from difficulty.ts). Default 1. */
@@ -416,6 +418,8 @@ export interface Game {
   chapterNotice?: ChapterNotice | null;
   /** What you own and what the market remembers. Optional for old saves. */
   market?: MarketState;
+  /** After a boss loss: that boss can't be rematched until this month index (age × 12 + month). Optional for old saves. */
+  regroup?: { name: string; until: number } | null;
   /** "mystery" (the default for new lives) or "god". Missing on classic saves. */
   mode?: GameMode;
   /** Life-sim fight difficulty. Missing on old saves → Normal. */

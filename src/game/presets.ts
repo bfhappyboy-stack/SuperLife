@@ -1687,6 +1687,43 @@ export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
   "mirror-master": G("feint", "Hall of Mirrors", "Every mirror shows a different Scudder.", "Some tells lie. Trade even when unsure."),
 };
 
+/**
+ * Phase 3 (DESIGN §17 item 8): each legend's FINAL canon boss (the rogue in their last canon fight beat)
+ * gets a second gimmick that replaces the first at 25% HP. Only in that legend's own life, from the age of
+ * that last beat on. Keyed by villain id, so a rename stays one-file.
+ */
+export const VILLAIN_PHASE3: Record<string, BossGimmick> = {
+  goblin: G("swarm", "Pumpkin Bombs", "The glider bay opens. Pumpkin bombs, dozens of them.", "Bombs chip you each turn. An area move clears them."),
+  joker: G("fog", "Laughing Gas", "\"Smile!\" The flower hisses and the room goes green.", "Some tells are hidden. When you can't read him, hit hard."),
+  ultron: G("adapt", "Learning Algorithm", "The last body has studied every fight you had with the others.", "He punishes repeats. Change your move every turn."),
+  maestro: G("enrage", "Gamma Overload", "The old king stops being clever. Now he is only the Hulk.", "He hits much harder now, and takes more. Answer every tell."),
+  zod: G("regen", "Yellow Sun", "Zod turns his face to the sun. The wounds close.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  ares: G("swarm", "Phobos and Deimos", "His sons, Fear and Terror, step out of the smoke.", "They chip you each turn. An area move drives them off."),
+  "red-skull": G("feint", "Cosmic Cube", "The Cube glows in his hand. The room rewrites itself around you.", "Some tells lie. Trade even when unsure."),
+  loki: G("armor", "Jotun Ice", "The glamour drops. Loki's skin goes blue and frost comes up like plate.", "The ice soaks hits. Two trick moves crack it.", { style: "trick" }),
+  klaw: G("armor", "Solid Sound", "Klaw's arm sings. Red sound hardens into a wall.", "The sound wall soaks hits. Two trick moves shatter it.", { style: "trick" }),
+  deathstrike: G("enrage", "Berserker Programming", "The program takes over. Yuriko stops talking.", "She hits much harder now, and takes more. Answer every tell."),
+  "reverse-flash": G("charge", "Speed Force Strike", "He runs a lap of the city and comes back through you.", "Every third turn he hits from a mile out. Guard when it comes."),
+};
+
+/** The villain in a legend's last canon fight beat, and that beat's age. */
+export function finalCanonBoss(presetId: string | null | undefined): { villainId: string; age: number } | null {
+  const preset = PRESETS.find((row) => row.id === presetId);
+  if (!preset) return null;
+  let best: { villainId: string; age: number } | null = null;
+  for (const beat of preset.beats) for (const choice of beat.choices) if (choice.fight && (!best || beat.age > best.age)) best = { villainId: choice.fight, age: beat.age };
+  return best;
+}
+
+/** Phase 3 for this boss fight: only the life's own final canon boss, from the age of that last beat. */
+export function villainPhase3(presetId: string | null | undefined, alias: string, age: number): BossGimmick | null {
+  const final = finalCanonBoss(presetId);
+  if (!final || age < final.age) return null;
+  const villain = PRESETS.find((row) => row.id === presetId)?.villains.find((row) => row.id === final.villainId);
+  if (!villain || (villain.alias !== alias && villain.name !== alias)) return null;
+  return VILLAIN_PHASE3[villain.id] ?? null;
+}
+
 /** A named rogue's gimmick by alias or civilian name. Null for anyone not in a preset. */
 export function villainGimmick(alias: string): BossGimmick | null {
   for (const preset of PRESETS) {

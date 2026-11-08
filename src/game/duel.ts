@@ -99,7 +99,8 @@ export interface DuelState {
   shown: MoveStyle | "hidden";
   lastStyle: MoveStyle | null;
   lastKey: string | null;
-  phase: 1 | 2;
+  /** 1 = opening, 2 = the gimmick is live, 3 = a final canon boss's second gimmick is live. */
+  phase: 1 | 2 | 3;
   /** Armor plates left (armor gimmick). */
   plates: number;
   /** Armor was shattered: the boss takes extra damage. */
@@ -133,7 +134,7 @@ export interface TurnResult {
   taken: number;
   edge: Edge;
   /** The boss just entered phase 2 (or got back up). */
-  shift: "phase" | "revive" | null;
+  shift: "phase" | "revive" | "phase3" | null;
   healed: number;
   chip: number;
   /** Short gimmick notes for the log: "Armor cracks", "Adapted", "Blocked the charge". */
@@ -168,17 +169,25 @@ export function gimmickOf(board: DuelBoard): BossGimmick | null {
   return board.gimmick ?? null;
 }
 
+/** Phase 3 starts when a final canon boss drops to this share of max HP (unless its gimmick sets `at`). */
+export const PHASE3_AT = 0.25;
+
+/** The gimmick in play right now: Phase 3's once it starts, else the board's own. Null in phase 1 too (not live). */
+export function activeGimmick(board: DuelBoard, state: Pick<DuelState, "phase">): BossGimmick | null {
+  if (state.phase === 3 && board.phase3) return board.phase3;
+  return board.gimmick ?? null;
+}
+
 /** The charged hit: the boss's hardest strike, wound up. */
-export function chargedMove(board: DuelBoard): DuelMove {
-  const g = board.gimmick;
+export function chargedMove(board: DuelBoard, g: BossGimmick | null = board.gimmick ?? null): DuelMove {
   const strikes = board.foeMoves.filter((move) => move.style === "strike");
   const base = [...(strikes.length ? strikes : board.foeMoves)].sort((a, b) => b.power - a.power)[0] ?? { name: "Charge", blurb: "", power: 8, style: "strike" as const };
   return { ...base, id: "charge", name: g?.name ?? base.name, power: Math.round(base.power * 1.8), style: "strike", kind: "burst" };
 }
 
 function show(board: DuelBoard, state: Pick<DuelState, "phase">, intent: DuelMove, rand: Rand): MoveStyle | "hidden" {
-  const g = board.gimmick;
-  if (g && state.phase === 2) {
+  const g = activeGimmick(board, state);
+  if (g && state.phase >= 2) {
     if (g.kind === "fog" && rand() < 0.5) return "hidden";
     if (g.kind === "feint" && rand() < 0.35) {
       const others = (["strike", "guard", "trick"] as const).filter((style) => style !== intent.style);
@@ -190,17 +199,17 @@ function show(board: DuelBoard, state: Pick<DuelState, "phase">, intent: DuelMov
 
 /** Decide the foe's next move and what the tell shows. */
 function commit(board: DuelBoard, state: DuelState, hated: MoveStyle | null, rand: Rand): void {
-  const g = board.gimmick;
-  if (g?.kind === "charge" && state.phase === 2) {
+  const g = activeGimmick(board, state);
+  if (g?.kind === "charge" && state.phase >= 2) {
     // Count down to the charged hit; once it has been thrown the wind-up starts again (every third turn).
     state.charge = state.charge <= 0 ? CHARGE_EVERY - 1 : state.charge - 1;
     if (state.charge === 0) {
-      state.intent = chargedMove(board);
+      state.intent = chargedMove(board, g);
       state.shown = "strike";
       return;
     }
   }
-  if (g?.kind === "coin" && state.phase === 2) state.coin = rand() < 0.5 ? "heads" : "tails";
+  if (g?.kind === "coin" && state.phase >= 2) state.coin = rand() < 0.5 ? "heads" : "tails";
   state.faked = false;
   const shocked = hasStatus(state.foeStatus, "shock");
   // Habit reading: you threw the same style twice, so the foe baits it with a fake tell and brings the answer.
@@ -262,8 +271,22 @@ export function startDuel(board: DuelBoard, rand: Rand = Math.random): DuelState
 }
 
 function enterPhase(board: DuelBoard, state: DuelState): void {
-  const g = board.gimmick;
   state.phase = 2;
+  setUpGimmick(board, state, board.gimmick ?? null);
+}
+
+/** Phase 3: the second gimmick replaces the first. A shattered armor stays shattered. */
+function enterPhase3(board: DuelBoard, state: DuelState): void {
+  state.phase = 3;
+  state.plates = 0;
+  state.swarm = 0;
+  state.charge = 0;
+  state.regenBlock = 0;
+  state.coin = null;
+  setUpGimmick(board, state, board.phase3 ?? null);
+}
+
+function setUpGimmick(board: DuelBoard, state: DuelState, g: BossGimmick | null): void {
   if (!g) return;
   if (g.kind === "armor") state.plates = 2;
   if (g.kind === "swarm") state.swarm = Math.max(2, Math.round(board.foeHp * 0.05));
@@ -299,10 +322,10 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   if (prev.done) return { ...empty, refused: "The fight is over." };
   const no = refusal(prev, move);
   if (no) return { ...empty, refused: no };
-  const g = board.gimmick;
+  const g = activeGimmick(board, prev);
   const breath = move === BREATH || move.id === "breath";
   const key = breath ? "breath" : keyOf(move);
-  const active = !!g && state.phase === 2;
+  const active = !!g && state.phase >= 2;
   const maxF = board.foeHp;
 
   // --- your hit ---
@@ -411,7 +434,7 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
 
   let foeHp = Math.max(0, prev.foeHp - dealt - foeBurn);
   let shift: TurnResult["shift"] = null;
-  if (foeHp <= 0 && g?.kind === "revive" && !state.revived) {
+  if (foeHp <= 0 && board.gimmick?.kind === "revive" && !state.revived) {
     state.revived = true;
     foeHp = Math.max(1, Math.round(maxF * 0.4));
     shift = "revive";
@@ -429,9 +452,15 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
       foeHp += healed;
     }
   }
-  if (!shift && state.phase === 1 && g && g.kind !== "revive" && foeHp > 0 && foeHp <= maxF * (g.at ?? PHASE_AT)) {
+  const g1 = board.gimmick;
+  if (!shift && state.phase === 1 && g1 && g1.kind !== "revive" && foeHp > 0 && foeHp <= maxF * (g1.at ?? PHASE_AT)) {
     enterPhase(board, state);
     shift = "phase";
+  }
+  // Final canon bosses only: a second gimmick takes over near the end.
+  if (!shift && state.phase === 2 && board.phase3 && foeHp > 0 && foeHp <= maxF * (board.phase3.at ?? PHASE3_AT)) {
+    enterPhase3(board, state);
+    shift = "phase3";
   }
 
   // --- statuses on you ---
@@ -496,8 +525,8 @@ export function duelRatio(state: DuelState): number {
 
 /** A readable status line for the gimmick, for the fight HUD. Null when nothing is live. */
 export function gimmickStatus(board: DuelBoard, state: DuelState): string | null {
-  const g = board.gimmick;
-  if (!g || state.phase !== 2) return null;
+  const g = activeGimmick(board, state);
+  if (!g || state.phase < 2) return null;
   const breaker = g.style ?? "trick";
   switch (g.kind) {
     case "armor":

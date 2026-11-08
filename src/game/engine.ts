@@ -38,7 +38,7 @@ import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp, youthGain } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
-import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
+import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainPhase3, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
 import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, tuneOf } from "./difficulty";
@@ -1653,6 +1653,7 @@ function makeDuel(
       ...foeLook(d, foe),
       boss: foe.boss || undefined,
       gimmick: gimmick ?? undefined,
+      phase3: (foe.boss && foe.side === "villain" && gimmick ? villainPhase3(d.preset, foe.name, d.age) : null) ?? undefined,
       difficulty: tune.id,
       foeDamage: tune.foeDamage,
       aiHate: tune.aiHate,
@@ -1831,15 +1832,49 @@ function nextLegendRogue(d: Game): PresetVillain | null {
 
 /** The legend rogue behind a story arc's boss: stable per arc, debut age passed. Null outside legend lives. */
 function arcPatron(d: Game, arcId: string): PresetVillain | null {
+  const key = `arcPatron:${arcId}`;
+  const pick = peekArcPatron(d, arcId);
+  if (pick && d.flags[key] === undefined) d.flags[key] = pick.index;
+  return pick?.villain ?? null;
+}
+
+/** Same pick as `arcPatron`, without writing the flag (safe on a read-only game). */
+function peekArcPatron(d: Game, arcId: string): { villain: PresetVillain; index: number } | null {
   const legend = presetById(d.preset);
   if (!legend) return null;
   const ready = legend.villains.filter((v) => villainDebut(legend, v.id) <= d.age);
   if (!ready.length) return null;
   let h = 7;
   for (const ch of arcId) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const key = `arcPatron:${arcId}`;
-  if (d.flags[key] === undefined) d.flags[key] = h % ready.length;
-  return ready[(d.flags[key] ?? 0) % ready.length] ?? null;
+  const index = d.flags[`arcPatron:${arcId}`] ?? h % ready.length;
+  const villain = ready[index % ready.length];
+  return villain ? { villain, index } : null;
+}
+
+/** Months since birth: the clock the regroup cooldown runs on. */
+export function monthIndex(g: Pick<Game, "age" | "month">): number {
+  return g.age * 12 + (g.month ?? 0);
+}
+
+/** A boss you just lost to can't be rematched for a month. */
+export const REGROUP_MONTHS = 1;
+
+/** True while this boss is still on regroup cooldown after a loss. */
+export function regroupFor(g: Pick<Game, "age" | "month" | "regroup">, name: string): boolean {
+  return !!g.regroup && g.regroup.name === name && monthIndex(g) < g.regroup.until;
+}
+
+/** The case boss you're regrouping from (the step is locked until next month), or null. */
+export function caseRegroup(g: Game): string | null {
+  const name = caseBossName(g);
+  return name && regroupFor(g, name) ? name : null;
+}
+
+/** Who the current case's boss step would put in front of you (legend patron, or the case's own foe). */
+function caseBossName(g: Game): string | null {
+  const current = currentCase(g);
+  if (!current || current.step.kind !== "boss") return null;
+  return peekArcPatron(g, current.arc.id)?.villain.alias ?? current.step.foeName ?? current.arc.villain;
 }
 
 /** True when this person is one of the current legend's own rogues. */
@@ -2515,6 +2550,11 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   }
   const special = win ? spec.specialWin : partial ? spec.specialPartial : spec.specialLose;
   let extra = applySpecial(d, special, deltas);
+  // A boss loss costs a month: no rematch with that boss until you've regrouped.
+  if (spec.kind === "duel" && spec.duel?.boss && !win && !partial) {
+    d.regroup = { name: spec.duel.foeName, until: monthIndex(d) + REGROUP_MONTHS };
+    extra += ` You need a month to regroup before you face ${spec.duel.foeName} again.`;
+  } else if (spec.kind === "duel" && spec.duel?.boss && win && d.regroup?.name === spec.duel.foeName) d.regroup = null;
   if (spec.kind === "duel") {
     const trained = grantMoveExp(d, used, win ? 8 : 5);
     if (trained.length) extra += ` ${trained.join(". ")}.`;
@@ -4006,6 +4046,8 @@ export function act(game: Game, id: string): Game {
   if (id === "arc-step") {
     const current = currentCase(d);
     if (!current || noTime(d, true)) return game;
+    const bossName = caseBossName(d);
+    if (bossName && regroupFor(d, bossName)) return game;
     const step = current.step;
     if (step.kind === "talk") {
       const hero = d.heroes.find((entry) => entry.id === step.heroId && entry.met);
@@ -4272,6 +4314,8 @@ export function actionsFor(g: Game): ActionItem[] {
         else if (hero.relationship < (step.minBond ?? 18)) blocked = `Bond ${step.minBond ?? 18} with ${hero.alias}. Talk is free.`;
       }
       if (step.kind === "train" && !heldDrill(g, step)) blocked = `Needs ${stepPowers(step).map((powerId) => getPower(powerId)?.name ?? powerId).join(" or ")}. Learn it, or set the case down.`;
+      const bossName = caseBossName(g);
+      if (bossName && regroupFor(g, bossName)) blocked = `Regrouping after the loss. ${bossName} again next month.`;
       items.push(item({ id: "arc-step", group: life, section: "Cases", label: step.title, detail: `${current.arc.villain} · ${step.kind}. ${step.brief}`, disabled: noTime(g, true) ?? blocked, accent: true }));
       items.push(item({ id: "arc-drop", group: life, section: "Cases", label: "Set the case down", detail: `${current.arc.title} stays on the page. You can pick it up later.`, disabled: noTime(g, true) }));
     } else {
