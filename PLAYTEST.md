@@ -28,6 +28,8 @@
 - **Regen hint trap (found in that lab):** obeying "a trick move stalls it" every turn drops regen bosses (Deathstrike, Sabretooth, Vulture) to 0.15 at perfect play against 0.90 if you just answer tells. Logged in BACKLOG for the owner.
 - **Regroup (inc 3):** after a boss loss the case file shows "Regrouping after the loss. Cinder Mallory again next month." and the step is locked; next month it opens (`1108am/inc3/nyc-regroup-cases.png`).
 - **Arena (inc 4):** Flash 0.438 → 0.488; spread 11.9.
+- **Life-sim re-sim after all five increments (street / boss, tell-reading policy):** night's 717-board pool (29 bosses): Story 0.97 / 0.97, **Normal 0.74 / 0.55**, Hard 0.68 / 0.51, Legendary 0.54 / 0.31 at 60% play; perfect 1.00 / 1.00, 0.96 / 0.88, 0.96 / 0.86, 0.92 / 0.76. Unchanged from the night pass within noise (those boards are under 55, so Phase 3 doesn't appear in them). This pass's 178 boards: Normal 60% street 0.84.
+- **Move-select / cards:** the ANSWER pill on Holy Hull no longer clips (`1108am/inc5/`).
 
 ## Night pass (2026-11-07 night): battle Stage 3 — playtest first
 
