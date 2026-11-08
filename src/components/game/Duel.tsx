@@ -11,7 +11,7 @@ import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST } from "@/game/battle";
-import { answerOf, BREATH, canBurst, duelRatio, gimmickStatus, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
+import { answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
 /** The player's look, so the duel draws the same hero as the closet. */
@@ -157,6 +157,8 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const heroAura = hero?.aura ?? "#ffcf4d";
   const foeSeed = fight.foeSeed ?? hashName(fight.foeName);
   const charging = live && gimmick?.kind === "charge" && hud.charge === 0;
+  // Tempo interrupt: the charged hit is coming and Momentum 4+ lets a Strike cut in first.
+  const canCut = charging && interruptReady(fight, now);
   const status = gimmickStatus(fight, hud);
 
   function later(ms: number, fn: () => void) {
@@ -243,7 +245,9 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
     const chip = turn.chip ? ` ${gimmick?.name ?? "Chip"} −${turn.chip}.` : "";
     const statusLine = turn.applied.length ? ` ${turn.applied.map((a) => (a.id === "ward" ? (a.on === "you" ? "Ward up." : `${fight.foeName} is Warded.`) : a.on === "foe" ? `${STATUSES[a.id].title} on ${fight.foeName}.` : `${STATUSES[a.id].title} on you.`)).join(" ")}` : "";
     const burnLine = turn.burn.foe || turn.burn.you ? ` Burn${turn.burn.foe ? ` −${turn.burn.foe} them` : ""}${turn.burn.you ? ` −${turn.burn.you} you` : ""}.` : "";
-    const line = breath
+    const line = turn.interrupted
+      ? `${move.name} cuts in before ${foeMove.name}. ${dealt} out, nothing back.`
+      : breath
       ? `You catch a breath${dealt ? ` and counter for ${dealt}` : ""}. ${fight.foeName} lands ${foeMove.name} for ${taken}.`
       : turn.edge === "you"
         ? `${move.name} beats ${foeMove.name}.${flavor} ${dealt} out${taken ? `, ${taken} back` : ""}.`
@@ -252,14 +256,16 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
           : `${move.name} meets ${foeMove.name}. You trade ${dealt} for ${taken}.`;
     setLog(next.foeHp <= 0 ? `${move.name} puts ${fight.foeName} down.${turn.finisher ? " Combo finisher!" : ""}${flavor}` : `${turn.read ? "That tell was bait: they read your habit. " : ""}${line}${extra}${statusLine}${chip}${burnLine}`);
     // Cinematic beat for a Burst or a combo Finisher, timed to the first hit.
-    if (turn.finisher || turn.burst || turn.ultimate) {
+    if (turn.finisher || turn.burst || turn.ultimate || turn.interrupted) {
       const key = ++beat.current;
       later(breath ? 80 : T.hit1 - 60, () => {
         const fx = turn.finisher
           ? { key, word: "FINISHER", sub: turn.ultimate ? `Ultimate + combo · +${turn.finisher}` : turn.burst ? `Burst + combo · +${turn.finisher}` : `Mix-up combo · +${turn.finisher}`, color: "#ffcf4d" }
           : turn.ultimate
             ? { key, word: "ULTIMATE", sub: `×2 · ${ULTIMATE_COST} momentum`, color: "#c48bff" }
-            : { key, word: "BURST", sub: "×1.45 · 3 momentum", color: "#ff7a3d" };
+            : turn.interrupted
+              ? { key, word: "INTERRUPT", sub: turn.burst ? `${foeMove.name} cut off · Burst` : `${foeMove.name} cut off · 1 momentum`, color: "#4dd8ff" }
+              : { key, word: "BURST", sub: "×1.45 · 3 momentum", color: "#ff7a3d" };
         setBeatFx(fx);
         setQuake({ key, color: fx.color });
         buzz(turn.finisher || turn.ultimate ? [20, 30, 40, 30, 70] : [30, 20, 60]);
@@ -506,7 +512,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             </>
           ) : charging ? (
             <>
-              {chargedName(fight)} is coming. <span className="font-semibold opacity-70">Guard, or catch a breath.</span>
+              {chargedName(fight)} is coming. <span className="font-semibold opacity-70">{canCut ? "Guard to brace, or Strike to interrupt (−1 momentum)." : "Guard, or catch a breath."}</span>
             </>
           ) : (
             <>
@@ -535,7 +541,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             <span className="t-num text-fg">
               {now.momentum}/{MOMENTUM_CAP}
             </span>
-            {now.momentum >= ULTIMATE_COST && fight.playerMoves.some((m) => m.ultimate) ? <span className="ml-1 rounded-full bg-[#c48bff]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#e2c6ff]">ULTIMATE READY</span> : canBurst(now) ? <span className="ml-1 rounded-full bg-[#ff7a3d]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#ffb08a]">BURST ON NEXT EDGE</span> : null}
+            {canCut ? <span className="ml-1 rounded-full bg-[#4dd8ff]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#a8ecff]">INTERRUPT READY</span> : now.momentum >= ULTIMATE_COST && fight.playerMoves.some((m) => m.ultimate) ? <span className="ml-1 rounded-full bg-[#c48bff]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#e2c6ff]">ULTIMATE READY</span> : canBurst(now) ? <span className="ml-1 rounded-full bg-[#ff7a3d]/25 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-[#ffb08a]">BURST ON NEXT EDGE</span> : null}
           </p>
           <div className="flex gap-1" aria-label={`${now.momentum} momentum`} role="meter" aria-valuenow={now.momentum} aria-valuemin={0} aria-valuemax={MOMENTUM_CAP}>
             {Array.from({ length: MOMENTUM_CAP }, (_, index) => (
@@ -556,7 +562,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             energy={now.energy}
             picked={last === keyOf(move)}
             answers={!!answer && move.style === answer}
-            tag={moveTag(fight, hud, move)}
+            tag={canCut && move.style === "strike" ? "Interrupt" : moveTag(fight, hud, move)}
             burst={canBurst(now) && !!answer && move.style === answer && !canUltimate(now.momentum, move)}
             ultimate={canUltimate(now.momentum, move)}
             busy={busy}

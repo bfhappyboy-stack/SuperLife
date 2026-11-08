@@ -12,7 +12,7 @@ import {
 import "./arena.css";
 import { Figure, type Pose } from "@/components/game/Figure";
 import { ComboPips, StatusIcon, StatusPills, StrikeBanner } from "@/components/game/BattleHud";
-import { hasStatus, STATUSES, statusOfMove } from "@/game/battle";
+import { hasStatus, INTERRUPT_MIN, STATUSES, statusOfMove } from "@/game/battle";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { VillainArt, type VillainCrop } from "@/components/game/VillainArt";
 import { hasVillainArt } from "@/components/game/villainArt.data";
@@ -808,12 +808,13 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
     // Cinematic beat: Burst or Finisher (yours first if both happen).
     const fin = log.finisher ?? [0, 0];
     const bur = log.burst ?? [false, false];
-    const who = ([0, 1] as Side[]).find((s) => fin[s] > 0) ?? ([0, 1] as Side[]).find((s) => bur[s]);
+    const cutBy = log.interrupt ?? null;
+    const who = ([0, 1] as Side[]).find((s) => fin[s] > 0) ?? ([0, 1] as Side[]).find((s) => bur[s]) ?? (cutBy === null ? undefined : cutBy);
     if (who !== undefined) {
       const key = ++beat.current;
       const mine = who === 0;
       later((who === lead ? T.hit1 : T.hit2) - 60, () => {
-        setBeatFx(fin[who] > 0 ? { key, word: "FINISHER", sub: `${mine ? "Your" : `${name(who)}'s`} mix-up combo · +${fin[who]}`, color: mine ? "#ffcf4d" : "#ff5a4f" } : { key, word: "BURST", sub: `${mine ? "You" : name(who)} · ×1.45`, color: mine ? "#ff7a3d" : "#ff5a4f" });
+        setBeatFx(fin[who] > 0 ? { key, word: "FINISHER", sub: `${mine ? "Your" : `${name(who)}'s`} mix-up combo · +${fin[who]}`, color: mine ? "#ffcf4d" : "#ff5a4f" } : bur[who] ? { key, word: "BURST", sub: `${mine ? "You" : name(who)} · ×1.45`, color: mine ? "#ff7a3d" : "#ff5a4f" } : { key, word: "INTERRUPT", sub: `${mine ? "You cut" : `${name(who)} cuts`} off the charge`, color: mine ? "#4dd8ff" : "#ff5a4f" });
         setQuake(key);
         buzz(mine ? [30, 20, 60] : [60]);
       });
@@ -930,7 +931,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
           ) : iLead ? (
             <>You lead. <span className="font-semibold opacity-70">{fb.name} sees your tell{fb.passive.kind !== "sense" ? feint ? " — and it's a lie" : "" : ", and Spider-Sense sees through feints"}.</span></>
           ) : rivalTell?.style ? (
-            <>{rivalTell.charged ? "A charged hit is coming. " : ""}They show {STYLE_NAME[rivalTell.style].toLowerCase()}. <span className="font-semibold opacity-70">{STYLE_NAME[answer!]} beats it{hud.feints[1] ? ` — they've feinted ${hud.feints[1]}×` : ""}.</span></>
+            <>{rivalTell.charged ? ((me.momentum ?? 0) >= INTERRUPT_MIN && rivalTell.style === "strike" ? "Charged hit! Strike to interrupt (−1 momentum). " : "A charged hit is coming. ") : ""}They show {STYLE_NAME[rivalTell.style].toLowerCase()}. <span className="font-semibold opacity-70">{STYLE_NAME[answer!]} beats it{hud.feints[1] ? ` — they've feinted ${hud.feints[1]}×` : ""}.</span></>
           ) : (
             <>You can't read them. <span className="font-semibold opacity-70">Pick your best odds.</span></>
           )}
