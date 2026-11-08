@@ -14,7 +14,10 @@ import {
   cleanseOne,
   FINISHER_MOMENTUM,
   finisherDamage,
+  canInterrupt,
   canUltimate,
+  INTERRUPT_COST,
+  INTERRUPT_MIN,
   stageBonus,
   ULTIMATE_COST,
   ULTIMATE_MULT,
@@ -51,10 +54,11 @@ export function keyOf(move: DuelMove): string {
   return move.id ?? move.name;
 }
 
-export function baseDamage(move: DuelMove, other: DuelMove, rand: Rand): number {
-  let mod = beats(move.style, other.style) ? 1.55 : beats(other.style, move.style) ? 0.68 : 1;
+export function baseDamage(move: DuelMove, other: DuelMove, rand: Rand, forceWin = false): number {
+  const won = forceWin || beats(move.style, other.style);
+  let mod = won ? 1.55 : beats(other.style, move.style) ? 0.68 : 1;
   if (move.kind === "area") mod *= 1.12;
-  if (move.kind === "dash" && beats(move.style, other.style)) mod *= 1.15;
+  if (move.kind === "dash" && won) mod *= 1.15;
   const jitter = 0.86 + rand() * 0.28;
   return Math.max(1, Math.round(move.power * mod * jitter));
 }
@@ -140,6 +144,8 @@ export interface TurnResult {
   burst?: boolean;
   /** True when this turn spent full Momentum on an Ultimate. */
   ultimate?: boolean;
+  /** True when your Strike cut in on a charged hit (Momentum 4+) and cancelled it. */
+  interrupted?: boolean;
   /** Momentum gained this turn (0 if none). */
   momentumGain?: number;
   /** Statuses that landed this turn. */
@@ -274,6 +280,11 @@ export function refusal(state: DuelState, move: DuelMove): string | null {
   return null;
 }
 
+/** True when the foe's charged hit is coming and you hold enough Momentum to cut in with a Strike. */
+export function interruptReady(board: DuelBoard, state: DuelState): boolean {
+  return !state.done && state.intent.id === "charge" && state.momentum >= INTERRUPT_MIN && board.playerMoves.some((m) => m.style === "strike");
+}
+
 /** True when momentum is banked for a Burst (it fires on your next winning hit). */
 export function canBurst(state: DuelState): boolean {
   return state.momentum >= BURST_COST;
@@ -297,11 +308,16 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   // --- your hit ---
   // Catching a breath is a guard stance: read a strike and it turns into a small counter.
   const counter = breath && beats("guard", foeMove.style) ? Math.max(1, Math.round(Math.max(...board.playerMoves.map((m) => m.power), 3) * 0.5)) : 0;
-  let dealt = breath ? counter : baseDamage(move, foeMove, rand);
+  // Tempo interrupt: a Strike into a charged hit at Momentum 4+ cuts in first and wins the edge.
+  const interrupted = !breath && foeMove.id === "charge" && canInterrupt(prev.momentum, true, move);
+  const banked = interrupted ? prev.momentum - INTERRUPT_COST : prev.momentum;
+  const wins = interrupted || beats(move.style, foeMove.style);
+  let dealt = breath ? counter : baseDamage(move, foeMove, rand, interrupted);
   if (counter) notes.push("Counter off the breath");
+  if (interrupted) notes.push("Interrupt");
   // Ultimate (full Momentum) beats Burst on the same swing; both need a won edge.
-  const ultimate = !breath && canUltimate(prev.momentum, move) && beats(move.style, foeMove.style);
-  const burst = !ultimate && !breath && prev.momentum >= BURST_COST && beats(move.style, foeMove.style);
+  const ultimate = !breath && canUltimate(banked, move) && wins;
+  const burst = !ultimate && !breath && banked >= BURST_COST && wins;
   if (ultimate) {
     dealt = Math.max(1, Math.round(dealt * ULTIMATE_MULT));
     notes.push("Ultimate");
@@ -339,7 +355,7 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   // Statuses: Frost weakens the hitter; Expose and Ward change what the target takes.
   const myMult = outMult(prev.playerStatus) * inMult(prev.foeStatus);
   if (dealt > 0) dealt = Math.max(1, Math.round(dealt * myMult));
-  const edge: Edge = breath ? "them" : beats(move.style, foeMove.style) ? "you" : beats(foeMove.style, move.style) ? "them" : "even";
+  const edge: Edge = breath ? "them" : wins ? "you" : beats(foeMove.style, move.style) ? "them" : "even";
   if (dealt > 0 && edge === "you") {
     const sb = stageBonus(board.stage, move, true);
     if (sb > 1) {
@@ -358,13 +374,14 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   // --- their hit ---
   const dmgMul = board.foeDamage ?? 1;
   let taken = Math.round(baseDamage(foeMove, breath ? BREATH : move, rand) * state.slow * (1 - Math.min(0.4, (board.guard ?? 0) / 100)) * dmgMul);
-  if (breath) taken = Math.max(1, Math.round(taken * 0.8));
+  if (interrupted) taken = 0;
+  else if (breath) taken = Math.max(1, Math.round(taken * 0.8));
   else if (move.kind === "guard") taken = Math.round(taken * 0.8);
   if (taken > 0) taken = Math.max(1, Math.round(taken * outMult(prev.foeStatus) * inMult(prev.playerStatus)));
   if (active && g) {
     if (g.kind === "enrage") taken = Math.round(taken * 1.35);
     if (g.kind === "coin") taken = Math.round(taken * (state.coin === "heads" ? 1.6 : 0.6));
-    if (foeMove.id === "charge") {
+    if (foeMove.id === "charge" && !interrupted) {
       if (move.style === "guard") {
         taken = Math.round(taken * 0.15);
         notes.push(`Braced for ${foeMove.name}`);
@@ -438,14 +455,14 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   const myBurn = foeHp > 0 && myLeft > 1 ? Math.min(burnChip(playerStatus, board.playerHp), myLeft - 1) : 0;
   const playerHp = Math.max(0, prev.playerHp - taken - chip - myBurn);
   // Momentum: edge wins bank it; Burst spends; breath never builds.
-  let momentum = prev.momentum;
+  let momentum = banked;
   let momentumGain = 0;
   if (ultimate) momentum = Math.max(0, momentum - ULTIMATE_COST);
   else if (burst) momentum = Math.max(0, momentum - BURST_COST);
   if (finisher) momentumGain += FINISHER_MOMENTUM;
   if (!breath && edge === "you") {
     momentumGain += 1;
-    if (move.style === "trick" && foeMove.style === "guard") {
+    if (move.style === "trick" && foeMove.style === "guard" && !interrupted) {
       momentumGain += GUARD_BREAK_BONUS;
       notes.push("Guard break");
     }
@@ -468,7 +485,7 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
   state.done = foeHp <= 0 || playerHp <= 0;
   if (!state.done) commit(board, state, state.lastStyle, rand);
   const burn = { you: myBurn, foe: foeBurn };
-  return { state, move, foeMove, dealt, taken, edge, shift, healed, chip, notes, burst: burst || undefined, ultimate: ultimate || undefined, momentumGain: momentumGain || undefined, applied, burn, finisher, cleansed, read: !!prev.faked };
+  return { state, move, foeMove, dealt, taken, edge, shift, healed, chip, notes, burst: burst || undefined, ultimate: ultimate || undefined, interrupted: interrupted || undefined, momentumGain: momentumGain || undefined, applied, burn, finisher, cleansed, read: !!prev.faked };
 }
 
 /** 1 for a win, 0.5 for a double knockout, 0 for a loss. */
@@ -492,7 +509,8 @@ export function gimmickStatus(board: DuelBoard, state: DuelState): string | null
     case "coin":
       return state.coin === "heads" ? "Heads · they hit ×1.6 this turn" : state.coin === "tails" ? "Tails · they're open, hit hard" : "Flipping…";
     case "charge":
-      return state.charge === 0 ? "Incoming! Guard or catch a breath" : `Big hit in ${state.charge} turn${state.charge === 1 ? "" : "s"}`;
+      if (state.charge === 0) return interruptReady(board, state) ? "Incoming! Guard, or Strike to interrupt" : "Incoming! Guard or catch a breath";
+      return `Big hit in ${state.charge} turn${state.charge === 1 ? "" : "s"}${state.momentum >= INTERRUPT_MIN - 1 ? ` · Momentum ${INTERRUPT_MIN} interrupts it` : ""}`;
     case "adapt":
       return "Repeat a move and it's adapted to";
     case "enrage":

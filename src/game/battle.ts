@@ -254,3 +254,19 @@ export function stageBonus(stage: StageTag | null | undefined, move: DuelMove | 
   if (!stage || !move || !wonEdge || move.id === "breath") return 1;
   return move.element === stage.element ? STAGE_EDGE_BONUS : 1;
 }
+
+// ─── Stage 4: tempo interrupt ─────────────────────────────────────────────────────
+
+/** Momentum needed to cut in on a charged hit. */
+export const INTERRUPT_MIN = 4;
+/** Momentum the interrupt costs (paid before any Burst on the same swing). */
+export const INTERRUPT_COST = 1;
+
+/**
+ * Tempo interrupt (DESIGN §17 item 9): when the foe's charged strike is coming and you hold
+ * Momentum 4+, meeting it with a Strike cuts in first. The charge is cancelled (it deals nothing),
+ * your Strike counts as winning the edge, and it costs 1 Momentum. Guard still braces as before.
+ */
+export function canInterrupt(momentum: number, charged: boolean, move: DuelMove | null | undefined): boolean {
+  return charged && !!move && move.id !== "breath" && move.style === "strike" && momentum >= INTERRUPT_MIN;
+}

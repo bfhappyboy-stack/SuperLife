@@ -20,12 +20,14 @@ import {
   addStatus,
   advanceCombo,
   burnChip,
+  canInterrupt,
   canUltimate,
   cleanseOne,
   FINISHER_MOMENTUM,
   finisherDamage,
   hasStatus,
   inMult,
+  INTERRUPT_COST,
   markUltimate,
   outMult,
   shockDrain,
@@ -148,6 +150,8 @@ export interface TurnLog {
   applied?: { on: Side; id: StatusId }[];
   /** Burn each side took at the end of the turn. */
   burn?: [number, number];
+  /** The side whose Strike cut in on a charged hit (Momentum 4+), if any. */
+  interrupt?: Side | null;
 }
 
 export interface BoutState {
@@ -388,7 +392,15 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
 
   // Shared rules: the edge decides Bursts, combos and statuses (breath stands as a guard).
   const styleOf = (m: DuelMove): MoveStyle => (m === BREATH ? "guard" : m.style);
-  const edgeNow: Side | null = beats(styleOf(moves[0]), styleOf(moves[1])) ? 0 : beats(styleOf(moves[1]), styleOf(moves[0])) ? 1 : null;
+  // Tempo interrupt: a follower at Momentum 4+ meets a charged Strike with a Strike, cuts in and wins the edge.
+  const follower = (1 - lead) as Side;
+  const chargedStrike = isCharged(prev, lead) && moves[lead] !== BREATH && moves[lead].style === "strike";
+  const cut: Side | null = chargedStrike && canInterrupt(fighters[follower].momentum ?? 0, true, moves[follower]) ? follower : null;
+  if (cut !== null) {
+    fighters[cut].momentum = (fighters[cut].momentum ?? 0) - INTERRUPT_COST;
+    notes.push(`${fighterOf(fighters[cut].id).name} interrupts the charged ${moves[lead].name}`);
+  }
+  const edgeNow: Side | null = cut !== null ? cut : beats(styleOf(moves[0]), styleOf(moves[1])) ? 0 : beats(styleOf(moves[1]), styleOf(moves[0])) ? 1 : null;
   const burst: [boolean, boolean] = [false, false];
   const ultimate: [boolean, boolean] = [false, false];
   const mult: [number, number] = [1, 1];
@@ -405,8 +417,9 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
     advanceCombo(fighters[s].combo, moves[s] === BREATH ? null : moves[s].style, moves[s] === BREATH ? "lost" : edgeNow === s ? "won" : edgeNow === null ? "even" : "lost"),
   );
   const dealt: [number, number] = [0, 0];
-  dealt[0] = hit(prev, 0, fighters[0], fighters[1], moves[0], moves[1], rng.next, notes, mult[0]);
-  dealt[1] = hit(prev, 1, fighters[1], fighters[0], moves[1], moves[0], rng.next, notes, mult[1]);
+  // An interrupting Strike lands as a won edge (×1.55); the cut-off charged hit deals nothing.
+  dealt[0] = cut === 1 ? 0 : hit(prev, 0, fighters[0], fighters[1], moves[0], moves[1], rng.next, notes, mult[0] * (cut === 0 ? 1.55 : 1));
+  dealt[1] = cut === 0 ? 0 : hit(prev, 1, fighters[1], fighters[0], moves[1], moves[0], rng.next, notes, mult[1] * (cut === 1 ? 1.55 : 1));
   for (const s of [0, 1] as Side[]) {
     if (edgeNow === s && dealt[s] > 0) {
       const sb = stageBonus({ tag: "arena", element: "energy", blurb: "" }, moves[s], true);
@@ -511,7 +524,7 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
     fighters[(1 - s) as Side].slow = !breath && m.kind === "status" ? 0.75 : 1;
   }
   fighters[lead].leads += 1;
-  const edge: Side | null = beats(moves[0].style, moves[1].style) ? 0 : beats(moves[1].style, moves[0].style) ? 1 : null;
+  const edge: Side | null = cut !== null ? cut : beats(moves[0].style, moves[1].style) ? 0 : beats(moves[1].style, moves[0].style) ? 1 : null;
   const feints: [number, number] = [...prev.feints];
   if (tell.feint) feints[lead] += 1;
   const leadsSeen: [number, number] = [...prev.leadsSeen];
@@ -532,6 +545,7 @@ export function playArenaTurn(prev: BoutState, actions: [ArenaAction, ArenaActio
     finisher,
     applied,
     burn,
+    interrupt: cut,
   };
   let done = false;
   let winner: Side | null = null;
@@ -704,7 +718,8 @@ export function aiFollow(bout: BoutState, side: Side, tell: Tell, level: AiLevel
   const odds = { strike: 0, trick: 0, guard: 0 } as Record<MoveStyle, number>;
   for (const s of STYLES) odds[s] = seen[s] * read + blind[s] * (1 - read);
   const opts: DuelMove[] = [BREATH, ...usable(bout, side)];
-  const m = weighted(opts, (mv) => moveValue(bout, side, mv, odds) + (tell.charged && mv.style === "guard" ? 3 : 0), skill, rand);
+  const cutIn = (mv: DuelMove) => tell.charged && tell.style !== "guard" && tell.style !== "trick" && mv !== BREATH && canInterrupt(bout.fighters[side].momentum ?? 0, true, mv);
+  const m = weighted(opts, (mv) => moveValue(bout, side, mv, odds) + (tell.charged && mv.style === "guard" ? 3 : 0) + (cutIn(mv) ? 3.5 : 0), skill, rand);
   return { move: m === BREATH ? "breath" : keyOf(m) };
 }
 
