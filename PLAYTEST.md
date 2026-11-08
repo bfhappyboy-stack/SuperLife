@@ -1,5 +1,28 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-08 pm): playtest first — Hard lives, Batman, Hulk, Crownbridge, Metro
+
+**Builds (new this pass):** **Batman** and **Hulk** God Mode presets, a Crownbridge / wealthy mystery (Ines Varga) and a Metro City / rural mystery (Cal Brody). Aged to 60, seed 1, all four difficulties; 349 villain boards per difficulty (15 case bosses). Same tell-reading policy as the am pass (`/workspace/playtest/pm1108/`). Phone screens at 390×844 on **Hard**: Batman 27 vs The Joker (boss), Hulk 35 vs Red Hulk (boss), Crownbridge 19 vs Saltwidow (`/workspace/playtest/pm1108/pt/`).
+
+**Baseline, street / boss:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random | Target @60% |
+|---|---|---|---|---|---|
+| Story | 1.00 / 1.00 | 0.99 / 0.97 | 0.94 / 0.83 | 0.79 / 0.53 | ~0.90 / 0.80 |
+| Normal | 0.99 / 0.92 | 0.81 / 0.66 | 0.56 / 0.32 | 0.23 / 0.12 | ~0.70 / 0.55 |
+| Hard | 1.00 / 0.93 | **0.75** / 0.49 | 0.44 / 0.21 | 0.15 / 0.04 | ~0.50 / 0.35 |
+| Legendary | 0.99 / 0.78 | **0.56** / 0.28 | 0.24 / 0.14 | 0.07 / 0.02 | ~0.30 / 0.18 |
+
+By build at Hard 60% (street / boss): Batman 0.86 / 0.64, Hulk 0.81 / 0.40, Metro 0.75 / 0.58, Crownbridge 0.64 / 0.21.
+
+**Findings:**
+- **Batman fights with six street moves for his whole life.** He has no powers, so his six is Haymaker / Slip / Brace / Shove / Feint / Cover Up from 8 to 60: no gadgets, no growth beyond power level, no Ultimate, nothing that says Batman. The Joker at 27 is fought with "Haymaker". The Arena Batman already has a Batarang / Smoke Pellet / Explosive Gel kit. Biggest gap found this pass.
+- **Hard and Legendary are too soft on street fights.** At 60% play Hard street is 0.75 (target ~0.50) and Legendary 0.56 (target ~0.30); the only difference from Normal is ~10% more HP and damage, so a street thug on Hard plays exactly like one on Normal. Bosses are close to target (they have gimmicks). Night's 717-board pool says the same (Hard 0.68, Legendary 0.54).
+- **Legends look like civilians on the duel stage.** Batman and Hulk are drawn as the generic figure (Hulk at 35 in glasses and a jacket) facing a painted villain card. Logged for presentation.
+- **Regen hint trap seen live:** Hulk 35 vs Red Hulk (regen) has one trick in his six (Ground Pound, cd 1, also his Ultimate), and the strip says "A trick move stalls it".
+- **Crownbridge mystery** (throne · arcane +10%) reads fine at 390×844; no overflow, no console errors on any of the three saves. Move cards, ANSWER tags and status pills fit.
+- **Mystery power count:** both mystery lives own 18 powers by 60 (Gen 0–2 mixes). Not a battle issue; noted for the grind check.
+
 ## Morning pass (2026-11-08 am): battle Stage 4 — playtest first
 
 **Builds (new this pass):** NYC / foster-care mystery (Jo Reyes; wakes at 15), Stacks / lab-program God Mode **elasticity + super strength** (Theo Kade), and **Captain America**. Aged to 45, seed 1, all four difficulties; 178 villain boards per difficulty (only 2 were case bosses: Slipstream for Stacks, Red Skull for Cap). Replayed with the same tell-reading policy as the night pass (`/workspace/playtest/am1108/`).

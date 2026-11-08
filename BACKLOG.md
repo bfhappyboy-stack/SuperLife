@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-08 pm pass (in progress)
+
+- **Batman has no battle kit in the life sim** (six street moves for life). Planned this pass: a gadget belt that grows with age.
+- **Hard / Legendary street fights are too soft** (60% play 0.75 / 0.56 vs targets 0.50 / 0.30). Planned this pass: more than bigger numbers.
+- **Legend heroes are drawn as civilians on the duel stage** (Hulk in glasses vs a painted Red Hulk card). Candidate: use the legend's hero card art on the left, like the foe card.
+
 ## From the 2026-11-08 am pass (in progress)
 
 - **Done (increment 1):** Charge bosses charged every turn after the first wind-up; now every third turn as the hint says.

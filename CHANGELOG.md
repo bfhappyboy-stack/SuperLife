@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-08 (pm): Batman's belt, harder Hard (`devbot/2026-11-08-pm`)
+
+Built on `origin/devbot/2026-11-08-am` (b2fe5d3). `main` is unchanged since 702d68d. Each increment is typechecked, linted, tested, built and loaded at 390×844 before push.
+
+### Increment 1: playtest
+
+- Batman / Hulk / Crownbridge mystery / Metro mystery to 60 on all four difficulties; Hard phone screens. Notes and baseline table in PLAYTEST.md. No code changes.
+
 ## 2026-11-08 (am): battle Stage 4 (`devbot/2026-11-08-am`)
 
 Built on `origin/devbot/2026-11-07-night` (c98aa83). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
