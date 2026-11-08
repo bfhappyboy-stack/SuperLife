@@ -5,6 +5,8 @@
 - **Done (increment 1):** Charge bosses charged every turn after the first wind-up; now every third turn as the hint says.
 - **Done (increment 2):** Tempo interrupt on Charge (Momentum 4+, Strike, −1 Momentum; life sim + Arena).
 - **Note for the owner's Burst call:** with auto-Burst at 3, Momentum only reaches 4 through a guard break or a Finisher, so the interrupt shows up in ~11% of charge fights. A manual Burst arm would make banking for an interrupt a real plan.
+- **Done (increment 3):** Phase 3 on the 11 final canon bosses; one-month regroup after a boss loss.
+- **Regen hint is a trap (found in the Phase 3 lab):** a player who obeys "A trick move stalls it" every time throws tricks into strike tells. On real Normal boards Deathstrike / Sabretooth / Vulture drop to 0.15 win at perfect play that way, against 0.90 if you just answer tells. Candidate: let any won edge also stall regen, or reword the hint to "a trick that wins the edge stalls it". Needs a quick owner nod since it changes six bosses.
 - **UI nit:** the ANSWER tag clips on a guard card that also shows "cd 1" and 3 energy (Holy Hull). Cosmetic.
 
 ## From the 2026-11-07 night pass (in progress)

@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-07-night` (c98aa83). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
 
+### Increment 3: Phase 3 on final canon bosses + regroup after a boss loss
+
+- **Phase 3 (DESIGN §17 item 8):** each legend's final canon boss (the rogue in their last canon fight beat: Goblin, Joker, Ultron, Maestro, Zod, Ares, Red Skull, Loki, Klaw, Lady Deathstrike, Reverse-Flash) gets a second gimmick that replaces the first at 25% HP. Phase 2 gimmicks are unchanged. Only in that legend's own life and from the age of that last beat, so early Goblin or Red Skull fights are the same as before. Table in DESIGN; data in `VILLAIN_PHASE3` (`presets.ts`); `activeGimmick` / `PHASE3_AT` in `duel.ts`.
+- **Phone:** the header reads "Boss · Phase 3", a PHASE 3 banner plays with the new gimmick's line and hint, the strip shows a "P3 at 25%" pill and the HP bar a tick while Phase 2 runs, and the strip switches to the Phase 3 gimmick.
+- **Regroup:** losing a boss fight locks a rematch with that boss for one month (`regroup` on the save; old saves migrate to none). The case file and the step card say "Regrouping after the loss. X again next month." Winning the rematch clears it.
+- **Sims (each final boss's gimmicks on 717 real Normal boards, 60% play, before → after Phase 3):** Goblin 0.62 → 0.58, Joker 0.48 → 0.51, Ultron 0.33 → 0.32, Maestro 0.61 → 0.61, Zod 0.63 → 0.56, Ares 0.63 → 0.59, Red Skull 0.62 → 0.59, Loki 0.48 → 0.40, Klaw 0.63 → 0.51, Deathstrike 0.11 → 0.13, Reverse-Flash 0.62 → 0.63. The boards stop at 45–55, so real 63+ lives (stronger kits) will land higher.
+- **Tests:** +8 (Phase 3 data covers exactly the final bosses with a new twist, age / life gating, phase 3 takeover + HUD line, Ultron revive then Phase 3, no-phase3 boards, regroup on loss / split / street, locked step + clear line, save round-trip). 207 pass.
+
 ### Increment 2: Tempo interrupt on Charge
 
 - **Rule (DESIGN §17 item 9):** when a Charge boss's charged hit is coming and you hold Momentum 4+, a Strike cuts in first. The charge deals nothing, your Strike counts as a won edge (×1.55, its status, a combo link, +1 Momentum), and it costs 1 Momentum, paid before the Burst check. Guard still braces as before. Shared helper `canInterrupt` in `battle.ts`; `interruptReady` in `duel.ts`.

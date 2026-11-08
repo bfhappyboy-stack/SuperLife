@@ -290,7 +290,23 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 5. **Environment / stage (Stage 3 — shipped 2026-11-07 night):** Each city maps to one stage tag (`alley`, `rooftop`, `lab`, `throne`, `pier`, `open`) that nudges one element (+10% damage when that element's move wins the edge). Readable chip on the fight header. Arena uses a neutral `arena` tag (energy). Data in `battle.ts` (`CITY_STAGE`).
 6. **Signature ultimates (Stage 3 — shipped 2026-11-07 night):** One Ultimate among the six, never a 7th button. Life-sim: the strongest equipped move of your **focus** power, once that power is mastery 4+. Arena: each fighter's strongest move. Armed only at full Momentum (5); costs all 5 Momentum + the move's Energy; deals ×2.0 (no Burst stack on the same swing). Cinematic ULTIMATE beat on the stage. Shared helpers in `battle.ts`.
 7. **Enemy AI (Stage 2 — life sim done):** habit reading with a fair on-screen warning (see above). Arena's lead/fake AI is separate.
-8. **Multi-phase bosses (done, deepen in Stage 2):** Existing gimmicks stay. Stage 2 adds a Phase 3 on final canon bosses and a one-month regroup cooldown after a boss loss.
+8. **Multi-phase bosses (Phase 3 + regroup shipped 2026-11-08 am):** Existing gimmicks stay as Phase 2. **Phase 3:** each legend's *final canon boss* (the rogue in that legend's last canon fight beat) gets a second gimmick that **replaces** the first when they drop to **25%** HP (`PHASE3_AT`; a revive boss reaches it after getting back up). Only in that legend's own life, from the age of that last beat on, in canon fights and case-boss fights. Data: `VILLAIN_PHASE3` in `presets.ts`; armor already shattered stays shattered.
+
+   | Legend | Final boss (age) | Phase 2 | Phase 3 |
+   |---|---|---|---|
+   | Spider-Man | Green Goblin (69) | enrage | swarm · Pumpkin Bombs |
+   | Batman | Joker (66) | feint | fog · Laughing Gas |
+   | Iron Man | Ultron (63) | revive | adapt · Learning Algorithm |
+   | Hulk | Maestro (67) | adapt | enrage · Gamma Overload |
+   | Superman | Zod (63) | charge | regen · Yellow Sun |
+   | Wonder Woman | Ares (67) | charge | swarm · Phobos and Deimos |
+   | Captain America | Red Skull (63) | enrage | feint · Cosmic Cube |
+   | Thor | Loki (67) | feint | armor · Jotun Ice |
+   | Black Panther | Klaw (66) | charge | armor · Solid Sound |
+   | Wolverine | Lady Deathstrike (67) | regen | enrage · Berserker Programming |
+   | Flash | Reverse-Flash (66) | adapt | charge · Speed Force Strike |
+
+   **Regroup:** losing a boss fight (score under a third; a split doesn't count) puts that boss on a **one-month** cooldown, saved on the life as `regroup` (old saves load without it; a malformed one is dropped). The case's boss step is locked with "Regrouping after the loss. X again next month." on the case file and the step card; winning the rematch clears it. Canon beats stay one-shot as before.
 9. **Tempo / initiative (Stage 4 — interrupt shipped 2026-11-08 am):** Winner of the previous edge acts "fast" (their projectile travels first visually; already true). **Interrupt:** when the foe's charged hit is coming and you hold **Momentum 4+**, a **Strike** cuts in first: the charge deals nothing, your Strike counts as winning the edge (×1.55, statuses, combo link, +1 Momentum), and it costs **1 Momentum**, paid before Burst is checked (so 4 → 3 still Bursts on that swing). Guard still braces (×0.15) at any Momentum; breath still works. Same rule in Arena: the follower interrupts a charged Strike lead (Bane, Zod). The HUD says "Strike to interrupt (−1 momentum)", the Momentum row shows INTERRUPT READY, and strike cards carry an Interrupt tag. Helpers: `canInterrupt` in `battle.ts`, `interruptReady` in `duel.ts`.
    - Charge cadence (fixed 2026-11-08 am): the charged hit comes on the second turn of phase 2 and then every third turn (`CHARGE_EVERY = 3`). Before, it charged every turn after the first.
 10. **Strategic loadouts (Stage 3 start — coverage shipped 2026-11-07 night):** Exactly 6 moves, two sets (A/B). Auto-fill and street padding prefer a missing strike/guard/trick so every tell has an answer; the Moves shelf warns when the equipped six still lacks a style (e.g. "No guard move: strike tells have no answer"). Authored early moves for durability / force-field / aegis / strength favour coverage. Future: a "Burst window" tag on authored finishers so the Momentum spend feels authored, not generic.
