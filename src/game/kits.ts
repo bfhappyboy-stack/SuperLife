@@ -42,13 +42,13 @@ export const KITS: KitDef[] = [
     ultimateAge: 30,
     moves: [
       k("batman", { id: "belt::keysi", name: "Keysi Guard", blurb: "Elbows high, head tucked, already moving.", minAge: 10, power: 3, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force" }),
-      k("batman", { id: "belt::batarang", name: "Batarang", blurb: "Thrown from the dark. Back before they look.", minAge: 12, power: 4, style: "strike", kind: "burst", energy: 1, effect: "Wins leave them Exposed.", cooldown: 0, element: "shadow" }),
-      k("batman", { id: "belt::smoke", name: "Smoke Pellet", blurb: "Where did he go?", minAge: 14, power: 3, style: "trick", kind: "status", energy: 1, effect: "Their next swing arrives slowed.", cooldown: 1, element: "shadow" }),
-      k("batman", { id: "belt::grapnel", name: "Grapnel Swing", blurb: "Up, over, and down on the wrong side of them.", minAge: 18, power: 5, style: "trick", kind: "dash", energy: 2, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "speed" }),
-      k("batman", { id: "belt::cape", name: "Armored Cape", blurb: "Kevlar weave. It catches what it can.", minAge: 22, power: 5, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield" }),
-      k("batman", { id: "belt::gel", name: "Explosive Gel", blurb: "Planted while you blinked.", minAge: 25, power: 7, style: "strike", kind: "burst", energy: 3, effect: "Wins leave them Burning.", cooldown: 1, element: "fire" }),
-      k("batman", { id: "belt::detective", name: "Detective Mode", blurb: "You saw this coming three moves ago.", minAge: 28, power: 5, style: "trick", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "psychic", applies: "shock" }),
-      k("batman", { id: "belt::vengeance", name: "I Am Vengeance", blurb: "The cape opens. The room goes quiet.", minAge: 32, power: 10, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Exposed.", cooldown: 1, element: "shadow" }),
+      k("batman", { id: "belt::batarang", name: "Batarang", blurb: "Thrown from the dark. Back before they look.", minAge: 12, power: 3, style: "strike", kind: "burst", energy: 1, effect: "Wins leave them Exposed.", cooldown: 0, element: "shadow" }),
+      k("batman", { id: "belt::smoke", name: "Smoke Pellet", blurb: "Where did he go?", minAge: 14, power: 2, style: "trick", kind: "status", energy: 1, effect: "Their next swing arrives slowed.", cooldown: 1, element: "shadow" }),
+      k("batman", { id: "belt::grapnel", name: "Grapnel Swing", blurb: "Up, over, and down on the wrong side of them.", minAge: 18, power: 4, style: "trick", kind: "dash", energy: 2, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "speed" }),
+      k("batman", { id: "belt::cape", name: "Armored Cape", blurb: "Kevlar weave. It catches what it can.", minAge: 22, power: 4, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield" }),
+      k("batman", { id: "belt::gel", name: "Explosive Gel", blurb: "Planted while you blinked.", minAge: 25, power: 6, style: "strike", kind: "burst", energy: 3, effect: "Wins leave them Burning.", cooldown: 1, element: "fire" }),
+      k("batman", { id: "belt::detective", name: "Detective Mode", blurb: "You saw this coming three moves ago.", minAge: 28, power: 4, style: "trick", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "psychic", applies: "shock" }),
+      k("batman", { id: "belt::vengeance", name: "I Am Vengeance", blurb: "The cape opens. The room goes quiet.", minAge: 32, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Exposed.", cooldown: 1, element: "shadow" }),
     ],
   },
 ];
@@ -85,4 +85,4 @@ export function kitRank(age: number): number {
 }
 
 /** Share of power level a kit move gains (powers get 0.55, street moves 0.35). Tuned by engine sims. */
-export const KIT_EDGE = 0.3;
+export const KIT_EDGE = 0.25;

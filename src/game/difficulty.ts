@@ -29,6 +29,11 @@ export interface DifficultyTune {
   foeLevelBump: number;
   /** Chance the AI fakes a tell to bait a habit (same style twice running). Stage 2. */
   aiRead: number;
+  /**
+   * Share of ordinary street villains who fight with their power's twist (the boss gimmick table),
+   * so a harder life is different fights, not just bigger numbers. Story / Normal: none.
+   */
+  streetTwist: number;
 }
 
 export const DIFFICULTY: Record<LifeDifficulty, DifficultyTune> = {
@@ -41,6 +46,7 @@ export const DIFFICULTY: Record<LifeDifficulty, DifficultyTune> = {
     aiHate: 0.3,
     foeLevelBump: 0,
     aiRead: 0,
+    streetTwist: 0,
   },
   normal: {
     id: "normal",
@@ -51,26 +57,29 @@ export const DIFFICULTY: Record<LifeDifficulty, DifficultyTune> = {
     aiHate: 0.48,
     foeLevelBump: 0.1,
     aiRead: 0.25,
+    streetTwist: 0,
   },
   hard: {
     id: "hard",
     title: "Hard",
-    blurb: "Thicker HP, sharper AI. Mistakes hurt.",
-    foeHp: 1.3,
-    foeDamage: 1.24,
+    blurb: "Half the street brings a twist. Mistakes hurt.",
+    foeHp: 1.4,
+    foeDamage: 1.34,
     aiHate: 0.58,
     foeLevelBump: 0.35,
     aiRead: 0.4,
+    streetTwist: 0.5,
   },
   legendary: {
     id: "legendary",
     title: "Legendary",
-    blurb: "Bosses that punish greed. Bring a plan.",
-    foeHp: 1.45,
-    foeDamage: 1.36,
+    blurb: "Every foe has a twist. Bring a plan.",
+    foeHp: 1.57,
+    foeDamage: 1.47,
     aiHate: 0.7,
     foeLevelBump: 0.65,
     aiRead: 0.55,
+    streetTwist: 1,
   },
 };
 
@@ -103,3 +112,16 @@ export const GUARD_BREAK_BONUS = 1;
 export const DUEL_HP_SCALE = 1.35;
 /** Case bosses get this much more HP than a street foe of the same level. */
 export const BOSS_HP_MULT = 1.45;
+
+/** Stable 0..1 roll for "does this street foe bring a twist", from the foe and the month (no RNG drift). */
+export function twistRoll(foe: string, age: number, month: number): number {
+  let h = 2166136261;
+  const key = `${foe}|${age}|${month}`;
+  for (let i = 0; i < key.length; i += 1) h = Math.imul(h ^ key.charCodeAt(i), 16777619);
+  return ((h >>> 0) % 10000) / 10000;
+}
+
+/** True when an ordinary (non-boss, unnamed) villain on this difficulty fights with a twist. */
+export function streetTwisted(tune: DifficultyTune, foe: string, age: number, month: number): boolean {
+  return tune.streetTwist > 0 && twistRoll(foe, age, month) < tune.streetTwist;
+}

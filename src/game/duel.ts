@@ -369,9 +369,14 @@ export function playTurn(board: DuelBoard, prev: DuelState, move: DuelMove, rand
       state.swarm = 0;
       notes.push(`${g.name} scattered`);
     }
+    // Regen: a trick (or status) stalls it for two turns; since 2026-11-08 pm any won edge also stops
+    // this turn's heal, so answering the tell is never the wrong call against a healer.
     if (g.kind === "regen" && (move.style === (g.style ?? "trick") || move.kind === "status")) {
       if (state.regenBlock === 0) notes.push(`${g.name} stalls`);
       state.regenBlock = 2;
+    } else if (g.kind === "regen" && wins && !breath && state.regenBlock === 0) {
+      notes.push(`${g.name} interrupted`);
+      state.regenBlock = 1;
     }
   }
   if (state.exposed && !breath) dealt = Math.round(dealt * 1.2);
@@ -534,7 +539,7 @@ export function gimmickStatus(board: DuelBoard, state: DuelState): string | null
     case "swarm":
       return state.swarm > 0 ? `−${state.swarm} a turn · an area move clears it` : "Scattered · no more chip damage";
     case "regen":
-      return state.regenBlock > 0 ? `Stalled for ${state.regenBlock} turn${state.regenBlock === 1 ? "" : "s"}` : `Heals each turn · ${breaker} or status stalls it`;
+      return state.regenBlock > 0 ? `Stalled for ${state.regenBlock} turn${state.regenBlock === 1 ? "" : "s"}` : `Heals each turn · a won edge stops it, a ${breaker} stalls 2`;
     case "coin":
       return state.coin === "heads" ? "Heads · they hit ×1.6 this turn" : state.coin === "tails" ? "Tails · they're open, hit hard" : "Flipping…";
     case "charge":

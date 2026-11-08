@@ -41,7 +41,7 @@ import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapte
 import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainPhase3, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
-import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, tuneOf } from "./difficulty";
+import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, streetTwisted, tuneOf } from "./difficulty";
 import { kitFor } from "./kits";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
 import { stageForCity } from "./battle";
@@ -1622,7 +1622,9 @@ function makeDuel(
   const pl = foe.powerLevel + tune.foeLevelBump;
   const suit = costumeMods(d);
   // Named rogues always fight with their signature twist; other villains only get one as a boss.
-  const gimmick = foe.side === "villain" ? (villainGimmick(foe.name) ?? (foe.boss ? powerGimmick(foe.powerId, foe.name) : null)) : null;
+  // Hard / Legendary: ordinary street villains may bring their power's twist too (difficulty.ts streetTwist).
+  const twisted = !foe.boss && streetTwisted(tune, foe.name, d.age, d.month ?? 0);
+  const gimmick = foe.side === "villain" ? (villainGimmick(foe.name) ?? (foe.boss || twisted ? powerGimmick(foe.powerId, foe.name) : null)) : null;
   const foeHp = Math.round((20 + Math.round(pl * 4)) * tune.foeHp);
   const moves = playerMoves(d).map((move) =>
     suit.strike ? { ...move, power: Math.max(1, Math.round(move.power * (1 + suit.strike / 100))) } : move,
