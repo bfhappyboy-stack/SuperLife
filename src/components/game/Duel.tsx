@@ -11,7 +11,7 @@ import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST } from "@/game/battle";
-import { answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
+import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
 /** The player's look, so the duel draws the same hero as the closet. */
@@ -146,8 +146,9 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const now = state;
   const maxP = fight.playerHp;
   const maxF = fight.foeHp;
-  const gimmick = fight.gimmick ?? null;
-  const live = !!gimmick && hud.phase === 2;
+  const gimmick = activeGimmick(fight, hud);
+  const live = !!gimmick && hud.phase >= 2;
+  const phaseLabel = hud.phase === 3 ? "Phase 3" : "Phase 2";
   const tell = hud.shown;
   const answer = tell === "hidden" ? null : answerOf(tell);
   const kit = kitFor(fight.foePower, fight.foeSide);
@@ -185,11 +186,12 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
     if (big) setQuake({ key, color: on === "foe" ? "#ffffff" : "#ff3b30" });
   }
 
-  function showPhase(kind: "phase" | "revive") {
-    if (!gimmick) return;
+  function showPhase(kind: "phase" | "revive" | "phase3") {
+    const g = kind === "phase3" ? (fight.phase3 ?? null) : (fight.gimmick ?? null);
+    if (!g) return;
     const key = ++beat.current;
-    setBanner({ key, title: kind === "revive" ? "Back up!" : "Phase 2", name: gimmick.name, line: gimmick.line, hint: gimmick.hint, color: GIMMICK_COLOR[gimmick.kind] });
-    setQuake({ key, color: GIMMICK_COLOR[gimmick.kind] });
+    setBanner({ key, title: kind === "revive" ? "Back up!" : kind === "phase3" ? "Phase 3" : "Phase 2", name: g.name, line: g.line, hint: g.hint, color: GIMMICK_COLOR[g.kind] });
+    setQuake({ key, color: GIMMICK_COLOR[g.kind] });
     buzz([30, 40, 60]);
     later(2300, () => setBanner((b) => (b && b.key === key ? null : b)));
   }
@@ -310,7 +312,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
         land("me", theirElement, taken + turn.chip, bigIn, turn.edge === "them", breath || move.kind === "guard" || move.style === "guard");
         if (turn.healed > 0) setHeal({ key: ++beat.current, amount: turn.healed });
         setHud(next);
-        if (turn.shift === "phase") showPhase("phase");
+        if (turn.shift === "phase" || turn.shift === "phase3") showPhase(turn.shift);
       });
       finish(next, delay + (breath ? 800 : T.rest));
     } else {
@@ -361,7 +363,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
         <div className="min-w-0">
           <p className="t-label flex items-center gap-1.5" style={{ color: fight.foeSide === "villain" ? "#ff5a4f" : "#3fe0c5" }}>
             {fight.boss && <Crown className="size-3.5 text-gold" aria-hidden />}
-            {fight.boss ? (live ? "Boss · Phase 2" : "Boss fight") : fight.foeSide === "villain" ? (live ? "Fight · Phase 2" : "Fight") : "Sparring"}
+            {fight.boss ? (live ? `Boss · ${phaseLabel}` : "Boss fight") : fight.foeSide === "villain" ? (live ? `Fight · ${phaseLabel}` : "Fight") : "Sparring"}
             <span className="text-muted">·</span>
             <ElementIcon element={foeElement} className="size-3.5" />
             <span className="text-muted">{kit.type}</span>
@@ -409,13 +411,13 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
           hot={impact?.on === "foe" && impact.amount > 0}
           kick={impact?.key ?? 0}
           right
-          mark={gimmick && gimmick.kind !== "revive" && (gimmick.at ?? 0.55) < 1 && hud.phase === 1 ? (gimmick.at ?? 0.55) : undefined}
-          lives={gimmick?.kind === "revive" ? (hud.revived ? 1 : 2) : undefined}
+          mark={gimmick && gimmick.kind !== "revive" && (gimmick.at ?? 0.55) < 1 && hud.phase === 1 ? (gimmick.at ?? 0.55) : fight.phase3 && hud.phase === 2 ? (fight.phase3.at ?? PHASE3_AT) : undefined}
+          lives={fight.gimmick?.kind === "revive" ? (hud.revived ? 1 : 2) : undefined}
         />
           <StatusPills list={hud.foeStatus} right />
         </div>
       </div>
-      {gimmick && <GimmickStrip gimmick={gimmick} live={live} status={status} state={hud} />}
+      {gimmick && <GimmickStrip gimmick={gimmick} live={live} status={status} state={hud} next={fight.phase3 && hud.phase === 2 ? (fight.phase3.at ?? PHASE3_AT) : null} third={hud.phase === 3} />}
 
       <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[146px]" : "h-[178px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
         <div className="absolute inset-0" style={{ background: `radial-gradient(45% 55% at 22% 92%, color-mix(in srgb, ${heroAura} 32%, transparent), transparent 70%), radial-gradient(45% 55% at 78% 92%, color-mix(in srgb, ${foeColor} ${live ? 52 : 34}%, transparent), transparent 70%)` }} />
@@ -512,7 +514,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
             </>
           ) : charging ? (
             <>
-              {chargedName(fight)} is coming. <span className="font-semibold opacity-70">{canCut ? "Guard to brace, or Strike to interrupt (−1 momentum)." : "Guard, or catch a breath."}</span>
+              {chargedName(gimmick)} is coming. <span className="font-semibold opacity-70">{canCut ? "Guard to brace, or Strike to interrupt (−1 momentum)." : "Guard, or catch a breath."}</span>
             </>
           ) : (
             <>
@@ -580,14 +582,14 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   );
 }
 
-function chargedName(board: DuelBoard): string {
-  return board.gimmick?.name ?? "The big one";
+function chargedName(g: BossGimmick | null): string {
+  return g?.name ?? "The big one";
 }
 
 /** A small tag on a move card when it is the answer to the live gimmick (cracks armor, clears a swarm…). */
 function moveTag(board: DuelBoard, state: DuelState, move: DuelMove): string | null {
-  const g = board.gimmick;
-  if (!g || state.phase !== 2) return null;
+  const g = activeGimmick(board, state);
+  if (!g || state.phase < 2) return null;
   if (g.kind === "armor" && state.plates > 0 && move.style === (g.style ?? "trick")) return "Cracks";
   if (g.kind === "swarm" && state.swarm > 0 && move.kind === "area") return "Clears";
   if (g.kind === "regen" && (move.style === (g.style ?? "trick") || move.kind === "status")) return "Stalls";
@@ -603,7 +605,7 @@ function buzz(pattern: number[]) {
   }
 }
 
-function GimmickStrip({ gimmick, live, status, state }: { gimmick: BossGimmick; live: boolean; status: string | null; state: DuelState }) {
+function GimmickStrip({ gimmick, live, status, state, next, third }: { gimmick: BossGimmick; live: boolean; status: string | null; state: DuelState; next?: number | null; third?: boolean }) {
   const Icon = GIMMICK_ICON[gimmick.kind];
   const color = GIMMICK_COLOR[gimmick.kind];
   const waiting = !live && gimmick.kind !== "revive";
@@ -619,8 +621,13 @@ function GimmickStrip({ gimmick, live, status, state }: { gimmick: BossGimmick; 
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[13px] leading-tight font-extrabold text-fg">{gimmick.name}</span>
           <span className="t-label shrink-0 rounded-full px-1.5 py-px text-[8px]" style={{ background: live ? color : "rgb(255 255 255 / 0.1)", color: live ? "#14121c" : "var(--color-muted)" }}>
-            {live ? "Live" : gimmick.kind === "revive" ? "Once" : `At ${Math.round((gimmick.at ?? 0.55) * 100)}%`}
+            {live ? (third ? "Phase 3" : "Live") : gimmick.kind === "revive" ? "Once" : `At ${Math.round((gimmick.at ?? 0.55) * 100)}%`}
           </span>
+          {next != null && (
+            <span className="t-label shrink-0 rounded-full border border-white/25 px-1.5 py-px text-[8px] text-fg/85" title={`A second twist starts at ${Math.round(next * 100)}% health`}>
+              P3 at {Math.round(next * 100)}%
+            </span>
+          )}
         </span>
         <span className="block truncate text-[11px] leading-snug font-semibold text-muted">{live && status ? status : gimmick.hint}</span>
       </span>

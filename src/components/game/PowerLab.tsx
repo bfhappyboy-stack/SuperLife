@@ -8,7 +8,7 @@ import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { getPower, mix, possibleMixes, teachableBases, viewPowers } from "@/game/combo";
 import { MIX_AGE, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, type MentorDef } from "@/game/mentors";
 import { canSkipToFifteen } from "@/game/skip";
-import { focusId } from "@/game/engine";
+import { caseRegroup, focusId } from "@/game/engine";
 import { mergeHeroes, replyLocally } from "@/game/heroes";
 import { askHero } from "@/game/hero-talk";
 import { masteryCap, masteryLevel, nextMasteryExp, powerRank } from "@/game/mastery";
@@ -489,6 +489,7 @@ export function CaseFile({ game }: { game: Game }) {
   const StepIcon = STEP_ICON[step.kind];
   const ceiling = cleared < 2 ? "Raises your mastery ceiling." : "";
   const reward = [ceiling, arc.legacy ? `Legacy +${arc.legacy}.` : ""].filter(Boolean).join(" ");
+  const regrouping = caseRegroup(game);
   return (
     <section className="card relative overflow-hidden px-4 py-3" style={{ borderColor: `${tint}80`, backgroundImage: `radial-gradient(120% 70% at 100% 0%, ${tint}2e, transparent 60%)` }}>
       <div className="flex items-start gap-3">
@@ -538,6 +539,11 @@ export function CaseFile({ game }: { game: Game }) {
         </p>
         <p className="mt-0.5 font-semibold text-fg">{step.title}</p>
         <p className="text-sm text-muted">{step.brief}</p>
+        {regrouping && (
+          <p className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-cape/15 px-2 py-1 text-xs font-bold text-[#ffb3ad]" role="status">
+            <Lock className="size-3.5 shrink-0" aria-hidden /> Regrouping after the loss. {regrouping} again next month.
+          </p>
+        )}
       </div>
       <p className="mt-2 text-xs text-muted">
         Play this step from its card below. {reward ? `Closing the case: ${reward}` : `The teachers know ${arc.villain}.`}

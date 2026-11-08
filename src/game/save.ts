@@ -109,6 +109,8 @@ function migrate(game: Game): Game {
   migrateChapters(next);
   ensureMarket(next);
   next.difficulty = asDifficulty(next.difficulty ?? DEFAULT_DIFFICULTY);
+  const rg = next.regroup as unknown;
+  if (rg !== undefined && rg !== null && !(typeof rg === "object" && typeof (rg as { name?: unknown }).name === "string" && typeof (rg as { until?: unknown }).until === "number")) next.regroup = null;
   return next;
 }
 
