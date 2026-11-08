@@ -4,6 +4,7 @@ import { Bug, CloudFog, Coins, Crown, Dna, Drama, EyeOff, Flame, HeartPulse, Ref
 import { ComboPips, StatusIcon, StatusPills, StrikeBanner } from "@/components/game/BattleHud";
 import { Figure, type Pose } from "@/components/game/Figure";
 import { kitFor } from "@/components/game/duelKit";
+import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
 import { villainArtFor } from "@/components/game/villainArt.data";
 import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
@@ -22,6 +23,8 @@ export interface DuelHero {
   look?: Partial<Look> | null;
   wardrobe?: Wardrobe;
   aura?: string;
+  /** A God Mode legend: drawn as their painted card instead of the paper doll. */
+  legend?: { art: string; color: string; name: string };
 }
 
 const HEX: Record<MoveStyle, string> = { strike: "#ff5a4f", guard: "#3fe0c5", trick: "#ffcf4d" };
@@ -102,6 +105,7 @@ const GIMMICK_COLOR: Record<GimmickKind, string> = {
 };
 
 export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
+  const legendArt = useArt(hero?.legend?.art ?? "");
   const board = spec.duel;
   const [state, setState] = useState<DuelState | null>(() => (board ? startDuel(board) : null));
   const [shownHp, setShownHp] = useState(() => ({ me: board?.playerHp ?? 1, foe: board?.foeHp ?? 1 }));
@@ -321,7 +325,18 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
     }
   }
 
-  const heroFigure = (
+  const heroFigure = hero?.legend && legendArt ? (
+    <div className="flex h-full w-full items-end justify-center" role="img" aria-label={hero.legend.name}>
+      <div
+        className={`duel-standee relative aspect-[3/4.4] h-[98%] w-auto max-w-none shrink-0 overflow-hidden rounded-2xl border-2 ${mePose === "hit" ? "duel-standee-hit" : ""} ${mePose === "attack" ? "duel-standee-attack" : ""} ${mePose === "ko" ? "grayscale" : ""}`}
+        style={{ borderColor: hero.legend.color, boxShadow: `0 10px 28px -10px ${heroAura}, inset 0 0 0 1px rgb(255 255 255 / 0.12)` }}
+      >
+        <img src={legendArt} alt="" className="size-full object-cover object-top" draggable={false} />
+        {mePose === "guard" && <span className="absolute inset-0 rounded-2xl border-4 border-[#4dd8ff]/70 shadow-[inset_0_0_24px_#4dd8ff88]" aria-hidden />}
+        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-1.5 pt-5 pb-1 text-center text-[10px] leading-tight font-black tracking-wide text-fg uppercase">{hero.legend.name}</span>
+      </div>
+    </div>
+  ) : (
     <Figure
       seed={hero?.seed ?? 11}
       age={Math.max(16, hero?.age ?? 24)}

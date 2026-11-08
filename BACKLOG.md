@@ -6,7 +6,7 @@
 - **Done (increment 3):** Hard / Legendary street twists (half / all street villains bring their power's gimmick) + retune: Hard 0.51 / 0.36, Legendary 0.32 / 0.20 at 60% (on target). Regen hint trap fixed (any won edge stops the heal). Batman belt retuned. Status labels no longer clip next to pills.
 - **Build spread is wide on Hard** (60% street): Dustreach celebrity 0.29, Crownbridge 0.32, Harbor 0.36 vs Wonder Woman 0.75, Cap 0.70. Mystery lives with scattered Gen-0 kits suffer most. Candidate: look at mystery-life move quality around 20–30 next pass.
 - **Flash in the life sim is weak** (Normal 60% street 0.47, Hard 0.44) as well as in Arena. Candidate: a status on one of his early moves, like Arena.
-- **Legend heroes are drawn as civilians on the duel stage** (Hulk in glasses vs a painted Red Hulk card). Candidate: use the legend's hero card art on the left, like the foe card.
+- **Legend heroes on the duel stage:** done 2026-11-08 night (painted card standee). Still open: Arena duel cards for saved legend lives, and mystery lives still use the paper doll.
 
 ## From the 2026-11-08 am pass (in progress)
 

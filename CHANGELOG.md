@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-08 (night): legends on the duel stage (`devbot/2026-11-08-night`)
+
+Built on `origin/devbot/2026-11-08-pm` (5ca0283). `main` is unchanged since 702d68d. Typechecked, linted (only the old `src/lib` no-empty error remains), 216 game tests, built and loaded at 390×844 before push.
+
+### Increment 1: God Mode legends fight as their painted card
+
+- **Why:** the pm playtest found Batman and Hulk drawn as the generic paper doll (Hulk in glasses and a jacket) facing a painted villain card.
+- **What:** `DuelHero.legend` (art key, colour, name) is passed from `GameApp` when the life's preset has painted art; `Duel` then draws the hero as a standee in the same frame as the villain (`duel-standee` hit / attack / guard / KO poses, legend-colour border, name plate), mirrored side. Mystery and custom lives keep their own figure. The result card reuses it. No rules or balance change.
+- **Shots:** `/workspace/playtest/night1108/hulk30.png`, `batman24.png`.
+
 ## 2026-11-08 (pm): Batman's belt, harder Hard and Legendary (`devbot/2026-11-08-pm`)
 
 Built on `origin/devbot/2026-11-08-am` (b2fe5d3). `main` is unchanged since 702d68d. Each increment is typechecked, linted, tested, built and loaded at 390×844 before push.
