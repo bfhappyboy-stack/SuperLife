@@ -22,6 +22,13 @@
 - **Arena (night rules):** roster spread 13.1 pts. Bottom three: Abomination 0.45, Cheetah 0.45, **Flash 0.44**. Pro AI vs the ladder stand-in 0.43 / 0.32 at perfect / 60%.
 - Screens before: `/workspace/superlife-screens/1108am/before/` (NYC 24 vs The Auditor, Stacks 28, Cap 35 vs Winter Soldier, Cap 34 vs Crossbones mid-charge).
 
+**After increments 1–4:**
+- **Charge (inc 1–2):** Bane's gimmick on 717 real Normal boards: perfect 0.95, 60% 0.63, 30% 0.39 (Hard 0.97 / 0.55 / 0.25). With the interrupt taken whenever offered, a perfect player gets one in 11% of charge fights (Hard 14%); win rates don't move. Phone: Crossbones with Momentum 4/5 shows INTERRUPT READY, "Guard to brace, or Strike to interrupt (−1 momentum)", an Interrupt tag on Heavy Hands, and the INTERRUPT beat (`1108am/inc2/`).
+- **Phase 3 (inc 3):** real lives hit it where they should: Iron Man's Ultron at 42 has none, at 63 has Learning Algorithm; Cap's Red Skull at 23 has none, at 63 and 71 has Cosmic Cube; Thor's Loki at 67 has Jotun Ice. Lab at Normal 60% (before → after): Goblin 0.62 → 0.58, Joker 0.48 → 0.51, Ultron 0.33 → 0.32, Maestro 0.61 → 0.61, Zod 0.63 → 0.56, Ares 0.63 → 0.59, Red Skull 0.62 → 0.59, Loki 0.48 → 0.40, Klaw 0.63 → 0.51, Deathstrike 0.11 → 0.13, Reverse-Flash 0.62 → 0.63.
+- **Regen hint trap (found in that lab):** obeying "a trick move stalls it" every turn drops regen bosses (Deathstrike, Sabretooth, Vulture) to 0.15 at perfect play against 0.90 if you just answer tells. Logged in BACKLOG for the owner.
+- **Regroup (inc 3):** after a boss loss the case file shows "Regrouping after the loss. Cinder Mallory again next month." and the step is locked; next month it opens (`1108am/inc3/nyc-regroup-cases.png`).
+- **Arena (inc 4):** Flash 0.438 → 0.488; spread 11.9.
+
 ## Night pass (2026-11-07 night): battle Stage 3 — playtest first
 
 **Builds (different from am/pm):** Harbor Bay / military mystery (Mara Quinn), Dustreach / celebrity mystery (Rex Vale), Neon Spire God Mode fire-control + super-speed (Sable Ortiz), Black Panther, Wonder Woman, Hulk, Flash. (Superman added to the after-boards for the coverage check.) Aged to 55, seed 1, all four difficulties. Harness: `/workspace/playtest/night1107/`.

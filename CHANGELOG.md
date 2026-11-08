@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-07-night` (c98aa83). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
 
+### Increment 4: Flash Arena balance
+
+- **Why:** after Cheetah's Expose buff, Flash was the weakest Arena pick (0.44). His dash punch, area jabs and phase are all speed, which leaves no status, so his best hits never set anything up.
+- **Fix (data):** Infinite Mass Punch now `applies: expose` (they reel and take +15% for 2 turns). Same pattern as Cheetah's Pounce.
+- **Arena ladder:** Flash 0.438 → 0.488 (rank 29 → 19 of 29). Roster spread 13.1 → 11.9 points (Thor 0.57 … Cheetah 0.45), inside the 22-point test. Pro AI vs the ladder stand-in 0.44 / 0.33 at perfect / 60% (was 0.43 / 0.32). Other options tried: Speed Steal → Frost 0.45, Phase Through → Ward 0.47.
+- **`TIER`** (AI draft weights) re-run on the current rules.
+- **Tests:** +1. 208 pass.
+
 ### Increment 3: Phase 3 on final canon bosses + regroup after a boss loss
 
 - **Phase 3 (DESIGN §17 item 8):** each legend's final canon boss (the rogue in their last canon fight beat: Goblin, Joker, Ultron, Maestro, Zod, Ares, Red Skull, Loki, Klaw, Lady Deathstrike, Reverse-Flash) gets a second gimmick that replaces the first at 25% HP. Phase 2 gimmicks are unchanged. Only in that legend's own life and from the age of that last beat, so early Goblin or Red Skull fights are the same as before. Table in DESIGN; data in `VILLAIN_PHASE3` (`presets.ts`); `activeGimmick` / `PHASE3_AT` in `duel.ts`.

@@ -6,6 +6,7 @@
 - **Done (increment 2):** Tempo interrupt on Charge (Momentum 4+, Strike, −1 Momentum; life sim + Arena).
 - **Note for the owner's Burst call:** with auto-Burst at 3, Momentum only reaches 4 through a guard break or a Finisher, so the interrupt shows up in ~11% of charge fights. A manual Burst arm would make banking for an interrupt a real plan.
 - **Done (increment 3):** Phase 3 on the 11 final canon bosses; one-month regroup after a boss loss.
+- **Done (increment 4):** Flash Arena 0.44 → 0.49 (Infinite Mass Punch applies Expose); spread 11.9. Cheetah 0.45 and Abomination 0.46 are now the floor.
 - **Regen hint is a trap (found in the Phase 3 lab):** a player who obeys "A trick move stalls it" every time throws tricks into strike tells. On real Normal boards Deathstrike / Sabretooth / Vulture drop to 0.15 win at perfect play that way, against 0.90 if you just answer tells. Candidate: let any won edge also stall regen, or reword the hint to "a trick that wins the edge stalls it". Needs a quick owner nod since it changes six bosses.
 - **UI nit:** the ANSWER tag clips on a guard card that also shows "cd 1" and 3 energy (Holy Hull). Cosmetic.
 
@@ -13,7 +14,7 @@
 
 - **Done (increment 1):** loadout coverage — Moves shelf warns on a missing style; auto-fill / street padding prefer covering strike/guard/trick; durability / force-field / aegis unlock a guard first; Ground Pound is a trick; Receipt is a trick. Superman / mystery kits catch up without a difficulty retune.
 - **Done (increment 2):** Cheetah Pounce applies Expose (Arena 41% → 45%); signature Ultimates (focus mastery 4+ / Arena strongest move; full Momentum 5 + Energy; ×2; one of the six); city environment chips (+10% element on edge); higher energy floors on signature moves.
-- **Still open (Stage 3 / polish):** optional tempo interrupt on Charge at Momentum ≥4; Phase-3/regroup cooldown; remaining 15 villain vector cards; Flash now weakest Arena pick (44%).
+- **Still open (Stage 3 / polish):** ~~tempo interrupt~~, ~~Phase 3 / regroup~~, ~~Flash~~ (all done 2026-11-08 am); remaining 15 villain vector cards.
 - **Owner's calls (unchanged):** Normal ~55%? (night Normal 60% boss now 0.55); auto vs manual Burst; Skip-to-15 auto-settles; purse amounts.
 
 ## From the 2026-11-07 pm pass
