@@ -155,6 +155,8 @@ export interface TurnResult {
 }
 
 const PHASE_AT = 0.55;
+/** A charge boss throws its charged hit every this many turns once phase 2 is live. */
+export const CHARGE_EVERY = 3;
 
 export function gimmickOf(board: DuelBoard): BossGimmick | null {
   return board.gimmick ?? null;
@@ -184,7 +186,8 @@ function show(board: DuelBoard, state: Pick<DuelState, "phase">, intent: DuelMov
 function commit(board: DuelBoard, state: DuelState, hated: MoveStyle | null, rand: Rand): void {
   const g = board.gimmick;
   if (g?.kind === "charge" && state.phase === 2) {
-    state.charge = Math.max(0, state.charge - 1);
+    // Count down to the charged hit; once it has been thrown the wind-up starts again (every third turn).
+    state.charge = state.charge <= 0 ? CHARGE_EVERY - 1 : state.charge - 1;
     if (state.charge === 0) {
       state.intent = chargedMove(board);
       state.shown = "strike";
@@ -258,7 +261,7 @@ function enterPhase(board: DuelBoard, state: DuelState): void {
   if (!g) return;
   if (g.kind === "armor") state.plates = 2;
   if (g.kind === "swarm") state.swarm = Math.max(2, Math.round(board.foeHp * 0.05));
-  if (g.kind === "charge") state.charge = 2;
+  if (g.kind === "charge") state.charge = CHARGE_EVERY - 1;
 }
 
 /** Can the player use this move right now? Returns the reason it can't, or null. */
