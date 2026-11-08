@@ -1,8 +1,19 @@
 # Changelog
 
-## 2026-11-08 (pm): Batman's belt, harder Hard (`devbot/2026-11-08-pm`)
+## 2026-11-08 (pm): Batman's belt, harder Hard and Legendary (`devbot/2026-11-08-pm`)
 
 Built on `origin/devbot/2026-11-08-am` (b2fe5d3). `main` is unchanged since 702d68d. Each increment is typechecked, linted, tested, built and loaded at 390×844 before push.
+
+### Increment 3: harder Hard and Legendary (street twists), regen hint fix, Batman retune
+
+- **Why:** the playtest found Hard street fights at 0.75 and Legendary at 0.56 for a 60% player (targets ~0.50 / ~0.30). The only difference from Normal was ~10% more HP and damage, so a Hard thug played exactly like a Normal one.
+- **Street twists (`streetTwist` in `difficulty.ts`, data):** on **Hard half** of ordinary street villains, and on **Legendary all** of them, fight with their power's twist from the boss gimmick table (healers Knit, fliers High Ground, strength Haymaker Wind-up, minds Mind Games…), with the usual Phase 2 banner, strip and hint. Story and Normal are unchanged. Picked by a stable hash of foe + age + month, so it never shifts the life's dice (Normal / Story boards are byte-identical before and after).
+- **Retune (data):** Hard foe HP ×1.30 → ×1.40, damage ×1.24 → ×1.34; Legendary HP ×1.45 → ×1.57, damage ×1.36 → ×1.47. Picker lines: Hard "Half the street brings a twist. Mistakes hurt." Legendary "Every foe has a twist. Bring a plan."
+- **Regen hint trap fixed:** against a healer (regen), **any won edge now stops that turn's heal**; a trick or status move still stalls it for two turns. Hints read "He heals each turn. Win edges to stop it." and the strip "Heals each turn · a won edge stops it, a trick stalls 2". Before, obeying "a trick move stalls it" every turn threw tricks into strike tells (Hard regen lab: hint-obeyer 0.37 vs tell-answerer 0.51 at 60%); now answering tells is never wrong (0.60). Arena's Healing Factor passive is unchanged.
+- **Batman retune:** with the new numbers his belt sat well above the field (Hard street 0.78). Gadget base power −1 and kit power-level share 0.30 → 0.25: Batman Normal 0.82 / 0.77, Hard 0.62 / 0.50 (street / boss), in line with Cap 0.70 and Black Panther 0.64 on Hard.
+- **Move cards:** on a card that shows a pill (Answer / Stalls / Ultimate / Ult), the status shows as its icon only, so "Expose" / "Frost" no longer clip to "E" / "Fr" at 390px.
+- **Sims (13 builds to 55: 7 night builds + Crownbridge, Metro, Batman, Stacks, NYC, Cap; 1,008 villain boards per difficulty; 60% play, street / boss):** Story 0.97 / 0.96, **Normal 0.76 / 0.56** (unchanged), **Hard 0.65 / 0.45 → 0.51 / 0.36**, **Legendary 0.48 / 0.28 → 0.32 / 0.20**. Perfect play: Hard 0.94 / 0.84, Legendary 0.79 / 0.70, so reading still wins.
+- **Tests:** +4 (`twist.test.ts`: twist shares + stable roll, a real Legendary life where every street villain has a twist while Normal keeps plain ones, difficulty ordering, regen won-edge rule). 216 game tests pass.
 
 ### Increment 2: Batman's Utility Belt (legend kits)
 

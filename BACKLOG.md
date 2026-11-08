@@ -3,7 +3,9 @@
 ## From the 2026-11-08 pm pass (in progress)
 
 - **Done (increment 2):** Batman's Utility Belt — 8 age-gated gadgets replace his lifelong street six; Ultimate from 30; saved Batman lives can enter the Arena. Candidate: kits for future powerless legends (e.g. Hawkeye, Black Widow) are one data entry each.
-- **Hard / Legendary street fights are too soft** (60% play 0.75 / 0.56 vs targets 0.50 / 0.30). Planned this pass: more than bigger numbers.
+- **Done (increment 3):** Hard / Legendary street twists (half / all street villains bring their power's gimmick) + retune: Hard 0.51 / 0.36, Legendary 0.32 / 0.20 at 60% (on target). Regen hint trap fixed (any won edge stops the heal). Batman belt retuned. Status labels no longer clip next to pills.
+- **Build spread is wide on Hard** (60% street): Dustreach celebrity 0.29, Crownbridge 0.32, Harbor 0.36 vs Wonder Woman 0.75, Cap 0.70. Mystery lives with scattered Gen-0 kits suffer most. Candidate: look at mystery-life move quality around 20–30 next pass.
+- **Flash in the life sim is weak** (Normal 60% street 0.47, Hard 0.44) as well as in Arena. Candidate: a status on one of his early moves, like Arena.
 - **Legend heroes are drawn as civilians on the duel stage** (Hulk in glasses vs a painted Red Hulk card). Candidate: use the legend's hero card art on the left, like the foe card.
 
 ## From the 2026-11-08 am pass (in progress)
@@ -13,7 +15,7 @@
 - **Note for the owner's Burst call:** with auto-Burst at 3, Momentum only reaches 4 through a guard break or a Finisher, so the interrupt shows up in ~11% of charge fights. A manual Burst arm would make banking for an interrupt a real plan.
 - **Done (increment 3):** Phase 3 on the 11 final canon bosses; one-month regroup after a boss loss.
 - **Done (increment 4):** Flash Arena 0.44 → 0.49 (Infinite Mass Punch applies Expose); spread 11.9. Cheetah 0.45 and Abomination 0.46 are now the floor.
-- **Regen hint is a trap (found in the Phase 3 lab):** a player who obeys "A trick move stalls it" every time throws tricks into strike tells. On real Normal boards Deathstrike / Sabretooth / Vulture drop to 0.15 win at perfect play that way, against 0.90 if you just answer tells. Candidate: let any won edge also stall regen, or reword the hint to "a trick that wins the edge stalls it". Needs a quick owner nod since it changes six bosses.
+- **Fixed 2026-11-08 pm (any won edge now stops the heal):** ~~Regen hint is a trap (found in the Phase 3 lab):~~ a player who obeys "A trick move stalls it" every time throws tricks into strike tells. On real Normal boards Deathstrike / Sabretooth / Vulture drop to 0.15 win at perfect play that way, against 0.90 if you just answer tells. Candidate: let any won edge also stall regen, or reword the hint to "a trick that wins the edge stalls it". Needs a quick owner nod since it changes six bosses.
 - **Done (increment 5):** ANSWER pill no longer clips (cooldown length yields to the pill). Villain cards were already complete (49/49); DESIGN count fixed.
 - **Guard Break pierce (§17 item 4) — not built:** at Momentum 4+ ignore half a Guard stance once. Skipped because auto-Burst at 3 keeps Momentum under 4 most fights and life-sim foes have no guard-stance damage cut to pierce. Revisit together with the manual-Burst owner's call.
 

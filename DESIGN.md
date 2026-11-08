@@ -237,12 +237,14 @@ Chosen at life start (mystery, God Mode builder, and legend pickers). Persisted 
 |---|---|---|---|---|
 | Story | Learn the tells | ×0.88 | ×0.82 | 0.30 |
 | Normal | Harder than the old baseline | ×1.20 | ×1.15 | 0.48 |
-| Hard | Mistakes hurt | ×1.30 | ×1.24 | 0.58 |
-| Legendary | Punishes greed | ×1.45 | ×1.36 | 0.70 |
+| Hard | Half the street brings a twist | ×1.40 | ×1.34 | 0.58 |
+| Legendary | Every foe has a twist | ×1.57 | ×1.47 | 0.70 |
 
 (Retuned 2026-11-07 pm with statuses and combos in: Normal lands ~0.58 for a 60% player. Habit-bait chance `aiRead`: 0 / 0.25 / 0.40 / 0.55.)
 
-Hard and Legendary also bump the foe's power level slightly before HP is rolled. Arena's Rookie / Pro / Legend ladder is separate — this curve is for life-sim fights only.
+Hard and Legendary also bump the foe's power level slightly before HP is rolled.
+
+**Street twists (2026-11-08 pm):** `streetTwist` is the share of ordinary (non-boss, unnamed) street villains who fight with their power's twist from the boss gimmick table: Story 0, Normal 0, **Hard 0.5, Legendary 1**. Picked by a stable hash of foe name + age + month (no RNG drift). Harder lives are different fights, not only bigger numbers. (Retuned with this: Hard ×1.30/×1.24 → ×1.40/×1.34, Legendary ×1.45/×1.36 → ×1.57/×1.47.) Arena's Rookie / Pro / Legend ladder is separate — this curve is for life-sim fights only.
 
 ### Momentum (Stage 1 — shipped)
 
@@ -337,6 +339,10 @@ A legend with **no powers** fights with a gear kit instead of street moves forev
 - Momentum diamonds next to Energy.
 - Impact numbers and stage shake already exist; keep them.
 - Console-quality direction: every new widget must work at 390×844 with ≥44px targets and no horizontal overflow.
+
+### Regen (2026-11-08 pm)
+
+A healer (regen gimmick) heals 7% a turn in Phase 2. **Any won edge stops that turn's heal; a trick or status move stalls it for two turns.** Hints say "Win edges to stop it." (Before, the hint said "a trick move stalls it", which baited players into throwing tricks into strike tells.) Arena's Healing Factor passive is unchanged.
 
 ### Balance targets (engine sims)
 

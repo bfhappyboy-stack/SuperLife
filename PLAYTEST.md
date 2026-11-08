@@ -23,6 +23,20 @@ By build at Hard 60% (street / boss): Batman 0.86 / 0.64, Hulk 0.81 / 0.40, Metr
 - **Crownbridge mystery** (throne · arcane +10%) reads fine at 390×844; no overflow, no console errors on any of the three saves. Move cards, ANSWER tags and status pills fit.
 - **Mystery power count:** both mystery lives own 18 powers by 60 (Gen 0–2 mixes). Not a battle issue; noted for the grind check.
 
+**After increments 2–3 (13 builds to 55, 1,008 villain boards per difficulty, street / boss):**
+
+| Difficulty | Perfect | 60% play | 30% play | Random | Target @60% |
+|---|---|---|---|---|---|
+| Story | 1.00 / 1.00 | 0.97 / 0.96 | 0.89 / 0.81 | 0.78 / 0.65 | ~0.90 / 0.80 |
+| Normal | 0.98 / 0.94 | 0.76 / 0.56 | 0.53 / 0.35 | 0.28 / 0.15 | ~0.70 / 0.55 |
+| Hard | 0.94 / 0.84 | **0.51 / 0.36** | 0.29 / 0.16 | 0.10 / 0.05 | ~0.50 / 0.35 |
+| Legendary | 0.79 / 0.70 | **0.32 / 0.20** | 0.17 / 0.07 | 0.04 / 0.01 | ~0.30 / 0.18 |
+
+(Same pool before the change: Hard 0.65 / 0.45, Legendary 0.48 / 0.28.) Policy now answers tells against healers too, since the regen hint changed.
+- **Hard 60% street by build:** Wonder Woman 0.75, Cap 0.70, Black Panther 0.64, Batman 0.62 (belt), Hulk 0.57, Stacks 0.55, NYC 0.47, Neon 0.45, Flash 0.44, Metro 0.44, Harbor 0.36, Crownbridge 0.32, Dustreach 0.29. Wide spread; mystery lives suffer most (logged).
+- **Batman's belt** on the phone: Two-Face at 30 (Hard) with Keysi Guard / Batarang / Smoke Pellet / Grapnel Swing / Armored Cape / Explosive Gel (ULT); Moves shelf shows the real picker, 6/6 (`shots/pm1108-batman-belt-*.png`).
+- **Street twist** on the phone: Metro 22 (Hard) vs Gutter Saint: Knit PHASE 2 banner "They heal each turn. Win edges to stop it." and the strip "Heals each turn · a won edge stops it, a trick stalls 2" fit at 390×844; no overflow or console errors (`shots/pm1108-hard-street-twist-*.png`).
+
 ## Morning pass (2026-11-08 am): battle Stage 4 — playtest first
 
 **Builds (new this pass):** NYC / foster-care mystery (Jo Reyes; wakes at 15), Stacks / lab-program God Mode **elasticity + super strength** (Theo Kade), and **Captain America**. Aged to 45, seed 1, all four difficulties; 178 villain boards per difficulty (only 2 were case bosses: Slipstream for Stacks, Red Skull for Cap). Replayed with the same tell-reading policy as the night pass (`/workspace/playtest/am1108/`).
