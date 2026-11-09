@@ -4,6 +4,13 @@
 
 Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 5: Captain America's Shield
+
+- **Why:** Cap fought with Heavy Hands, Aegis, Holy Hull, Counter Tap: no shield moves at all, and he was the strongest legend (Normal 60% 0.92 / 0.81).
+- **What:** **The Shield** kit, 12 pieces: Trash-Can Lid (10), Brooklyn Jab (12), Duck and Weave (14), Vibranium Shield (21, upgrades the lid), Shield Bash (22), Shield Throw (23), Ricochet Volley (26), Commando Feint (28), **Liberty Strike** (30, upgrades Shield Bash, his Ultimate), Assemble (33), Unbreakable Guard (40), Worthy (45, he lifts the hammer). It replaces his **Aegis Shell** moves. Braids that contain Aegis Shell (Holy Hull) still bring theirs.
+- **Balance** (60% play, street / boss, 3 seeds): Story 0.99 / 1.00 → 0.98 / 0.96; Normal 0.92 / 0.81 → **0.86 / 0.68**; Hard 0.78 / 0.58 → 0.77 / 0.56; Legendary 0.71 / 0.50 → 0.66 / 0.44. Still the strongest legend; logged.
+- **Tests:** +1 (every kit, lived past its Ultimate age: exactly six, no street padding, nothing the kit replaces in the six, kit moves in the six, a kit strike Ultimate where the kit leads). 223 game tests pass.
+
 ### Increment 4: Thor's Mjolnir
 
 - **Why:** Thor was the weakest legend in the playtest (Hard 60% 0.54 / 0.19, Legendary 0.30 / 0.06) and fought generically: at 20 vs Loki his six was Slip, Heavy Hands, Cloud Bolt, Squall Slap, Thunder Clap, Brace. No hammer. Same treatment as Iron Man, as its own increment.
