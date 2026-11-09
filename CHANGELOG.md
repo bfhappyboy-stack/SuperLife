@@ -4,6 +4,13 @@
 
 Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 3: painted portraits for the 31 legend rogues
+
+- **Why:** the 18 Arena villains were painted this morning; the 31 legend rogues (Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith, Justin Hammer, Red Hulk, Maestro, Ares, Medusa, Crossbones, Surtur, M'Baku, Namor, Lady Deathstrike, Omega Red, Silver Samurai, Captain Cold, Grodd, Mirror Master) still stood as vector cards next to painted heroes (user request 4).
+- **What:** 31 painted 540×960 webp modules (`src/assets/art/villain-<id>.ts`, 52–87 kB each, ~2 MB total, lazy chunks, none on first paint) plus one loader line each. Every villain in the game now has a painting; `VillainArt` picks it up everywhere (FIGHT! / BOSS! intro, ring standee, header avatar, Arena). The vector card stays the loading fallback.
+- **Head crop:** eight paintings have the face lower than the usual upper third, so the avatar circle showed a forehead or a fishbowl top. New `PAINTED_HEAD_Y` per-villain head-crop origin (Brainiac, Grodd, Justin Hammer, the Leader, Mirror Master, Surtur, Vulture, Silver Samurai). Checked at 390×844 on Mysterio, Two-Face, Surtur and Man-Ape duels.
+- **Tests:** +1 (every villain with a card has a painted portrait registered). 228 game tests pass.
+
 ### Increment 2: Wonder Woman's Amazon Arms
 
 - **Why:** Diana fought with Heavy Hands, Dive Kick, Aegis, Static Snap, Quick Cut, Mind Spike: no lasso, no bracers, no sword. She was also well above target (Normal 60% 0.88 / 0.78).

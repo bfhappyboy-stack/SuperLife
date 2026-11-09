@@ -49,3 +49,11 @@ test("every Arena villain has a painted portrait registered", async () => {
   const art = await import("../../assets/art/villain-goblin.ts");
   assert.match(art.default, /^data:image\/webp;base64,/);
 });
+
+// 2026-11-09 night: the 31 legend rogues have painted portraits too, so every villain card in the game is painted.
+test("every villain with a card has a painted portrait registered", async () => {
+  const { hasArt } = await import("../../assets/art/index.ts");
+  for (const id of VILLAIN_ART_IDS) assert.ok(hasArt(`villain-${id}`), `${id} has no painted portrait`);
+  const art = await import("../../assets/art/villain-mysterio.ts");
+  assert.match(art.default, /^data:image\/webp;base64,/);
+});

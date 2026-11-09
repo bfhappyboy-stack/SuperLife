@@ -1191,7 +1191,7 @@ function scene(id: string) {
  */
 export const VillainArt = memo(function VillainArt({ id, color, crop = "card", className = "absolute inset-0 size-full" }: { id: string; color: string; crop?: VillainCrop; className?: string }) {
   const painted = useArt(`villain-${id}`);
-  if (painted) return <PaintedVillain src={painted} crop={crop} className={className} />;
+  if (painted) return <PaintedVillain src={painted} crop={crop} headY={PAINTED_HEAD_Y[id]} className={className} />;
   return <VectorVillain id={id} color={color} crop={crop} className={className} />;
 });
 
@@ -1206,8 +1206,17 @@ const PAINTED: Record<VillainCrop, { pos: string; zoom: number; origin: string }
   tall: { pos: "50% 28%", zoom: 1, origin: "50% 30%" },
 };
 
-function PaintedVillain({ src, crop, className }: { src: string; crop: VillainCrop; className: string }) {
-  const f = PAINTED[crop];
+/**
+ * Head-crop zoom origin (percent of the frame's height) for paintings whose face sits lower than the usual upper
+ * third (big-headed or hunched figures). Checked on the avatar circle at 390×844 (2026-11-09 night).
+ */
+const PAINTED_HEAD_Y: Partial<Record<string, number>> = {
+  brainiac: 70, grodd: 70, hammer: 55, leader: 85, "mirror-master": 55, surtur: 70, vulture: 70, "silver-samurai": 55,
+};
+
+function PaintedVillain({ src, crop, headY, className }: { src: string; crop: VillainCrop; headY?: number; className: string }) {
+  const base = PAINTED[crop];
+  const f = crop === "head" && headY !== undefined ? { ...base, origin: `52% ${headY}%` } : base;
   return (
     <span className={`${className} block overflow-hidden`} aria-hidden>
       <img src={src} alt="" decoding="async" className="anim-fade size-full object-cover" style={{ objectPosition: f.pos, transform: f.zoom === 1 ? undefined : `scale(${f.zoom})`, transformOrigin: f.origin }} />
