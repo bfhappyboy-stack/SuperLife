@@ -105,6 +105,11 @@ export interface HeroPreset {
    * Off-list powers can still be braided on purpose: that is bending canon.
    */
   stretch?: string[];
+  /**
+   * Added to every signature move of this legend's rogues in life-sim fights. Spider-Man's gallery was
+   * tuned like a powerless hero's (moves 4–7) while he fights with three powers; engine sims set it.
+   */
+  rogueEdge?: number;
   decades: PresetDecade[];
   beats: CanonBeat[];
   villains: PresetVillain[];
@@ -133,6 +138,7 @@ export const PRESETS: HeroPreset[] = [
     color: "#e2363e",
     boost: { smarts: 14 },
     powers: ["super-senses", "super-strength", "super-speed"],
+    rogueEdge: 2,
     stretch: ["super-durability", "regeneration", "invisibility", "elasticity"],
     decades: [
       { title: "Queens, Before the Bite", premise: "{name} grows up in a small Queens apartment with Aunt May, Uncle Ben, and a library card worn soft." },
@@ -1587,7 +1593,7 @@ export function presetVillain(presetId: string | null | undefined, villainId: st
 export function signatureMoves(alias: string, level: number): DuelMove[] | null {
   for (const preset of PRESETS) {
     const villain = preset.villains.find((row) => row.alias === alias || row.name === alias);
-    if (villain) return villain.moves.map((move) => ({ ...move, power: move.power + Math.round(Math.max(level, villain.level) / 2) }));
+    if (villain) return villain.moves.map((move) => ({ ...move, power: move.power + Math.round(Math.max(level, villain.level) / 2) + (preset.rogueEdge ?? 0) }));
   }
   return null;
 }

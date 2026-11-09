@@ -106,6 +106,24 @@ export const KITS: KitDef[] = [
       k("iron-man", { id: "armory::hulkbuster", name: "Hulkbuster Brace", blurb: "Veronica drops the big suit. For a minute, nothing gets through.", minAge: 40, power: 7, style: "guard", kind: "guard", energy: 3, effect: "Takes the edge off what comes back.", cooldown: 2, element: "force" }),
     ],
   },
+  {
+    legend: "spider-man",
+    id: "kit:spider-man",
+    name: "Web-Shooters",
+    blurb: "Homemade fluid, wrist triggers, and a lot of practice. Every guard is a web now.",
+    ultimateAge: null,
+    replaces: { styles: ["guard"], line: "Spider-Man guards with webs: the Web-Shooters handle every guard." },
+    edge: 0.1,
+    piece: "web",
+    moves: [
+      k("spider-man", { id: "web::shield", name: "Web Shield", blurb: "A quick lattice across the gap. It gives, then holds.", minAge: 15, power: 3, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force" }),
+      k("spider-man", { id: "web::net", name: "Web Net", blurb: "Thwip. Now they are wearing it.", minAge: 16, power: 3, style: "guard", kind: "status", energy: 1, effect: "Wins leave them Frosted: tangled, hitting 15% weaker.", cooldown: 1, element: "force", applies: "frost" }),
+      k("spider-man", { id: "web::yank", name: "Web Yank", blurb: "Their own swing, pulled straight past you.", minAge: 19, power: 4, style: "guard", kind: "guard", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "force", applies: "expose" }),
+      k("spider-man", { id: "web::cocoon", name: "Web Cocoon", blurb: "Wrapped to the elbows. Struggling just tightens it.", minAge: 23, power: 5, style: "guard", kind: "status", energy: 2, effect: "Wins leave them Frosted: tangled, hitting 15% weaker.", cooldown: 1, element: "force", applies: "frost", upgrades: "web::net" }),
+      k("spider-man", { id: "web::wall", name: "Web Wall", blurb: "A whole alley, strung shut in a heartbeat.", minAge: 26, power: 5, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "web::shield" }),
+      k("spider-man", { id: "web::snare", name: "Spider-Sense Snare", blurb: "The tingle, the web, already there when they move.", minAge: 32, power: 6, style: "guard", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "lightning", applies: "shock", upgrades: "web::yank" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));

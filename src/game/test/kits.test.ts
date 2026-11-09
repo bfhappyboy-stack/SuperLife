@@ -2,10 +2,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { KITS, kitFor, kitMoveUnlocked } from "../kits.ts";
-import { allMoveDefs, battleMoves, knownMoves, lockedLine, moveById, moveSource, placeInSlot, toDuel } from "../moves.ts";
+import { allMoveDefs, battleMoves, fillLoadout, knownMoves, lockedLine, moveById, moveSource, placeInSlot, toDuel } from "../moves.ts";
 import { ageUp, choose, createGame, resolveMini } from "../engine.ts";
 import { fighterFromLife } from "../arena.lives.ts";
-import { PRESETS } from "../presets.ts";
+import { PRESETS, signatureMoves } from "../presets.ts";
 import type { Game } from "../types.ts";
 
 const base = { name: "Kai Moreno", cityId: "metro", upbringing: "supportive", portrait: 5, sex: "male", face: "secret", drive: "protector" } as const;
@@ -125,4 +125,40 @@ test("Iron Man's life: no street moves once the suit is built, upgrades keep the
   assert.equal(styles.size, 3, "every tell has an answer");
   const fighter = fighterFromLife(0, g);
   assert.ok(fighter && fighter.moves.some((m) => (m.id ?? "").includes("armory::unibeam")), "Arena saved-life Iron Man brings the Armory");
+});
+
+// Spider-Man's web-shooters (2026-11-09 pm): webs replace every guard his powers would give.
+test("Spider-Man's web-shooters replace his power guards instead of adding to them", () => {
+  const g = live(createGame({ ...base, preset: "spider-man", seed: 4 } as never), 27);
+  const shelf = knownMoves(g);
+  const guards = shelf.filter((e) => e.def.style === "guard");
+  assert.ok(guards.length > 0);
+  assert.ok(guards.every((e) => e.def.id.startsWith("web::")), guards.map((e) => e.def.id).join(","));
+  assert.ok(shelf.some((e) => !e.def.id.startsWith("web::") && e.unlocked), "his powers still bring strikes and tricks");
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  const sixGuards = six.filter((m) => m.style === "guard");
+  assert.ok(sixGuards.length >= 1 && sixGuards.every((m) => (m.id ?? "").startsWith("web::")), six.map((m) => m.id).join(","));
+  assert.ok(!six.some((m) => (m.id ?? "").startsWith("street::")), "no street padding once the webs are in");
+  // Web Shield has become Web Wall by 26; the old piece is off the shelf.
+  assert.ok(!shelf.some((e) => e.def.id === "web::shield") && shelf.some((e) => e.def.id === "web::wall"));
+  // A power guard can't be slotted, and an old save holding one drops it and refills from the webs.
+  const powerGuard = allMoveDefs().find((d) => ["super-senses", "super-strength", "super-speed"].includes(d.powerId) && d.style === "guard")!;
+  const res = placeInSlot(structuredClone(g), 0, powerGuard.id);
+  assert.equal(res.ok, false);
+  assert.match(res.line, /Web-Shooters/);
+  const old = structuredClone(g);
+  old.loadout = [powerGuard.id, ...(old.loadout ?? []).slice(1)];
+  fillLoadout(old);
+  assert.equal(old.loadout.length, 6);
+  assert.ok(!old.loadout.includes(powerGuard.id));
+});
+
+test("web-shooters leave the Ultimate to his powers, and his rogues hit harder than the base table", () => {
+  assert.equal(kitFor("spider-man")!.ultimateAge, null);
+  const goblin = PRESETS.find((p) => p.id === "spider-man")!.villains.find((v) => v.alias === "Green Goblin")!;
+  const moves = signatureMoves("Green Goblin", 1)!;
+  assert.equal(moves[0]!.power, goblin.moves[0]!.power + Math.round(goblin.level / 2) + 2);
+  const joker = PRESETS.find((p) => p.id === "batman")!.villains.find((v) => v.alias === "The Joker")!;
+  assert.equal(signatureMoves("The Joker", 1)![0]!.power, joker.moves[0]!.power + Math.round(joker.level / 2));
 });
