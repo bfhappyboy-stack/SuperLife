@@ -1,5 +1,24 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-09 am): playtest first — Spider-Man, Iron Man, Hood mystery, Flash
+
+**Builds (new this pass):** **Spider-Man** and **Iron Man** God Mode presets, a Hood / foster mystery (wakes at 15), and Flash again for the life-sim check. Aged to 50, seed 1, Normal and Hard; 263 villain boards per difficulty. Same tell-reading policy as the pm pass (`/workspace/playtest/am1109/`). Phone screens at 390×844: Iron Man 30 vs Whiplash (Hard boss), Spider-Man 33 vs Venom (Hard boss), Hood 18 vs Afterimage (Normal).
+
+| Build | Normal perfect | Normal 60% | Hard perfect | Hard 60% |
+|---|---|---|---|---|
+| Spider-Man | 0.99 / 0.98 | **0.96 / 0.93** | 1.00 / 0.97 | 0.74 / 0.55 |
+| Iron Man | 0.94 / 0.79 | **0.59 / 0.38** | 0.82 / 0.52 | 0.44 / 0.19 |
+| Hood mystery | 0.96 / 0.86 | 0.74 / 0.42 | 0.63 / 0.89 | 0.35 / 0.33 |
+| Flash | 0.84 / 0.96 | 0.56 / 0.63 | 0.79 / 0.98 | 0.50 / 0.56 |
+
+(street / boss; boss n = 3–8 per build, so noisy.)
+
+**Findings:**
+- **Villains look unfinished next to the heroes.** Every duel puts a painted hero card (Iron Man, Spider-Man) beside a flat vector villain bust (Whiplash, Venom). The vector cards were always the stand-in for painted art (user request 4); an image generator is now available. Biggest visual gap this pass.
+- **Iron Man doesn't fight like Iron Man.** Until his powers wake at 24 his six is street moves; at 30 against Whiplash it is Pulse Shot, Dive Kick, Heavy Hands, Stand Firm, Slip, Haymaker. No repulsors, no Unibeam, no armour, and four of six are strikes. He is also the weakest legend measured (Normal 60% 0.59 / 0.38). Same gap Batman had before his belt.
+- **Spider-Man is too easy on Normal** (0.96 / 0.93 at 60% play, target ~0.70 / 0.55): three guards (Counter Tap, Stand Firm, Slow Second at 13 power) from his senses + strength + speed mix, and no webs in his six either.
+- **Hood mystery** reads fine at 390×844; no overflow or console errors on any of the three saves.
+
 ## Night pass (2026-11-08): short check
 
 Re-opened the pm Hulk 35 (Red Hulk boss) and Batman 27 (Joker boss) Hard saves at 390×844 after the legend-standee change: both heroes now stand as painted cards, no overflow or console errors (`/workspace/playtest/night1108/`). Hero art loads lazily, so the first ~1s of a duel can still show the intro card only. Balance numbers unchanged from the pm table (no engine change this pass).
