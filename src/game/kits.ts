@@ -222,6 +222,32 @@ export const KITS: KitDef[] = [
       k("superman", { id: "krypton::fortress", name: "Fortress Training", blurb: "Jor-El's lessons, finally making sense.", minAge: 38, power: 6, style: "trick", kind: "status", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "psychic" }),
     ],
   },
+  {
+    legend: "wonder-woman",
+    id: "kit:wonder-woman",
+    name: "Amazon Arms",
+    blurb: "Bracers, a lasso, a sword and a shield, and an island of aunts who taught her every one.",
+    ultimateAge: 30,
+    leadsUltimate: true,
+    replaces: { powers: ["super-strength", "flight", "aegis-shell"], line: "Diana fights the Amazon way: these moves come from her Amazon Arms." },
+    edge: 0.2,
+    piece: "Amazon art",
+    moves: [
+      k("wonder-woman", { id: "amazon::bracers", name: "Bracer Block", blurb: "Silver bracelets. Bullets ring off them like bells.", minAge: 10, power: 5, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force" }),
+      k("wonder-woman", { id: "amazon::spear", name: "Training Spear", blurb: "Antiope's yard, before sunrise, every day.", minAge: 12, power: 5, style: "strike", kind: "burst", energy: 1, effect: "Single hit.", cooldown: 0, element: "force" }),
+      k("wonder-woman", { id: "amazon::lasso", name: "Lasso of Truth", blurb: "Bound in gold, nobody lies. Not even with their feet.", minAge: 14, power: 4, style: "trick", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "light", applies: "shock" }),
+      k("wonder-woman", { id: "amazon::feint", name: "Antiope's Feint", blurb: "Show them the spear. Hit them with the shield.", minAge: 17, power: 5, style: "trick", kind: "dash", energy: 1, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "speed" }),
+      k("wonder-woman", { id: "amazon::sword", name: "Sword of Athena", blurb: "A blade from the island's vault, finally hers.", minAge: 19, power: 6, style: "strike", kind: "burst", energy: 2, effect: "Wins leave them Exposed.", cooldown: 0, element: "force", applies: "expose", upgrades: "amazon::spear" }),
+      k("wonder-woman", { id: "amazon::shield", name: "Amazon Shield", blurb: "Round, bronze and older than the city.", minAge: 21, power: 6, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "amazon::bracers" }),
+      k("wonder-woman", { id: "amazon::clash", name: "Bracer Clash", blurb: "She crosses her wrists. The street hears thunder.", minAge: 24, power: 6, style: "strike", kind: "area", energy: 2, effect: "Hits wide. Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
+      k("wonder-woman", { id: "amazon::takedown", name: "Lasso Takedown", blurb: "Gold around the ankle, and the ground arrives.", minAge: 27, power: 6, style: "trick", kind: "dash", energy: 2, effect: "Hits harder when it answers their tell. Wins leave them Exposed.", cooldown: 0, element: "light", upgrades: "amazon::feint" }),
+      k("wonder-woman", { id: "amazon::godkiller", name: "Godkiller", blurb: "The sword that was made for Ares, swung at whoever earns it.", minAge: 30, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Exposed.", cooldown: 1, element: "light", applies: "expose", upgrades: "amazon::sword" }),
+      k("wonder-woman", { id: "amazon::deflect", name: "Bullet Deflection", blurb: "Every shot goes back where it came from.", minAge: 33, power: 6, style: "guard", kind: "guard", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "force", applies: "expose" }),
+      k("wonder-woman", { id: "amazon::perfect", name: "Golden Perfect", blurb: "The lasso at full length, glowing like noon.", minAge: 38, power: 7, style: "trick", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "light", applies: "shock", upgrades: "amazon::lasso" }),
+      k("wonder-woman", { id: "amazon::aegis", name: "Aegis of Themyscira", blurb: "Her mother's shield. It has never once been broken.", minAge: 44, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "amazon::shield" }),
+      k("wonder-woman", { id: "amazon::zeus", name: "Zeus's Thunder", blurb: "Her father's lightning, caught on the bracers and thrown back.", minAge: 48, power: 8, style: "strike", kind: "area", energy: 3, effect: "Hits wide. Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-09 (night): Wonder Woman's kit, painted rogues (`devbot/2026-11-09-night`)
+
+Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 2: Wonder Woman's Amazon Arms
+
+- **Why:** Diana fought with Heavy Hands, Dive Kick, Aegis, Static Snap, Quick Cut, Mind Spike: no lasso, no bracers, no sword. She was also well above target (Normal 60% 0.88 / 0.78).
+- **What:** an **Amazon Arms** kit, 13 pieces: Bracer Block (10), Training Spear (12), **Lasso of Truth** (14, Shock: their tells can't lie), Antiope's Feint (17), Sword of Athena (19, Expose, upgrades the spear), Amazon Shield (21, Ward, upgrades the bracers), Bracer Clash (24, area, Shock), Lasso Takedown (27, upgrades the feint), **Godkiller** (30, Expose, upgrades the sword, her Ultimate), Bullet Deflection (33, guard, Expose), Golden Perfect (38, upgrades the lasso), Aegis of Themyscira (44, upgrades the shield), Zeus's Thunder (48, area, Shock). It replaces her **Super Strength, Flight and Aegis Shell** moves; her stretch powers (speed, telepathy, lightning…) still bring theirs. Kit edge 0.20.
+- **Balance** (60% play, street / boss, 3 seeds, 156 villain boards): Story 0.99 / 0.99 → 0.99 / 0.96; Normal 0.88 / 0.78 → **0.82 / 0.59**; Hard 0.82 / 0.64 → **0.66 / 0.49**; Legendary 0.62 / 0.41 → **0.53 / 0.29**. Teens (15–24) are now 0.50 street (Cheetah is her teen rogue), 40+ is 0.94.
+- **Tests:** +1 (shelf has none of the replaced moves, upgrades retire the old pieces, the lasso's Shock override at 14, Godkiller Ultimate at 31, all three styles). The every-kit tests cover her too. 227 game tests pass.
+
+### Increment 1: playtest
+
+- A Harbor Bay / street-kid mystery (Nell Okafor) and a Dustreach / alien **God Mode** life with Telekinesis + Lightning (Kai Moreno), beside Wonder Woman, Hulk, Black Panther, Wolverine and three reference legends; three seeds to 50, all four difficulties. Power mixing at 15 (Skip to 15, mentor), move-select and phone screens re-checked. Notes and table in PLAYTEST.md. No code changes.
+
 ## 2026-11-09 (pm): legend signature kits (`devbot/2026-11-09-pm`)
 
 Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.

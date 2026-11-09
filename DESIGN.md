@@ -316,12 +316,12 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 
 ### Legend kits (shipped 2026-11-08 pm; Armory 2026-11-09 pm)
 
-A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**, **Captain America — The Shield**, **Flash — Speed Force**, **Superman — Kryptonian Arts**.
+A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**, **Captain America — The Shield**, **Flash — Speed Force**, **Superman — Kryptonian Arts**, **Wonder Woman — Amazon Arms**.
 
 - Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More final pieces than slots, so the six stays a choice.
 - **Upgrades** (`upgrades: <older piece>`): when a newer piece arrives, the older one retires from the shelf and the new one takes **its slot** in the six (the Mark I Plating slot becomes the Nanotech Shell). An upgrade always keeps the slot's style. The birthday banner says "Armory upgrade: X replaces Y".
 - **Replaces** (`replaces: { powers?, styles?, line }`): a kit can stand in for moves the legend's powers would give. Those power moves leave the shelf and can't be slotted (the shelf says why). Iron Man's Armory replaces Energy Projection and Flight moves (his repulsors and jets are the suit); Spider-Man's Web-Shooters replace every **guard** his powers would give, so his strikes and tricks come from his powers and every guard is a web. A legend with powers must declare what its kit replaces, so kits never just pile on.
-- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Thor 0.55, a god's hammer trains like a power; Flash 0.55, the kit is his power; Cap 0.30; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
+- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Thor 0.55, a god's hammer trains like a power; Flash 0.55, the kit is his power; Cap 0.30; Wonder Woman 0.20, her arms are trained; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
 - From `ultimateAge` (Batman, Iron Man, Thor and Cap 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6). `leadsUltimate` lets the kit's Ultimate win over the power's (Iron Man's Unibeam, Thor's God Blast, Cap's Liberty Strike). A kit that leads the Ultimate should make its Ultimate piece an upgrade of an early strike, so it is in the six on the day it arrives. `ultimateAge: null` leaves the power's Ultimate alone.
 - Saved kit lives can enter the Arena with the same six (passive by their first power, else Read the Room).
 
@@ -438,7 +438,25 @@ Braided powers that contain Aegis Shell (Holy Hull) still bring their own moves.
 | 34 | Thunderclap | strike (area) | force | |
 | 38 | Fortress Training | trick (status) | psychic · Expose | |
 
-A kit that starts at the wake (Flash, Spider-Man, Superman) doesn't need childhood coverage; a kit that starts in childhood (Batman, Iron Man, Thor, Cap) covers strike, guard and trick by 14.
+**Wonder Woman — Amazon Arms** (2026-11-09 night; replaces Super Strength, Flight and Aegis Shell moves; edge 0.20; Godkiller is the Ultimate from 30; her stretch powers still bring theirs)
+
+| Age | Piece | Style | Element / status | Upgrades |
+|---|---|---|---|---|
+| 10 | Bracer Block | guard | force | |
+| 12 | Training Spear | strike | force | |
+| 14 | Lasso of Truth | trick (status) | Shock override | |
+| 17 | Antiope's Feint | trick (dash) | speed | |
+| 19 | Sword of Athena | strike | Expose override | Training Spear |
+| 21 | Amazon Shield | guard | shield · Ward | Bracer Block |
+| 24 | Bracer Clash | strike (area) | lightning · Shock | |
+| 27 | Lasso Takedown | trick (dash) | light · Expose | Antiope's Feint |
+| 30 | Godkiller | strike | Expose override | Sword of Athena |
+| 33 | Bullet Deflection | guard | Expose override | |
+| 38 | Golden Perfect | trick (status) | Shock override | Lasso of Truth |
+| 44 | Aegis of Themyscira | guard | shield · Ward | Amazon Shield |
+| 48 | Zeus's Thunder | strike (area) | lightning · Shock | |
+
+A kit that starts at the wake (Flash, Spider-Man, Superman) doesn't need childhood coverage; a kit that starts in childhood (Batman, Iron Man, Thor, Cap, Wonder Woman) covers strike, guard and trick by 14.
 
 **Rogues wait (2026-11-09 pm):** a legend's own arch-rogue never calls out the hero (the monthly "arch-month" pin) before they can fight back: the powers waking or the kit's first piece, whichever is first. Before, kid Barry was called out by Reverse-Flash (level 9) almost every month from 11 to 24; kid Bruce Banner the same until 28. Canon beats and boss fights still happen on schedule.
 

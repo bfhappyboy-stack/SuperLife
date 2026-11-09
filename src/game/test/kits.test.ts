@@ -251,3 +251,19 @@ test("Superman's Kryptonian Arts replace his generic power moves, upgrade in pla
   const ult = six.find((m) => m.ultimate);
   assert.ok(ult && (ult.id ?? "").startsWith("krypton::"), six.map((m) => m.id).join(","));
 });
+
+// Wonder Woman's Amazon Arms (2026-11-09 night): bracers, lasso, sword and shield replace her generic strength/flight/aegis moves.
+test("Wonder Woman's Amazon Arms replace her generic power moves, the lasso arrives at 14, Godkiller is the Ultimate at 30", () => {
+  const lasso = moveById("amazon::lasso")!;
+  assert.equal(kitMoveUnlocked({ preset: "wonder-woman", age: 14 }, lasso as never), true);
+  assert.equal(toDuel(lasso).applies, "shock");
+  const g = live(createGame({ ...base, preset: "wonder-woman", seed: 9 } as never), 31);
+  const shelf = knownMoves(g).map((e) => e.def.id);
+  assert.ok(!shelf.some((id) => /^(super-strength|flight|aegis-shell)::/.test(id)), shelf.join(","));
+  assert.ok(shelf.includes("amazon::godkiller") && !shelf.includes("amazon::sword") && !shelf.includes("amazon::spear"), "Godkiller retires the sword and spear");
+  assert.ok(shelf.includes("amazon::shield") && !shelf.includes("amazon::bracers"), "Amazon Shield retires Bracer Block");
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  assert.equal(six.find((m) => m.ultimate)?.id, "amazon::godkiller", six.map((m) => m.id).join(","));
+  assert.equal(new Set(six.map((m) => m.style)).size, 3);
+});
