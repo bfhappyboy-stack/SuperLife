@@ -149,6 +149,31 @@ export const KITS: KitDef[] = [
       k("thor", { id: "mjolnir::odinforce", name: "Odinforce Ward", blurb: "Your father's light, finally yours to hold up.", minAge: 48, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "mjolnir::spin" }),
     ],
   },
+  {
+    legend: "captain-america",
+    id: "kit:captain-america",
+    name: "The Shield",
+    blurb: "A trash-can lid in a Brooklyn alley, then vibranium. He never fought without something round.",
+    ultimateAge: 30,
+    leadsUltimate: true,
+    replaces: { powers: ["aegis-shell"], line: "Cap's shell is the shield now: guards and throws come from The Shield." },
+    edge: 0.3,
+    piece: "shield move",
+    moves: [
+      k("captain-america", { id: "shield::lid", name: "Trash-Can Lid", blurb: "He picked it up in an alley. He never put it down.", minAge: 10, power: 4, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force" }),
+      k("captain-america", { id: "shield::jab", name: "Brooklyn Jab", blurb: "Small, sick, and swinging anyway.", minAge: 12, power: 4, style: "strike", kind: "burst", energy: 1, effect: "Single hit.", cooldown: 0, element: "force" }),
+      k("captain-america", { id: "shield::weave", name: "Duck and Weave", blurb: "Bucky taught him one thing: don't be there.", minAge: 14, power: 3, style: "trick", kind: "dash", energy: 1, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "speed" }),
+      k("captain-america", { id: "shield::vibranium", name: "Vibranium Shield", blurb: "Star-spangled, unbreakable, and always in the way.", minAge: 21, power: 5, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "shield::lid" }),
+      k("captain-america", { id: "shield::bash", name: "Shield Bash", blurb: "The rim, edge-on, at the jaw.", minAge: 22, power: 5, style: "strike", kind: "burst", energy: 2, effect: "Wins leave them Exposed.", cooldown: 0, element: "force", applies: "expose", upgrades: "shield::jab" }),
+      k("captain-america", { id: "shield::throw", name: "Shield Throw", blurb: "Off the wall, off his jaw, back to the glove.", minAge: 23, power: 5, style: "trick", kind: "dash", energy: 2, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "force", upgrades: "shield::weave" }),
+      k("captain-america", { id: "shield::ricochet", name: "Ricochet Volley", blurb: "Three walls, four goons, one throw.", minAge: 26, power: 6, style: "strike", kind: "area", energy: 2, effect: "Hits wide.", cooldown: 1, element: "force" }),
+      k("captain-america", { id: "shield::feint", name: "Commando Feint", blurb: "A Howling Commandos trick: show the shield, hit with the other hand.", minAge: 28, power: 5, style: "trick", kind: "status", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "psychic" }),
+      k("captain-america", { id: "shield::liberty", name: "Liberty Strike", blurb: "The shield comes down with everything behind it.", minAge: 30, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Exposed.", cooldown: 1, element: "force", applies: "expose", upgrades: "shield::bash" }),
+      k("captain-america", { id: "shield::rally", name: "Assemble", blurb: "He says one word and the room stands up straighter.", minAge: 33, power: 5, style: "trick", kind: "status", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "life", applies: "ward" }),
+      k("captain-america", { id: "shield::unbreakable", name: "Unbreakable Guard", blurb: "Kneel behind it and the world can try.", minAge: 40, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "shield::vibranium" }),
+      k("captain-america", { id: "shield::worthy", name: "Worthy", blurb: "He lifts the hammer. He always could.", minAge: 45, power: 8, style: "strike", kind: "burst", energy: 3, effect: "Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));

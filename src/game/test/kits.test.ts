@@ -179,3 +179,29 @@ test("Thor's life: Mjolnir replaces his strength moves, upgrades in place, and G
   assert.equal(ult[0]!.id, "mjolnir::godblast");
   assert.equal(new Set(six.map((m) => m.style)).size, 3);
 });
+
+// Every kit (2026-11-09 pm): a lived legend past the kit's Ultimate age fights with exactly six,
+// no street padding, nothing the kit replaces, and (when the kit leads) a kit Ultimate.
+test("every legend kit: six moves, no replaced power moves, kit Ultimate where the kit leads", () => {
+  for (const kit of KITS) {
+    const age = (kit.ultimateAge ?? 30) + 1;
+    const g = live(createGame({ ...base, preset: kit.legend, seed: 8 } as never), age);
+    const six = battleMoves(g);
+    assert.equal(six.length, 6, kit.legend);
+    assert.ok(!six.some((m) => (m.id ?? "").startsWith("street::")), `${kit.legend}: ${six.map((m) => m.id).join(",")}`);
+    for (const m of six) {
+      const def = moveById(m.id ?? "");
+      if (def && !def.powerId.startsWith("kit:")) {
+        assert.ok(!kit.replaces?.powers?.includes(def.powerId), `${kit.legend} fights with replaced ${def.id}`);
+        assert.ok(!kit.replaces?.styles?.includes(def.style), `${kit.legend} fights with replaced ${def.id}`);
+      }
+    }
+    assert.ok(six.some((m) => (m.id ?? "").startsWith(kit.moves[0]!.id.split("::")[0]!)), `${kit.legend} has kit moves in the six`);
+    if (kit.ultimateAge !== null && (kit.leadsUltimate || !PRESETS.find((p) => p.id === kit.legend)!.powers.length)) {
+      const ult = six.filter((m) => m.ultimate);
+      assert.equal(ult.length, 1, kit.legend);
+      assert.equal(moveById(ult[0]!.id ?? "")?.powerId, kit.id, `${kit.legend} Ultimate comes from the kit`);
+      assert.equal(ult[0]!.style, "strike", `${kit.legend} Ultimate is a strike`);
+    }
+  }
+});
