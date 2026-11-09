@@ -1,5 +1,6 @@
 import { memo, useId, type ReactNode } from "react";
 import { type VillainArtId } from "@/components/game/villainArt.data";
+import { useArt } from "@/components/game/Scene";
 
 /**
  * Illustrated villain cards for the Arena (and anywhere a signature villain needs a portrait).
@@ -1189,6 +1190,32 @@ function scene(id: string) {
  * The SVG uses `slice`, so it fills any frame shape like the painted `object-cover` art does.
  */
 export const VillainArt = memo(function VillainArt({ id, color, crop = "card", className = "absolute inset-0 size-full" }: { id: string; color: string; crop?: VillainCrop; className?: string }) {
+  const painted = useArt(`villain-${id}`);
+  if (painted) return <PaintedVillain src={painted} crop={crop} className={className} />;
+  return <VectorVillain id={id} color={color} crop={crop} className={className} />;
+});
+
+/**
+ * Where each frame looks on a painted 540×960 portrait. The figures are painted full length with the head in the
+ * upper third, so small avatars zoom in on the face instead of shrinking the whole body.
+ */
+const PAINTED: Record<VillainCrop, { pos: string; zoom: number; origin: string }> = {
+  card: { pos: "50% 20%", zoom: 1, origin: "50% 20%" },
+  head: { pos: "50% 0%", zoom: 2.3, origin: "52% 22%" },
+  wide: { pos: "50% 24%", zoom: 1.15, origin: "50% 30%" },
+  tall: { pos: "50% 28%", zoom: 1, origin: "50% 30%" },
+};
+
+function PaintedVillain({ src, crop, className }: { src: string; crop: VillainCrop; className: string }) {
+  const f = PAINTED[crop];
+  return (
+    <span className={`${className} block overflow-hidden`} aria-hidden>
+      <img src={src} alt="" decoding="async" className="anim-fade size-full object-cover" style={{ objectPosition: f.pos, transform: f.zoom === 1 ? undefined : `scale(${f.zoom})`, transformOrigin: f.origin }} />
+    </span>
+  );
+}
+
+const VectorVillain = memo(function VectorVillain({ id, color, crop, className }: { id: string; color: string; crop: VillainCrop; className: string }) {
   const raw = useId().replace(/:/g, "");
   const spec = (SPECS as Record<string, Spec | undefined>)[id];
   if (!spec) return null;

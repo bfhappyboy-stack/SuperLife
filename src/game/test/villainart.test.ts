@@ -41,3 +41,11 @@ test("every legend rogue has an illustrated card", () => {
     assert.equal(villainArtFor(v.alias)?.id, v.id, v.alias);
   }
 });
+
+// 2026-11-09 am: the 18 Arena villains have painted portraits (same style as the legend heroes), used over the vector card.
+test("every Arena villain has a painted portrait registered", async () => {
+  const { hasArt } = await import("../../assets/art/index.ts");
+  for (const v of ARENA_ROSTER.filter((f) => f.side === "villain")) assert.ok(hasArt(`villain-${v.id}`), `${v.id} has no painted portrait`);
+  const art = await import("../../assets/art/villain-goblin.ts");
+  assert.match(art.default, /^data:image\/webp;base64,/);
+});
