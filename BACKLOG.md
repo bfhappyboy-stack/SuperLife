@@ -3,6 +3,7 @@
 ## From the 2026-11-09 night pass (in progress)
 
 - **Done (increment 2):** Wonder Woman's **Amazon Arms** (13 pieces from 10, Lasso of Truth at 14, Godkiller Ultimate at 30), replacing her strength / flight / aegis moves. Normal 60% 0.88 / 0.78 → 0.82 / 0.59, Hard 0.82 / 0.64 → 0.66 / 0.49, Legendary 0.62 / 0.41 → 0.53 / 0.29. Teen dip (0.50 street at 15–24 vs Cheetah) and late high (0.94 at 40+) logged.
+- **Done (increment 3):** painted portraits for all 31 legend rogues (every villain is now painted), with per-villain head-crop origins for eight low-face paintings.
 - **Legends still on generic moves:** Hulk (Normal 0.91 / 0.72), Black Panther (0.88 / 0.71), Wolverine (0.87 / 0.73). All three are above target; kits should bring them down as WW's did.
 - **Dustreach TK + Lightning God Mode is the weakest life measured** (Hard 0.31 / 0.07, Legendary 0.13 / 0.02): five strikes and one street guard until 30 (Push, Brace, Heavy Step, Spark Jab, Blindside, Pulse Shot). Same root as the Crownbridge ice life: Gen-0 kits that are mostly strikes.
 - **Harbor street-kid mystery** is fine on Normal (0.74 / 0.79) but stacks four guards at 15–30 (Dome, Stand Firm, Aegis, Door to Nowhere).
@@ -24,7 +25,7 @@
 ## From the 2026-11-09 am pass (in progress)
 
 - **Done (increment 2):** painted portraits for the 18 Arena villains, used everywhere the vector card was.
-- **Painted rogues next (31 left on vector cards):** most-fought first: Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith, then the 15 drawn 2026-11-03 night. One webp module + one loader line each.
+- **Painted rogues:** done 2026-11-09 night. ~~31 left on vector cards:~~ most-fought first: Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith, then the 15 drawn 2026-11-03 night. One webp module + one loader line each.
 - **Iron Man doesn't fight like Iron Man:** done 2026-11-09 pm (Armory kit).
 - **Spider-Man too easy on Normal:** done 2026-11-09 pm (Web-Shooters kit + rogue edge).
 
