@@ -8,6 +8,7 @@ import { mergeHeroes } from "./heroes";
 import { resolveLook } from "./look";
 import { STARTER_IDS } from "./powers.catalog";
 import { presetById } from "./presets";
+import { asDifficulty, DEFAULT_DIFFICULTY } from "./difficulty";
 import type { Game } from "./types";
 
 /** The original single save. Kept untouched after migration as a backup. */
@@ -107,6 +108,9 @@ function migrate(game: Game): Game {
   }
   migrateChapters(next);
   ensureMarket(next);
+  next.difficulty = asDifficulty(next.difficulty ?? DEFAULT_DIFFICULTY);
+  const rg = next.regroup as unknown;
+  if (rg !== undefined && rg !== null && !(typeof rg === "object" && typeof (rg as { name?: unknown }).name === "string" && typeof (rg as { until?: unknown }).until === "number")) next.regroup = null;
   return next;
 }
 

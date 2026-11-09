@@ -5,6 +5,8 @@ import { AUTHORED, type AuthoredMove } from "./moves.authored";
 import { elementOfPower } from "./elements";
 import type { CatalogPower } from "./combo";
 import type { DuelMove, Game, MoveStyle } from "./types";
+import { markUltimate } from "./battle";
+import { isKitPower, kitById, kitEdge, kitFor, kitHidesPowerMove, kitMoveById, kitMoveRetired, kitMoveUnlocked, kitRank, kitUpgradeTip, type KitMove } from "./kits";
 
 const HAND = new Map<string, MoveDef[]>();
 for (const entry of MOVE_BOOK) {
@@ -134,6 +136,36 @@ export const STREET_MOVES: readonly DuelMove[] = [
 
 export const MOVESET_SIZE = 6;
 
+/** The three duel styles every six should try to cover. */
+export const MOVE_STYLES = ["strike", "guard", "trick"] as const;
+
+export function styleCounts(styles: Iterable<MoveStyle | undefined | null>): Record<MoveStyle, number> {
+  const counts: Record<MoveStyle, number> = { strike: 0, guard: 0, trick: 0 };
+  for (const style of styles) if (style === "strike" || style === "guard" || style === "trick") counts[style]++;
+  return counts;
+}
+
+/** Styles with zero count, in strike → guard → trick order. */
+export function missingStyles(counts: Record<MoveStyle, number>): MoveStyle[] {
+  return MOVE_STYLES.filter((style) => (counts[style] ?? 0) <= 0);
+}
+
+/**
+ * Clear shelf warnings when the equipped six cannot answer a tell.
+ * Street padding may still cover the gap in a fight; this is about what you packed.
+ */
+export function loadoutWarnings(game: Pick<Game, "loadout">): string[] {
+  const equipped = (game.loadout ?? []).map((id) => moveById(id)?.style).filter(Boolean) as MoveStyle[];
+  if (!equipped.length) return [];
+  const missing = missingStyles(styleCounts(equipped));
+  const out: string[] = [];
+  if (missing.includes("guard")) out.push("No guard move: strike tells have no answer.");
+  if (missing.includes("strike")) out.push("No strike move: trick tells have no answer.");
+  if (missing.includes("trick")) out.push("No trick move: guard tells have no answer.");
+  return out;
+}
+
+
 export function allMoveDefs(): MoveDef[] {
   const out: MoveDef[] = [];
   for (const power of allPowers()) out.push(...movesForPower(power));
@@ -141,6 +173,8 @@ export function allMoveDefs(): MoveDef[] {
 }
 
 export function moveById(id: string): MoveDef | null {
+  const kit = kitMoveById(id);
+  if (kit) return kit;
   for (const list of HAND.values()) {
     const found = list.find((entry) => entry.id === id);
     if (found) return found;
@@ -170,7 +204,9 @@ export function scaledPower(def: MoveDef, level: number): number {
   return def.power + tier + (rank - 1) * step;
 }
 
-export function grantMoveExp(game: Pick<Game, "moveExp" | "unlockedPowers" | "mastery">, ids: readonly string[], amount: number): string[] {
+type UnlockGame = Pick<Game, "unlockedPowers" | "mastery"> & { preset?: string | null; age?: number };
+
+export function grantMoveExp(game: Pick<Game, "moveExp" | "unlockedPowers" | "mastery"> & { preset?: string | null; age?: number }, ids: readonly string[], amount: number): string[] {
   if (!game.moveExp || typeof game.moveExp !== "object") game.moveExp = {};
   const notes: string[] = [];
   for (const id of [...new Set(ids)]) {
@@ -185,25 +221,33 @@ export function grantMoveExp(game: Pick<Game, "moveExp" | "unlockedPowers" | "ma
   return notes;
 }
 
-export function moveUnlocked(game: Pick<Game, "unlockedPowers" | "mastery">, def: MoveDef): boolean {
+export function moveUnlocked(game: UnlockGame, def: MoveDef): boolean {
+  if (isKitPower(def.powerId)) return kitMoveUnlocked(game, def as KitMove);
+  // A legend kit can stand in for some power moves (Iron Man's suit, Spider-Man's web guards).
+  if (kitHidesPowerMove(game.preset, def)) return false;
   if (!(game.unlockedPowers ?? []).includes(def.powerId)) return false;
   const power = getPower(def.powerId);
   const level = masteryLevel(game.mastery?.[def.powerId] ?? 0, power?.generation ?? 0);
   return level >= def.minMastery;
 }
 
-export function knownMoves(game: Pick<Game, "unlockedPowers" | "mastery">): { def: MoveDef; unlocked: boolean }[] {
+export function knownMoves(game: UnlockGame): { def: MoveDef; unlocked: boolean }[] {
   const out: { def: MoveDef; unlocked: boolean }[] = [];
   for (const id of game.unlockedPowers ?? []) {
     const power = getPower(id);
     if (!power) continue;
-    for (const def of movesForPower(power)) out.push({ def, unlocked: moveUnlocked(game, def) });
+    for (const def of movesForPower(power)) if (!kitHidesPowerMove(game.preset, def)) out.push({ def, unlocked: moveUnlocked(game, def) });
   }
+  // A legend kit (Batman's belt) sits on the shelf beside any powers, locked moves showing their age.
+  // Pieces an upgrade has replaced leave the shelf (Pulse Glove once Repulsor Blast arrives).
+  for (const def of kitFor(game.preset)?.moves ?? []) if (!kitMoveRetired(game, def)) out.push({ def, unlocked: moveUnlocked(game, def) });
   return out;
 }
 
 export function toDuel(def: MoveDef, level = 1): DuelMove {
   const rank = Math.max(1, Math.min(5, level));
+  // Stage 3: signature / high-mastery moves cost real Energy so the bar is a choice.
+  const energy = def.minMastery >= 4 ? Math.max(def.energy, 3) : def.minMastery >= 3 ? Math.max(def.energy, 2) : def.energy;
   return {
     id: def.id,
     name: def.name,
@@ -211,24 +255,27 @@ export function toDuel(def: MoveDef, level = 1): DuelMove {
     power: scaledPower(def, rank),
     style: def.style,
     kind: def.kind,
-    energy: def.energy,
+    energy,
     effect: def.effect,
     cooldown: def.cooldown,
     element: def.element ?? elementOfPower(def.powerId),
     rank,
+    ...((def as KitMove).applies !== undefined ? { applies: (def as KitMove).applies } : {}),
   };
 }
 
-type FightGame = Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp"> & { stats?: { powerLevel: number } };
+type FightGame = Pick<Game, "loadout" | "unlockedPowers" | "mastery" | "moveExp"> & { focusPower?: string | null; stats?: { powerLevel: number }; preset?: string | null; age?: number };
 
 /**
  * How much your training adds to a move in a real fight: power level (the slow lifetime grind, soft-capped
  * by age) plus that power's mastery rank. Street moves get half the power-level part and no mastery.
  * Without this, a 50-year-old hero swung the same 4–6 point moves as a 12-year-old against foes that scale.
  */
-export function moveEdge(game: { stats?: { powerLevel: number }; mastery?: Record<string, number> }, powerId?: string): number {
+export function moveEdge(game: { stats?: { powerLevel: number }; mastery?: Record<string, number>; age?: number }, powerId?: string): number {
   const pl = Math.max(0, game.stats?.powerLevel ?? 0);
   if (!powerId) return Math.round(pl * 0.35);
+  // Kit gear trains like a power (full power-level share) and wears in by decade instead of mastery.
+  if (isKitPower(powerId)) return Math.round(pl * kitEdge(powerId)) + kitRank(game.age ?? 0) - 1;
   const power = getPower(powerId);
   const rank = masteryLevel(game.mastery?.[powerId] ?? 0, power?.generation ?? 0);
   return Math.round(pl * 0.55) + Math.max(0, rank - 1);
@@ -250,16 +297,69 @@ export function battleMoves(game: FightGame): DuelMove[] {
   // Street padding answers whatever style the kit is missing first, so every tell has a reply.
   const spare = [...STREET_MOVES];
   while (picked.length < MOVESET_SIZE && spare.length) {
-    const styles = new Set(picked.map((move) => move.style));
-    const index = Math.max(0, spare.findIndex((move) => !styles.has(move.style)));
-    const move = spare.splice(index, 1)[0]!;
+    const gap = missingStyles(styleCounts(picked.map((move) => move.style)));
+    const index = gap.length ? Math.max(0, spare.findIndex((move) => move.style === gap[0])) : 0;
+    const move = spare.splice(index >= 0 ? index : 0, 1)[0]!;
     picked.push({ ...move, power: move.power + edge });
   }
-  return picked;
+  // Full six with a hole (five strikes + a trick, no guard): swap the weakest surplus for a street cover.
+  for (;;) {
+    const counts = styleCounts(picked.map((move) => move.style));
+    const gap = missingStyles(counts)[0];
+    if (!gap) break;
+    const surplus = MOVE_STYLES.find((style) => (counts[style] ?? 0) >= 2);
+    if (!surplus) break;
+    const victim = picked
+      .map((move, index) => ({ move, index }))
+      .filter((row) => row.move.style === surplus && !(row.move.id ?? "").startsWith("street::"))
+      .sort((a, b) => a.move.power - b.move.power)[0];
+    const cover = spare.find((move) => move.style === gap) ?? STREET_MOVES.find((move) => move.style === gap);
+    if (!victim || !cover) break;
+    const at = spare.indexOf(cover);
+    if (at >= 0) spare.splice(at, 1);
+    picked[victim.index] = { ...cover, power: cover.power + edge };
+  }
+  const focus = game.focusPower && (game.unlockedPowers ?? []).includes(game.focusPower) ? game.focusPower : (game.unlockedPowers ?? [])[0];
+  const power = focus ? getPower(focus) : null;
+  const rank = focus && power ? masteryLevel(game.mastery?.[focus] ?? 0, power.generation) : 0;
+  const focusMoveIds = power ? movesForPower(power).map((def) => def.id) : [];
+  // A legend kit arms its own Ultimate once the hero is old enough: always when there is no power
+  // to focus (Batman), and over the power's when the kit leads (Iron Man's Unibeam).
+  const kit = kitFor(game.preset);
+  if (kit && kit.ultimateAge !== null && (!focus || kit.leadsUltimate)) {
+    return markUltimate(picked, { focusPowerId: kit.id, masteryRank: (game.age ?? 0) >= kit.ultimateAge ? 4 : 0, focusMoveIds: kit.moves.map((def) => def.id) });
+  }
+  return markUltimate(picked, { focusPowerId: focus, masteryRank: rank, focusMoveIds });
+}
+
+/**
+ * A new kit piece (not an upgrade) arriving on a birthday takes a slot when the six is lopsided: its style has at
+ * most one move while another style has three or more. It replaces the weakest non-kit move of that crowded style,
+ * so a kit-led six keeps an answer for every tell (Black Panther with one strike and three tricks gets Claw Flurry).
+ * Returns the name of the move it replaced, or null when the six was balanced enough to leave alone.
+ */
+export function slotKitArrival(game: Game, pieceId: string): string | null {
+  const piece = moveById(pieceId);
+  if (!piece || !isKitPower(piece.powerId) || !moveUnlocked(game, piece)) return null;
+  const loadout = game.loadout ?? [];
+  if (loadout.length < MOVESET_SIZE || loadout.includes(pieceId)) return null;
+  const defs = loadout.map((id) => moveById(id));
+  const counts = styleCounts(defs.map((def) => def?.style));
+  if ((counts[piece.style] ?? 0) > 1) return null;
+  const crowded = MOVE_STYLES.filter((style) => style !== piece.style && (counts[style] ?? 0) >= 3);
+  const victim = defs
+    .map((def, index) => ({ def, index }))
+    .filter((row) => row.def && crowded.includes(row.def.style) && !isKitPower(row.def.powerId))
+    .sort((a, b) => a.def!.power - b.def!.power)[0];
+  if (!victim) return null;
+  game.loadout = loadout.map((id, index) => (index === victim.index ? pieceId : id));
+  return victim.def!.name;
 }
 
 export function fillLoadout(game: Game): void {
   if (!Array.isArray(game.loadout)) game.loadout = [];
+  // A suit upgrade takes the old piece's slot (Mark I Plating → Nanotech Shell), so the six keeps its shape.
+  if (kitFor(game.preset)) game.loadout = game.loadout.map((id) => (isKitPower(moveById(id)?.powerId) ? kitUpgradeTip(game, id) : id));
   // Drop stale, duplicate or no-longer-unlocked ids first, then top up, so a pruned slot is refilled
   // the same tick instead of leaving the six at five.
   game.loadout = game.loadout
@@ -274,10 +374,27 @@ export function fillLoadout(game: Game): void {
   // A slot the player filled by hand is never touched.
   const pool = knownMoves(game).filter((entry) => entry.unlocked && !have.has(entry.def.id)).map((entry) => entry.def);
   while (game.loadout.length < MOVESET_SIZE && pool.length) {
-    const styles = new Set(game.loadout.map((id) => moveById(id)?.style));
-    const index = Math.max(0, pool.findIndex((def) => !styles.has(def.style)));
-    const def = pool.splice(index, 1)[0]!;
+    const gap = missingStyles(styleCounts(game.loadout.map((id) => moveById(id)?.style)));
+    let pick = gap.length ? pool.findIndex((def) => def.style === gap[0]) : -1;
+    if (pick < 0) pick = 0;
+    const def = pool.splice(pick, 1)[0]!;
     game.loadout.push(def.id);
+    have.add(def.id);
+  }
+  // Once the six is full, if a style is still missing and the bench has one, swap out a surplus style.
+  // Keeps authored defaults (and late unlocks) from locking a hero into five strikes.
+  for (;;) {
+    const counts = styleCounts(game.loadout.map((id) => moveById(id)?.style));
+    const gap = missingStyles(counts)[0];
+    if (!gap) break;
+    const cover = pool.find((def) => def.style === gap);
+    if (!cover) break;
+    const surplus = MOVE_STYLES.find((style) => (counts[style] ?? 0) >= 2);
+    if (!surplus) break;
+    const victimAt = game.loadout.findIndex((id) => moveById(id)?.style === surplus);
+    if (victimAt < 0) break;
+    game.loadout[victimAt] = cover.id;
+    pool.splice(pool.indexOf(cover), 1);
   }
 }
 
@@ -295,10 +412,7 @@ function benchMoves(game: Game, skip: readonly string[]): MoveDef[] {
 export function toggleLoadout(game: Game, moveId: string): string {
   const def = moveById(moveId);
   if (!def) return "That move isn't in the book.";
-  if (!moveUnlocked(game, def)) {
-    const power = getPower(def.powerId);
-    return `${def.name} wants ${power?.name ?? "that power"} at mastery ${def.minMastery}.`;
-  }
+  if (!moveUnlocked(game, def)) return lockedLine(def);
   if (!Array.isArray(game.loadout)) game.loadout = [];
   const at = game.loadout.indexOf(moveId);
   if (at >= 0) {
@@ -326,10 +440,7 @@ export interface SlotResult {
 export function placeInSlot(game: Game, slot: number, moveId: string): SlotResult {
   const def = moveById(moveId);
   if (!def) return { ok: false, line: "That move isn't in the book." };
-  if (!moveUnlocked(game, def)) {
-    const power = getPower(def.powerId);
-    return { ok: false, line: `${def.name} wants ${power?.name ?? "that power"} at mastery ${def.minMastery}.` };
-  }
+  if (!moveUnlocked(game, def)) return { ok: false, line: kitHidesPowerMove(game.preset, def) ? (kitFor(game.preset)?.replaces?.line ?? lockedLine(def)) : lockedLine(def) };
   if (!Number.isInteger(slot) || slot < 0 || slot >= MOVESET_SIZE) return { ok: false, line: "There are only six slots." };
   if (!Array.isArray(game.loadout)) game.loadout = [];
   const loadout = [...game.loadout];
@@ -350,4 +461,16 @@ export function placeInSlot(game: Game, slot: number, moveId: string): SlotResul
   game.loadout = loadout.slice(0, MOVESET_SIZE);
   const outName = out ? moveById(out)?.name : null;
   return { ok: true, line: outName ? `${def.name} in, ${outName} out. Slot ${target + 1}.` : `${def.name} takes slot ${target + 1}.` };
+}
+
+/** Where a move comes from, for shelf labels: the power's name, or the legend kit's (Utility Belt). */
+export function moveSource(def: MoveDef): string {
+  if (isKitPower(def.powerId)) return kitById(def.powerId)?.name ?? "Gear";
+  return getPower(def.powerId)?.name ?? "";
+}
+
+/** Why a move can't go in the six yet. */
+export function lockedLine(def: MoveDef): string {
+  if (isKitPower(def.powerId)) return `${def.name} joins the ${moveSource(def)} at ${(def as KitMove).minAge}.`;
+  return `${def.name} wants ${getPower(def.powerId)?.name ?? "that power"} at mastery ${def.minMastery}.`;
 }

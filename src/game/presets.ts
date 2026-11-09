@@ -105,6 +105,11 @@ export interface HeroPreset {
    * Off-list powers can still be braided on purpose: that is bending canon.
    */
   stretch?: string[];
+  /**
+   * Added to every signature move of this legend's rogues in life-sim fights. Spider-Man's gallery was
+   * tuned like a powerless hero's (moves 4–7) while he fights with three powers; engine sims set it.
+   */
+  rogueEdge?: number;
   decades: PresetDecade[];
   beats: CanonBeat[];
   villains: PresetVillain[];
@@ -133,6 +138,7 @@ export const PRESETS: HeroPreset[] = [
     color: "#e2363e",
     boost: { smarts: 14 },
     powers: ["super-senses", "super-strength", "super-speed"],
+    rogueEdge: 2,
     stretch: ["super-durability", "regeneration", "invisibility", "elasticity"],
     decades: [
       { title: "Queens, Before the Bite", premise: "{name} grows up in a small Queens apartment with Aunt May, Uncle Ben, and a library card worn soft." },
@@ -914,7 +920,7 @@ export const PRESETS: HeroPreset[] = [
       },
     ],
     villains: [
-      { id: "cheetah", name: "Barbara Minerva", alias: "Cheetah", sex: "female", title: "The friend with claws", powerId: "speed", level: 7, blurb: "An archaeologist who found a god in a box and lost herself to it.", moves: [mv("Pounce", "From the shadows, all at once.", 8, "strike", "speed", "dash"), mv("Rake", "Claws like knives.", 7, "strike", "force", "burst"), mv("Hunter's Patience", "She waits. You blink.", 5, "trick", "shadow", "status"), mv("Prowl", "Too fast to pin.", 5, "guard", "speed", "guard")] },
+      { id: "cheetah", name: "Barbara Minerva", alias: "Cheetah", sex: "female", title: "The friend with claws", powerId: "speed", level: 7, blurb: "An archaeologist who found a god in a box and lost herself to it.", moves: [{ ...mv("Pounce", "From the shadows, all at once.", 8, "strike", "speed", "dash"), applies: "expose" }, mv("Rake", "Claws like knives.", 7, "strike", "force", "burst"), mv("Hunter's Patience", "She waits. You blink.", 5, "trick", "shadow", "status"), mv("Prowl", "Too fast to pin.", 5, "guard", "speed", "guard")] },
       { id: "circe", name: "Circe", alias: "Circe", sex: "female", title: "The witch of Aeaea", powerId: "mind", level: 7, blurb: "A sorceress older than the island, with a grudge against every Amazon.", moves: [mv("Swine Hex", "Oink.", 6, "trick", "arcane", "status"), mv("Witchfire", "Green flame that bites.", 7, "strike", "arcane", "area"), mv("Glamour", "She looks like your mother.", 5, "trick", "psychic"), mv("Ward of Aeaea", "Old magic, thick as walls.", 5, "guard", "shield", "guard")] },
       { id: "ares", name: "Ares", alias: "Ares", title: "The God of War", powerId: "strength", level: 9, blurb: "Every war ever fought fed him. He is hungry.", moves: [mv("Spear of War", "It has killed gods.", 9, "strike", "force", "burst"), mv("Battle Cry", "Every soldier in the city hears it.", 6, "trick", "psychic", "status"), mv("Aegis of Bronze", "War-god armor.", 6, "guard", "shield", "guard"), mv("Rain of Blades", "The sky remembers every battle.", 8, "strike", "force", "area")] },
       { id: "medusa", name: "Medusa", alias: "Medusa", sex: "female", title: "The gorgon", powerId: "mind", level: 8, from: 44, blurb: "Snakes for hair and a gaze that ends conversations.", moves: [mv("Stone Gaze", "Don't look.", 8, "trick", "arcane", "status"), mv("Serpent Lash", "A dozen bites at once.", 7, "strike", "life", "area"), mv("Coil", "She tightens.", 6, "strike", "force"), mv("Petrified Hide", "Skin like marble.", 5, "guard", "shield", "guard")] },
@@ -940,6 +946,7 @@ export const PRESETS: HeroPreset[] = [
     color: "#3a6fd8",
     boost: { karma: 10 },
     powers: ["super-strength", "aegis-shell", "regeneration"],
+    rogueEdge: 2,
     stretch: ["super-speed", "super-durability", "super-senses", "force-field"],
     decades: [
       { title: "Brooklyn Kid", premise: "{name} is small, sick, and starts fights he can't win. His mother patches him up and tells him not to stop." },
@@ -1587,7 +1594,7 @@ export function presetVillain(presetId: string | null | undefined, villainId: st
 export function signatureMoves(alias: string, level: number): DuelMove[] | null {
   for (const preset of PRESETS) {
     const villain = preset.villains.find((row) => row.alias === alias || row.name === alias);
-    if (villain) return villain.moves.map((move) => ({ ...move, power: move.power + Math.round(Math.max(level, villain.level) / 2) }));
+    if (villain) return villain.moves.map((move) => ({ ...move, power: move.power + Math.round(Math.max(level, villain.level) / 2) + (preset.rogueEdge ?? 0) }));
   }
   return null;
 }
@@ -1631,7 +1638,7 @@ export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
   venom: G("fog", "Sense Blind", "Your spider-sense goes quiet. That is the attack.", "Some tells are hidden. When you can't read him, go big."),
   kraven: G("charge", "Trophy Hunt", "Kraven sinks low. He has been waiting an hour for this.", "Every third turn he winds up. Guard when it comes."),
   mysterio: G("feint", "Stagecraft", "The room flickers. Which Mysterio is real?", "One tell in three is a lie. Don't trust a sure thing."),
-  vulture: G("regen", "Updraft", "He climbs out of reach and catches his breath on the wind.", "He recovers each turn. A trick move pulls him down.", { style: "trick" }),
+  vulture: G("regen", "Updraft", "He climbs out of reach and catches his breath on the wind.", "He recovers each turn. Win edges to stop it.", { style: "trick" }),
   // Batman
   joker: G("feint", "Punchline", "\"Why so serious?\" Every grin means something else now.", "Some tells are lies. Trade even when unsure."),
   "two-face": G("coin", "Heads or Tails", "The coin goes up. It decides how hard he hits.", "Heads: guard up, he hits ×1.6. Tails: go for it.", { at: 1 }),
@@ -1648,7 +1655,7 @@ export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
   // Hulk
   abomination: G("enrage", "Gamma Fury", "The scales split. Blonsky stops fighting like a soldier.", "He hits much harder below half. Answer every tell.", { at: 0.5 }),
   leader: G("swarm", "Humanoids", "Rubber soldiers pour out of the walls.", "Humanoids chip you each turn. An area move clears them."),
-  "ross-red": G("regen", "Absorb the Gamma", "Red Hulk drinks the heat off you and gets bigger.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  "ross-red": G("regen", "Absorb the Gamma", "Red Hulk drinks the heat off you and gets bigger.", "He heals each turn. Win edges to stop it.", { style: "trick" }),
   maestro: G("adapt", "He Knows You", "\"I have watched you do that a thousand times.\"", "He reads repeats. Never use the same move twice in a row.", { at: 0.7 }),
   // Superman
   lex: G("armor", "Warsuit", "Lex seals the warsuit. Green light hums under the plates.", "The suit soaks hits. Two trick moves crack it.", { style: "trick" }),
@@ -1674,10 +1681,10 @@ export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
   killmonger: G("enrage", "Golden Jaguar", "The suit flares gold. He fights like he has nothing left to lose.", "He hits harder below half. Answer every tell.", { at: 0.5 }),
   klaw: G("charge", "Sonic Cannon", "The arm hums up to a pitch you feel in your teeth.", "Every third turn he fires. Guard when it comes."),
   mbaku: G("armor", "Jabari Guard", "M'Baku plants his feet. You will not move the mountain.", "His guard soaks hits. Two trick moves break it.", { style: "trick" }),
-  namor: G("regen", "Tide's Return", "He dives into the water and comes up whole.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
+  namor: G("regen", "Tide's Return", "He dives into the water and comes up whole.", "He heals each turn. Win edges to stop it.", { style: "trick" }),
   // Wolverine
-  sabretooth: G("regen", "Healing Factor", "The cuts close while you watch. He grins.", "He heals each turn. A trick move stalls it.", { style: "trick" }),
-  deathstrike: G("regen", "Cyborg Repair", "Her hand reforms around the claws.", "She heals each turn. A trick move stalls it.", { style: "trick" }),
+  sabretooth: G("regen", "Healing Factor", "The cuts close while you watch. He grins.", "He heals each turn. Win edges to stop it.", { style: "trick" }),
+  deathstrike: G("regen", "Cyborg Repair", "Her hand reforms around the claws.", "She heals each turn. Win edges to stop it.", { style: "trick" }),
   "omega-red": G("swarm", "Carbonadium Coils", "The coils whip out and start draining you.", "The coils drain you each turn. An area move throws them off."),
   "silver-samurai": G("armor", "Tachyon Blade Stance", "Harada raises the sword. The edge glows.", "His stance soaks hits. Two trick moves slip it.", { style: "trick" }),
   // Flash
@@ -1686,6 +1693,43 @@ export const VILLAIN_GIMMICKS: Record<string, BossGimmick> = {
   grodd: G("fog", "Psionic Fog", "Grodd reaches into your head and turns off the lights.", "Some tells are hidden. Hit hard when you can't see."),
   "mirror-master": G("feint", "Hall of Mirrors", "Every mirror shows a different Scudder.", "Some tells lie. Trade even when unsure."),
 };
+
+/**
+ * Phase 3 (DESIGN §17 item 8): each legend's FINAL canon boss (the rogue in their last canon fight beat)
+ * gets a second gimmick that replaces the first at 25% HP. Only in that legend's own life, from the age of
+ * that last beat on. Keyed by villain id, so a rename stays one-file.
+ */
+export const VILLAIN_PHASE3: Record<string, BossGimmick> = {
+  goblin: G("swarm", "Pumpkin Bombs", "The glider bay opens. Pumpkin bombs, dozens of them.", "Bombs chip you each turn. An area move clears them."),
+  joker: G("fog", "Laughing Gas", "\"Smile!\" The flower hisses and the room goes green.", "Some tells are hidden. When you can't read him, hit hard."),
+  ultron: G("adapt", "Learning Algorithm", "The last body has studied every fight you had with the others.", "He punishes repeats. Change your move every turn."),
+  maestro: G("enrage", "Gamma Overload", "The old king stops being clever. Now he is only the Hulk.", "He hits much harder now, and takes more. Answer every tell."),
+  zod: G("regen", "Yellow Sun", "Zod turns his face to the sun. The wounds close.", "He heals each turn. Win edges to stop it.", { style: "trick" }),
+  ares: G("swarm", "Phobos and Deimos", "His sons, Fear and Terror, step out of the smoke.", "They chip you each turn. An area move drives them off."),
+  "red-skull": G("feint", "Cosmic Cube", "The Cube glows in his hand. The room rewrites itself around you.", "Some tells lie. Trade even when unsure."),
+  loki: G("armor", "Jotun Ice", "The glamour drops. Loki's skin goes blue and frost comes up like plate.", "The ice soaks hits. Two trick moves crack it.", { style: "trick" }),
+  klaw: G("armor", "Solid Sound", "Klaw's arm sings. Red sound hardens into a wall.", "The sound wall soaks hits. Two trick moves shatter it.", { style: "trick" }),
+  deathstrike: G("enrage", "Berserker Programming", "The program takes over. Yuriko stops talking.", "She hits much harder now, and takes more. Answer every tell."),
+  "reverse-flash": G("charge", "Speed Force Strike", "He runs a lap of the city and comes back through you.", "Every third turn he hits from a mile out. Guard when it comes."),
+};
+
+/** The villain in a legend's last canon fight beat, and that beat's age. */
+export function finalCanonBoss(presetId: string | null | undefined): { villainId: string; age: number } | null {
+  const preset = PRESETS.find((row) => row.id === presetId);
+  if (!preset) return null;
+  let best: { villainId: string; age: number } | null = null;
+  for (const beat of preset.beats) for (const choice of beat.choices) if (choice.fight && (!best || beat.age > best.age)) best = { villainId: choice.fight, age: beat.age };
+  return best;
+}
+
+/** Phase 3 for this boss fight: only the life's own final canon boss, from the age of that last beat. */
+export function villainPhase3(presetId: string | null | undefined, alias: string, age: number): BossGimmick | null {
+  const final = finalCanonBoss(presetId);
+  if (!final || age < final.age) return null;
+  const villain = PRESETS.find((row) => row.id === presetId)?.villains.find((row) => row.id === final.villainId);
+  if (!villain || (villain.alias !== alias && villain.name !== alias)) return null;
+  return VILLAIN_PHASE3[villain.id] ?? null;
+}
 
 /** A named rogue's gimmick by alias or civilian name. Null for anyone not in a preset. */
 export function villainGimmick(alias: string): BossGimmick | null {

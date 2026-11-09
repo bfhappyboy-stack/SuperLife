@@ -1,5 +1,96 @@
 # SuperLife — Backlog
 
+## From the 2026-11-09 night pass (in progress)
+
+- **Done (increment 2):** Wonder Woman's **Amazon Arms** (13 pieces from 10, Lasso of Truth at 14, Godkiller Ultimate at 30), replacing her strength / flight / aegis moves. Normal 60% 0.88 / 0.78 → 0.82 / 0.59, Hard 0.82 / 0.64 → 0.66 / 0.49, Legendary 0.62 / 0.41 → 0.53 / 0.29. Teen dip (0.50 street at 15–24 vs Cheetah) and late high (0.94 at 40+) logged.
+- **Done (increment 3):** painted portraits for all 31 legend rogues (every villain is now painted), with per-villain head-crop origins for eight low-face paintings.
+- **Done (increment 4):** Hulk's **Gamma Rage** (9 pieces from 28, World Breaker Ultimate at 33) replacing his strength / durability / Juggernaut moves. Normal 0.91 / 0.72 → 0.87 / 0.54, Hard 0.79 / 0.53 → 0.62 / 0.31, Legendary 0.64 / 0.32 → 0.45 / 0.25.
+- **Legend Normal street is high across the board** (WW 0.82, Hulk 0.87, Cap 0.86, Batman 0.85 vs 0.70–0.80): bosses are now on target, the street pool for legends is soft. Candidate: a legend street bump (HP or a twist share on Normal for preset lives) rather than more kit nerfs.
+- **Done (increment 5):** Black Panther's **Panther Habit** (12 pieces from 16, Kinetic Release Ultimate at 30). Normal 0.88 / 0.71 → 0.78 / 0.63, Hard 0.73 / 0.35 → 0.58 / 0.28, Legendary 0.47 / 0.21 → 0.41 / 0.21.
+- **Done (increment 6):** Wolverine's **Claws & Healing Factor** (12 pieces from 12, Berserker Barrage Ultimate at 30). Normal 0.87 / 0.73 → 0.79 / 0.64, Hard 0.79 / 0.54 → 0.65 / 0.44, Legendary 0.59 / 0.24 → 0.40 / 0.22. **Every God Mode legend now has a kit.**
+- **Done (increment 7):** Cap's rogues +2 (`rogueEdge`): Normal 0.86 / 0.68 → 0.80 / 0.56, Hard 0.77 / 0.56 → 0.67 / 0.47, Legendary 0.66 / 0.44 → 0.56 / 0.26. Holy Hull wasn't the cause (it isn't in his six in these lives; his edge is Heavy Hands + Grit Knit).
+- **Done (increment 8):** ~~New kit pieces don't take a slot by themselves:~~ when a piece arrives and no older piece is upgraded, it lands on the shelf only, so some lives keep one strike (e.g. Black Panther 31 seed 2: Kinetic Release ULT + five guards/tricks while Claw Flurry sits on the shelf; Hulk 34 the same with Gamma Clap). Candidate: when a new kit piece covers a style the six is short of, swap it in for a non-kit move of a style the six has two of, with a banner.
+- **Dustreach TK + Lightning God Mode is the weakest life measured** (Hard 0.31 / 0.07, Legendary 0.13 / 0.02): five strikes and one street guard until 30 (Push, Brace, Heavy Step, Spark Jab, Blindside, Pulse Shot). Same root as the Crownbridge ice life: Gen-0 kits that are mostly strikes.
+- **Harbor street-kid mystery** is fine on Normal (0.74 / 0.79) but stacks four guards at 15–30 (Dome, Stand Firm, Aegis, Door to Nowhere).
+
+## From the 2026-11-09 pm pass (in progress)
+
+- **Done (increment 2):** Iron Man's **Armory** — 14 suit pieces from 10 to 40 with Mark upgrades that take the old piece's slot, replacing his generic Energy Projection / Flight moves and the street six; Unibeam is his Ultimate from 30; saved Iron Man lives bring it to the Arena. Normal 60%: 0.79 / 0.64 → 0.77 / 0.59 (3 seeds; seed 1 0.59 / 0.38 → 0.75 / 0.58), teen band 0.91 → 0.73 street, the 24–30 dip (0.66) gone (0.84).
+- **Done (increment 3):** Spider-Man's **Web-Shooters** — 6 web guards (15–32, three upgrades) replace every guard his powers gave; his rogues get +2 on signature moves (`rogueEdge`). Normal 60%: 0.94 / 0.88 → 0.80 / 0.69 (3 seeds; seed 1 0.96 / 0.93 → 0.79 / 0.53); Hard 0.77 / 0.54 → 0.55 / 0.36; Legendary 0.54 / 0.21 → 0.34 / 0.15.
+- **Normal boss still high for legends** (Spider-Man 0.69, Batman 0.68, Wonder Woman 0.78 vs ~0.55 target) while Hard / Legendary are on target. Candidate: retune Normal boss HP or legend boss gimmicks rather than legend kits.
+- **Story is a walkover** (0.99 / 0.95 at 60%, 0.94 / 0.82 at 30%). Candidate: Story bosses keep their phase-2 gimmick at half strength so they still read as bosses.
+- **Done (increment 4):** Thor's **Mjolnir** — 12 pieces (yard 10–14, hammer from 17, God Blast Ultimate at 30, Stormbreaker at 42) replacing his Super Strength moves. 60% street / boss, 3 seeds: Normal 0.72 / 0.50 → 0.77 / 0.46, Hard 0.54 / 0.19 → 0.57 / 0.38, Legendary 0.30 / 0.06 → 0.43 / 0.10. His bosses (Loki, Hela, Malekith at 8–9) stay the hardest in the game; Legendary street a little high.
+- **Done (increment 5):** Captain America's **Shield** — 12 pieces (Trash-Can Lid at 10 to Worthy at 45, Liberty Strike Ultimate at 30) replacing his Aegis Shell moves. Normal 0.92 / 0.81 → 0.86 / 0.68; still the strongest legend (Hard 0.77 / 0.56, Legendary 0.66 / 0.44). His power-level edge barely matters (0.15 vs 0.30 within noise); his strength is Heavy Hands + Holy Hull (a braid). Candidate: look at Holy Hull (19 power guard) and his gallery next.
+- **Done (increment 7):** Superman's **Kryptonian Arts** (12 pieces from 13: heat vision, freeze breath, super-breath, X-ray, Solar Flare Ultimate at 30), replacing his strength / flight / durability moves. Normal 60% 0.57 / 0.39 → 0.65 / 0.61, Legendary 0.26 / 0.13 → 0.37 / 0.30. Open: Lex at level 9 meeting a 13-year-old Clark; Freeze Breath and Flying Tackle rarely reach the six because existing slots stay put (player choice).
+- **Done (increment 6):** Flash's **Speed Force** kit (10 pieces from 25, Infinite Mass Punch Ultimate at 33) + **rogues wait**: a legend's arch-rogue no longer calls out a child who can't fight back (kid Barry was pinged by a level-9 Reverse-Flash ~monthly from 11 to 24). Flash 60%: Normal 0.54 / 0.45 → 0.71 / 0.50, Hard 0.42 / 0.35 → 0.57 / 0.34, Legendary 0.26 / 0.23 → 0.43 / 0.21. Hulk (also gated until 28): Normal 0.91 / 0.74 → 0.91 / 0.72, Legendary 0.52 / 0.28 → 0.64 / 0.32.
+- **Legends without kits:** Hulk, Superman, Wonder Woman, Black Panther, Wolverine still fight with generic power moves (Heavy Hands in almost every six). Superman is now the weakest legend (Normal 0.56 / 0.47, 40-year sample). Candidate: Superman (heat vision, freeze breath, Kryptonian guard) next, Wonder Woman's lasso / bracers after.
+- **Thor four strikes:** eased 2026-11-09 night (Bifrost Call slots itself in at 26 when the six is strike-heavy). ~~Thor still four strikes once his powers wake~~ (God Blast, Static Snap, Cloud Bolt, Squall Slap + hammer guard + throw). His lightning / storm book is all strikes early. Candidate: an authored early trick for Storm Calling.
+- **Crownbridge ice God Mode is the hardest life** (Legendary 0.17 / 0.03): strike-heavy Gen-0 mix. Same root as the mystery-life spread below.
+
+## From the 2026-11-09 am pass (in progress)
+
+- **Done (increment 2):** painted portraits for the 18 Arena villains, used everywhere the vector card was.
+- **Painted rogues:** done 2026-11-09 night. ~~31 left on vector cards:~~ most-fought first: Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith, then the 15 drawn 2026-11-03 night. One webp module + one loader line each.
+- **Iron Man doesn't fight like Iron Man:** done 2026-11-09 pm (Armory kit).
+- **Spider-Man too easy on Normal:** done 2026-11-09 pm (Web-Shooters kit + rogue edge).
+
+## From the 2026-11-08 pm pass (in progress)
+
+- **Done (increment 2):** Batman's Utility Belt — 8 age-gated gadgets replace his lifelong street six; Ultimate from 30; saved Batman lives can enter the Arena. Candidate: kits for future powerless legends (e.g. Hawkeye, Black Widow) are one data entry each.
+- **Done (increment 3):** Hard / Legendary street twists (half / all street villains bring their power's gimmick) + retune: Hard 0.51 / 0.36, Legendary 0.32 / 0.20 at 60% (on target). Regen hint trap fixed (any won edge stops the heal). Batman belt retuned. Status labels no longer clip next to pills.
+- **Build spread is wide on Hard** (60% street): Dustreach celebrity 0.29, Crownbridge 0.32, Harbor 0.36 vs Wonder Woman 0.75, Cap 0.70. Mystery lives with scattered Gen-0 kits suffer most. Candidate: look at mystery-life move quality around 20–30 next pass.
+- **Flash in the life sim is weak** (Normal 60% street 0.47, Hard 0.44) as well as in Arena. Candidate: a status on one of his early moves, like Arena.
+- **Legend heroes on the duel stage:** done 2026-11-08 night (painted card standee). Still open: Arena duel cards for saved legend lives, and mystery lives still use the paper doll.
+
+## From the 2026-11-08 am pass (in progress)
+
+- **Done (increment 1):** Charge bosses charged every turn after the first wind-up; now every third turn as the hint says.
+- **Done (increment 2):** Tempo interrupt on Charge (Momentum 4+, Strike, −1 Momentum; life sim + Arena).
+- **Note for the owner's Burst call:** with auto-Burst at 3, Momentum only reaches 4 through a guard break or a Finisher, so the interrupt shows up in ~11% of charge fights. A manual Burst arm would make banking for an interrupt a real plan.
+- **Done (increment 3):** Phase 3 on the 11 final canon bosses; one-month regroup after a boss loss.
+- **Done (increment 4):** Flash Arena 0.44 → 0.49 (Infinite Mass Punch applies Expose); spread 11.9. Cheetah 0.45 and Abomination 0.46 are now the floor.
+- **Fixed 2026-11-08 pm (any won edge now stops the heal):** ~~Regen hint is a trap (found in the Phase 3 lab):~~ a player who obeys "A trick move stalls it" every time throws tricks into strike tells. On real Normal boards Deathstrike / Sabretooth / Vulture drop to 0.15 win at perfect play that way, against 0.90 if you just answer tells. Candidate: let any won edge also stall regen, or reword the hint to "a trick that wins the edge stalls it". Needs a quick owner nod since it changes six bosses.
+- **Done (increment 5):** ANSWER pill no longer clips (cooldown length yields to the pill). Villain cards were already complete (49/49); DESIGN count fixed.
+- **Guard Break pierce (§17 item 4) — not built:** at Momentum 4+ ignore half a Guard stance once. Skipped because auto-Burst at 3 keeps Momentum under 4 most fights and life-sim foes have no guard-stance damage cut to pierce. Revisit together with the manual-Burst owner's call.
+
+## From the 2026-11-07 night pass (in progress)
+
+- **Done (increment 1):** loadout coverage — Moves shelf warns on a missing style; auto-fill / street padding prefer covering strike/guard/trick; durability / force-field / aegis unlock a guard first; Ground Pound is a trick; Receipt is a trick. Superman / mystery kits catch up without a difficulty retune.
+- **Done (increment 2):** Cheetah Pounce applies Expose (Arena 41% → 45%); signature Ultimates (focus mastery 4+ / Arena strongest move; full Momentum 5 + Energy; ×2; one of the six); city environment chips (+10% element on edge); higher energy floors on signature moves.
+- **Still open (Stage 3 / polish):** ~~tempo interrupt~~, ~~Phase 3 / regroup~~, ~~Flash~~ (all done 2026-11-08 am); remaining 15 villain vector cards.
+- **Owner's calls (unchanged):** Normal ~55%? (night Normal 60% boss now 0.55); auto vs manual Burst; Skip-to-15 auto-settles; purse amounts.
+
+## From the 2026-11-07 pm pass
+
+- **Done (increment 2):** statuses, mix-up Finisher, habit reading, HP runway, boss step-up and a Normal retune in the life-sim duel. Burst now fires on your next *winning* hit instead of the next move.
+- **Done (increment 3):** Arena (vs AI and online) uses the same Momentum / Burst / statuses / Finisher. Note: online rooms have no rules version, so a match left running across a deploy could desync if the two phones load different builds; a refresh fixes it. Candidate: stamp a rules version on new rooms.
+- **Cheetah is now the weakest Arena pick (41%)**: her force/speed kit leaves no statuses. Candidate: give one move an `applies` override (e.g. Expose on a pounce).
+- **Energy is rarely a decision:** with +3 a turn and 1-cost moves, the bar sits at 10/10 most fights. Candidate for Stage 3: costlier signature moves, or Ultimates that spend Energy and full Momentum.
+- **Done (night increment 1):** lopsided default sixes — Moves shelf warn + auto-fill / street cover + authored early guards.
+
+## From the 2026-11-07 am pass
+
+- **Done (battle Stage 1):** DESIGN.md §17 signature system; life difficulty Story/Normal/Hard/Legendary at birth; Momentum + Burst + guard-break on the life-sim duel; harder Normal; HP/Momentum HUD polish; engine sims + tests.
+- **Battle Stage 2 (next):** status effects (Burn/Frost/Shock/Slow/Expose/Ward), combo chains, AI pattern memory, Phase 3 on final canon bosses, boss-loss regroup cooldown. Keep shipping in complete increments.
+- **Battle Stage 3:** environment tags, signature Ultimates (mastery 4+, full Momentum), tempo interrupt on Charge.
+- **Still open from prior:** mentor quests at bond 60+; Arena style-drift fix; online choosing indicator; painted raster villain art (GenerateImage now available — only after Stage 1 is green).
+- **Owner's calls:**
+  - Are Story 94% / Normal 67% / Hard 29% / Legendary 10% (60% play vs case boss) the right bands, or should Normal sit closer to 55%?
+  - Burst auto-spends at 3 Momentum on the next real move (bank by breathing). Prefer a manual arm toggle instead?
+  - Skip-to-15 auto-settles and purse amounts still await a nod (from Nov 4).
+
+
+## From the 2026-11-03 pm pass
+
+- **Done:** mixing locked until 15 with a lock card; mentors at 15 (legend, upbringing or city) with monthly lessons; **Skip to 15** in the Skip sheet (still stops for the reveal, chapters, story beats, cases, fights and the mentor); Arena purses into the active life (results line, history, daily taper); 16 more villain cards (Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith); illustrated rogues now stand in life-sim fights as cards; fixed the foe figure losing its mirror while idle.
+- **Villain cards: remaining rogues (15).** Justin Hammer, Red Hulk, The Maestro, Ares, Medusa, Crossbones, Surtur, Man-Ape, Namor, Lady Deathstrike, Omega Red, Silver Samurai, Captain Cold, Gorilla Grodd, Mirror Master. Add a spec in `VillainArt.tsx` + the id in `villainArt.data.ts` (+ `ROGUE_COLORS`).
+- **Painted (raster) villain art is blocked:** no image-generation tool is connected to the dev bot. The vector cards are the stand-in; swap in painted webp art when a generator is available.
+- **Owner's calls:**
+  - Purse amounts ($600 / $1,500 / $3,500 a win, 20% for a loss, 5 purses a day tapering).
+  - Skip to 15 auto-settles small moments (rainy days, birthdays, friendly cape drop-ins) by picking the choice that best fits your history. Story beats, villains and cases still stop. OK, or should drop-ins stop too?
+  - Thor's powers wake at 16 (canon), so his mentor (Odin) card appears a year after he's assigned.
+- **Next:** Arena purse for online matches is wired (Pro rate) but not yet tested with two real players; mentor quests (a mentor-specific case at bond 60+).
+
 ## From the 2026-11-03 am pass
 
 - **Done:** illustrated vector cards for all 18 Arena villains (draft, sheet, order, reveal, intro, duel cards); life-sim "FIGHT!" boss card and header face for the same 18 rogues; breath log capitalised; moves re-verified across 6 saves (0 fails).

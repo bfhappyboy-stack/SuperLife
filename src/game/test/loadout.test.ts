@@ -194,3 +194,4 @@ test("gaining a new power keeps the player's six and puts the new moves on the b
     assertSix(g, "after new power");
   }
 });
+

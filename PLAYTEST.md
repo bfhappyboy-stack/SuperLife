@@ -1,5 +1,286 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-09 night): playtest first — Harbor street kid, Dustreach alien God Mode, Wonder Woman, Hulk, Black Panther, Wolverine
+
+**Builds (new this pass):** a Harbor Bay / *Street kid* mystery (Nell Okafor) and a Dustreach / *Alien planet* **God Mode** life with **Telekinesis + Lightning Control** (Kai Moreno), with **Wonder Woman, Hulk, Black Panther and Wolverine** (the four legends still on generic moves) and Cap, Spider-Man, Batman for reference. Three seeds to 50, all four difficulties, 1,664 villain boards per difficulty, same tell-reading policy (`/workspace/playtest/n1109/`). Phone screens at 390×844: Harbor 20 vs The Auditor, Wonder Woman 24 vs Cheetah, Black Panther 22 vs Klaw (all Normal).
+
+**Baseline, 60% play, street / boss (3 seeds):**
+
+| Build | Story | Normal | Hard | Legendary |
+|---|---|---|---|---|
+| Harbor street mystery | 1.00 / 1.00 | 0.74 / 0.79 | 0.47 / 0.67 | 0.23 / 0.42 |
+| Dustreach TK + lightning God Mode | 0.99 / 0.97 | 0.64 / 0.62 | **0.31 / 0.07** | **0.13 / 0.02** |
+| Wonder Woman | 0.99 / 0.99 | **0.88 / 0.78** | 0.82 / 0.64 | 0.62 / 0.41 |
+| Hulk | 1.00 / 1.00 | **0.91 / 0.72** | 0.79 / 0.53 | 0.64 / 0.32 |
+| Black Panther | 1.00 / 0.98 | **0.88 / 0.71** | 0.73 / 0.35 | 0.47 / 0.21 |
+| Wolverine | 1.00 / 1.00 | **0.87 / 0.73** | 0.79 / 0.54 | 0.59 / 0.24 |
+| Captain America | 0.98 / 0.96 | 0.86 / 0.68 | 0.77 / 0.56 | 0.66 / 0.44 |
+| Spider-Man | 1.00 / 0.94 | 0.80 / 0.69 | 0.55 / 0.36 | 0.34 / 0.15 |
+| Batman | 1.00 / 0.96 | 0.85 / 0.68 | 0.67 / 0.45 | 0.45 / 0.25 |
+| **All** | 0.99 / 0.98 | 0.81 / 0.71 | 0.63 / 0.47 | 0.44 / 0.26 |
+
+**Findings:**
+- **The four kit-less legends are all too easy on Normal** (0.87–0.91 street) and all fight with generic moves: Wonder Woman with Heavy Hands / Dive Kick / Aegis / Static Snap / Quick Cut / Mind Spike; Hulk with Heavy Hands / Stand Firm / Grit Knit / Freight Train / Heavy Step / Ground Pound; Black Panther with Heavy Hands / Counter Tap / Quick Cut / Slow Second / Grit Knit; Wolverine with Grit Knit / Counter Tap / Feel It Coming / Quick Cut / Static Snap / Heavy Hands (three guards, no claws).
+- **Dustreach TK + lightning God Mode is the weakest life measured** (Hard 0.31 / 0.07, Legendary 0.13 / 0.02): five strikes and a street guard until 30.
+- **Story stays a walkover** (0.99 / 0.98 at 60%, 0.94 / 0.86 at 30%).
+- **Power mixing at 15 re-verified** on the Dustreach life: Skip to 15 from 13 lands at 15 in one skip, the lock lifts, mentor Vael arrives and steers to Perfect Blank (Invisibility + Shape-shifting); three braids possible, the braid works and the six stays at 6.
+- **Move-select re-verified** on Wonder Woman 31 vs Cheetah: tapping Quick Cut plays it (Even Trade, log line, Expose pill), no console errors, no overflow at 390×844.
+- **Arena purses:** `purse.test.ts` (payout into the active life, loss share, daily taper) passes on this branch.
+
+**After increments 2–8 (same 9 builds, same seeds and policy; street / boss at 60%):**
+
+| Build | Story | Normal | Hard | Legendary |
+|---|---|---|---|---|
+| Harbor street mystery | 1.00 / 1.00 | 0.74 / 0.79 | 0.47 / 0.67 | 0.23 / 0.42 |
+| Dustreach TK + lightning God Mode | 0.99 / 0.97 | 0.64 / 0.62 | 0.31 / 0.07 | 0.13 / 0.02 |
+| Wonder Woman (Amazon Arms) | 0.99 / 0.97 | 0.88 / 0.78 → **0.84 / 0.61** | 0.82 / 0.64 → **0.69 / 0.51** | 0.62 / 0.41 → **0.55 / 0.32** |
+| Hulk (Gamma Rage) | 1.00 / 0.92 | 0.91 / 0.72 → **0.81 / 0.51** | 0.79 / 0.53 → **0.67 / 0.31** | 0.64 / 0.32 → **0.44 / 0.27** |
+| Black Panther (Panther Habit) | 0.99 / 0.99 | 0.88 / 0.71 → **0.81 / 0.63** | 0.73 / 0.35 → **0.65 / 0.36** | 0.47 / 0.21 → **0.49 / 0.24** |
+| Wolverine (Claws & Healing Factor) | 1.00 / 0.96 | 0.87 / 0.73 → **0.78 / 0.58** | 0.79 / 0.54 → **0.65 / 0.40** | 0.59 / 0.24 → **0.40 / 0.23** |
+| Captain America (rogue edge) | 0.96 / 0.90 | 0.86 / 0.68 → **0.83 / 0.60** | 0.77 / 0.56 → **0.67 / 0.49** | 0.66 / 0.44 → **0.54 / 0.25** |
+| Spider-Man | 1.00 / 0.94 | 0.80 / 0.69 | 0.55 / 0.36 | 0.34 / 0.15 |
+| Batman | 1.00 / 0.96 | 0.85 / 0.68 | 0.67 / 0.45 | 0.45 / 0.25 |
+| **All** | 0.99 / 0.98 → 0.99 / 0.95 | 0.81 / 0.71 → **0.78 / 0.61** | 0.63 / 0.47 → **0.57 / 0.38** | 0.44 / 0.26 → **0.38 / 0.23** |
+
+Targets at 60%: Normal ~0.70–0.80 / ~0.55–0.60, Hard ~0.50 / 0.36, Legendary ~0.32 / 0.20. Bosses are now on target on every difficulty; legend street fights stay a notch high (0.78–0.85 Normal, 0.65–0.69 Hard) and the two non-legend lives sit below the legends.
+
+## Afternoon pass (2026-11-09 pm): playtest first — Story and Legendary, Neon legacy mystery, Crownbridge ice God Mode, Thor, Wolverine
+
+**Builds (new this pass):** a Neon Spire / *Cape in the closet* mystery (Vera Lux, wakes at 8), a Crownbridge / *Off-grid* **God Mode** custom life with **Ice Control + Force Field** (Ash Wren), and **Thor** and **Wolverine**, beside Spider-Man, Iron Man, Batman, Cap and Wonder Woman for reference. Aged to 50 on **all four difficulties** and now **three seeds per build** (seed 1 alone matches the am table exactly; seeds 2–3 show how much one life swings). 1,721 villain boards per difficulty, same tell-reading policy (`/workspace/playtest/pm1109/`). Phone screens at 390×844: Thor 20 vs Loki (Story), Crownbridge 30 vs Cinder Mallory (Legendary boss), Iron Man 26 vs Justin Hammer (Normal), the Skip to 15 summary and the mentor card at 15.
+
+**Baseline, 60% play, street / boss (3 seeds):**
+
+| Build | Story | Normal | Hard | Legendary |
+|---|---|---|---|---|
+| Spider-Man | 1.00 / 0.99 | **0.94 / 0.88** | 0.77 / 0.54 | 0.54 / 0.21 |
+| Iron Man | 1.00 / 0.92 | 0.79 / 0.64 | 0.59 / 0.42 | 0.39 / 0.20 |
+| Batman | 1.00 / 0.96 | 0.85 / 0.68 | 0.67 / 0.45 | 0.45 / 0.25 |
+| Captain America | 0.99 / 1.00 | 0.92 / 0.81 | 0.78 / 0.58 | 0.71 / 0.50 |
+| Wonder Woman | 0.99 / 0.99 | 0.88 / 0.78 | 0.82 / 0.64 | 0.62 / 0.41 |
+| Thor | 0.98 / 0.96 | **0.72 / 0.50** | **0.54 / 0.19** | **0.30 / 0.06** |
+| Wolverine | 1.00 / 1.00 | 0.87 / 0.73 | 0.79 / 0.54 | 0.59 / 0.24 |
+| Neon legacy mystery | 1.00 / 0.94 | 0.76 / 0.50 | 0.52 / 0.32 | 0.33 / 0.13 |
+| Crownbridge ice God Mode | 0.99 / 0.88 | 0.74 / 0.48 | 0.41 / 0.15 | **0.17 / 0.03** |
+| **All** | 0.99 / 0.95 | 0.83 / 0.66 | 0.64 / 0.42 | 0.44 / 0.20 |
+
+Seed 1 only (the am table's life): Iron Man Normal 0.59 / 0.38, Spider-Man 0.96 / 0.93, same as this morning.
+
+**Findings:**
+- **Story is a walkover.** 0.99 / 0.95 at 60% play and 0.94 / 0.82 even at 30% (target ~0.90 / 0.80 at 60%). Fine for a story mode, but bosses on Story never threaten. Logged; not changed this pass.
+- **Legends sit well above the generic lives.** Cap, Wonder Woman and Wolverine are 0.87–0.92 street on Normal while the two non-legend lives are 0.74–0.76. Spider-Man is the outlier (0.94 / 0.88).
+- **Iron Man's six is lopsided once his powers wake.** At 24–30 it is Pulse Shot, Dive Kick, Heavy Hands, Stand Firm, Slip, Haymaker: four strikes, one guard, one trick, all generic. That age band was his worst (0.66 street). Before 24 it is six street moves.
+- **Thor also fights generically and is the weakest legend:** at 20 vs Loki his six is Slip, Heavy Hands, Cloud Bolt, Squall Slap, Thunder Clap, Brace (four strikes, a street guard, a street trick, no Mjolnir). Hard 0.54 / 0.19, Legendary 0.30 / 0.06.
+- **Crownbridge ice God Mode is the hardest life measured** (Legendary 0.17 / 0.03): strikes-heavy six (Frost Jab, Spark Jab, Pulse Shot, Squall Slap + Dome + Quick Cut).
+- **Power mixing at 15 re-verified.** Skip to 15 from 13 takes 3–8 skips (it stops for cases), lands on Jan at 15 with "A mentor finds you" on the summary; the mixing lock lifts and the mentor card shows in Powers. Fire + Speed God Mode: the mentor steers to Light Speed first and the braid works; ice + speed braids Absolute Zero Dash. The Neon mystery (Regeneration only at 15) has nothing to braid yet and the mentor points at a recipe instead, which is right.
+- **Move-select re-verified** on the Iron Man 26 save: tapping Stand Firm plays it (Ward pill, combo pip, log line), no console errors, no horizontal overflow at 390×844.
+
+## Morning pass (2026-11-09 am): playtest first — Spider-Man, Iron Man, Hood mystery, Flash
+
+**Builds (new this pass):** **Spider-Man** and **Iron Man** God Mode presets, a Hood / foster mystery (wakes at 15), and Flash again for the life-sim check. Aged to 50, seed 1, Normal and Hard; 263 villain boards per difficulty. Same tell-reading policy as the pm pass (`/workspace/playtest/am1109/`). Phone screens at 390×844: Iron Man 30 vs Whiplash (Hard boss), Spider-Man 33 vs Venom (Hard boss), Hood 18 vs Afterimage (Normal).
+
+| Build | Normal perfect | Normal 60% | Hard perfect | Hard 60% |
+|---|---|---|---|---|
+| Spider-Man | 0.99 / 0.98 | **0.96 / 0.93** | 1.00 / 0.97 | 0.74 / 0.55 |
+| Iron Man | 0.94 / 0.79 | **0.59 / 0.38** | 0.82 / 0.52 | 0.44 / 0.19 |
+| Hood mystery | 0.96 / 0.86 | 0.74 / 0.42 | 0.63 / 0.89 | 0.35 / 0.33 |
+| Flash | 0.84 / 0.96 | 0.56 / 0.63 | 0.79 / 0.98 | 0.50 / 0.56 |
+
+(street / boss; boss n = 3–8 per build, so noisy.)
+
+**Findings:**
+- **Villains look unfinished next to the heroes.** Every duel puts a painted hero card (Iron Man, Spider-Man) beside a flat vector villain bust (Whiplash, Venom). The vector cards were always the stand-in for painted art (user request 4); an image generator is now available. Biggest visual gap this pass.
+- **Iron Man doesn't fight like Iron Man.** Until his powers wake at 24 his six is street moves; at 30 against Whiplash it is Pulse Shot, Dive Kick, Heavy Hands, Stand Firm, Slip, Haymaker. No repulsors, no Unibeam, no armour, and four of six are strikes. He is also the weakest legend measured (Normal 60% 0.59 / 0.38). Same gap Batman had before his belt.
+- **Spider-Man is too easy on Normal** (0.96 / 0.93 at 60% play, target ~0.70 / 0.55): three guards (Counter Tap, Stand Firm, Slow Second at 13 power) from his senses + strength + speed mix, and no webs in his six either.
+- **Hood mystery** reads fine at 390×844; no overflow or console errors on any of the three saves.
+
+## Night pass (2026-11-08): short check
+
+Re-opened the pm Hulk 35 (Red Hulk boss) and Batman 27 (Joker boss) Hard saves at 390×844 after the legend-standee change: both heroes now stand as painted cards, no overflow or console errors (`/workspace/playtest/night1108/`). Hero art loads lazily, so the first ~1s of a duel can still show the intro card only. Balance numbers unchanged from the pm table (no engine change this pass).
+
+## Afternoon pass (2026-11-08 pm): playtest first — Hard lives, Batman, Hulk, Crownbridge, Metro
+
+**Builds (new this pass):** **Batman** and **Hulk** God Mode presets, a Crownbridge / wealthy mystery (Ines Varga) and a Metro City / rural mystery (Cal Brody). Aged to 60, seed 1, all four difficulties; 349 villain boards per difficulty (15 case bosses). Same tell-reading policy as the am pass (`/workspace/playtest/pm1108/`). Phone screens at 390×844 on **Hard**: Batman 27 vs The Joker (boss), Hulk 35 vs Red Hulk (boss), Crownbridge 19 vs Saltwidow (`/workspace/playtest/pm1108/pt/`).
+
+**Baseline, street / boss:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random | Target @60% |
+|---|---|---|---|---|---|
+| Story | 1.00 / 1.00 | 0.99 / 0.97 | 0.94 / 0.83 | 0.79 / 0.53 | ~0.90 / 0.80 |
+| Normal | 0.99 / 0.92 | 0.81 / 0.66 | 0.56 / 0.32 | 0.23 / 0.12 | ~0.70 / 0.55 |
+| Hard | 1.00 / 0.93 | **0.75** / 0.49 | 0.44 / 0.21 | 0.15 / 0.04 | ~0.50 / 0.35 |
+| Legendary | 0.99 / 0.78 | **0.56** / 0.28 | 0.24 / 0.14 | 0.07 / 0.02 | ~0.30 / 0.18 |
+
+By build at Hard 60% (street / boss): Batman 0.86 / 0.64, Hulk 0.81 / 0.40, Metro 0.75 / 0.58, Crownbridge 0.64 / 0.21.
+
+**Findings:**
+- **Batman fights with six street moves for his whole life.** He has no powers, so his six is Haymaker / Slip / Brace / Shove / Feint / Cover Up from 8 to 60: no gadgets, no growth beyond power level, no Ultimate, nothing that says Batman. The Joker at 27 is fought with "Haymaker". The Arena Batman already has a Batarang / Smoke Pellet / Explosive Gel kit. Biggest gap found this pass.
+- **Hard and Legendary are too soft on street fights.** At 60% play Hard street is 0.75 (target ~0.50) and Legendary 0.56 (target ~0.30); the only difference from Normal is ~10% more HP and damage, so a street thug on Hard plays exactly like one on Normal. Bosses are close to target (they have gimmicks). Night's 717-board pool says the same (Hard 0.68, Legendary 0.54).
+- **Legends look like civilians on the duel stage.** Batman and Hulk are drawn as the generic figure (Hulk at 35 in glasses and a jacket) facing a painted villain card. Logged for presentation.
+- **Regen hint trap seen live:** Hulk 35 vs Red Hulk (regen) has one trick in his six (Ground Pound, cd 1, also his Ultimate), and the strip says "A trick move stalls it".
+- **Crownbridge mystery** (throne · arcane +10%) reads fine at 390×844; no overflow, no console errors on any of the three saves. Move cards, ANSWER tags and status pills fit.
+- **Mystery power count:** both mystery lives own 18 powers by 60 (Gen 0–2 mixes). Not a battle issue; noted for the grind check.
+
+**After increments 2–3 (13 builds to 55, 1,008 villain boards per difficulty, street / boss):**
+
+| Difficulty | Perfect | 60% play | 30% play | Random | Target @60% |
+|---|---|---|---|---|---|
+| Story | 1.00 / 1.00 | 0.97 / 0.96 | 0.89 / 0.81 | 0.78 / 0.65 | ~0.90 / 0.80 |
+| Normal | 0.98 / 0.94 | 0.76 / 0.56 | 0.53 / 0.35 | 0.28 / 0.15 | ~0.70 / 0.55 |
+| Hard | 0.94 / 0.84 | **0.51 / 0.36** | 0.29 / 0.16 | 0.10 / 0.05 | ~0.50 / 0.35 |
+| Legendary | 0.79 / 0.70 | **0.32 / 0.20** | 0.17 / 0.07 | 0.04 / 0.01 | ~0.30 / 0.18 |
+
+(Same pool before the change: Hard 0.65 / 0.45, Legendary 0.48 / 0.28.) Policy now answers tells against healers too, since the regen hint changed.
+- **Hard 60% street by build:** Wonder Woman 0.75, Cap 0.70, Black Panther 0.64, Batman 0.62 (belt), Hulk 0.57, Stacks 0.55, NYC 0.47, Neon 0.45, Flash 0.44, Metro 0.44, Harbor 0.36, Crownbridge 0.32, Dustreach 0.29. Wide spread; mystery lives suffer most (logged).
+- **Batman's belt** on the phone: Two-Face at 30 (Hard) with Keysi Guard / Batarang / Smoke Pellet / Grapnel Swing / Armored Cape / Explosive Gel (ULT); Moves shelf shows the real picker, 6/6 (`shots/pm1108-batman-belt-*.png`).
+- **Street twist** on the phone: Metro 22 (Hard) vs Gutter Saint: Knit PHASE 2 banner "They heal each turn. Win edges to stop it." and the strip "Heals each turn · a won edge stops it, a trick stalls 2" fit at 390×844; no overflow or console errors (`shots/pm1108-hard-street-twist-*.png`).
+
+## Morning pass (2026-11-08 am): battle Stage 4 — playtest first
+
+**Builds (new this pass):** NYC / foster-care mystery (Jo Reyes; wakes at 15), Stacks / lab-program God Mode **elasticity + super strength** (Theo Kade), and **Captain America**. Aged to 45, seed 1, all four difficulties; 178 villain boards per difficulty (only 2 were case bosses: Slipstream for Stacks, Red Skull for Cap). Replayed with the same tell-reading policy as the night pass (`/workspace/playtest/am1108/`).
+
+**Baseline (before this pass), street / boss:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random |
+|---|---|---|---|---|
+| Story | 1.00 / 1.00 | 0.98 / 1.00 | 0.93 / 0.88 | 0.79 / 0.67 |
+| Normal | 0.99 / 0.96 | 0.84 / 0.75 | 0.62 / 0.33 | 0.36 / 0.00 |
+| Hard | 0.98 / 1.00 | 0.74 / 0.50 | 0.46 / 0.04 | 0.23 / 0.00 |
+| Legendary | 0.95 / 0.71 | 0.57 / 0.25 | 0.30 / 0.00 | 0.13 / 0.00 |
+
+(Boss column is n=2 here, so it is noise. Night's 717-board pool stays the reference for bosses.) Normal 60% street by build: Cap 0.88, Stacks 0.86, NYC foster 0.79. Cap's fights are short (4.7 turns): his six at 34–35 is four guards, one strike, one trick, and Holy Hull hits for 19.
+
+**Findings:**
+- **Bug: a Charge boss charged every turn once it started.** After the first charged hit the countdown sat at 0, so Crossbones / Bane / Zod / Kraven / Whiplash / Ares / Surtur / Klaw (and strength, blast and lightning bosses) threw the charged hit every turn for the rest of the fight, while the hint said "every third turn". Seen on the phone: Crossbones at 34 showed "Charging!" with all three pips lit four turns running. A tell-reader just guarded every turn, so it made the fight easier, not harder (lab: Bane gimmick on 717 real Normal boards, perfect play 0.99, 60% play 0.64). **Fixed in increment 1:** charge comes on turn 2 after phase 2 starts, then every third turn (perfect 0.95, 60% 0.61, 30% 0.37; 1.0 charged hit a fight instead of 2.0).
+- **Move-select still works** on the NYC, Stacks and Cap saves: cards tap, ANSWER / status / ULT tags show, no console errors, no horizontal overflow at 390×844.
+- **UI nit:** on a 3-energy, cooldown-1 guard card (Holy Hull) the ANSWER tag is clipped at the right edge. Cosmetic; left for a later pass.
+- **Arena (night rules):** roster spread 13.1 pts. Bottom three: Abomination 0.45, Cheetah 0.45, **Flash 0.44**. Pro AI vs the ladder stand-in 0.43 / 0.32 at perfect / 60%.
+- Screens before: `/workspace/superlife-screens/1108am/before/` (NYC 24 vs The Auditor, Stacks 28, Cap 35 vs Winter Soldier, Cap 34 vs Crossbones mid-charge).
+
+**After increments 1–4:**
+- **Charge (inc 1–2):** Bane's gimmick on 717 real Normal boards: perfect 0.95, 60% 0.63, 30% 0.39 (Hard 0.97 / 0.55 / 0.25). With the interrupt taken whenever offered, a perfect player gets one in 11% of charge fights (Hard 14%); win rates don't move. Phone: Crossbones with Momentum 4/5 shows INTERRUPT READY, "Guard to brace, or Strike to interrupt (−1 momentum)", an Interrupt tag on Heavy Hands, and the INTERRUPT beat (`1108am/inc2/`).
+- **Phase 3 (inc 3):** real lives hit it where they should: Iron Man's Ultron at 42 has none, at 63 has Learning Algorithm; Cap's Red Skull at 23 has none, at 63 and 71 has Cosmic Cube; Thor's Loki at 67 has Jotun Ice. Lab at Normal 60% (before → after): Goblin 0.62 → 0.58, Joker 0.48 → 0.51, Ultron 0.33 → 0.32, Maestro 0.61 → 0.61, Zod 0.63 → 0.56, Ares 0.63 → 0.59, Red Skull 0.62 → 0.59, Loki 0.48 → 0.40, Klaw 0.63 → 0.51, Deathstrike 0.11 → 0.13, Reverse-Flash 0.62 → 0.63.
+- **Regen hint trap (found in that lab):** obeying "a trick move stalls it" every turn drops regen bosses (Deathstrike, Sabretooth, Vulture) to 0.15 at perfect play against 0.90 if you just answer tells. Logged in BACKLOG for the owner.
+- **Regroup (inc 3):** after a boss loss the case file shows "Regrouping after the loss. Cinder Mallory again next month." and the step is locked; next month it opens (`1108am/inc3/nyc-regroup-cases.png`).
+- **Arena (inc 4):** Flash 0.438 → 0.488; spread 11.9.
+- **Life-sim re-sim after all five increments (street / boss, tell-reading policy):** night's 717-board pool (29 bosses): Story 0.97 / 0.97, **Normal 0.74 / 0.55**, Hard 0.68 / 0.51, Legendary 0.54 / 0.31 at 60% play; perfect 1.00 / 1.00, 0.96 / 0.88, 0.96 / 0.86, 0.92 / 0.76. Unchanged from the night pass within noise (those boards are under 55, so Phase 3 doesn't appear in them). This pass's 178 boards: Normal 60% street 0.84.
+- **Move-select / cards:** the ANSWER pill on Holy Hull no longer clips (`1108am/inc5/`).
+
+## Night pass (2026-11-07 night): battle Stage 3 — playtest first
+
+**Builds (different from am/pm):** Harbor Bay / military mystery (Mara Quinn), Dustreach / celebrity mystery (Rex Vale), Neon Spire God Mode fire-control + super-speed (Sable Ortiz), Black Panther, Wonder Woman, Hulk, Flash. (Superman added to the after-boards for the coverage check.) Aged to 55, seed 1, all four difficulties. Harness: `/workspace/playtest/night1107/`.
+
+**Baseline (before night changes), street / boss at each skill:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random |
+|---|---|---|---|---|
+| Story | 1.00 / 0.99 | 0.97 / 0.90 | 0.87 / 0.76 | 0.69 / 0.44 |
+| Normal | 0.87 / 0.81 | 0.61 / 0.46 | 0.35 / 0.19 | 0.15 / 0.03 |
+| Hard | 0.84 / 0.72 | 0.50 / 0.35 | 0.27 / 0.15 | 0.10 / 0.00 |
+| Legendary | 0.71 / 0.45 | 0.34 / 0.16 | 0.16 / 0.02 | 0.02 / 0.00 |
+
+**Findings before Increment 1:**
+- Superman @19 known styles strike 3 / guard 0 / trick 2; @31 still no guard unlocked in the early kit (Stand Firm sat at mastery 3). Dustreach celebrity six was five strikes + one trick. Harbor military mystery likewise had no guard in the six.
+- fillLoadout already preferred missing styles on *empty* slots, but a full six of strikes never got a street guard, and late-unlocked guards stayed on the bench.
+- Phone before shots: `/workspace/superlife-screens/1107night-before/` (Harbor/Neon/BP/WW/Hulk/Flash duels + title/create). Energy still sits at 10/10 on openers — Stage 3 Ultimates still needed.
+
+**After Increment 1 (coverage), same policy, boards now include Superman:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random | Avg turns (60%) |
+|---|---|---|---|---|---|
+| Story | 1.00 / 1.00 | 0.97 / 0.97 | 0.87 / 0.81 | 0.73 / 0.55 | ~4.9 |
+| Normal | 0.96 / 0.88 | 0.74 / 0.54 | 0.47 / 0.31 | 0.20 / 0.10 | ~5.7 |
+| Hard | 0.96 / 0.86 | 0.68 / 0.50 | 0.37 / 0.22 | 0.12 / 0.03 | ~5.8 |
+| Legendary | 0.92 / 0.74 | 0.53 / 0.31 | 0.24 / 0.11 | 0.05 / 0.01 | ~5.8 |
+
+- Per-build Normal 60%: Wonder Woman 0.93, Black Panther 0.87, Hulk 0.87, Neon fire+speed 0.87, Harbor 0.79, Superman 0.63, Flash 0.56, Dustreach 0.54. Superman is no longer the floor.
+- Probe: Superman @19 loadout now includes Stand Firm (guard); Harbor/Dustreach auto-fill starts with Dome (guard).
+- Screenshots after: `/workspace/superlife-screens/1107night-inc1/`.
+
+**After Increment 2 (Ultimates + Cheetah + stage chips):**
+- Normal 60%: street 0.74 / boss 0.55. Arena roster spread 13.1 pts; Cheetah 0.45 (was 0.41); Flash 0.44 is the new floor.
+- Harbor Bay duel shows `pier · ice +10%` under the foe name. Wonder Woman vs Cheetah still plays clean with Aegis + Expose tags.
+- Screenshots: `/workspace/superlife-screens/1107night-inc2/`.
+
+
+
+## Afternoon pass (2026-11-07 pm): battle Stage 2 — playtest first
+
+**Life sims (builds not used in recent passes), aged to 60, seed 1, every difficulty:**
+- **Crownbridge / wealthy** mystery (reluctant + pragmatic): wakes at 8, 18 powers by 60, mentor Kessler.
+- **Metro City / supportive** God Mode **lightning control + force field** (loud + team): 18 powers, mentor Skyline.
+- **Spider-Man**, **Batman** (no powers, by vow) and **Superman** legends: canon wakes 15 / — / 13, mentors Ben Parker / Alfred / Jonathan Kent.
+- 450 villain duel boards per difficulty were dumped from those lives and replayed with the tell-reading policy (`/workspace/playtest/pm1107/`).
+
+**Baseline (before this pass), win rate vs street foes / case bosses:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random |
+|---|---|---|---|---|
+| Story | 1.00 / 0.97 | 0.94 / 0.93 | 0.86 / 0.82 | 0.71 / 0.74 |
+| Normal | 0.94 / 0.89 | 0.66 / 0.64 | 0.50 / 0.49 | 0.27 / 0.25 |
+| Hard | 0.81 / 0.71 | 0.49 / 0.50 | 0.35 / 0.31 | 0.16 / 0.13 |
+| Legendary | 0.54 / 0.55 | 0.30 / 0.36 | 0.18 / 0.19 | 0.06 / 0.06 |
+
+**Findings:**
+- **Fights are over in 4–5 turns** (average 4.4–5.1). Momentum needs 3 edge wins to Burst, so most fights end before a Burst can happen, and there is no room for statuses or combos to matter. Stage 2 needs a little more runway (target 6–8 turns, still under a minute).
+- **Bosses are no harder than street foes** (Normal 60%: 0.66 street vs 0.64 boss). DESIGN §17 wants bosses a clear step up.
+- **Build spread is wider than the difficulty spread.** At Normal / 60%: Batman 0.92, Spider-Man 0.88, Metro God Mode 0.68, Crownbridge mystery 0.54 (bosses 0.29), Superman 0.39. The weak lives have lopsided sixes: Superman's default six is five strikes and one guard; the Crownbridge hero at 22 has no guard move at all, so a strike tell has no answer but a breath.
+- **Phone (390×844):** on a gimmick fight the move grid squeezed its rows to fit, so the bottom line of each move card was cut off (overflow-hidden cards in a fixed-height grid shrink to 0 min-height). Fixed in increment 1.
+- Duel at Legendary vs The Auditor (Crownbridge, 22) and Superman vs Lex Luthor (Warsuit armor phase) both played clean, 0 console errors.
+
+**Screenshots (before):** `/workspace/superlife-screens/1107pm-before/` (`crown-leg-b.png`, `superman.png`).
+
+**After increment 2 (statuses, combos, habit reading, HP runway, retune), same 450 boards per difficulty, street / boss:**
+
+| Difficulty | Perfect | 60% play | 30% play | Random | Avg turns (60%) |
+|---|---|---|---|---|---|
+| Story | 1.00 / 0.98 | 0.96 / 0.88 | 0.85 / 0.79 | 0.65 / 0.51 | 5.5 |
+| Normal | 0.88 / 0.70 | 0.61 / 0.53 | 0.42 / 0.33 | 0.20 / 0.15 | 6.0 |
+| Hard | 0.80 / 0.61 | 0.49 / 0.39 | 0.30 / 0.22 | 0.13 / 0.06 | 6.1 |
+| Legendary | 0.54 / 0.50 | 0.29 / 0.20 | 0.15 / 0.12 | 0.05 / 0.00 | 5.9 |
+
+- "Perfect" answers every tell and, on Hard and up, breaks a habit when the bait warning shows. Boss rows are 18 bosses × 12 seeds each, so ±0.08.
+- Per fight at Normal / 60%: 0.74 Bursts, 0.27 Finishers (0.42 for perfect play), 0.19 habit baits, ~1.5 statuses landed (Expose, Ward, Burn and Shock most common).
+- Bosses are now a clear step above street foes (Normal 60%: 0.61 street vs 0.53 boss; it was 0.66 vs 0.64).
+- Build spread is still wide (Spider-Man 0.95, Superman 0.44 at Normal / 60%) because of lopsided default sixes; see BACKLOG.
+- Phone: Metro God Mode vs Glassjaw (Hard) and Crownbridge vs The Auditor (Legendary) played through the Answer hints at 390×844. Expose/Ward pills, the combo pips, the habit warning and the BURST beat all read cleanly; 0 console errors. Screenshots: `/workspace/superlife-screens/1107pm-inc2/` (`crown-t6.png` BURST, `metro-5.png` habit warning).
+
+### Arena after increment 3 (shared rules)
+
+Pro AI vs the ladder stand-in, all bouts, 29 fighters (`/workspace/playtest/pm1107/ladder.ts`):
+
+| | Rookie | Pro | Legend |
+|---|---|---|---|
+| Perfect play, before → after | 0.81 → 0.77 | 0.46 → 0.44 | 0.03 → 0.01 |
+| 60% play, before → after | 0.63 → 0.63 | 0.35 → 0.33 | 0.03 → 0.02 |
+
+- Turns per bout 8.1 → 7.3. Per bout: ~1 Burst, ~0.4 Finishers, ~3.4 statuses.
+- Roster spread 9.5 → 16.1 points (limit 22). Top Thor 0.57, Loki/Ultron 0.55; bottom Cheetah 0.41, Venom 0.45.
+- Browser at 390×844 (Superman / Hulk / Thor / Wonder Woman vs Pro AI, all 3 rounds): Shock, Expose and Ward pills showed on the cards, "Shocked · no fakes" replaced the tell picker, combo pips filled, and the purse paid out at the end. No console errors. The first pass had the tell picker overflowing beside the new Momentum pips and the combo pips covering fighter names; both were fixed before the push.
+
+## Morning pass (2026-11-07 am): battle Stage 1 — difficulty + Momentum
+
+**Life sims (new combos, not used in recent passes):**
+- Builds: **Neon Spire / alien** mystery (secret + idealistic), **Hood / tragic** God Mode ice+telepathy (loud + vengeful), plus **Iron Man**, **Wolverine** and **Thor** legends.
+- Seeds 11/22/33 for the two custom builds; seed 44 for legends. Aged to 35–40.
+- Mystery wakes at **8–10** (energy-projection, super-strength, flight). Mentors: Vael (alien/Neon), Nora Vance (tragic/Hood), Yinsen / Ogun / Odin for legends.
+- Power counts at 35–40: Neon mystery 10–12, Hood own 10–11, Iron Man 5 (book-capped), Wolverine 9, Thor 8.
+- Chapter goals mid-life still soft on mood/mastery/fame — unchanged finding, not this pass's focus.
+
+**Battle Stage 1 balance (engine, case-boss board, 60% play, N=48):**
+| Difficulty | Win rate | Smart@Normal |
+|---|---|---|
+| Story | 0.94 | — |
+| Normal | 0.67 | 1.00 |
+| Hard | 0.29 | — |
+| Legendary | 0.10 | — |
+
+Normal is now clearly harder than the old baseline. Legendary is a wall for messy play, which matches the design target band. Tune lives in `src/game/difficulty.ts`.
+
+**UI (390×844):** difficulty picker on mystery/God create footer and legend Begin; duel shows Momentum diamonds + Burst-ready chip; HP bars use a delayed ghost trail. **0 console errors.**
+
+**Screenshots:** `/workspace/superlife-screens/1107am-01-title.png` … `1107am-10-legend-difficulty.png` (create Hard pick, first month, duel Momentum HUD, legend picker).
+
+
 ## Morning pass (2026-11-03 am): moves re-check, Arena vs Pro with a saved life, villain art
 
 **Life sims (3 seeds each, new combos):**

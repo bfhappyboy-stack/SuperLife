@@ -6,11 +6,14 @@ import type React from "react";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { buzz, RivalName } from "@/components/game/arena-context";
 import {
-  Activity, ArrowLeft, Bot, Bug, Check, CloudFog, CloudLightning, Cpu, Crown, Dna, Drama, EyeOff, Flame, Gauge, HeartPulse,
+  Activity, ArrowLeft, Bot, Bug, Check, CloudFog, Coins, CloudLightning, Cpu, Crown, Dna, Drama, EyeOff, Flame, Gauge, HeartPulse,
   Info, Lightbulb, Lock, Medal, Radar, RefreshCcw, RotateCcw, Shield, ShieldCheck, ShieldHalf, Siren, Sparkles, Swords, Trophy, Users, Wifi, Zap,
 } from "lucide-react";
 import "./arena.css";
 import { Figure, type Pose } from "@/components/game/Figure";
+import { ComboPips, StatusIcon, StatusPills, StrikeBanner } from "@/components/game/BattleHud";
+import { hasStatus, INTERRUPT_MIN, STATUSES, statusOfMove } from "@/game/battle";
+import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { VillainArt, type VillainCrop } from "@/components/game/VillainArt";
 import { hasVillainArt } from "@/components/game/villainArt.data";
 import { useArt } from "@/components/game/Scene";
@@ -27,6 +30,8 @@ import { fighterFromLife } from "@/game/arena.lives";
 import { listSlots, loadSlot } from "@/game/save";
 import { PRESETS } from "@/game/presets";
 import { useGame } from "@/game/store";
+import { localDay, purseKey, PURSE_BASE, PURSE_DAILY, type PurseQuote } from "@/game/arena.purse";
+import { money } from "@/game/format";
 import type { DuelMove, MoveStyle } from "@/game/types";
 import { OnlineArena } from "@/components/game/OnlineArena";
 
@@ -139,7 +144,7 @@ export function ArenaScreen() {
   if (view === "reveal") return <Reveal match={saved.match} onGo={() => set(saved.match, "intro")} />;
   if (view === "intro") return <RoundIntro match={saved.match} onGo={() => set(saved.match, "battle")} />;
   if (view === "battle") return <Battle key={`r${saved.match.round}`} match={saved.match} level={saved.level} onMatch={(m) => set(m, "battle")} onRoundDone={(m) => set(m, m.stage === "done" ? "results" : "intro")} onQuit={quit} />;
-  return <Results match={saved.match} onRematch={start} onHub={() => update(null)} onTitle={() => { update(null); toTitle(); }} />;
+  return <Results match={saved.match} purse={{ level: saved.level }} onRematch={start} onHub={() => update(null)} onTitle={() => { update(null); toTitle(); }} />;
 }
 
 // ─── Art ──────────────────────────────────────────────────────────────────────────
@@ -256,7 +261,7 @@ function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiL
           <button type="button" onClick={onStart} className="btn btn-gold mt-3 min-h-14 w-full text-lg">
             <Swords className="size-5" aria-hidden /> Start the draft
           </button>
-          
+          <PurseHint lives={lives} level={level} />
         </section>
 
         <button type="button" onClick={onOnline} className="arena-online-card card-glass mt-3 flex w-full items-center gap-3 px-4 py-3 text-left">
@@ -287,6 +292,24 @@ function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiL
         </section>
       </div>
     </main>
+  );
+}
+
+/** Hub line: which life can earn purses, and what a win pays at this skill. */
+function PurseHint({ lives, level }: { lives: ArenaFighter[]; level: AiLevel }) {
+  const activeSlot = useGame((s) => s.activeSlot);
+  const slot = activeSlot();
+  const mine = lives.find((f) => f.id === `life-${slot}`);
+  if (!mine) return null;
+  const junior = (mine.life?.age ?? 18) < 18 ? 0.5 : 1;
+  const win = Math.round((PURSE_BASE[level] * junior) / 25) * 25;
+  return (
+    <p className="mt-2.5 flex items-start gap-1.5 text-xs font-semibold text-fg/85">
+      <Coins className="mt-px size-3.5 shrink-0 text-gold" aria-hidden />
+      <span>
+        Draft <b className="text-gold">{mine.name}</b> and the match pays their life: up to <b className="text-fg">{money(win)}</b> a win here. Purses shrink after a few a day.
+      </span>
+    </p>
   );
 }
 
@@ -677,6 +700,8 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
   const [ko, setKo] = useState<null | "ko" | "time" | "double">(bout.done ? (bout.end ?? "ko") : null);
   const [intro, setIntro] = useState(bout.turn === 0);
   const [quitAsk, setQuitAsk] = useState(false);
+  const [beatFx, setBeatFx] = useState<{ key: number; word: string; sub: string; color: string } | null>(null);
+  const [tags, setTags] = useState<{ key: number; on: Side; text: string; color: string }[]>([]);
   const timers = useRef<number[]>([]);
   const beat = useRef(0);
   const city = useArt(PRESETS.find((p) => p.id === fb.world)?.cityId ?? "");
@@ -736,7 +761,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
   function play(move: DuelMove) {
     if (busy || hud.done) return;
     const key = move === BREATH ? "breath" : keyOf(move);
-    const f = iLead ? feint : null;
+    const f = iLead && !hasStatus(me.status, "shock") ? feint : null;
     const no = arenaRefusal(me, move, f);
     if (no) {
       setLine(no);
@@ -776,7 +801,32 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
     parts.push(cap(log.edge === null ? `${mname(0)} meets ${mname(1)}.` : `${mname(log.edge)} beats ${mname((1 - log.edge) as Side)}.`));
     parts.push(`You deal ${log.dealt[0]}, take ${log.dealt[1] + log.chip[0]}.`);
     if (log.notes.length) parts.push(log.notes.join(". ") + ".");
+    for (const a of log.applied ?? []) parts.push(a.id === "ward" ? `${name(a.on)} is Warded.` : `${STATUSES[a.id].title} on ${a.on === 0 ? "you" : name(a.on)}.`);
+    const burn = log.burn ?? [0, 0];
+    if (burn[0] || burn[1]) parts.push(`Burn${burn[1] ? ` −${burn[1]} ${name(1)}` : ""}${burn[0] ? ` −${burn[0]} you` : ""}.`);
     setLine(parts.join(" "));
+    // Cinematic beat: Burst or Finisher (yours first if both happen).
+    const fin = log.finisher ?? [0, 0];
+    const bur = log.burst ?? [false, false];
+    const cutBy = log.interrupt ?? null;
+    const who = ([0, 1] as Side[]).find((s) => fin[s] > 0) ?? ([0, 1] as Side[]).find((s) => bur[s]) ?? (cutBy === null ? undefined : cutBy);
+    if (who !== undefined) {
+      const key = ++beat.current;
+      const mine = who === 0;
+      later((who === lead ? T.hit1 : T.hit2) - 60, () => {
+        setBeatFx(fin[who] > 0 ? { key, word: "FINISHER", sub: `${mine ? "Your" : `${name(who)}'s`} mix-up combo · +${fin[who]}`, color: mine ? "#ffcf4d" : "#ff5a4f" } : bur[who] ? { key, word: "BURST", sub: `${mine ? "You" : name(who)} · ×1.45`, color: mine ? "#ff7a3d" : "#ff5a4f" } : { key, word: "INTERRUPT", sub: `${mine ? "You cut" : `${name(who)} cuts`} off the charge`, color: mine ? "#4dd8ff" : "#ff5a4f" });
+        setQuake(key);
+        buzz(mine ? [30, 20, 60] : [60]);
+      });
+      later((who === lead ? T.hit1 : T.hit2) + 900, () => setBeatFx((x) => (x && x.key === key ? null : x)));
+    }
+    for (const a of log.applied ?? []) {
+      const key = ++beat.current;
+      const from = a.id === "ward" ? a.on : ((1 - a.on) as Side);
+      const at = (from === lead ? T.hit1 : T.hit2) + 80;
+      later(at, () => setTags((list) => [...list.slice(-2), { key, on: a.on, text: STATUSES[a.id].title.toUpperCase(), color: STATUSES[a.id].color }]));
+      later(at + 1100, () => setTags((list) => list.filter((t) => t.key !== key)));
+    }
     const step = (s: Side, at: number, hitAt: number) => {
       later(at, () => (mv[s] === BREATH ? setPoses((p) => (s === 0 ? ["guard", p[1]] : [p[0], "guard"])) : attack(s, el(s))));
       later(hitAt, () => {
@@ -837,6 +887,13 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
         <DuelCard f={fa} side={0} lunging={lunge?.side === 0 ? lunge.key : 0} pose={poses[0]} hitKey={impact?.on === 0 && impact.amount > 0 ? impact.key : 0} />
         <DuelCard f={fb} side={1} lunging={lunge?.side === 1 ? lunge.key : 0} pose={poses[1]} hitKey={impact?.on === 1 && impact.amount > 0 ? impact.key : 0} />
         {shot && <Projectile key={shot.key} element={shot.element} reverse={shot.from === 1} seed={shot.key} />}
+        <ComboPips chain={hud.fighters[0].combo} className="absolute bottom-11 left-1/2 z-[2] -translate-x-1/2" />
+        {tags.map((t) => (
+          <span key={t.key} className={`pointer-events-none absolute top-[50%] ${t.on === 1 ? "right-[7%]" : "left-[7%]"}`}>
+            <FloatNumber text={t.text} color={t.color} className={`!text-lg whitespace-nowrap ${t.on === 1 ? "right-0" : "left-0"}`} />
+          </span>
+        ))}
+        {beatFx && <StrikeBanner key={beatFx.key} word={beatFx.word} sub={beatFx.sub} color={beatFx.color} />}
         {impact && (
           <span key={impact.key} className={`pointer-events-none absolute top-[12%] h-[62%] w-[34%] ${impact.on === 1 ? "right-[4%]" : "left-[4%]"}`}>
             {impact.amount > 0 && <ElementBurst element={impact.element} size={impact.big ? 96 : 76} seed={impact.key} big={impact.big} />}
@@ -853,6 +910,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
               <span key={hud.turn} className="arena-tell anim-pop flex items-center gap-1.5 whitespace-nowrap" style={{ "--tc": rivalTell.charged ? "#ff3b30" : tellColor } as React.CSSProperties}>
                 <TellIcon className="size-3.5" style={{ color: tellColor }} aria-hidden />
                 {rivalTell.style ? `${fb.name} shows ${STYLE_NAME[rivalTell.style]}` : `${fb.name} hides the tell`}
+                {rivalTell.style && hasStatus(them.status, "shock") && <span className="text-[10px] text-[#ffe14d]">· true</span>}
                 {rivalTell.charged && <Siren className="size-3.5 text-cape" aria-hidden />}
               </span>
             ) : null}
@@ -873,7 +931,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
           ) : iLead ? (
             <>You lead. <span className="font-semibold opacity-70">{fb.name} sees your tell{fb.passive.kind !== "sense" ? feint ? " — and it's a lie" : "" : ", and Spider-Sense sees through feints"}.</span></>
           ) : rivalTell?.style ? (
-            <>{rivalTell.charged ? "A charged hit is coming. " : ""}They show {STYLE_NAME[rivalTell.style].toLowerCase()}. <span className="font-semibold opacity-70">{STYLE_NAME[answer!]} beats it{hud.feints[1] ? ` — they've feinted ${hud.feints[1]}×` : ""}.</span></>
+            <>{rivalTell.charged ? ((me.momentum ?? 0) >= INTERRUPT_MIN && rivalTell.style === "strike" ? "Charged hit! Strike to interrupt (−1 momentum). " : "A charged hit is coming. ") : ""}They show {STYLE_NAME[rivalTell.style].toLowerCase()}. <span className="font-semibold opacity-70">{STYLE_NAME[answer!]} beats it{hud.feints[1] ? ` — they've feinted ${hud.feints[1]}×` : ""}.</span></>
           ) : (
             <>You can't read them. <span className="font-semibold opacity-70">Pick your best odds.</span></>
           )}
@@ -882,12 +940,21 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
       </div>
 
       <div className="flex shrink-0 items-center justify-between gap-2">
-        <p className="t-label flex items-center gap-1 text-muted"><Zap className="size-3.5 text-gold" aria-hidden /> <span className="t-num text-fg">{me.energy}/{cap}</span></p>
-        {iLead && fb.passive.kind !== "sense" ? (
+        <div className="flex shrink-0 items-center gap-2">
+          <p className="t-label flex items-center gap-1 text-muted"><Zap className="size-3.5 text-gold" aria-hidden /> <span className="t-num text-fg">{me.energy}/{cap}</span></p>
+          <p className="t-label flex items-center gap-[3px] text-muted" role="meter" aria-label={`Momentum ${me.momentum ?? 0} of ${MOMENTUM_CAP}`} aria-valuenow={me.momentum ?? 0} aria-valuemin={0} aria-valuemax={MOMENTUM_CAP}>
+            <Flame className="size-3.5 text-[#ff7a3d]" aria-hidden />
+            {Array.from({ length: MOMENTUM_CAP }, (_, i) => <span key={i} className={`size-1.5 rounded-full transition-all duration-300 ${i < (me.momentum ?? 0) ? "bg-[#ff7a3d] shadow-[0_0_6px_#ff7a3d]" : "bg-panel-2"}`} />)}
+            {(me.momentum ?? 0) >= BURST_COST && !iLead && <span className="ml-0.5 rounded-full bg-[#ff7a3d]/25 px-1 text-[8px] font-extrabold text-[#ffb08a]">BURST</span>}
+          </p>
+        </div>
+        {iLead && fb.passive.kind !== "sense" && hasStatus(me.status, "shock") ? (
+          <p className="t-label flex items-center gap-1 text-[10px] text-[#ffe14d]"><Zap className="size-3" aria-hidden /> Shocked · no fakes</p>
+        ) : iLead && fb.passive.kind !== "sense" ? (
           <div role="radiogroup" aria-label="Your tell" className="flex items-center gap-1">
-            <span className="t-label text-[9px] text-muted">Tell</span>
+            <span className="sr-only">Tell</span>
             {([null, ...STYLES] as (MoveStyle | null)[]).map((s) => (
-              <button key={s ?? "true"} type="button" role="radio" aria-checked={feint === s} disabled={busy} onClick={() => setFeint(s)} className={`flex h-8 items-center gap-1 rounded-full border px-2 text-[11px] font-extrabold ${feint === s ? "border-gold bg-gold/20 text-gold" : "border-white/15 text-muted"}`}>
+              <button key={s ?? "true"} type="button" role="radio" aria-checked={feint === s} disabled={busy} onClick={() => setFeint(s)} className={`flex h-8 items-center gap-0.5 rounded-full border px-1.5 text-[11px] font-extrabold ${feint === s ? "border-gold bg-gold/20 text-gold" : "border-white/15 text-muted"}`}>
                 {s === null ? "True" : (() => { const I = STYLE_ICON[s]; return <><I className="size-3" style={{ color: HEX[s] }} aria-hidden />Fake</>; })()}
               </button>
             ))}
@@ -902,11 +969,13 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
       <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-1.5 overflow-y-auto">
         {moves.map((m) => {
           const cool = me.cool[keyOf(m)] ?? 0;
-          const extra = iLead ? feintCost(fa.id, feint, m) : 0;
+          const extra = iLead && !hasStatus(me.status, "shock") ? feintCost(fa.id, feint, m) : 0;
           const cost = (m.energy ?? 1) + extra;
           const blocked = cool > 0 || me.energy < cost;
           const isAnswer = !iLead && !!answer && m.style === answer;
           const fakeSame = iLead && feint === m.style;
+          const leaves = statusOfMove(m);
+          const burstHere = isAnswer && (me.momentum ?? 0) >= BURST_COST;
           return (
             <button key={keyOf(m)} type="button" aria-disabled={blocked || busy || roundOver || locked} onClick={() => play(m)} className={`card relative flex min-h-[4.25rem] flex-col gap-0.5 overflow-hidden px-2.5 py-1.5 text-left ${isAnswer && !blocked && !locked ? "!border-gold/80 shadow-[0_0_16px_-6px_var(--color-gold)]" : ""} ${blocked || locked ? "opacity-50" : ""}`}>
               <span className="absolute inset-y-0 left-0 w-1" style={{ background: HEX[m.style] }} />
@@ -920,7 +989,8 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
                 <span className="text-muted">{m.power}</span>
                 <span className={`flex items-center ${me.energy < cost ? "text-cape" : "text-gold"}`}><Zap className="size-3" aria-hidden />{cost}</span>
                 {m.kind && <span className="text-muted capitalize">{m.kind}</span>}
-                {isAnswer && !blocked && <span className="t-label rounded-full bg-gold px-1.5 py-px text-[8px] text-paper-ink">Answer</span>}
+                {isAnswer && !blocked && <span className="t-label rounded-full bg-gold px-1.5 py-px text-[8px] text-paper-ink">{burstHere ? "Answer · Burst" : "Answer"}</span>}
+                {leaves && <span className="flex items-center" title={`Wins the edge: ${STATUSES[leaves].title}`}><StatusIcon id={leaves} /></span>}
               </span>
               <span className="relative text-[10.5px] leading-snug text-muted">{cool > 0 ? `Cooling · ${cool}t` : me.energy < cost ? "Not enough energy" : fakeSame ? "Fake = same style (no bluff)" : m.blurb}</span>
             </button>
@@ -974,6 +1044,7 @@ function HpCard({ f, hp, max, lead, hot, extra, right = false }: { f: ArenaFight
           <Icon className="size-3 shrink-0" aria-label={f.passive.name} />
           <span className="truncate">{badges[0] ?? f.passive.name}</span>
         </p>
+        <StatusPills list={extra.status} right={right} />
       </div>
     </div>
   );
@@ -1071,7 +1142,7 @@ function RoundOver({ match, ko, onNext, onSkip, net }: { match: ArenaMatch; ko: 
 
 // ─── Results ──────────────────────────────────────────────────────────────────────
 
-export function Results({ match, onRematch, onHub, onTitle, note, footer }: { match: ArenaMatch; onRematch: () => void; onHub: () => void; onTitle: () => void; note?: React.ReactNode; footer?: React.ReactNode }) {
+export function Results({ match, onRematch, onHub, onTitle, note, footer, purse }: { match: ArenaMatch; onRematch: () => void; onHub: () => void; onTitle: () => void; note?: React.ReactNode; footer?: React.ReactNode; purse?: { level: AiLevel; online?: boolean } }) {
   const won = match.winner === 0;
   const played = !!match.orders[0] && !!match.orders[1];
   const [w0, w1] = roundsWon(match);
@@ -1088,6 +1159,7 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer }: { ma
           <span className="font-display text-5xl text-cape">{w1}</span>
         </div>
         {note}
+        {purse && <PurseLine match={match} level={purse.level} online={purse.online} />}
         <ol className="mt-5 flex flex-col gap-2">
           {(played ? [0, 1, 2] : []).map((r) => {
             const a = fighterOf(match.orders[0]![r]!);
@@ -1118,6 +1190,65 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer }: { ma
         </div>
       </div>}
     </main>
+  );
+}
+
+/** Purses already shown this session, so React re-renders (and Strict Mode) show the payout, not "already paid". */
+const PURSE_SHOWN = new Map<string, { quote: PurseQuote; name: string }>();
+
+/**
+ * Arena purse (owner decision 2026-11-03): if your active life fought on your team, the match pays into
+ * that life. Shows the payout, the daily diminishing returns, or a hint to draft your own hero.
+ */
+function PurseLine({ match, level, online }: { match: ArenaMatch; level: AiLevel; online?: boolean }) {
+  const activeSlot = useGame((s) => s.activeSlot);
+  const payArena = useGame((s) => s.payArena);
+  const slot = activeSlot();
+  const lifeId = slot ? `life-${slot}` : null;
+  const fought = !!lifeId && match.picks[0].includes(lifeId);
+  const inPool = !!lifeId && match.pool.includes(lifeId);
+  const key = purseKey(match.seed, match.picks[0]);
+  const [paid, setPaid] = useState<{ quote: PurseQuote; name: string } | null>(() => PURSE_SHOWN.get(key) ?? null);
+  useEffect(() => {
+    if (!fought || match.stage !== "done" || match.winner === null || PURSE_SHOWN.has(key)) return;
+    const [w0, w1] = roundsWon(match);
+    const rival = match.picks[1][0] ? fighterOf(match.picks[1][0]).name : "the AI";
+    const result = payArena({ level, won: match.winner === 0, rounds: [w0, w1], key, day: localDay(), online, opponent: online ? `a friend's ${rival}` : `${rival} and co. (${level === "rookie" ? "Rookie" : level === "pro" ? "Pro" : "Legend"} AI)` });
+    if (!result) return;
+    PURSE_SHOWN.set(key, result);
+    setPaid(result);
+  }, [fought, key, level, match, online, payArena]);
+  if (!lifeId) return null;
+  if (!fought) {
+    if (!inPool) return null;
+    const name = fighterOf(lifeId).name;
+    return (
+      <p className="anim-rise mx-auto mt-3 flex w-fit max-w-full items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-center text-xs font-bold text-muted">
+        <Coins className="size-3.5 shrink-0 text-gold" aria-hidden /> Draft {name} to earn purses for that life.
+      </p>
+    );
+  }
+  if (!paid) return null;
+  const { quote, name } = paid;
+  const first = name.split(" ")[0] ?? name;
+  const line = quote.already
+    ? `Purse already paid into ${first}'s life.`
+    : quote.capped
+      ? `Purse office closed for today. ${first} fought for glory.`
+      : `Paid into ${first}'s life${match.winner === 0 ? "" : " · appearance fee"}`;
+  const sub = quote.already || quote.capped ? "Purses reset tomorrow." : quote.nth >= PURSE_DAILY.length ? "Last purse today." : quote.rate < 1 ? `Purse ${quote.nth} today · ${Math.round(quote.rate * 100)}% rate` : `Purse ${quote.nth} of ${PURSE_DAILY.length} today`;
+  return (
+    <section className="anim-pop mx-auto mt-4 flex w-full max-w-[22rem] items-center gap-3 rounded-2xl border border-gold/60 bg-[linear-gradient(135deg,rgba(230,179,77,0.22),rgba(230,179,77,0.06))] px-3 py-2.5 shadow-[0_0_24px_rgba(230,179,77,0.2)]" aria-label="Arena purse">
+      <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gold/25 text-gold shadow-[0_0_14px_rgba(230,179,77,0.45)]">
+        <Coins className="size-6" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="t-label block text-[10px] text-gold">ARENA PURSE</span>
+        {quote.amount > 0 && <span className="t-num block text-2xl leading-none font-black text-fg">+{money(quote.amount)}</span>}
+        <span className="block truncate text-xs font-bold text-fg/85">{line}</span>
+        <span className="block text-[11px] font-semibold text-muted">{sub}</span>
+      </span>
+    </section>
   );
 }
 

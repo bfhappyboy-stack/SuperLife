@@ -140,7 +140,14 @@ export interface DuelMove {
   element?: string;
   /** Move rank 1–5 for player moves. */
   rank?: number;
+  /** Status this move leaves when it wins the edge (overrides its element's; null = none). See battle.ts. */
+  applies?: StatusId | null;
+  /** Stage 3 Ultimate: one of the six, armed at full Momentum. See battle.ts. */
+  ultimate?: boolean;
 }
+
+/** Battle statuses (battle.ts). */
+export type StatusId = "burn" | "frost" | "shock" | "expose" | "ward";
 
 export interface Look {
   skin: number;
@@ -194,6 +201,18 @@ export interface DuelBoard {
   boss?: boolean;
   /** Signature twist; most switch on in phase 2. */
   gimmick?: BossGimmick;
+  /** Final canon bosses only: a second twist that replaces the first as Phase 3 (at `at`, default 25% HP). */
+  phase3?: BossGimmick;
+  /** Life difficulty id, for HUD and AI. */
+  difficulty?: LifeDifficulty;
+  /** Multiplier on damage the foe deals (from difficulty.ts). Default 1. */
+  foeDamage?: number;
+  /** Chance the AI answers your last style (from difficulty.ts). Default 0.42. */
+  aiHate?: number;
+  /** Chance the AI fakes a tell to bait a habit (same style twice running). Default 0. */
+  aiRead?: number;
+  /** Stage tag from the city (or Arena). Nudges one element. */
+  stage?: { tag: string; element: string; blurb: string };
 }
 
 export interface Cape {
@@ -399,12 +418,20 @@ export interface Game {
   chapterNotice?: ChapterNotice | null;
   /** What you own and what the market remembers. Optional for old saves. */
   market?: MarketState;
+  /** After a boss loss: that boss can't be rematched until this month index (age × 12 + month). Optional for old saves. */
+  regroup?: { name: string; until: number } | null;
   /** "mystery" (the default for new lives) or "god". Missing on classic saves. */
   mode?: GameMode;
+  /** Life-sim fight difficulty. Missing on old saves → Normal. */
+  difficulty?: LifeDifficulty;
   /** The sealed power that has not woken yet (mystery lives and God Mode legends). Cleared at the reveal. */
   hiddenGift?: string | null;
   /** God Mode legend id (see presets.ts). */
   preset?: string | null;
+  /** The mentor who found you at 15 (mentors.ts). Missing before 15 and on old saves until their next birthday. */
+  mentor?: MentorState | null;
+  /** Arena purses paid into this life (anti-farm ledger). */
+  arenaPurse?: ArenaPurseLedger;
   /** The big reveal waiting to play. UI-only, cleared on dismiss. */
   reveal?: RevealNotice | null;
   /** Strange signs noticed before the power woke, oldest first. */
@@ -424,9 +451,9 @@ export interface Habits {
   mini: number;
 }
 
-export type SkipSpan = "season" | "year";
+export type SkipSpan = "season" | "year" | "fifteen";
 
-export type SkipStopKind = "reveal" | "story" | "chapter" | "case" | "event" | "fight" | "health" | "bond" | "death";
+export type SkipStopKind = "reveal" | "story" | "chapter" | "case" | "event" | "fight" | "health" | "bond" | "death" | "mentor";
 
 export interface SkipReport {
   span: SkipSpan;
@@ -449,6 +476,9 @@ export interface SkipReport {
 
 export type GameMode = "mystery" | "god";
 
+/** Life-sim fight curve. Chosen at birth; see difficulty.ts. */
+export type LifeDifficulty = "story" | "normal" | "hard" | "legendary";
+
 export interface RevealNotice {
   /** Catalog ids that woke, the headline power first. */
   powers: string[];
@@ -467,4 +497,25 @@ export interface ActionItem {
   detail?: string;
   disabled?: string;
   accent?: boolean;
+}
+
+export interface MentorState {
+  id: string;
+  /** Age they found you. */
+  since: number;
+  lessons: number;
+  /** 0–100, grows with diminishing returns. Better lessons as it rises. */
+  bond: number;
+}
+
+export interface ArenaPurseLedger {
+  /** Local calendar day (YYYY-MM-DD) the count below belongs to. */
+  day: string;
+  /** Matches paid today (diminishing returns, daily cap). */
+  paidToday: number;
+  /** Recent match keys, so a reload never pays twice. */
+  keys: string[];
+  total: number;
+  wins: number;
+  matches: number;
 }

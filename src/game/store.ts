@@ -2,7 +2,8 @@ import { create } from "zustand";
 import { act, ageUp, applyHeroTalk, choose, createGame, dismissReveal, freshen, heirFrom, resolveMini, type NewLifeOpts } from "./engine";
 import { dismissSkip, fastForward, noteAct, noteMini, notePick } from "./skip";
 import { presetById } from "./presets";
-import { deleteSlot, firstEmptySlot, listSlots, loadScores, loadSlot, migrateLegacySave, pushScore, saveScores, saveSlot, setActiveSlot, type ScoreRow, type SlotSummary } from "./save";
+import { deleteSlot, firstEmptySlot, listSlots, loadScores, loadSlot, migrateLegacySave, pushScore, readIndex, saveScores, saveSlot, setActiveSlot, type ScoreRow, type SlotSummary } from "./save";
+import { payPurse, type PurseInput, type PurseQuote } from "./arena.purse";
 import { applyChapterText, type ChapterText } from "./chapters";
 import type { Game, GameMode, SkipSpan } from "./types";
 
@@ -32,7 +33,7 @@ interface Store {
   openCreate: () => void;
   pickMode: (mode: GameMode) => void;
   buildOwn: () => void;
-  beginLegend: (presetId: string) => void;
+  beginLegend: (presetId: string, difficulty?: import("./types").LifeDifficulty) => void;
   closeReveal: (firstMove?: number) => void;
   begin: (opts: NewLifeOpts) => void;
   resume: () => void;
@@ -49,6 +50,10 @@ interface Store {
   noteTalk: (heroId: string, line: string, reply: string) => void;
   toTitle: () => void;
   playHeir: () => void;
+  /** The life whose character can earn Arena purses: the one you're playing, else the last one played. */
+  activeSlot: () => number | null;
+  /** Pay an Arena purse into the active life (once per match). Null if there's no active life. */
+  payArena: (input: PurseInput & { opponent: string }) => { quote: PurseQuote; name: string } | null;
 }
 
 function commit(set: (partial: Partial<Store>) => void, get: () => Store, game: Game) {
@@ -63,6 +68,22 @@ function commit(set: (partial: Partial<Store>) => void, get: () => Store, game: 
 }
 
 export const useGame = create<Store>((set, get) => ({
+  activeSlot: () => get().slot ?? readIndex().active ?? null,
+  payArena: (input) => {
+    const slot = get().activeSlot();
+    if (!slot) return null;
+    // The in-memory life wins over the slot copy: toTitle/openArena flush it, so paying the stale copy would be overwritten.
+    const live = get().slot === slot ? get().game : null;
+    const base = live ?? loadSlot(slot);
+    if (!base) return null;
+    const { game, quote } = payPurse(freshen(base), input);
+    if (game !== base) {
+      saveSlot(slot, game);
+      if (live) set({ game });
+      set({ lives: listSlots() });
+    }
+    return { quote, name: game.name };
+  },
   hydrated: false,
   screen: "title",
   game: null,
@@ -113,11 +134,11 @@ export const useGame = create<Store>((set, get) => ({
   },
   pickMode: (mode) => set({ createMode: mode, screen: mode === "god" ? "god" : "create" }),
   buildOwn: () => set({ createMode: "god", screen: "create" }),
-  beginLegend: (presetId) => {
+  beginLegend: (presetId, difficulty) => {
     const legend = presetById(presetId);
     if (!legend) return;
     // createGame fills name, city, upbringing, traits and look from the legend.
-    get().begin({ name: legend.name, cityId: legend.cityId, upbringing: legend.upbringing, portrait: legend.portrait, sex: legend.sex, face: legend.face, drive: legend.drive, preset: legend.id, mode: "god" });
+    get().begin({ name: legend.name, cityId: legend.cityId, upbringing: legend.upbringing, portrait: legend.portrait, sex: legend.sex, face: legend.face, drive: legend.drive, preset: legend.id, mode: "god", difficulty });
   },
   closeReveal: (firstMove) => {
     const game = get().game;

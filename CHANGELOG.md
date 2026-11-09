@@ -1,5 +1,393 @@
 # Changelog
 
+## 2026-11-09 (night): kits for Wonder Woman, Hulk, Black Panther and Wolverine; painted rogues (`devbot/2026-11-09-night`)
+
+Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 8: new kit pieces take a slot in a lopsided six
+
+- **Why:** a kit piece that doesn't upgrade an older one only landed on the shelf, so kit-led sixes stayed lopsided: Black Panther at 31 fought Killmonger with one strike (his Ultimate, cooldown 1) beside five guards and tricks while Claw Flurry sat unused; Hulk at 34 the same with Gamma Clap; Thor kept four strikes after Bifrost Call arrived (BACKLOG).
+- **What:** `slotKitArrival` (`moves.ts`): on the birthday a new kit piece arrives, if its style has at most one move in the six and another style has three or more, it replaces the weakest **non-kit** move of the crowded style. The birthday card says "Claw Flurry takes Counter Tap's slot, so every tell has an answer." A balanced six is never touched, and the player can swap back on the Moves shelf.
+- **How often** (11 legends × 3 seeds to 50): once or twice per life for Wonder Woman (Bullet Deflection at 33), Hulk (Gamma Clap at 31), Black Panther (Claw Flurry at 26), Wolverine (Scent Track at 16), Thor (Bifrost Call at 26, Hammer Catch at 44), Cap (Commando Feint at 28), Superman (Freeze Breath at 17 / Flying Tackle at 20), Flash (1 of 3); never for Batman, Iron Man or Spider-Man.
+- **Balance** (60% play, street / boss, 3 seeds): roughly neutral. 9-build pool Normal 0.78 / 0.63 → 0.78 / 0.61, Hard 0.57 / 0.38 → 0.57 / 0.38, Legendary 0.38 / 0.23 → 0.38 / 0.23; Thor / Superman / Flash / Iron Man Normal 0.73 / 0.55 → 0.71 / 0.57, Hard 0.53 / 0.38 → 0.54 / 0.38. Hulk Normal street 0.87 → 0.81.
+- **Tests:** +1 (Black Panther's six gets a second strike by 27; a balanced six is left alone). 233 game tests pass.
+
+### Increment 7: Captain America's rogues get the rogue edge
+
+- **Why:** with every legend on a kit, Cap was still the strongest (Normal 60% 0.86 / 0.68, Hard 0.77 / 0.56, Legendary 0.66 / 0.44). His kit's power-level share barely matters (edge 0.30 → 0.20 moved nothing), and making The Shield replace his serum strength too made it *easier* (foes scale with his power level, and a street Haymaker crept back into the six), so neither was shipped.
+- **What:** `rogueEdge: 2` on the Captain America preset, the same lever as Spider-Man's: Red Skull, Winter Soldier, Zemo, Crossbones and the rest hit +2 on their signature moves in life-sim fights. Arena is unchanged.
+- **Balance** (60% play, street / boss, 3 seeds, 164 villain boards, boss n = 6): Story 0.98 / 0.96 → 0.95 / 0.90; Normal 0.86 / 0.68 → **0.80 / 0.56**; Hard 0.77 / 0.56 → **0.67 / 0.47**; Legendary 0.66 / 0.44 → **0.56 / 0.26**. Now in the pack with Wonder Woman and Wolverine.
+- **Tests:** +1 (Cap's rogue edge). 232 game tests pass.
+
+### Increment 6: Wolverine's Claws & Healing Factor
+
+- **Why:** Logan fought with Grit Knit, Counter Tap, Feel It Coming, Quick Cut, Static Snap, Heavy Hands: three guards and no claws. Normal 60% 0.87 / 0.73, above target. Last legend on generic moves.
+- **What:** a **Claws & Healing Factor** kit, 12 pieces from the wake at 12: Bone Claws, Healing Factor (Ward) (12), Feral Lunge (13), Scent Track (16, Shock), Snikt Flurry (20, area), Adamantium Claws (25, Expose, upgrades the bone claws), Adamantium Skeleton (25, guard), Berserker Charge (28, Expose, upgrades the lunge), **Berserker Barrage** (30, Expose, upgrades the adamantium claws, his Ultimate), Unkillable (34, Ward, upgrades Healing Factor), Fastball Special (40, area, Expose), Weapon X Instinct (46, upgrades Scent Track). It replaces his **Regeneration and Pain Map** moves; Super Senses and his stretch powers still bring theirs. Kit edge 0.15.
+- **Balance** (60% play, street / boss, 3 seeds, 210 villain boards, boss n = 15): Story 1.00 / 1.00 → 1.00 / 0.97; Normal 0.87 / 0.73 → **0.79 / 0.64**; Hard 0.79 / 0.54 → **0.65 / 0.44**; Legendary 0.59 / 0.24 → **0.40 / 0.22**. Sabretooth at 12–14 is now 0.47 (was 0.70).
+- **Tests:** +1 (shelf has none of the replaced moves, the barrage retires both claws and is the Ultimate at 31, all three styles). 231 game tests pass.
+
+### Increment 5: Black Panther's Panther Habit
+
+- **Why:** T'Challa fought with Heavy Hands, Counter Tap, Quick Cut, Slow Second, Grit Knit and a Ground Pound Ultimate: no claws, no vibranium, no kinetic release. Normal 60% 0.88 / 0.71, above target.
+- **What:** a **Panther Habit** kit, 12 pieces: Dora Milaje drills at 16 (Okoye's Stance, Challenge Strike, Panther Step), Vibranium Claws (18, Expose, upgrades the strike), Kinetic Weave (19, upgrades the stance), Kimoyo Beads (21, Shock), Panther Pounce (23, Expose, upgrades the step), Claw Flurry (26, area), **Kinetic Release** (30, Shock, upgrades the claws, his Ultimate), Charged Habit (33, Ward), Bast's Shadow (38, Expose), Wakanda Forever (42, area, Shock). It replaces his **Super Strength, Kinetic Impact and Juggernaut Mass** moves; Super Senses and his stretch powers still bring theirs. Kit edge 0.25.
+- **Starts at 16, not 10:** a first try from 10 let Klaw call out a 12-year-old prince (the rogues-wait rule uses the kit's first piece): 7 fights before 15 at 0.21. From 16, nothing before 15, same as before.
+- **Balance** (60% play, street / boss, 3 seeds, 195 villain boards, boss n = 6, noisy): Story 1.00 / 0.98 → 0.99 / 0.99; Normal 0.88 / 0.71 → **0.78 / 0.63**; Hard 0.73 / 0.35 → **0.58 / 0.28**; Legendary 0.47 / 0.21 → **0.41 / 0.21**.
+- **Tests:** +1 (no kit before 16, shelf has none of the replaced moves, Kinetic Release retires the claws and is the Ultimate at 31, all three styles). 230 game tests pass.
+
+### Increment 4: Hulk's Gamma Rage
+
+- **Why:** Hulk fought with Heavy Hands, Stand Firm, Grit Knit, Freight Train, Heavy Step and a Ground Pound Ultimate (generic strength / Juggernaut moves) and sat above target (Normal 60% 0.91 / 0.72, Hard 0.79 / 0.53).
+- **What:** a **Gamma Rage** kit, 9 pieces from the gamma blast at 28: Hulk Smash, Gamma Hide, Gamma Leap (28), Hulk Roar (30, Expose), Gamma Clap (31, area, Frost: a second strike so a trick tell always has an answer), **World Breaker** (33, Expose, upgrades Hulk Smash, his Ultimate), Madder, Stronger (34, Ward, upgrades Gamma Hide), Ground Quake (40, area, Frost), Banner's Read (44, Shock). It replaces his **Super Strength, Super Durability and Juggernaut Mass** moves; Regeneration (Grit Knit) and his stretch powers still bring theirs. Kit edge 0.15 (his gamma moves start strong instead of growing).
+- **Balance** (60% play, street / boss, 3 seeds, 140 villain boards, boss n = 18): Story 1.00 / 1.00 → 1.00 / 0.92; Normal 0.91 / 0.72 → **0.87 / 0.54**; Hard 0.79 / 0.53 → **0.62 / 0.31**; Legendary 0.64 / 0.32 → **0.45 / 0.25**. Street stays a little high (like every legend on Normal street, 0.82–0.87); bosses are on target.
+- **Tests:** +1 (shelf has none of the replaced moves, World Breaker and Madder, Stronger retire the old pieces, kit Ultimate at 35, all three styles). 229 game tests pass.
+
+### Increment 3: painted portraits for the 31 legend rogues
+
+- **Why:** the 18 Arena villains were painted this morning; the 31 legend rogues (Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith, Justin Hammer, Red Hulk, Maestro, Ares, Medusa, Crossbones, Surtur, M'Baku, Namor, Lady Deathstrike, Omega Red, Silver Samurai, Captain Cold, Grodd, Mirror Master) still stood as vector cards next to painted heroes (user request 4).
+- **What:** 31 painted 540×960 webp modules (`src/assets/art/villain-<id>.ts`, 52–87 kB each, ~2 MB total, lazy chunks, none on first paint) plus one loader line each. Every villain in the game now has a painting; `VillainArt` picks it up everywhere (FIGHT! / BOSS! intro, ring standee, header avatar, Arena). The vector card stays the loading fallback.
+- **Head crop:** eight paintings have the face lower than the usual upper third, so the avatar circle showed a forehead or a fishbowl top. New `PAINTED_HEAD_Y` per-villain head-crop origin (Brainiac, Grodd, Justin Hammer, the Leader, Mirror Master, Surtur, Vulture, Silver Samurai). Checked at 390×844 on Mysterio, Two-Face, Surtur and Man-Ape duels.
+- **Tests:** +1 (every villain with a card has a painted portrait registered). 228 game tests pass.
+
+### Increment 2: Wonder Woman's Amazon Arms
+
+- **Why:** Diana fought with Heavy Hands, Dive Kick, Aegis, Static Snap, Quick Cut, Mind Spike: no lasso, no bracers, no sword. She was also well above target (Normal 60% 0.88 / 0.78).
+- **What:** an **Amazon Arms** kit, 13 pieces: Bracer Block (10), Training Spear (12), **Lasso of Truth** (14, Shock: their tells can't lie), Antiope's Feint (17), Sword of Athena (19, Expose, upgrades the spear), Amazon Shield (21, Ward, upgrades the bracers), Bracer Clash (24, area, Shock), Lasso Takedown (27, upgrades the feint), **Godkiller** (30, Expose, upgrades the sword, her Ultimate), Bullet Deflection (33, guard, Expose), Golden Perfect (38, upgrades the lasso), Aegis of Themyscira (44, upgrades the shield), Zeus's Thunder (48, area, Shock). It replaces her **Super Strength, Flight and Aegis Shell** moves; her stretch powers (speed, telepathy, lightning…) still bring theirs. Kit edge 0.20.
+- **Balance** (60% play, street / boss, 3 seeds, 156 villain boards): Story 0.99 / 0.99 → 0.99 / 0.96; Normal 0.88 / 0.78 → **0.82 / 0.59**; Hard 0.82 / 0.64 → **0.66 / 0.49**; Legendary 0.62 / 0.41 → **0.53 / 0.29**. Teens (15–24) are now 0.50 street (Cheetah is her teen rogue), 40+ is 0.94.
+- **Tests:** +1 (shelf has none of the replaced moves, upgrades retire the old pieces, the lasso's Shock override at 14, Godkiller Ultimate at 31, all three styles). The every-kit tests cover her too. 227 game tests pass.
+
+### Increment 1: playtest
+
+- A Harbor Bay / street-kid mystery (Nell Okafor) and a Dustreach / alien **God Mode** life with Telekinesis + Lightning (Kai Moreno), beside Wonder Woman, Hulk, Black Panther, Wolverine and three reference legends; three seeds to 50, all four difficulties. Power mixing at 15 (Skip to 15, mentor), move-select and phone screens re-checked. Notes and table in PLAYTEST.md. No code changes.
+
+## 2026-11-09 (pm): legend signature kits (`devbot/2026-11-09-pm`)
+
+Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 7: Superman's Kryptonian Arts
+
+- **Why:** with Flash fixed, Superman was the weakest legend (Normal 60% 0.57 / 0.39 on 3 seeds) and fought with Heavy Hands, Dive Kick, Stand Firm, Push, Spark Jab, Quick Cut: no heat vision, no freeze breath.
+- **What:** a **Kryptonian Arts** kit, 12 pieces from his wake at 13: Bulletproof, Heat Glare, Blur (13), X-Ray Read (15, Shock), Freeze Breath (17, Frost), Heat Vision (18, upgrades Heat Glare), Flying Tackle (20), Super-Breath (24, upgrades Blur), Man of Steel (28, Ward, upgrades Bulletproof), **Solar Flare** (30, Burn, upgrades Flying Tackle), Thunderclap (34), Fortress Training (38, Expose). It replaces his **Super Strength, Flight and Super Durability** moves; braided and stretch powers still bring theirs. The kit leads the Ultimate from 30.
+- **Balance** (60% play, street / boss, 3 seeds): Story 0.93 / 0.90 → 0.94 / 0.96; Normal 0.57 / 0.39 → **0.65 / 0.61**; Hard 0.45 / 0.30 → **0.49 / 0.38**; Legendary 0.26 / 0.13 → **0.37 / 0.30**. Boss n = 15. 13–15 fights against Lex are still hard (he is level 9 on a fresh teen); logged.
+- **Tests:** +1 (Superman's shelf has none of the replaced moves, Heat Vision and Man of Steel retire their old pieces, kit Ultimate at 31). The every-kit test covers him too. 226 game tests pass.
+
+### Increment 6: Flash's Speed Force, and rogues who wait
+
+- **Why:** Flash was the weakest legend (Normal 60% 0.54 / 0.45, Legendary 0.26 / 0.23) and fought with Quick Cut / Volt Step / Afterimage. Digging in: 60 of his 206 villain fights before 25 were **Reverse-Flash (level 9, ~95 HP) calling out a powerless child** through the monthly arch-enemy pin, 11 to 24, and he lost all of the ones before 15.
+- **Rogues wait:** a legend's own arch-rogue never sends the monthly "Show up" pin before the hero can fight back: the powers waking or the kit's first piece, whichever comes first (Iron Man's Armory and Thor's yard start at 10, so they are unchanged). Canon beats and boss steps are untouched. Affects Flash (until 25) and Hulk (until 28).
+- **Speed Force kit**, 10 pieces from his wake at 25: Lightning Jab, Speed Mirage, Phase Step, Tornado Arms (27), Lightning Throw (29), Speed Steal (31, Frost), **Infinite Mass Punch** (33, Expose, upgrades the jab, his Ultimate), Rewind (36, Ward), Time Remnant (38), Speed Force Storm (45). It replaces his Super Speed and Thunder Sprint moves.
+- **Balance** (60% play, street / boss, 3 seeds): Story 0.87 / 0.93 → 0.97 / 0.89; Normal 0.54 / 0.45 → **0.71 / 0.50**; Hard 0.42 / 0.35 → **0.57 / 0.34**; Legendary 0.26 / 0.23 → **0.43 / 0.21**. Hulk: Normal 0.91 / 0.74 → 0.91 / 0.72, Hard 0.75 / 0.53 → 0.79 / 0.53, Legendary 0.52 / 0.28 → 0.64 / 0.32. Every other build measured is identical to before (same lives).
+- Kit data test: a kit that starts at the wake doesn't need childhood style coverage.
+- **Tests:** +2 (Flash's shelf and Ultimate; a kid Flash with Reverse-Flash as arch-enemy gets no call-outs before 25 across three lives, where the old code sent them from 11). 225 game tests pass.
+
+### Increment 5: Captain America's Shield
+
+- **Why:** Cap fought with Heavy Hands, Aegis, Holy Hull, Counter Tap: no shield moves at all, and he was the strongest legend (Normal 60% 0.92 / 0.81).
+- **What:** **The Shield** kit, 12 pieces: Trash-Can Lid (10), Brooklyn Jab (12), Duck and Weave (14), Vibranium Shield (21, upgrades the lid), Shield Bash (22), Shield Throw (23), Ricochet Volley (26), Commando Feint (28), **Liberty Strike** (30, upgrades Shield Bash, his Ultimate), Assemble (33), Unbreakable Guard (40), Worthy (45, he lifts the hammer). It replaces his **Aegis Shell** moves. Braids that contain Aegis Shell (Holy Hull) still bring theirs.
+- **Balance** (60% play, street / boss, 3 seeds): Story 0.99 / 1.00 → 0.98 / 0.96; Normal 0.92 / 0.81 → **0.86 / 0.68**; Hard 0.78 / 0.58 → 0.77 / 0.56; Legendary 0.71 / 0.50 → 0.66 / 0.44. Still the strongest legend; logged.
+- **Tests:** +1 (every kit, lived past its Ultimate age: exactly six, no street padding, nothing the kit replaces in the six, kit moves in the six, a kit strike Ultimate where the kit leads). 223 game tests pass.
+
+### Increment 4: Thor's Mjolnir
+
+- **Why:** Thor was the weakest legend in the playtest (Hard 60% 0.54 / 0.19, Legendary 0.30 / 0.06) and fought generically: at 20 vs Loki his six was Slip, Heavy Hands, Cloud Bolt, Squall Slap, Thunder Clap, Brace. No hammer. Same treatment as Iron Man, as its own increment.
+- **What:** a **Mjolnir** kit, 12 pieces: Asgard's yard first (Shieldwall 10, Practice Blade 12, Warrior's Feint 14), then the hammer (Mjolnir Strike 17, Hammer Throw 18, Hammer Spin 21, Bifrost Call 26, **God Blast** 30, Thunder Landing 33, Stormbreaker Cleave 42, Hammer Catch 44, Odinforce Ward 48). Five upgrade in place (Practice Blade → Mjolnir Strike → God Blast, Shieldwall → Hammer Spin → Odinforce Ward, Warrior's Feint → Hammer Throw). It replaces his **Super Strength** moves (Heavy Hands, Stand Firm): his strength is the hammer. His lightning and storm powers still fill the rest of the six. God Blast is his Ultimate from 30.
+- **Balance** (60% play, street / boss, 3 seeds): Story 0.98 / 0.96 → 0.98 / 0.94; Normal 0.72 / 0.50 → **0.77 / 0.46**; Hard 0.54 / 0.19 → **0.57 / 0.38**; Legendary 0.30 / 0.06 → **0.43 / 0.10**. Boss n = 8, so the boss column is noisy; his gallery (Loki, Hela, Malekith, Surtur at 8–10) is the strongest in the game.
+- The kit Ultimate banner now reads "<Kit>: your strongest <piece> is now your Ultimate at full Momentum."
+- **Tests:** +1 (Thor's shelf has no strength moves, the Mjolnir upgrade banner, God Blast Ultimate at 31, all three styles). 222 game tests pass.
+
+### Increment 3: Spider-Man's web-shooters
+
+- **Why:** Spider-Man was far too easy (Normal 60% 0.94 / 0.88 on 3 seeds, 0.96 / 0.93 on seed 1): three 13-power guards (Counter Tap, Stand Firm, Slow Second) from his senses / strength / speed mix, and no webs anywhere. User request (Nov 9): a web-shooter kit that **replaces** his generic guards rather than adding to them.
+- **What:** a **Web-Shooters** kit: Web Shield (15), Web Net (16, Frost), Web Yank (19, Expose), Web Cocoon (23, upgrades Net), Web Wall (26, Ward, upgrades Shield), Spider-Sense Snare (32, Shock, upgrades Yank). It uses the new `replaces` rule by **style**: every guard his powers would give leaves his shelf, so all his guards are webs and his strikes and tricks still come from his powers. Webs gain little from power level (edge 0.10); they win on statuses. His power keeps the Ultimate.
+- **His rogues:** Goblin, Doc Ock, Venom, Kraven, Mysterio and Vulture were written with 4–7 power moves, like Batman's gallery, while Peter fights with three powers. New preset field `rogueEdge` (Spider-Man +2) adds to every signature move of that legend's rogues in life-sim fights. Arena is unchanged.
+- **Balance** (60% play, street / boss, 3 seeds): Story 1.00 / 0.99 → 1.00 / 0.94; Normal 0.94 / 0.88 → **0.80 / 0.69**; Hard 0.77 / 0.54 → **0.55 / 0.36**; Legendary 0.54 / 0.21 → **0.34 / 0.15**. Seed 1 (the am table's life): Normal 0.96 / 0.93 → 0.79 / 0.53. Web guards alone took Normal to 0.89 / 0.80; the rogue edge did the rest.
+- **Tests:** +2 (webs replace power guards on the shelf, in the six and in old saves; the kit leaves the Ultimate alone; rogue edge applies only to his gallery). 221 game tests pass.
+
+### Increment 2: Iron Man's Armory
+
+- **Why:** Tony Stark fought with six street moves until his powers woke at 24, then with Pulse Shot, Dive Kick, Heavy Hands, Stand Firm, Slip and Haymaker (four strikes). No repulsors, no Unibeam, no armour. User request (Nov 9): a signature kit like Batman's belt.
+- **What:** an **Armory** kit (`src/game/kits.ts`), 14 pieces from 10 to 40: Tin-Can Shield, Pulse Glove, Flash Flare, Arc Taser, Chest Reactor, Mark I Plating, Mark I Flamethrower, Repulsor Blast, Boot Jets, JARVIS Targeting, Shoulder Missiles, **Unibeam**, Nanotech Shell, Hulkbuster Brace.
+- **Suit upgrades:** kit pieces can now `upgrade` an older piece. When the new Mark arrives the old piece retires and the new one takes its slot, so the six keeps its shape (Pulse Glove → Repulsor Blast at 24, Chest Reactor → Unibeam at 30, Mark I Plating → Nanotech Shell at 36…). The birthday banner says "Armory upgrade: X replaces Y"; the locked shelf shows "Upgrades X".
+- **Replaces:** a kit can now stand in for power moves. Iron Man's Energy Projection and Flight moves leave his shelf (the suit is where they come from); old saves drop them and refill from the Armory on load. Powers he braids later still bring their own moves.
+- **Ultimate:** Unibeam (the strongest piece) is his Ultimate from 30, ahead of his power's (`leadsUltimate`).
+- **Balance** (Normal, 60% play, street / boss, 3 seeds): 0.79 / 0.64 → **0.77 / 0.59**; Story 1.00 / 0.92 → 1.00 / 0.95; Hard 0.59 / 0.42 → **0.49 / 0.41**; Legendary 0.39 / 0.20 → **0.29 / 0.18**. Seed 1 alone (the am table's life): Normal 0.59 / 0.38 → 0.75 / 0.58. His worst stretch (24–30, 0.66) is now 0.84; teens are 0.73 street (were 0.91 on street moves against teen foes).
+- Kits get a per-kit `edge` (Iron Man 0.40, default 0.25) and a `piece` word for banners; the Moves shelf strings name the kit instead of "the belt".
+- **Tests:** +2 (Armory unlocks, upgrades and hidden power moves; Iron Man's six at 23 and 31, Unibeam Ultimate, Arena saved life). Kit data test now checks upgrade lines. 219 game tests pass.
+
+### Increment 1: playtest
+
+- Story and Legendary as well as Normal and Hard; a Neon Spire legacy mystery, a Crownbridge ice + force-field God Mode life, Thor and Wolverine beside five reference legends; three seeds per build. Power mixing at 15 (mentor, Skip to 15) and move-select re-checked on the phone. Notes and table in PLAYTEST.md. No code changes.
+
+## 2026-11-09 (am): painted villains (`devbot/2026-11-09-am`)
+
+Built on `origin/devbot/2026-11-08-night` (3947fa9). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 2: painted portraits for the 18 Arena villains
+
+- **Why:** every duel put a painted hero card next to a flat vector villain bust, and the vector cards were always the stand-in for painted art (user request 4). An image generator is now available to the dev bot.
+- **What:** Green Goblin, Venom, Doctor Octopus, Joker, Bane, Iron Monger, Ultron, Abomination, Lex Luthor, Zod, Doomsday, Cheetah, Red Skull, Loki, Hela, Killmonger, Sabretooth and Reverse-Flash now have painted 540×960 portraits in the legend heroes' style (stormy sky, their home turf, one strong rim light, dark floor). Webp inlined as lazy chunks (`src/assets/art/villain-<id>.ts`, 27–59 kB each, ~0.8 MB total, none on first paint).
+- **Where they show:** `VillainArt` uses the painting whenever one is registered, so it lands everywhere the vector card did: Arena draft, sheet, order, reveal, round intro and duel cards, the life-sim FIGHT! / BOSS! intro, the ring standee and the header avatar (zoomed on the face). The vector card stays as the loading and no-painting fallback.
+- **Tests:** +1 (every Arena villain has a registered painting; the module is a webp data URI). 217 game tests pass.
+
+### Increment 1: playtest
+
+- Spider-Man, Iron Man, a Hood / foster mystery and Flash to 50 on Normal and Hard; phone screens. Notes and table in PLAYTEST.md. No code changes.
+
+## 2026-11-08 (night): legends on the duel stage (`devbot/2026-11-08-night`)
+
+Built on `origin/devbot/2026-11-08-pm` (5ca0283). `main` is unchanged since 702d68d. Typechecked, linted (only the old `src/lib` no-empty error remains), 216 game tests, built and loaded at 390×844 before push.
+
+### Increment 1: God Mode legends fight as their painted card
+
+- **Why:** the pm playtest found Batman and Hulk drawn as the generic paper doll (Hulk in glasses and a jacket) facing a painted villain card.
+- **What:** `DuelHero.legend` (art key, colour, name) is passed from `GameApp` when the life's preset has painted art; `Duel` then draws the hero as a standee in the same frame as the villain (`duel-standee` hit / attack / guard / KO poses, legend-colour border, name plate), mirrored side. Mystery and custom lives keep their own figure. The result card reuses it. No rules or balance change.
+- **Shots:** `/workspace/playtest/night1108/hulk30.png`, `batman24.png`.
+
+## 2026-11-08 (pm): Batman's belt, harder Hard and Legendary (`devbot/2026-11-08-pm`)
+
+Built on `origin/devbot/2026-11-08-am` (b2fe5d3). `main` is unchanged since 702d68d. Each increment is typechecked, linted, tested, built and loaded at 390×844 before push.
+
+### Increment 3: harder Hard and Legendary (street twists), regen hint fix, Batman retune
+
+- **Why:** the playtest found Hard street fights at 0.75 and Legendary at 0.56 for a 60% player (targets ~0.50 / ~0.30). The only difference from Normal was ~10% more HP and damage, so a Hard thug played exactly like a Normal one.
+- **Street twists (`streetTwist` in `difficulty.ts`, data):** on **Hard half** of ordinary street villains, and on **Legendary all** of them, fight with their power's twist from the boss gimmick table (healers Knit, fliers High Ground, strength Haymaker Wind-up, minds Mind Games…), with the usual Phase 2 banner, strip and hint. Story and Normal are unchanged. Picked by a stable hash of foe + age + month, so it never shifts the life's dice (Normal / Story boards are byte-identical before and after).
+- **Retune (data):** Hard foe HP ×1.30 → ×1.40, damage ×1.24 → ×1.34; Legendary HP ×1.45 → ×1.57, damage ×1.36 → ×1.47. Picker lines: Hard "Half the street brings a twist. Mistakes hurt." Legendary "Every foe has a twist. Bring a plan."
+- **Regen hint trap fixed:** against a healer (regen), **any won edge now stops that turn's heal**; a trick or status move still stalls it for two turns. Hints read "He heals each turn. Win edges to stop it." and the strip "Heals each turn · a won edge stops it, a trick stalls 2". Before, obeying "a trick move stalls it" every turn threw tricks into strike tells (Hard regen lab: hint-obeyer 0.37 vs tell-answerer 0.51 at 60%); now answering tells is never wrong (0.60). Arena's Healing Factor passive is unchanged.
+- **Batman retune:** with the new numbers his belt sat well above the field (Hard street 0.78). Gadget base power −1 and kit power-level share 0.30 → 0.25: Batman Normal 0.82 / 0.77, Hard 0.62 / 0.50 (street / boss), in line with Cap 0.70 and Black Panther 0.64 on Hard.
+- **Move cards:** on a card that shows a pill (Answer / Stalls / Ultimate / Ult), the status shows as its icon only, so "Expose" / "Frost" no longer clip to "E" / "Fr" at 390px.
+- **Sims (13 builds to 55: 7 night builds + Crownbridge, Metro, Batman, Stacks, NYC, Cap; 1,008 villain boards per difficulty; 60% play, street / boss):** Story 0.97 / 0.96, **Normal 0.76 / 0.56** (unchanged), **Hard 0.65 / 0.45 → 0.51 / 0.36**, **Legendary 0.48 / 0.28 → 0.32 / 0.20**. Perfect play: Hard 0.94 / 0.84, Legendary 0.79 / 0.70, so reading still wins.
+- **Tests:** +4 (`twist.test.ts`: twist shares + stable roll, a real Legendary life where every street villain has a twist while Normal keeps plain ones, difficulty ordering, regen won-edge rule). 216 game tests pass.
+
+### Increment 2: Batman's Utility Belt (legend kits)
+
+- **Why:** Batman has no powers, so from 8 to 60 his six was street moves (Haymaker, Slip, Brace…). The Joker was fought with "Haymaker", no Ultimate, nothing that said Batman.
+- **Kits (`src/game/kits.ts`, data):** a legend with no powers gets a gear kit. Batman's **Utility Belt** grows on birthdays: Keysi Guard (10), Batarang (12, Expose), Smoke Pellet (14), Grapnel Swing (18), Armored Cape (22, Ward), Explosive Gel (25, Burn), Detective Mode (28, `applies: shock`, so tells can't lie), I Am Vengeance (32). Eight gadgets for six slots, so from 28 you choose. Each covers strike / guard / trick by 14.
+- **Rules:** kit moves are normal moves with a `kit:batman` source: they unlock by age, rank up by use, wear in by decade (+1 at 25 / 35 / 45) and take 0.30 of power level (powers 0.55, street 0.35). From **30** the belt's strongest equipped gadget is his **Ultimate**. Only Batman's own life can equip them.
+- **Phone:** the Moves shelf now opens the real six-slot picker for Batman (it showed the read-only street six); locked gadgets say "Age 28" and "Detective Mode joins the Utility Belt at 28". A birthday card says "New on the Utility Belt: Batarang." and at 30 that the strongest gadget is now his Ultimate.
+- **Arena:** a saved Batman life (14+) can now be drafted as himself with his belt (before, saved lives needed a power). Passive: Read the Room (+1 energy a turn).
+- **Sims (Batman to 60, 70 villain boards, 60% play, street / boss):** Normal 0.79 / 0.75 → 0.90 / 0.81, Hard 0.86 / 0.64 → 0.84 / 0.78, Legendary 0.64 / 0.44 → 0.70 / 0.67. A notch above other heroes on Normal (statuses and full coverage do most of it, not raw power: his gadgets hit for less than the old padded street kit); increment 3 retunes Hard / Legendary for every build.
+- **Tests:** +4 (`kits.test.ts`: data, age/legend gating, Shock override, a real Batman life to 31 + Arena fighter). 212 game tests pass.
+
+### Increment 1: playtest
+
+- Batman / Hulk / Crownbridge mystery / Metro mystery to 60 on all four difficulties; Hard phone screens. Notes and baseline table in PLAYTEST.md. No code changes.
+
+## 2026-11-08 (am): battle Stage 4 (`devbot/2026-11-08-am`)
+
+Built on `origin/devbot/2026-11-07-night` (c98aa83). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
+
+### Increment 5: move-card polish + doc fixes
+
+- **Move cards:** on a card that shows an Answer / Ultimate / gimmick pill, the cooldown length ("cd 1") gives way, so the pill no longer clips at 390px (Holy Hull at 3 energy, cd 1). A cooling move still shows "1t left".
+- **Villain cards:** checked: all 49 villains (18 Arena + every legend rogue, including the 15 drawn 2026-11-03 night) already have vector cards. DESIGN's "34" count was stale and is fixed.
+- **Skipped on purpose:** Guard Break pierce (§17 item 4). With auto-Burst at 3, Momentum only sits at 4+ in about one fight in ten, and life-sim foes have no guard-stance damage cut to pierce, so it would be an Arena-only rule that rarely fires. Logged in BACKLOG next to the Burst owner's call.
+- **Tests:** 208 pass (no new rules).
+
+### Increment 4: Flash Arena balance
+
+- **Why:** after Cheetah's Expose buff, Flash was the weakest Arena pick (0.44). His dash punch, area jabs and phase are all speed, which leaves no status, so his best hits never set anything up.
+- **Fix (data):** Infinite Mass Punch now `applies: expose` (they reel and take +15% for 2 turns). Same pattern as Cheetah's Pounce.
+- **Arena ladder:** Flash 0.438 → 0.488 (rank 29 → 19 of 29). Roster spread 13.1 → 11.9 points (Thor 0.57 … Cheetah 0.45), inside the 22-point test. Pro AI vs the ladder stand-in 0.44 / 0.33 at perfect / 60% (was 0.43 / 0.32). Other options tried: Speed Steal → Frost 0.45, Phase Through → Ward 0.47.
+- **`TIER`** (AI draft weights) re-run on the current rules.
+- **Tests:** +1. 208 pass.
+
+### Increment 3: Phase 3 on final canon bosses + regroup after a boss loss
+
+- **Phase 3 (DESIGN §17 item 8):** each legend's final canon boss (the rogue in their last canon fight beat: Goblin, Joker, Ultron, Maestro, Zod, Ares, Red Skull, Loki, Klaw, Lady Deathstrike, Reverse-Flash) gets a second gimmick that replaces the first at 25% HP. Phase 2 gimmicks are unchanged. Only in that legend's own life and from the age of that last beat, so early Goblin or Red Skull fights are the same as before. Table in DESIGN; data in `VILLAIN_PHASE3` (`presets.ts`); `activeGimmick` / `PHASE3_AT` in `duel.ts`.
+- **Phone:** the header reads "Boss · Phase 3", a PHASE 3 banner plays with the new gimmick's line and hint, the strip shows a "P3 at 25%" pill and the HP bar a tick while Phase 2 runs, and the strip switches to the Phase 3 gimmick.
+- **Regroup:** losing a boss fight locks a rematch with that boss for one month (`regroup` on the save; old saves migrate to none). The case file and the step card say "Regrouping after the loss. X again next month." Winning the rematch clears it.
+- **Sims (each final boss's gimmicks on 717 real Normal boards, 60% play, before → after Phase 3):** Goblin 0.62 → 0.58, Joker 0.48 → 0.51, Ultron 0.33 → 0.32, Maestro 0.61 → 0.61, Zod 0.63 → 0.56, Ares 0.63 → 0.59, Red Skull 0.62 → 0.59, Loki 0.48 → 0.40, Klaw 0.63 → 0.51, Deathstrike 0.11 → 0.13, Reverse-Flash 0.62 → 0.63. The boards stop at 45–55, so real 63+ lives (stronger kits) will land higher.
+- **Tests:** +8 (Phase 3 data covers exactly the final bosses with a new twist, age / life gating, phase 3 takeover + HUD line, Ultron revive then Phase 3, no-phase3 boards, regroup on loss / split / street, locked step + clear line, save round-trip). 207 pass.
+
+### Increment 2: Tempo interrupt on Charge
+
+- **Rule (DESIGN §17 item 9):** when a Charge boss's charged hit is coming and you hold Momentum 4+, a Strike cuts in first. The charge deals nothing, your Strike counts as a won edge (×1.55, its status, a combo link, +1 Momentum), and it costs 1 Momentum, paid before the Burst check. Guard still braces as before. Shared helper `canInterrupt` in `battle.ts`; `interruptReady` in `duel.ts`.
+- **Arena:** same rule for the follower against a charged Strike lead (Bane's Venom Pump, Zod's Kryptonian Soldier). The AI follower values the interrupt when it has the Momentum. Logged as `interrupt` on the turn, so online replay stays deterministic.
+- **Phone HUD:** the gimmick strip reads "Incoming! Guard, or Strike to interrupt"; during the wind-up it adds "Momentum 4 interrupts it" once you're at 3+. The tell card says "Guard to brace, or Strike to interrupt (−1 momentum)", the Momentum row shows INTERRUPT READY, strike cards get an Interrupt tag, and a cyan INTERRUPT beat plays when it lands.
+- **Sims (Bane's gimmick on 717 real Normal boards):** a perfect player who takes every interrupt gets one in 11% of charge fights (14% on Hard); win rates do not move (Normal perfect 0.95, 60% 0.63). Auto-Burst at 3 means Momentum rarely sits at 4, so this is a skill reward, not a balance lever. Arena ladder unchanged (spread 13.1; Bane 0.48 → 0.46).
+- **Tests:** +4 (helper, life-sim interrupt + Burst on the rest, determinism + wind-up restart, Arena interrupt + replay). 199 pass.
+
+### Increment 1: playtest + Charge cadence fix
+
+- **Playtest:** NYC foster mystery, Stacks lab-program God Mode (elasticity + super strength), Captain America; to 45 on all four difficulties. Notes in PLAYTEST.md.
+- **Fix:** a Charge boss now throws its charged hit every third turn (`CHARGE_EVERY = 3` in `duel.ts`). Before, the countdown stuck at 0 after the first charged hit, so every turn after it was charged. Same hint, same answer (guard or breath).
+- **Effect (lab, Bane's gimmick on 717 real Normal boards):** perfect play 0.99 → 0.95, 60% play 0.64 → 0.61. One charged hit a fight instead of two.
+- **Tests:** +1 (`stage4.test.ts`). 195 pass.
+
+## 2026-11-07 (night): battle Stage 3 start — loadout coverage (`devbot/2026-11-07-night`)
+
+Built on `origin/devbot/2026-11-07-pm` (1f40f97). `main` is unchanged since 702d68d. Each increment is typechecked, tested, built and loaded at 390×844 before push.
+
+### Increment 2: Cheetah Expose + Ultimates + environment chips
+
+- **Cheetah:** Pounce now `applies: expose`, so her kit lands a status. Arena ladder win rate 41% → 45% (spread 13 pts; Flash is now the floor at 44%).
+- **Signature Ultimates** (`battle.ts`, shared): one of the six moves, never a 7th button. Life-sim marks the strongest equipped move of your focus power once that power is mastery 4+; Arena marks each fighter's strongest move. Armed only at full Momentum (5); costs all 5 Momentum + the move's Energy; deals ×2.0 and does not stack with Burst. Cinematic ULTIMATE beat + purple card glow when ready.
+- **Energy matters more:** mastery-3 moves cost at least 2 energy, mastery-4+ at least 3; Ultimates also floor at 3.
+- **Environment chips:** each city maps to a stage tag that nudges one element (+10% damage on a won edge). Readable chip under the foe name (`pier · ice +10%`, etc.). Arena uses the energy tag.
+- **Sims:** Normal 60% street 0.74 / boss 0.55 (design target ~55% boss). 194 tests.
+
+### Increment 1: loadout coverage
+
+- **Why:** pm playtest found Superman's six at five strikes and mystery lives with no guard, so a strike tell had no answer but breath. Win rates swung more with the build than with the difficulty.
+- **Auto-fill:** `fillLoadout` still prefers a missing style when topping up empty slots, and once the six is full it will swap a surplus-style slot for a bench move of the missing style (so a late-unlocked Stand Firm actually lands in the six).
+- **Street padding:** `battleMoves` still pads empty slots by missing style first; if a full six still lacks a style, the weakest surplus-style move is swapped for a street cover of the missing style for that fight only.
+- **Moves shelf warning:** clear amber line when the equipped six has no guard / strike / trick (e.g. "No guard move: strike tells have no answer").
+- **Authored / catalog defaults:** Stand Firm, Dome and Aegis unlock as the *first* move of durability / force-field / aegis-shell; Ground Pound is a trick; Black Panther's Receipt is a trick. Superman / Wonder Woman / Harbor Bay kits now ship with a guard in the six.
+- **Sims (new builds: Harbor military mystery, Dustreach celebrity, Neon fire+speed God Mode, Black Panther, Wonder Woman, Hulk, Flash, Superman), Normal 60% play:** street 0.74 / boss 0.54 (was 0.61 / 0.46 on the night baseline before this fix). Superman street 0.63 (was the weak outlier). Design target for Normal boss is ~55%.
+- **Tests:** +6 in `coverage.test.ts`. 189 pass.
+
+
+## 2026-11-07 (pm): battle Stage 2 (`devbot/2026-11-07-pm`)
+
+Built on `origin/devbot/2026-11-07-am` (f9179b9). `main` is unchanged since 702d68d. Each increment below was typechecked, linted, tested, built and loaded at 390×844 before it was pushed.
+
+### Increment 3: Arena shares the battle book
+
+- **Same rules in both modes:** Arena bouts (vs AI and online) now use the life sim's Momentum (+1 on a won edge, +1 guard break, +1 Finisher; cap 5), **Burst** (×1.45 on your next winning hit at 3+), the five **statuses** (same element table, max 2, non-lethal Burn, breath clears one) and the mix-up **Finisher**. Shock also stops a leader from faking its tell.
+- **AI:** values a winning hit higher with Burst banked and likes landing a status the rival doesn't have yet. A Shocked AI leader stops planning feints.
+- **HUD:** Momentum pips next to Energy, status pills on both HP cards, combo pips in the scene, the BURST / FINISHER banner, status words on the fighter they hit, status/Burn lines in the turn log, a "true" mark on a Shocked rival's tell, "Shocked · no fakes" in place of the tell picker, and status icons on move cards. The tell picker is slimmer so it fits beside the Momentum pips at 390px.
+- **Balance:** bouts are ~7.3 turns (was 8.1). Pro AI vs the ladder stand-in is 0.44 / 0.33 at perfect / 60% play (was 0.46 / 0.35). Roster spread 16 points (Thor 57% … Cheetah 41%), within the 22-point test limit. The `TIER` table is re-run on the new rules.
+- **Burn never lands the knockout** in either mode (it stops at 1 HP), so a revive or a last hit always decides the fight.
+- **Tests:** 3 more in `battle.test.ts` (Arena status + Burst, Shock vs feint + non-lethal Burn, deterministic replay for online). 183 pass.
+
+### Increment 2: battle Stage 2 in the life sim — statuses, combos, habit reading
+
+- **Statuses** (`battle.ts`, shared): a move that wins the style edge leaves its element's status. Burn (fire, arcane), Frost (ice, storm), Shock (lightning, energy: tells can't lie, −1 energy), Expose (psychic, shadow, warp, light, gravity), Ward (shield, life: lands on you, next hit −35%). Two a side at most. Breath shakes off your oldest harmful status. Foes inflict them too.
+- **Mix-up combo:** three won edges, never the same style twice running, fire a **Finisher** (bonus hit + Momentum). An even trade holds the chain; a lost edge or a breath drops it.
+- **Habit reading:** the same style twice running lets Normal / Hard / Legendary foes fake a tell that baits it (25 / 40 / 55%). The stage shows a "Habit · tells may be bait" warning first, so it's fair; Shock cancels it.
+- **Runway and bosses:** both HP pools ×1.35 and case bosses ×1.45 HP, so fights last ~6 turns and bosses are harder than street foes. Retuned difficulty so Normal lands ~58% for a 60% player (was ~66%). Win rates per difficulty and play style are in `PLAYTEST.md`.
+- **Burst no longer wastes itself:** banked momentum (3+) now spends on your next **winning** hit, not on whatever move comes next (it used to fire on a guard that lost the exchange). Still automatic, so the owner's "manual arm" question stays open.
+- **Feel:** a cinematic BURST / FINISHER slash and word with shake and haptics; status words pop on the fighter they hit; status pills under both HP bars; combo pips in the stage (the stage is 10–18px shorter so all six moves still fit beside a boss gimmick strip); move cards show the status they leave; the breath button says what it will clear; a "true" mark on a Shocked foe's tell.
+- **Tests:** `battle.test.ts` (9): element table, status cap/refresh/expiry, Ward vs Burn, cleanse, combo rules, habit bait, Burn/Frost/Ward/Shock in real duel turns, Finisher determinism, difficulty read curve.
+
+### Increment 1: playtest + move-card fix
+
+- Playtest of new builds (Crownbridge wealthy mystery, Metro God Mode lightning + force field, Spider-Man / Batman / Superman) at all four difficulties. Results and the Stage 2 plan are in `PLAYTEST.md` and `BACKLOG.md`.
+- **Fix:** in gimmick fights the six move cards were squeezed to fit, cutting off their bottom line. The grid now keeps each card's full height (`auto-rows-max`), and the cards are more compact (one-line effect, no rank chip in fights, the Burst hint moves to the glow and the effect line), so all six fit on a 390×844 screen even with a boss gimmick strip.
+
+## 2026-11-07 (am): battle redesign Stage 1 — life difficulty + Momentum (`devbot/2026-11-07-am`)
+
+Built on `origin/devbot/2026-11-04-am` (2aed31b). Full signature system written into `DESIGN.md` §17; Stage 1 ships complete and playable.
+
+### Life difficulty (`difficulty.ts`, CreateScreen, Legends, engine, save)
+
+- Chosen at birth: **Story / Normal / Hard / Legendary** (default Normal). Persisted on the save; old saves migrate to Normal.
+- Scales every life-sim duel: foe HP, foe damage, AI hate-read, and a small foe level bump on Hard/Legendary.
+- **Normal is harder than the previous baseline** (foe HP ×1.10, damage ×1.06, AI 0.48 vs old ×1.0 / 0.42).
+- Picker on the new-life stepper footer and on the legend Begin button.
+
+### Momentum (`duel.ts`, Duel.tsx)
+
+- Second resource next to Energy. Cap 5. Builds +1 on style-edge wins, +1 extra on Trick-vs-Guard (guard break). Breath never builds.
+- At 3+ Momentum the next real move **Bursts** automatically (spend 3, ×1.45 damage). UI marks Burst-ready moves.
+- Pure and deterministic — safe for future Arena online replay.
+
+### Feel
+
+- Animated HP bars with a delayed ghost trail and a kick flash on hit.
+- Momentum diamonds under the Energy row; Burst chip on move cards.
+
+### Tests
+
+- `difficulty.test.ts`: catalog, persistence, momentum/Burst/guard-break, foeDamage, balance sims per difficulty.
+
+### Verification
+
+- typecheck clean; 171 game tests (5 new in difficulty.test.ts); lint (plumbing `no-empty` left alone); production build; 390×844 screenshots in PLAYTEST.
+
+
+## 2026-11-03 (pm + night, shipped Nov 4 am): mixing at 15 with mentors, Skip to 15, Arena purses, every villain carded (`devbot/2026-11-04-am`)
+
+Built on `devbot/2026-11-03-am` (head 0de3abd, same content as main 702d68d). The 3 PM and 9 PM passes were cut off before pushing, so their work ships here. The Nov 4 am pass re-ran typecheck, lint, 166/166 game tests and the build, and reloaded it at 390x844 (Powers lock card and Skip to 15 sheet checked).
+
+### Power mixing unlocks at 15 (owner's call) (`mentors.ts`, `engine.ts`, `PowerLab.tsx`)
+
+- **Why:** heroes got too strong too early. Light Speed could be braided at about 12.
+- **The rule:** no mixing before **15**, in every mode. The engine refuses `mix|` and the mentor's braid lesson before then (`MIX_AGE`, `mixLock`). The required chain is unchanged: **Fire Control + Super Speed = Light Speed**, then **Light Speed + Super Strength = Lightning Strikes**. Generation 2 is still the hard cap.
+- **Lock card:** before 15, Powers ▸ Book shows **"Mixing unlocks at 15"**. It has the years to go, an age track, who will train you (God Mode legends name their teacher) and how many recipes you already hold. It also has a **Skip to 15** button.
+- The "Learn 1 new power" goal now says "Mix (15+)".
+
+### Mentors (15+) (`mentors.ts`)
+
+- On the 15th birthday a mentor finds you, with a banner and a major life-log line. Old saves already past 15 get their mentor when they load.
+- **Who:** God Mode legends get their canon teacher, bent for this universe:
+  - Spider-Man: Ben Parker
+  - Batman: Alfred
+  - Iron Man: Ho Yinsen
+  - Hulk: Leonard Samson
+  - Superman: Jonathan Kent
+  - Wonder Woman: Antiope
+  - Captain America: Erskine
+  - Thor: Odin
+  - Black Panther: Zuri
+  - Wolverine: Ogun
+  - The Flash: Jay Garrick
+- Other lives get a mentor matched to their upbringing (12 of them), then to their city (8), then a fallback coach. All of it is data: one row per mentor.
+- **Lessons:** one a month, on the mentor card. The card is in Powers ▸ Book, and **night:** now in Powers ▸ Teachers too, since that's where players look for a teacher. The three lessons:
+  - **Guided braid:** prefers the required chain, and the new power lands a little drilled.
+  - **Drill:** a mastery boost on your focus power.
+  - **Study night:** writes a recipe into your book.
+- Bond grows with each lesson, with diminishing gains, and raises the boost by up to +50%.
+
+### Skip to 15 (`skip.ts`, `FastForward.tsx`)
+
+- A big **Skip to 15** card in the Skip sheet and on the lock card. It's the quick way through childhood.
+- It still stops for:
+  - the power reveal (random age 7–15)
+  - chapters and story beats
+  - villain cases and fights
+  - low health
+  - the mentor's arrival
+- Small everyday moments (rainy days, birthdays, friendly cape drop-ins) are settled for you. The skip picks the answer that best fits your stats and lists it afterwards ("Small moments handled").
+- A long skip draws one track segment per year, so it stays readable on a phone.
+
+### Arena purses (`arena.purse.ts`, `store.ts`, `Arena.tsx`)
+
+- If one of your 3 picks is your **active life's** character, the match pays into that life.
+- **Win purse:** Rookie $600, Pro $1,500, Legend $3,500. Online counts as Pro.
+- **Adjustments:** +25% for a 2–0 sweep. A loss pays a 20% appearance fee. Under-18s get half.
+- **Anti-farm:** each day's purses run 100%, 100%, 70%, 50%, 30%, then close until tomorrow. Each match pays once, keyed by seed and picks, so reloads and rematches can't pay twice.
+- **Where it shows:**
+  - a gold **ARENA PURSE** line on the results screen
+  - a major line in the life log ("Arena loss, 0–2, against … An appearance fee of $300.")
+  - a card banner
+  - a hint in the Arena hub ("Draft Mara Quinn and the match pays their life")
+- Teams of only legends and villains earn nothing.
+
+### Every villain has a card (`VillainArt.tsx`, `villainArt.data.ts`)
+
+- **pm:** 16 legend rogues got cards: Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe and Malekith. In life-sim fights an illustrated rogue now **stands in the ring as its card**, with hit-flash and lean-in.
+- **night:** the last 15 got cards:
+  - Justin Hammer (drones, tinted glasses)
+  - Red Hulk
+  - The Maestro (grey beard, throne)
+  - Ares (fire-crested war helm, spear)
+  - Medusa (snake crown)
+  - Crossbones
+  - Surtur (horned fire crown, Twilight Sword)
+  - Man-Ape (white pelt, war club)
+  - Namor (trident, jade collar)
+  - Lady Deathstrike (talons)
+  - Omega Red (carbonadium coils)
+  - Silver Samurai (kabuto, glowing katana)
+  - Captain Cold (parka, cold gun)
+  - Gorilla Grodd (telepathy rings)
+  - Mirror Master (mirror visor, shards)
+- That makes **49 villains: all 18 Arena villains and every legend's rogues**. A new test makes sure every preset rogue maps to a card.
+- **Painted (AI) portraits are still blocked:** no image-generation tool is available to the dev bot, so these are the vector cards. Hero portraits are inlined webp data URIs (`src/assets/art`), so painted villains can drop in the same way later.
+
+### Fixes
+
+- The foe figure no longer loses its mirror while idle: float and mirror are now on separate layers (pm).
+
+### Verification
+
+- typecheck clean.
+- lint: 0 new errors. One pre-existing error in the Grok Build plumbing `src/lib/app-data/client.server.ts`, left alone.
+- 167/167 game tests pass.
+- The `scripts/` plumbing suite has the same 12 pre-existing failures as main.
+- Build OK.
+- Playtests are in PLAYTEST.md (night pass).
+
 ## 2026-11-03 (am): illustrated villain cards, life-sim boss reveal (`devbot/2026-11-03-am`)
 
 This branch stacks on `devbot/2026-11-02-night` (head 6f82bef), so it also carries the Nov 1 night and all three Nov 2 passes.

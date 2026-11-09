@@ -25,8 +25,9 @@ import {
 } from "./data";
 import { pickEvent, type EventDef, type MiniTemplate } from "./events";
 import { clamp, firstName, money, whenLabel } from "./format";
-import { basePowers, getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
+import { basePowers, type CatalogPower, getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { kinOrder, kinPool, legendFits } from "./kin";
+import { MIX_AGE, mentorBondGain, mentorBoost, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, mixOpen } from "./mentors";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
 import { ELEMENTS, elementOfLegacy, elementOfPower } from "./elements";
@@ -37,10 +38,13 @@ import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp, youthGain } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
-import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
+import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainPhase3, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
-import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
+import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, streetTwisted, tuneOf } from "./difficulty";
+import { kitFor } from "./kits";
+import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, slotKitArrival, STREET_MOVES, toggleLoadout } from "./moves";
+import { stageForCity } from "./battle";
 import {
   asDrive,
   asFace,
@@ -104,6 +108,8 @@ export interface NewLifeOpts {
   extraTraits?: TraitId[];
   /** God Mode legend (presets.ts). Overrides name, city, upbringing, traits and look. */
   preset?: string | null;
+  /** Life-sim fight difficulty. Defaults to Normal. */
+  difficulty?: import("./types").LifeDifficulty;
   seed?: number;
   heir?: { fame: number; powerBias: PowerId | null; belief: number; trust?: number };
 }
@@ -1120,7 +1126,7 @@ function monthlyBody(d: Game, banners: string[]) {
 
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "omened" || key === "mentored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (key === "rested" || key === "omened" || key === "mentored" || key === "tutored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
   }
 }
 
@@ -1466,6 +1472,7 @@ export function createGame(input: NewLifeOpts): Game {
   biasHeroes(d);
   d.stats.fame = clamp(d.stats.fame, 0, 28);
   if (opts.mode) d.mode = opts.mode;
+  d.difficulty = asDifficulty(opts.difficulty ?? DEFAULT_DIFFICULTY);
   for (const id of legend?.extra ?? []) grantTrait(d, id, "mark");
   for (const id of (opts.extraTraits ?? []).slice(0, 2)) if (traitById(id)?.slot === "earned") grantTrait(d, id);
   if (legend?.boost) applyEffects(d, legend.boost, []);
@@ -1611,11 +1618,14 @@ function makeDuel(
   foe: { name: string; title: string; side: "hero" | "villain"; powerId: PowerId; powerLevel: number; personId?: string; boss?: boolean },
   flavor: { title: string; subtitle: string; win: string; partial: string; lose: string; tag: "duel" | "relic"; winEffects: Effects; loseEffects: Effects; partialEffects: Effects; specialWin?: Special },
 ): MinigameSpec {
-  const pl = foe.powerLevel;
+  const tune = tuneOf(d);
+  const pl = foe.powerLevel + tune.foeLevelBump;
   const suit = costumeMods(d);
   // Named rogues always fight with their signature twist; other villains only get one as a boss.
-  const gimmick = foe.side === "villain" ? (villainGimmick(foe.name) ?? (foe.boss ? powerGimmick(foe.powerId, foe.name) : null)) : null;
-  const foeHp = 20 + Math.round(pl * 4);
+  // Hard / Legendary: ordinary street villains may bring their power's twist too (difficulty.ts streetTwist).
+  const twisted = !foe.boss && streetTwisted(tune, foe.name, d.age, d.month ?? 0);
+  const gimmick = foe.side === "villain" ? (villainGimmick(foe.name) ?? (foe.boss || twisted ? powerGimmick(foe.powerId, foe.name) : null)) : null;
+  const foeHp = Math.round((20 + Math.round(pl * 4)) * tune.foeHp);
   const moves = playerMoves(d).map((move) =>
     suit.strike ? { ...move, power: Math.max(1, Math.round(move.power * (1 + suit.strike / 100))) } : move,
   );
@@ -1636,8 +1646,8 @@ function makeDuel(
       foeName: foe.name,
       foeTitle: foe.title,
       foeSide: foe.side,
-      playerHp: 26 + Math.round(d.stats.health / 5) + Math.round(d.stats.powerLevel * 2) + (hasTrait(d, "martial") ? 6 : 0) + suit.hp,
-      foeHp: foe.boss ? Math.round(foeHp * 1.25) : foeHp,
+      playerHp: Math.round((26 + Math.round(d.stats.health / 5) + Math.round(d.stats.powerLevel * 2) + (hasTrait(d, "martial") ? 6 : 0) + suit.hp) * DUEL_HP_SCALE),
+      foeHp: Math.round((foe.boss ? foeHp * BOSS_HP_MULT : foeHp) * DUEL_HP_SCALE),
       playerMoves: moves,
       foeMoves: signatureMoves(foe.name, pl) ?? movesFrom(foe.powerId, pl),
       personId: foe.personId,
@@ -1646,6 +1656,12 @@ function makeDuel(
       ...foeLook(d, foe),
       boss: foe.boss || undefined,
       gimmick: gimmick ?? undefined,
+      phase3: (foe.boss && foe.side === "villain" && gimmick ? villainPhase3(d.preset, foe.name, d.age) : null) ?? undefined,
+      difficulty: tune.id,
+      foeDamage: tune.foeDamage,
+      aiHate: tune.aiHate,
+      aiRead: tune.aiRead,
+      stage: stageForCity(d.cityId),
     } satisfies DuelBoard,
   };
 }
@@ -1819,15 +1835,49 @@ function nextLegendRogue(d: Game): PresetVillain | null {
 
 /** The legend rogue behind a story arc's boss: stable per arc, debut age passed. Null outside legend lives. */
 function arcPatron(d: Game, arcId: string): PresetVillain | null {
+  const key = `arcPatron:${arcId}`;
+  const pick = peekArcPatron(d, arcId);
+  if (pick && d.flags[key] === undefined) d.flags[key] = pick.index;
+  return pick?.villain ?? null;
+}
+
+/** Same pick as `arcPatron`, without writing the flag (safe on a read-only game). */
+function peekArcPatron(d: Game, arcId: string): { villain: PresetVillain; index: number } | null {
   const legend = presetById(d.preset);
   if (!legend) return null;
   const ready = legend.villains.filter((v) => villainDebut(legend, v.id) <= d.age);
   if (!ready.length) return null;
   let h = 7;
   for (const ch of arcId) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const key = `arcPatron:${arcId}`;
-  if (d.flags[key] === undefined) d.flags[key] = h % ready.length;
-  return ready[(d.flags[key] ?? 0) % ready.length] ?? null;
+  const index = d.flags[`arcPatron:${arcId}`] ?? h % ready.length;
+  const villain = ready[index % ready.length];
+  return villain ? { villain, index } : null;
+}
+
+/** Months since birth: the clock the regroup cooldown runs on. */
+export function monthIndex(g: Pick<Game, "age" | "month">): number {
+  return g.age * 12 + (g.month ?? 0);
+}
+
+/** A boss you just lost to can't be rematched for a month. */
+export const REGROUP_MONTHS = 1;
+
+/** True while this boss is still on regroup cooldown after a loss. */
+export function regroupFor(g: Pick<Game, "age" | "month" | "regroup">, name: string): boolean {
+  return !!g.regroup && g.regroup.name === name && monthIndex(g) < g.regroup.until;
+}
+
+/** The case boss you're regrouping from (the step is locked until next month), or null. */
+export function caseRegroup(g: Game): string | null {
+  const name = caseBossName(g);
+  return name && regroupFor(g, name) ? name : null;
+}
+
+/** Who the current case's boss step would put in front of you (legend patron, or the case's own foe). */
+function caseBossName(g: Game): string | null {
+  const current = currentCase(g);
+  if (!current || current.step.kind !== "boss") return null;
+  return peekArcPatron(g, current.arc.id)?.villain.alias ?? current.step.foeName ?? current.arc.villain;
 }
 
 /** True when this person is one of the current legend's own rogues. */
@@ -1871,6 +1921,95 @@ function markArch(d: Game, personId?: string): Person | null {
   foe.arch = true;
   foe.closeness = clamp(foe.closeness + 8, 0, 100);
   return foe;
+}
+
+/** Land a mixed power in the book: story card, small power bump. `extra` is appended to the card (mentor lessons). */
+function braidInto(d: Game, left: string, power: CatalogPower, extra: string): string {
+  const name = unlockCombo(d, power.id);
+  const deltas: Delta[] = [];
+  applyEffects(d, { powerLevel: power.generation === 0 ? 0.04 : power.generation === 2 ? 0.1 : 0.06, fame: 1, happiness: 2 }, deltas);
+  if (!d.powerId && d.age >= 8) {
+    const legacy = legacyFromCombo(left) ?? legacyFromCombo(power.id);
+    if (legacy) {
+      d.powerId = legacy;
+      d.powerless = false;
+      d.stats.powerLevel = Math.max(d.stats.powerLevel, 1.3);
+    }
+  }
+  setStory(d, `${name || power.name}. ${power.tierName} tier, generation ${power.generation}. ${power.description} A basic still hits softer than this.${extra}`, deltas, [`Braid: ${power.name}`], "major");
+  peaks(d);
+  return name;
+}
+
+/** The 15th birthday (or the first birthday after it on an old save): mixing opens and a mentor finds you. */
+function meetMentor(d: Game, banners: string[]) {
+  if (d.age < MIX_AGE || d.mentor || d.phase === "dead") return;
+  const mentor = mentorFor(d);
+  d.mentor = { id: mentor.id, since: d.age, lessons: 0, bond: 12 };
+  const first = d.age === MIX_AGE;
+  banners.push(first ? `You're ${MIX_AGE}. Power mixing unlocks, and ${mentor.name} wants to train you.` : `${mentor.name} offers to train you.`);
+  pushHistory(d, `${mentor.hello} ${mentor.name} becomes your mentor${first ? ", and the braid book opens" : ""}.`, "major");
+}
+
+/** One mentor lesson a month: a guided braid, a hard drill, or a study night. */
+function tutorLesson(game: Game, d: Game, kind: string): Game {
+  const state = d.mentor;
+  const mentor = mentorById(state?.id);
+  if (!state || !mentor || mixLock(d) || d.flags.tutored || noTime(d, true) || d.phase !== "live") return game;
+  const boost = mentorBoost(state.bond);
+  if (kind === "braid") {
+    const pick = mentorBraid(d);
+    if (!pick || library(d).block) return game;
+    spend(d);
+    d.flags.tutored = 1;
+    state.lessons += 1;
+    state.bond = clamp(state.bond + mentorBondGain(state.bond), 0, 100);
+    const name = braidInto(d, pick.left.id, pick.result, ` ${mentor.name} talks you through it: ${pick.left.name} into ${pick.right.name}.`);
+    // A guided braid lands a little drilled: the mentor's head start.
+    const drilled = name ? grantMastery(d, pick.result.id, Math.round(10 * boost)) : "";
+    if (drilled && d.card) d.card = { ...d.card, body: `${d.card.body}${drilled}` };
+    return d;
+  }
+  if (kind === "drill") {
+    const powerId = focusId(d);
+    const trained = getPower(powerId);
+    if (!trained || d.stats.health < 12) return game;
+    spend(d);
+    d.flags.tutored = 1;
+    state.lessons += 1;
+    state.bond = clamp(state.bond + mentorBondGain(state.bond), 0, 100);
+    const level = masteryLevel(d.mastery?.[powerId] ?? 0, trained.generation);
+    const exp = Math.round(trainExp({ level, generation: trained.generation, age: d.age, withHero: true, story: false, bond: state.bond }) * boost);
+    const deltas: Delta[] = [];
+    applyEffects(d, { health: -3, happiness: 1, powerLevel: 0.03 }, deltas);
+    const drilled = grantMastery(d, powerId, exp);
+    setStory(d, `${mentor.name} runs you through ${trained.name} until the form is boring, which is the point.${drilled}`, deltas, [`Lesson: ${trained.name}`]);
+    peaks(d);
+    return d;
+  }
+  if (kind === "study") {
+    spend(d);
+    d.flags.tutored = 1;
+    state.lessons += 1;
+    state.bond = clamp(state.bond + mentorBondGain(state.bond) + 1, 0, 100);
+    const recipe = mentorRecipe(d);
+    const power = recipe ? getPower(recipe) : null;
+    if (power) discoverPower(d, power.id);
+    const deltas: Delta[] = [];
+    applyEffects(d, { smarts: 2, happiness: 1 }, deltas);
+    const parents = power?.ingredients.map((id) => getPower(id)?.name).filter(Boolean) ?? [];
+    setStory(
+      d,
+      power
+        ? `${mentor.name} draws a recipe on a napkin: ${parents.join(" + ")} makes ${power.name}. It's in your book now.`
+        : `${mentor.name} talks theory all evening. Your book has nothing new to learn yet, but your head does.`,
+      deltas,
+      power ? [`Recipe: ${power.name}`] : [],
+    );
+    peaks(d);
+    return d;
+  }
+  return game;
 }
 
 function discoverPower(d: Game, id: string | null | undefined) {
@@ -2045,7 +2184,12 @@ function personFoe(d: Game, person: Person): { name: string; title: string; side
 
 function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): boolean {
   if (d.age < 8) return false;
-  const arch = d.relationships.find((r) => r.arch && r.alive);
+  const found = d.relationships.find((r) => r.arch && r.alive);
+  // A legend's own rogue doesn't call out a child who can't fight back yet: Thawne waits for the Speed Force.
+  // "Can fight back" is the powers waking or the legend's kit arriving, whichever comes first (Iron Man's Armory at 10).
+  const wake = wakeAge(d.preset);
+  const ready = wake === null ? null : Math.min(wake, kitFor(d.preset)?.moves[0]?.minAge ?? wake);
+  const arch = found && ready !== null && d.age < ready && presetById(d.preset)?.villains.some((v) => v.alias === found.note) ? undefined : found;
   if (arch && roll(d) < 0.34 * calm) {
     const foe = personFoe(d, arch);
     showChoice(
@@ -2198,6 +2342,24 @@ export const SKIP_EVENT_CHANCE = 0.16;
 /** Fast-forward also scales city run-ins and arch-enemy pings down to this share. */
 export const SKIP_ENCOUNTER_CALM = 0.4;
 
+/** A legend kit (Batman's belt, Iron Man's Armory) gains pieces on birthdays; say so and slot them in. */
+function beltBirthday(d: Game, banners: string[]) {
+  const kit = kitFor(d.preset);
+  if (!kit) return;
+  const fresh = kit.moves.filter((move) => move.minAge === d.age);
+  if (!fresh.length) return;
+  fillLoadout(d);
+  const added = fresh.filter((move) => !move.upgrades);
+  const upgrades = fresh.filter((move) => move.upgrades);
+  if (added.length) banners.push(`New in the ${kit.name}: ${added.map((move) => move.name).join(", ")}.`);
+  for (const move of added) {
+    const out = slotKitArrival(d, move.id);
+    if (out) banners.push(`${move.name} takes ${out}'s slot, so every tell has an answer.`);
+  }
+  for (const move of upgrades) banners.push(`${kit.name} upgrade: ${move.name} replaces ${kit.moves.find((old) => old.id === move.upgrades)?.name ?? "the old piece"}.`);
+  if (d.age === kit.ultimateAge) banners.push(`${kit.name}: your strongest ${kit.piece} is now your Ultimate at full Momentum.`);
+}
+
 export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
@@ -2206,6 +2368,8 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   let banners: string[] = [];
   if (birthday) {
     banners = openYear(d);
+    meetMentor(d, banners);
+    beltBirthday(d, banners);
     if (turnChapter(d)) banners.push(`Chapter ${(d.chapters?.length ?? 1)} begins: ${d.chapters?.[d.chapters.length - 1]?.title ?? "a new decade"}.`);
     if (d.stats.health <= 0) {
       collapse(d, "Your health gives out before the year can even pick a fight.");
@@ -2413,6 +2577,11 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   }
   const special = win ? spec.specialWin : partial ? spec.specialPartial : spec.specialLose;
   let extra = applySpecial(d, special, deltas);
+  // A boss loss costs a month: no rematch with that boss until you've regrouped.
+  if (spec.kind === "duel" && spec.duel?.boss && !win && !partial) {
+    d.regroup = { name: spec.duel.foeName, until: monthIndex(d) + REGROUP_MONTHS };
+    extra += ` You need a month to regroup before you face ${spec.duel.foeName} again.`;
+  } else if (spec.kind === "duel" && spec.duel?.boss && win && d.regroup?.name === spec.duel.foeName) d.regroup = null;
   if (spec.kind === "duel") {
     const trained = grantMoveExp(d, used, win ? 8 : 5);
     if (trained.length) extra += ` ${trained.join(". ")}.`;
@@ -2532,12 +2701,15 @@ function powerOffer(d: Game, hero: AiHero, discovered: readonly string[]): strin
 export function freshen(game: Game): Game {
   game.heroes = mergeHeroes(game.heroes);
   migrateChapters(game);
+  if (!game.difficulty) game.difficulty = DEFAULT_DIFFICULTY;
   if (game.crew) {
     if (typeof game.crew.heat !== "number") game.crew.heat = 15;
     if (typeof game.crew.loyalty !== "number") game.crew.loyalty = 55;
     if (!game.crew.motto) game.crew.motto = "No real names.";
   }
   ensureProgress(game);
+  // Saves from before the mentor pass: anyone already 15+ gets their mentor on load, quietly.
+  if (game.mentor === undefined && game.age >= MIX_AGE && game.phase !== "dead") meetMentor(game, []);
   return game;
 }
 
@@ -3349,32 +3521,16 @@ export function act(game: Game, id: string): Game {
 
   if (id.startsWith("mix|")) {
     const [, left, right] = id.split("|");
-    if (!left || !right || noTime(d, true)) return game;
+    if (!left || !right || noTime(d, true) || mixLock(d)) return game;
     const attempt = mix(left, right, d.unlockedPowers ?? []);
     if (!attempt.ok) return game;
     if (!(d.unlockedPowers ?? []).includes(attempt.power.id) && library(d).block) return game;
     spend(d);
-    const name = unlockCombo(d, attempt.power.id);
-    const deltas: Delta[] = [];
-    applyEffects(d, { powerLevel: attempt.power.generation === 0 ? 0.04 : attempt.power.generation === 2 ? 0.1 : 0.06, fame: 1, happiness: 2 }, deltas);
-    if (!d.powerId && d.age >= 8) {
-      const legacy = legacyFromCombo(left) ?? legacyFromCombo(attempt.power.id);
-      if (legacy) {
-        d.powerId = legacy;
-        d.powerless = false;
-        d.stats.powerLevel = Math.max(d.stats.powerLevel, 1.3);
-      }
-    }
-    setStory(
-      d,
-      `${name || attempt.power.name}. ${attempt.power.tierName} tier, generation ${attempt.power.generation}. ${attempt.power.description} A basic still hits softer than this.`,
-      deltas,
-      [`Braid: ${attempt.power.name}`],
-      "major",
-    );
-    peaks(d);
+    braidInto(d, left, attempt.power, "");
     return d;
   }
+
+  if (id.startsWith("tutor|")) return tutorLesson(game, d, id.slice(6));
 
   if (id === "seek-hero") {
     if (d.age < 10 || noTime(d, true)) return game;
@@ -3715,7 +3871,8 @@ export function act(game: Game, id: string): Game {
   if (id.startsWith("herotrain|")) {
     const hero = d.heroes.find((item) => item.id === id.slice(10) && item.met);
     if (!hero || hero.relationship < 36 || noTime(d, true)) return game;
-    const options = possibleMixes(d.unlockedPowers ?? []).filter((item) => hero.unlocked.includes(item.left.id) || hero.unlocked.includes(item.right.id));
+    // Braiding with a hero waits for 15 like every other mix (owner rule, mentors.ts).
+    const options = mixOpen(d) ? possibleMixes(d.unlockedPowers ?? []).filter((item) => hero.unlocked.includes(item.left.id) || hero.unlocked.includes(item.right.id)) : [];
     const taught = options[0];
     const bases = teachFrom(d, hero.unlocked);
     const base = bases[0];
@@ -3916,6 +4073,8 @@ export function act(game: Game, id: string): Game {
   if (id === "arc-step") {
     const current = currentCase(d);
     if (!current || noTime(d, true)) return game;
+    const bossName = caseBossName(d);
+    if (bossName && regroupFor(d, bossName)) return game;
     const step = current.step;
     if (step.kind === "talk") {
       const hero = d.heroes.find((entry) => entry.id === step.heroId && entry.met);
@@ -4182,6 +4341,8 @@ export function actionsFor(g: Game): ActionItem[] {
         else if (hero.relationship < (step.minBond ?? 18)) blocked = `Bond ${step.minBond ?? 18} with ${hero.alias}. Talk is free.`;
       }
       if (step.kind === "train" && !heldDrill(g, step)) blocked = `Needs ${stepPowers(step).map((powerId) => getPower(powerId)?.name ?? powerId).join(" or ")}. Learn it, or set the case down.`;
+      const bossName = caseBossName(g);
+      if (bossName && regroupFor(g, bossName)) blocked = `Regrouping after the loss. ${bossName} again next month.`;
       items.push(item({ id: "arc-step", group: life, section: "Cases", label: step.title, detail: `${current.arc.villain} · ${step.kind}. ${step.brief}`, disabled: noTime(g, true) ?? blocked, accent: true }));
       items.push(item({ id: "arc-drop", group: life, section: "Cases", label: "Set the case down", detail: `${current.arc.title} stays on the page. You can pick it up later.`, disabled: noTime(g, true) }));
     } else {

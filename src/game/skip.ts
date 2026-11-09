@@ -11,6 +11,7 @@ import { act, actionsFor, ageUp, choose, focusId, resolveMini } from "./engine";
 import { getPower } from "./combo";
 import { masteryLevel, powerRank } from "./mastery";
 import { firstName } from "./format";
+import { MIX_AGE } from "./mentors";
 import type { Game, Habits, Person, SkipReport, SkipSpan, SkipStopKind } from "./types";
 
 export const SKIP_LOW_HEALTH = 25;
@@ -180,6 +181,9 @@ export function stopFor(before: Game, after: Game, first: boolean): { kind: Skip
       return { kind: "bond", text: `Things with ${firstName(person.name)} are close to breaking (${now.closeness}).` };
     }
   }
+  if (after.mentor && !before.mentor) {
+    return { kind: "mentor", text: `You're ${after.age}. Power mixing is open, and a mentor is waiting in the Powers tab.` };
+  }
   const h = after.stats.health;
   if (h < SKIP_LOW_HEALTH && (first || before.stats.health >= SKIP_LOW_HEALTH)) return { kind: "health", text: `Health is down to ${h}. Rest or see a doctor.` };
   return null;
@@ -215,7 +219,60 @@ export function playMonth(g: Game, did: Map<string, { label: string; count: numb
 }
 
 export function skipMonths(g: Game, span: SkipSpan): number {
+  if (span === "fifteen") return Math.max(0, (MIX_AGE - g.age) * 12 - (g.month ?? 0));
   return span === "season" ? 3 : 12 - (g.month ?? 0);
+}
+
+/** "Skip to 15" is offered while mixing is still locked and at least a season away. */
+export function canSkipToFifteen(g: Game): boolean {
+  return g.phase === "live" && !g.reveal && g.age < MIX_AGE && skipMonths(g, "fifteen") >= 3;
+}
+
+const STAT_TASTE: Partial<Record<keyof Game["stats"], number>> = { happiness: 1, health: 1, smarts: 0.7, parentBelief: 0.5, karma: 0.4, reputation: 0.3, looks: 0.2, fame: 0.2 };
+
+function tasteOf(before: Game, after: Game): number {
+  let score = 0;
+  for (const [key, w] of Object.entries(STAT_TASTE) as [keyof Game["stats"], number][]) score += ((after.stats[key] ?? 0) - (before.stats[key] ?? 0)) * w;
+  score += ((after.stats.money ?? 0) - (before.stats.money ?? 0)) / 2000;
+  score += ((after.stats.powerLevel ?? 0) - (before.stats.powerLevel ?? 0)) * 20;
+  return score;
+}
+
+/**
+ * Skip to 15 only: settle a small everyday moment (a choice event or a quick event mini) the way a
+ * sensible kid would, so childhood isn't twenty taps of pigeons and birthday cake. Returns null for
+ * anything that matters (fights, tagged minis, canon, cases) so the skip still stops for those.
+ */
+export function settleSmall(g: Game): { g: Game; line: string } | null {
+  if (g.phase === "mini" && g.minigame) {
+    if (g.minigame.kind === "duel" || g.minigame.tag) return null;
+    const n = resolveMini(g, autoRatio(g));
+    return n === g ? null : { g: n, line: `${g.minigame.title}: handled.` };
+  }
+  if (g.phase !== "choice" || !g.pending) return null;
+  const id = g.pending.id;
+  // Canon beats, villain cases and story arcs always stop. Friendly hero drop-ins and an arch's monthly
+  // taunt are settled only when there is a no-fight answer (any fight still stops the skip).
+  const chatter = /^hero-/.test(id) || id === "arch-month" || id === "arch-billboard";
+  if (id.startsWith("canon|") || (!chatter && /case|arc|arch|enc|villain|hero/.test(id))) return null;
+  let best: { g: Game; label: string; score: number } | null = null;
+  for (const choice of g.pending.choices) {
+    let n = choose(g, choice.id);
+    if (n === g) continue;
+    if (n.phase === "mini" && n.minigame) {
+      if (n.minigame.kind === "duel" || n.minigame.tag) continue;
+      n = resolveMini(n, autoRatio(g));
+    }
+    if (n.phase === "dead" || n.phase === "choice" || n.phase === "mini") continue;
+    // Meeting a hero is worth more than a stat point: they teach the powers you braid at 15.
+    const met = (n.heroes ?? []).filter((h) => h.met).length - (g.heroes ?? []).filter((h) => h.met).length;
+    const score = tasteOf(g, n) + met * 4;
+    if (!best || score > best.score) best = { g: n, label: choice.label, score };
+  }
+  if (!best) return null;
+  const prompt = g.pending.prompt.replace(/\s+/g, " ").trim();
+  const short = prompt.length > 60 ? `${prompt.slice(0, 57).trimEnd()}…` : prompt;
+  return { g: best.g, line: `${short} → ${best.label}` };
 }
 
 export function fastForward(game: Game, span: SkipSpan): Game {
@@ -235,12 +292,28 @@ export function fastForward(game: Game, span: SkipSpan): Game {
   let g = start;
   let stop: SkipReport["stop"] = null;
   let passed = 0;
-  for (let m = 0; m < months; m++) {
-    const played = playMonth(g, did);
-    g = played.g;
-    if (played.stop) {
-      stop = played.stop;
-      break;
+  const fifteen = span === "fifteen";
+  let handled = 0;
+  // Skip to 15 settles small everyday moments for you; anything bigger still stops the skip.
+  const settle = (cur: Game, why: SkipReport["stop"]): Game | null => {
+    if (!fifteen || !why || (why.kind !== "event" && why.kind !== "case")) return null;
+    const done = settleSmall(cur);
+    if (!done) return null;
+    handled += 1;
+    if (handled <= 3) note(done.line);
+    return done.g;
+  };
+  outer: for (let m = 0; m < months; m++) {
+    for (let tries = 0; ; tries++) {
+      const played = playMonth(g, did);
+      g = played.g;
+      if (!played.stop) break;
+      const next = tries < 4 ? settle(g, played.stop) : null;
+      if (!next || !liveish(next)) {
+        stop = played.stop;
+        break outer;
+      }
+      g = next;
     }
     const before = g;
     const historyAt = before.history?.length ?? 0;
@@ -249,8 +322,17 @@ export function fastForward(game: Game, span: SkipSpan): Game {
     for (const line of g.card?.banner ?? []) note(line);
     for (const entry of (g.history ?? []).slice(historyAt)) if (entry.tag === "major") note(entry.text);
     stop = stopFor(before, g, m === 0);
-    if (stop) break;
+    if (stop) {
+      const next = settle(g, stop);
+      if (next && liveish(next)) {
+        g = next;
+        stop = null;
+        continue;
+      }
+      break;
+    }
   }
+  if (handled) did.set("auto-moments", { label: "Small moments handled", count: handled });
   g.skipReport = buildReport(start, g, span, passed, months, did, notes, stop);
   return g;
 }
