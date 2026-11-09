@@ -6,7 +6,8 @@
 - **Done (increment 3):** painted portraits for all 31 legend rogues (every villain is now painted), with per-villain head-crop origins for eight low-face paintings.
 - **Done (increment 4):** Hulk's **Gamma Rage** (9 pieces from 28, World Breaker Ultimate at 33) replacing his strength / durability / Juggernaut moves. Normal 0.91 / 0.72 → 0.87 / 0.54, Hard 0.79 / 0.53 → 0.62 / 0.31, Legendary 0.64 / 0.32 → 0.45 / 0.25.
 - **Legend Normal street is high across the board** (WW 0.82, Hulk 0.87, Cap 0.86, Batman 0.85 vs 0.70–0.80): bosses are now on target, the street pool for legends is soft. Candidate: a legend street bump (HP or a twist share on Normal for preset lives) rather than more kit nerfs.
-- **Legends still on generic moves:** Black Panther (0.88 / 0.71), Wolverine (0.87 / 0.73). All three are above target; kits should bring them down as WW's did.
+- **Done (increment 5):** Black Panther's **Panther Habit** (12 pieces from 16, Kinetic Release Ultimate at 30). Normal 0.88 / 0.71 → 0.78 / 0.63, Hard 0.73 / 0.35 → 0.58 / 0.28, Legendary 0.47 / 0.21 → 0.41 / 0.21.
+- **Legend still on generic moves:** Wolverine (0.87 / 0.73; three guards, no claws).
 - **Dustreach TK + Lightning God Mode is the weakest life measured** (Hard 0.31 / 0.07, Legendary 0.13 / 0.02): five strikes and one street guard until 30 (Push, Brace, Heavy Step, Spark Jab, Blindside, Pulse Shot). Same root as the Crownbridge ice life: Gen-0 kits that are mostly strikes.
 - **Harbor street-kid mystery** is fine on Normal (0.74 / 0.79) but stacks four guards at 15–30 (Dome, Stand Firm, Aegis, Door to Nowhere).
 
