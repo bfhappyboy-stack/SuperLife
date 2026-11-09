@@ -6,7 +6,7 @@ import { elementOfPower } from "./elements";
 import type { CatalogPower } from "./combo";
 import type { DuelMove, Game, MoveStyle } from "./types";
 import { markUltimate } from "./battle";
-import { isKitPower, KIT_EDGE, kitById, kitFor, kitMoveById, kitMoveUnlocked, kitRank, type KitMove } from "./kits";
+import { isKitPower, kitById, kitEdge, kitFor, kitHidesPowerMove, kitMoveById, kitMoveRetired, kitMoveUnlocked, kitRank, kitUpgradeTip, type KitMove } from "./kits";
 
 const HAND = new Map<string, MoveDef[]>();
 for (const entry of MOVE_BOOK) {
@@ -223,6 +223,8 @@ export function grantMoveExp(game: Pick<Game, "moveExp" | "unlockedPowers" | "ma
 
 export function moveUnlocked(game: UnlockGame, def: MoveDef): boolean {
   if (isKitPower(def.powerId)) return kitMoveUnlocked(game, def as KitMove);
+  // A legend kit can stand in for some power moves (Iron Man's suit, Spider-Man's web guards).
+  if (kitHidesPowerMove(game.preset, def)) return false;
   if (!(game.unlockedPowers ?? []).includes(def.powerId)) return false;
   const power = getPower(def.powerId);
   const level = masteryLevel(game.mastery?.[def.powerId] ?? 0, power?.generation ?? 0);
@@ -234,10 +236,11 @@ export function knownMoves(game: UnlockGame): { def: MoveDef; unlocked: boolean 
   for (const id of game.unlockedPowers ?? []) {
     const power = getPower(id);
     if (!power) continue;
-    for (const def of movesForPower(power)) out.push({ def, unlocked: moveUnlocked(game, def) });
+    for (const def of movesForPower(power)) if (!kitHidesPowerMove(game.preset, def)) out.push({ def, unlocked: moveUnlocked(game, def) });
   }
   // A legend kit (Batman's belt) sits on the shelf beside any powers, locked moves showing their age.
-  for (const def of kitFor(game.preset)?.moves ?? []) out.push({ def, unlocked: moveUnlocked(game, def) });
+  // Pieces an upgrade has replaced leave the shelf (Pulse Glove once Repulsor Blast arrives).
+  for (const def of kitFor(game.preset)?.moves ?? []) if (!kitMoveRetired(game, def)) out.push({ def, unlocked: moveUnlocked(game, def) });
   return out;
 }
 
@@ -272,7 +275,7 @@ export function moveEdge(game: { stats?: { powerLevel: number }; mastery?: Recor
   const pl = Math.max(0, game.stats?.powerLevel ?? 0);
   if (!powerId) return Math.round(pl * 0.35);
   // Kit gear trains like a power (full power-level share) and wears in by decade instead of mastery.
-  if (isKitPower(powerId)) return Math.round(pl * KIT_EDGE) + kitRank(game.age ?? 0) - 1;
+  if (isKitPower(powerId)) return Math.round(pl * kitEdge(powerId)) + kitRank(game.age ?? 0) - 1;
   const power = getPower(powerId);
   const rank = masteryLevel(game.mastery?.[powerId] ?? 0, power?.generation ?? 0);
   return Math.round(pl * 0.55) + Math.max(0, rank - 1);
@@ -320,16 +323,19 @@ export function battleMoves(game: FightGame): DuelMove[] {
   const power = focus ? getPower(focus) : null;
   const rank = focus && power ? masteryLevel(game.mastery?.[focus] ?? 0, power.generation) : 0;
   const focusMoveIds = power ? movesForPower(power).map((def) => def.id) : [];
-  if (!focus) {
-    // No power to focus: a legend kit arms its own Ultimate once the hero is old enough.
-    const kit = kitFor(game.preset);
-    if (kit) return markUltimate(picked, { focusPowerId: kit.id, masteryRank: (game.age ?? 0) >= kit.ultimateAge ? 4 : 0, focusMoveIds: kit.moves.map((def) => def.id) });
+  // A legend kit arms its own Ultimate once the hero is old enough: always when there is no power
+  // to focus (Batman), and over the power's when the kit leads (Iron Man's Unibeam).
+  const kit = kitFor(game.preset);
+  if (kit && kit.ultimateAge !== null && (!focus || kit.leadsUltimate)) {
+    return markUltimate(picked, { focusPowerId: kit.id, masteryRank: (game.age ?? 0) >= kit.ultimateAge ? 4 : 0, focusMoveIds: kit.moves.map((def) => def.id) });
   }
   return markUltimate(picked, { focusPowerId: focus, masteryRank: rank, focusMoveIds });
 }
 
 export function fillLoadout(game: Game): void {
   if (!Array.isArray(game.loadout)) game.loadout = [];
+  // A suit upgrade takes the old piece's slot (Mark I Plating → Nanotech Shell), so the six keeps its shape.
+  if (kitFor(game.preset)) game.loadout = game.loadout.map((id) => (isKitPower(moveById(id)?.powerId) ? kitUpgradeTip(game, id) : id));
   // Drop stale, duplicate or no-longer-unlocked ids first, then top up, so a pruned slot is refilled
   // the same tick instead of leaving the six at five.
   game.loadout = game.loadout
@@ -410,7 +416,7 @@ export interface SlotResult {
 export function placeInSlot(game: Game, slot: number, moveId: string): SlotResult {
   const def = moveById(moveId);
   if (!def) return { ok: false, line: "That move isn't in the book." };
-  if (!moveUnlocked(game, def)) return { ok: false, line: lockedLine(def) };
+  if (!moveUnlocked(game, def)) return { ok: false, line: kitHidesPowerMove(game.preset, def) ? (kitFor(game.preset)?.replaces?.line ?? lockedLine(def)) : lockedLine(def) };
   if (!Number.isInteger(slot) || slot < 0 || slot >= MOVESET_SIZE) return { ok: false, line: "There are only six slots." };
   if (!Array.isArray(game.loadout)) game.loadout = [];
   const loadout = [...game.loadout];

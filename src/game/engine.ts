@@ -2337,15 +2337,18 @@ export const SKIP_EVENT_CHANCE = 0.16;
 /** Fast-forward also scales city run-ins and arch-enemy pings down to this share. */
 export const SKIP_ENCOUNTER_CALM = 0.4;
 
-/** A legend kit (Batman's belt) gains its gadgets on birthdays; say so and slot them in. */
+/** A legend kit (Batman's belt, Iron Man's Armory) gains pieces on birthdays; say so and slot them in. */
 function beltBirthday(d: Game, banners: string[]) {
   const kit = kitFor(d.preset);
   if (!kit) return;
   const fresh = kit.moves.filter((move) => move.minAge === d.age);
   if (!fresh.length) return;
   fillLoadout(d);
-  banners.push(`New on the ${kit.name}: ${fresh.map((move) => move.name).join(", ")}.`);
-  if (d.age === kit.ultimateAge) banners.push(`The ${kit.name}'s strongest gadget is now your Ultimate at full Momentum.`);
+  const added = fresh.filter((move) => !move.upgrades);
+  const upgrades = fresh.filter((move) => move.upgrades);
+  if (added.length) banners.push(`New in the ${kit.name}: ${added.map((move) => move.name).join(", ")}.`);
+  for (const move of upgrades) banners.push(`${kit.name} upgrade: ${move.name} replaces ${kit.moves.find((old) => old.id === move.upgrades)?.name ?? "the old piece"}.`);
+  if (d.age === kit.ultimateAge) banners.push(`The ${kit.name}'s strongest ${kit.piece} is now your Ultimate at full Momentum.`);
 }
 
 export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
