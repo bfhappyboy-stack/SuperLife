@@ -1,5 +1,35 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-09 pm): playtest first — Story and Legendary, Neon legacy mystery, Crownbridge ice God Mode, Thor, Wolverine
+
+**Builds (new this pass):** a Neon Spire / *Cape in the closet* mystery (Vera Lux, wakes at 8), a Crownbridge / *Off-grid* **God Mode** custom life with **Ice Control + Force Field** (Ash Wren), and **Thor** and **Wolverine**, beside Spider-Man, Iron Man, Batman, Cap and Wonder Woman for reference. Aged to 50 on **all four difficulties** and now **three seeds per build** (seed 1 alone matches the am table exactly; seeds 2–3 show how much one life swings). 1,721 villain boards per difficulty, same tell-reading policy (`/workspace/playtest/pm1109/`). Phone screens at 390×844: Thor 20 vs Loki (Story), Crownbridge 30 vs Cinder Mallory (Legendary boss), Iron Man 26 vs Justin Hammer (Normal), the Skip to 15 summary and the mentor card at 15.
+
+**Baseline, 60% play, street / boss (3 seeds):**
+
+| Build | Story | Normal | Hard | Legendary |
+|---|---|---|---|---|
+| Spider-Man | 1.00 / 0.99 | **0.94 / 0.88** | 0.77 / 0.54 | 0.54 / 0.21 |
+| Iron Man | 1.00 / 0.92 | 0.79 / 0.64 | 0.59 / 0.42 | 0.39 / 0.20 |
+| Batman | 1.00 / 0.96 | 0.85 / 0.68 | 0.67 / 0.45 | 0.45 / 0.25 |
+| Captain America | 0.99 / 1.00 | 0.92 / 0.81 | 0.78 / 0.58 | 0.71 / 0.50 |
+| Wonder Woman | 0.99 / 0.99 | 0.88 / 0.78 | 0.82 / 0.64 | 0.62 / 0.41 |
+| Thor | 0.98 / 0.96 | **0.72 / 0.50** | **0.54 / 0.19** | **0.30 / 0.06** |
+| Wolverine | 1.00 / 1.00 | 0.87 / 0.73 | 0.79 / 0.54 | 0.59 / 0.24 |
+| Neon legacy mystery | 1.00 / 0.94 | 0.76 / 0.50 | 0.52 / 0.32 | 0.33 / 0.13 |
+| Crownbridge ice God Mode | 0.99 / 0.88 | 0.74 / 0.48 | 0.41 / 0.15 | **0.17 / 0.03** |
+| **All** | 0.99 / 0.95 | 0.83 / 0.66 | 0.64 / 0.42 | 0.44 / 0.20 |
+
+Seed 1 only (the am table's life): Iron Man Normal 0.59 / 0.38, Spider-Man 0.96 / 0.93, same as this morning.
+
+**Findings:**
+- **Story is a walkover.** 0.99 / 0.95 at 60% play and 0.94 / 0.82 even at 30% (target ~0.90 / 0.80 at 60%). Fine for a story mode, but bosses on Story never threaten. Logged; not changed this pass.
+- **Legends sit well above the generic lives.** Cap, Wonder Woman and Wolverine are 0.87–0.92 street on Normal while the two non-legend lives are 0.74–0.76. Spider-Man is the outlier (0.94 / 0.88).
+- **Iron Man's six is lopsided once his powers wake.** At 24–30 it is Pulse Shot, Dive Kick, Heavy Hands, Stand Firm, Slip, Haymaker: four strikes, one guard, one trick, all generic. That age band was his worst (0.66 street). Before 24 it is six street moves.
+- **Thor also fights generically and is the weakest legend:** at 20 vs Loki his six is Slip, Heavy Hands, Cloud Bolt, Squall Slap, Thunder Clap, Brace (four strikes, a street guard, a street trick, no Mjolnir). Hard 0.54 / 0.19, Legendary 0.30 / 0.06.
+- **Crownbridge ice God Mode is the hardest life measured** (Legendary 0.17 / 0.03): strikes-heavy six (Frost Jab, Spark Jab, Pulse Shot, Squall Slap + Dome + Quick Cut).
+- **Power mixing at 15 re-verified.** Skip to 15 from 13 takes 3–8 skips (it stops for cases), lands on Jan at 15 with "A mentor finds you" on the summary; the mixing lock lifts and the mentor card shows in Powers. Fire + Speed God Mode: the mentor steers to Light Speed first and the braid works; ice + speed braids Absolute Zero Dash. The Neon mystery (Regeneration only at 15) has nothing to braid yet and the mentor points at a recipe instead, which is right.
+- **Move-select re-verified** on the Iron Man 26 save: tapping Stand Firm plays it (Ward pill, combo pip, log line), no console errors, no horizontal overflow at 390×844.
+
 ## Morning pass (2026-11-09 am): playtest first — Spider-Man, Iron Man, Hood mystery, Flash
 
 **Builds (new this pass):** **Spider-Man** and **Iron Man** God Mode presets, a Hood / foster mystery (wakes at 15), and Flash again for the life-sim check. Aged to 50, seed 1, Normal and Hard; 263 villain boards per difficulty. Same tell-reading policy as the pm pass (`/workspace/playtest/am1109/`). Phone screens at 390×844: Iron Man 30 vs Whiplash (Hard boss), Spider-Man 33 vs Venom (Hard boss), Hood 18 vs Afterimage (Normal).

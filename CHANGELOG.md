@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-09 (pm): legend signature kits (`devbot/2026-11-09-pm`)
+
+Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 1: playtest
+
+- Story and Legendary as well as Normal and Hard; a Neon Spire legacy mystery, a Crownbridge ice + force-field God Mode life, Thor and Wolverine beside five reference legends; three seeds per build. Power mixing at 15 (mentor, Skip to 15) and move-select re-checked on the phone. Notes and table in PLAYTEST.md. No code changes.
+
 ## 2026-11-09 (am): painted villains (`devbot/2026-11-09-am`)
 
 Built on `origin/devbot/2026-11-08-night` (3947fa9). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
