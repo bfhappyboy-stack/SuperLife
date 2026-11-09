@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { KITS, kitFor, kitMoveUnlocked } from "../kits.ts";
-import { allMoveDefs, battleMoves, fillLoadout, knownMoves, lockedLine, moveById, moveSource, placeInSlot, toDuel } from "../moves.ts";
+import { allMoveDefs, battleMoves, fillLoadout, knownMoves, lockedLine, moveById, moveSource, placeInSlot, slotKitArrival, toDuel } from "../moves.ts";
 import { ageUp, choose, createGame, resolveMini } from "../engine.ts";
 import { fighterFromLife } from "../arena.lives.ts";
 import { PRESETS, signatureMoves } from "../presets.ts";
@@ -312,4 +312,22 @@ test("Captain America's rogues carry a +2 rogue edge", () => {
   assert.equal(cap.rogueEdge, 2);
   const rogue = cap.villains[0]!;
   assert.equal(signatureMoves(rogue.alias, 1)![0]!.power, rogue.moves[0]!.power + Math.round(rogue.level / 2) + 2);
+});
+
+// 2026-11-09 night: a new kit piece takes a slot when its style is short in a lopsided six.
+test("a new kit piece slots itself in when the six is lopsided, and leaves a balanced six alone", () => {
+  const seen: string[] = [];
+  const g = live(createGame({ ...base, preset: "black-panther", seed: 1 } as never), 27, seen);
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  const counts = { strike: 0, guard: 0, trick: 0 } as Record<string, number>;
+  for (const m of six) counts[m.style]!++;
+  assert.ok(counts.strike! >= 2, six.map((m) => m.id).join(","));
+  assert.ok(seen.some((l) => /Claw Flurry takes .*slot/.test(l)) || (g.loadout ?? []).includes("panther::flurry"), seen.join(" | "));
+  // Balanced six: nothing moves.
+  const bal = structuredClone(g);
+  const before = [...(bal.loadout ?? [])];
+  const strikes = (bal.loadout ?? []).filter((id) => moveById(id)?.style === "strike").length;
+  if (strikes >= 2) assert.equal(slotKitArrival(bal, "panther::forever"), null);
+  assert.deepEqual(bal.loadout, before);
 });

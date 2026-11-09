@@ -43,7 +43,7 @@ import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHidde
 import { powerGimmick } from "./gimmicks";
 import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, streetTwisted, tuneOf } from "./difficulty";
 import { kitFor } from "./kits";
-import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, STREET_MOVES, toggleLoadout } from "./moves";
+import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, slotKitArrival, STREET_MOVES, toggleLoadout } from "./moves";
 import { stageForCity } from "./battle";
 import {
   asDrive,
@@ -2352,6 +2352,10 @@ function beltBirthday(d: Game, banners: string[]) {
   const added = fresh.filter((move) => !move.upgrades);
   const upgrades = fresh.filter((move) => move.upgrades);
   if (added.length) banners.push(`New in the ${kit.name}: ${added.map((move) => move.name).join(", ")}.`);
+  for (const move of added) {
+    const out = slotKitArrival(d, move.id);
+    if (out) banners.push(`${move.name} takes ${out}'s slot, so every tell has an answer.`);
+  }
   for (const move of upgrades) banners.push(`${kit.name} upgrade: ${move.name} replaces ${kit.moves.find((old) => old.id === move.upgrades)?.name ?? "the old piece"}.`);
   if (d.age === kit.ultimateAge) banners.push(`${kit.name}: your strongest ${kit.piece} is now your Ultimate at full Momentum.`);
 }

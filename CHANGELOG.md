@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 8: new kit pieces take a slot in a lopsided six
+
+- **Why:** a kit piece that doesn't upgrade an older one only landed on the shelf, so kit-led sixes stayed lopsided: Black Panther at 31 fought Killmonger with one strike (his Ultimate, cooldown 1) beside five guards and tricks while Claw Flurry sat unused; Hulk at 34 the same with Gamma Clap; Thor kept four strikes after Bifrost Call arrived (BACKLOG).
+- **What:** `slotKitArrival` (`moves.ts`): on the birthday a new kit piece arrives, if its style has at most one move in the six and another style has three or more, it replaces the weakest **non-kit** move of the crowded style. The birthday card says "Claw Flurry takes Counter Tap's slot, so every tell has an answer." A balanced six is never touched, and the player can swap back on the Moves shelf.
+- **How often** (11 legends × 3 seeds to 50): once or twice per life for Wonder Woman (Bullet Deflection at 33), Hulk (Gamma Clap at 31), Black Panther (Claw Flurry at 26), Wolverine (Scent Track at 16), Thor (Bifrost Call at 26, Hammer Catch at 44), Cap (Commando Feint at 28), Superman (Freeze Breath at 17 / Flying Tackle at 20), Flash (1 of 3); never for Batman, Iron Man or Spider-Man.
+- **Balance** (60% play, street / boss, 3 seeds): roughly neutral. 9-build pool Normal 0.78 / 0.63 → 0.78 / 0.61, Hard 0.57 / 0.38 → 0.57 / 0.38, Legendary 0.38 / 0.23 → 0.38 / 0.23; Thor / Superman / Flash / Iron Man Normal 0.73 / 0.55 → 0.71 / 0.57, Hard 0.53 / 0.38 → 0.54 / 0.38. Hulk Normal street 0.87 → 0.81.
+- **Tests:** +1 (Black Panther's six gets a second strike by 27; a balanced six is left alone). 233 game tests pass.
+
 ### Increment 7: Captain America's rogues get the rogue edge
 
 - **Why:** with every legend on a kit, Cap was still the strongest (Normal 60% 0.86 / 0.68, Hard 0.77 / 0.56, Legendary 0.66 / 0.44). His kit's power-level share barely matters (edge 0.30 → 0.20 moved nothing), and making The Shield replace his serum strength too made it *easier* (foes scale with his power level, and a street Haymaker crept back into the six), so neither was shipped.

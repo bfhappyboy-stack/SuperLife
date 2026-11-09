@@ -332,6 +332,30 @@ export function battleMoves(game: FightGame): DuelMove[] {
   return markUltimate(picked, { focusPowerId: focus, masteryRank: rank, focusMoveIds });
 }
 
+/**
+ * A new kit piece (not an upgrade) arriving on a birthday takes a slot when the six is lopsided: its style has at
+ * most one move while another style has three or more. It replaces the weakest non-kit move of that crowded style,
+ * so a kit-led six keeps an answer for every tell (Black Panther with one strike and three tricks gets Claw Flurry).
+ * Returns the name of the move it replaced, or null when the six was balanced enough to leave alone.
+ */
+export function slotKitArrival(game: Game, pieceId: string): string | null {
+  const piece = moveById(pieceId);
+  if (!piece || !isKitPower(piece.powerId) || !moveUnlocked(game, piece)) return null;
+  const loadout = game.loadout ?? [];
+  if (loadout.length < MOVESET_SIZE || loadout.includes(pieceId)) return null;
+  const defs = loadout.map((id) => moveById(id));
+  const counts = styleCounts(defs.map((def) => def?.style));
+  if ((counts[piece.style] ?? 0) > 1) return null;
+  const crowded = MOVE_STYLES.filter((style) => style !== piece.style && (counts[style] ?? 0) >= 3);
+  const victim = defs
+    .map((def, index) => ({ def, index }))
+    .filter((row) => row.def && crowded.includes(row.def.style) && !isKitPower(row.def.powerId))
+    .sort((a, b) => a.def!.power - b.def!.power)[0];
+  if (!victim) return null;
+  game.loadout = loadout.map((id, index) => (index === victim.index ? pieceId : id));
+  return victim.def!.name;
+}
+
 export function fillLoadout(game: Game): void {
   if (!Array.isArray(game.loadout)) game.loadout = [];
   // A suit upgrade takes the old piece's slot (Mark I Plating → Nanotech Shell), so the six keeps its shape.
