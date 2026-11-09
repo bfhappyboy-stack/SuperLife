@@ -174,6 +174,29 @@ export const KITS: KitDef[] = [
       k("captain-america", { id: "shield::worthy", name: "Worthy", blurb: "He lifts the hammer. He always could.", minAge: 45, power: 8, style: "strike", kind: "burst", energy: 3, effect: "Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
     ],
   },
+  {
+    legend: "flash",
+    id: "kit:flash",
+    name: "Speed Force",
+    blurb: "Lightning, a coma, and a world that suddenly moves in slow motion. Every move is a running start.",
+    ultimateAge: 33,
+    leadsUltimate: true,
+    replaces: { powers: ["super-speed", "thunder-sprint"], line: "Barry's speed comes through the Speed Force: these moves live there now." },
+    edge: 0.55,
+    piece: "speed trick",
+    moves: [
+      k("flash", { id: "speedforce::jab", name: "Lightning Jab", blurb: "A hundred punches. They only feel the first.", minAge: 25, power: 5, style: "strike", kind: "burst", energy: 1, effect: "Wins leave them Shocked.", cooldown: 0, element: "lightning" }),
+      k("flash", { id: "speedforce::mirage", name: "Speed Mirage", blurb: "They hit the you from half a second ago.", minAge: 25, power: 5, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "speed" }),
+      k("flash", { id: "speedforce::phase", name: "Phase Step", blurb: "Vibrate fast enough and their swing goes through.", minAge: 25, power: 5, style: "trick", kind: "dash", energy: 1, effect: "Hits harder when it answers their tell. Wins leave them Exposed.", cooldown: 0, element: "warp" }),
+      k("flash", { id: "speedforce::tornado", name: "Tornado Arms", blurb: "Spin both arms. Make the weather personal.", minAge: 27, power: 6, style: "guard", kind: "guard", energy: 2, effect: "Wins leave them Frosted in the vortex.", cooldown: 1, element: "wind", upgrades: "speedforce::mirage" }),
+      k("flash", { id: "speedforce::throw", name: "Lightning Throw", blurb: "Run a lap, catch the spark, throw it.", minAge: 29, power: 6, style: "strike", kind: "burst", energy: 2, effect: "Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
+      k("flash", { id: "speedforce::steal", name: "Speed Steal", blurb: "Their momentum is yours now. Say thank you.", minAge: 31, power: 5, style: "trick", kind: "status", energy: 2, effect: "Wins leave them Frosted: slow, hitting 15% weaker.", cooldown: 1, element: "speed", applies: "frost" }),
+      k("flash", { id: "speedforce::imp", name: "Infinite Mass Punch", blurb: "A run-up from across the city. Physics files a complaint.", minAge: 33, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Exposed.", cooldown: 1, element: "lightning", applies: "expose", upgrades: "speedforce::jab" }),
+      k("flash", { id: "speedforce::rewind", name: "Rewind", blurb: "Ten seconds back. Try that again.", minAge: 36, power: 6, style: "trick", kind: "status", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "life", applies: "ward" }),
+      k("flash", { id: "speedforce::remnant", name: "Time Remnant", blurb: "Another you, from ten seconds from now, steps in the way.", minAge: 38, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "speedforce::tornado" }),
+      k("flash", { id: "speedforce::storm", name: "Speed Force Storm", blurb: "The sky over the city turns blue and starts to run.", minAge: 45, power: 8, style: "strike", kind: "area", energy: 3, effect: "Hits wide. Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));

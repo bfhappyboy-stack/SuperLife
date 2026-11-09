@@ -42,10 +42,13 @@ test("kit data: unique ids, ascending ages, upgrades point back, kits that fill 
         assert.equal(old.style, move.style, `${move.id} keeps the slot's style`);
       }
     }
-    const fills = !kit.replaces?.styles;
+    // A kit that starts in childhood carries the fights alone until the powers wake, so it covers every style early.
+    const fills = !kit.replaces?.styles && kit.moves[0]!.minAge <= 14;
     if (fills) {
       const early = new Set(kit.moves.filter((m) => m.minAge <= 14).map((m) => m.style));
       assert.deepEqual([...early].sort(), ["guard", "strike", "trick"]);
+    }
+    if (!kit.replaces?.styles) {
       const finalPieces = kit.moves.filter((m) => !kit.moves.some((n) => n.upgrades === m.id));
       assert.ok(finalPieces.length > 6, `${kit.legend}: a kit should outgrow the six so the player chooses`);
     }
@@ -204,4 +207,34 @@ test("every legend kit: six moves, no replaced power moves, kit Ultimate where t
       assert.equal(ult[0]!.style, "strike", `${kit.legend} Ultimate is a strike`);
     }
   }
+});
+
+// Flash's Speed Force (2026-11-09 pm) and rogues who wait (a child can't be called out by his legend's rogue).
+test("Flash's Speed Force replaces his generic speed moves from the wake, Infinite Mass Punch at 33", () => {
+  const g = live(createGame({ ...base, preset: "flash", seed: 9 } as never), 34);
+  const shelf = knownMoves(g).map((e) => e.def.id);
+  assert.ok(!shelf.some((id) => id.startsWith("super-speed::") || id.startsWith("thunder-sprint::")), shelf.join(","));
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  assert.equal(six.find((m) => m.ultimate)?.id, "speedforce::imp");
+});
+
+test("a legend's own arch-rogue never calls out a child who can't fight back yet", () => {
+  const thawne = PRESETS.find((p) => p.id === "flash")!.villains.find((v) => v.id === "reverse-flash")!;
+  const callouts: number[] = [];
+  let armed = false;
+  for (const seed of [11, 12, 13]) {
+    let g = createGame({ ...base, preset: "flash", seed } as never);
+    for (let i = 0; i < 9000 && g.phase !== "dead" && g.age < 30; i++) {
+      // Make Thawne the arch-enemy as soon as he exists in this life.
+      for (const r of g.relationships) if (r.note === thawne.alias && r.alive) { r.arch = true; armed = true; }
+      if (g.phase === "choice" && g.pending) {
+        if (g.pending.id === "arch-month") callouts.push(g.age);
+        g = choose(g, g.pending.choices[0]!.id);
+      } else if (g.phase === "mini") g = resolveMini(g, 0.7);
+      else g = ageUp(g);
+    }
+  }
+  assert.ok(armed, "Thawne should turn up in at least one of these lives");
+  assert.deepEqual(callouts.filter((age) => age < 25), [], `called out at ${callouts.join(",")}`);
 });

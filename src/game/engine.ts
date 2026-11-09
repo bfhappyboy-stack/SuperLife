@@ -2184,7 +2184,12 @@ function personFoe(d: Game, person: Person): { name: string; title: string; side
 
 function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): boolean {
   if (d.age < 8) return false;
-  const arch = d.relationships.find((r) => r.arch && r.alive);
+  const found = d.relationships.find((r) => r.arch && r.alive);
+  // A legend's own rogue doesn't call out a child who can't fight back yet: Thawne waits for the Speed Force.
+  // "Can fight back" is the powers waking or the legend's kit arriving, whichever comes first (Iron Man's Armory at 10).
+  const wake = wakeAge(d.preset);
+  const ready = wake === null ? null : Math.min(wake, kitFor(d.preset)?.moves[0]?.minAge ?? wake);
+  const arch = found && ready !== null && d.age < ready && presetById(d.preset)?.villains.some((v) => v.alias === found.note) ? undefined : found;
   if (arch && roll(d) < 0.34 * calm) {
     const foe = personFoe(d, arch);
     showChoice(
