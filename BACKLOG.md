@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-09 night pass (in progress)
+
+- **Done (increment 2):** Wonder Woman's **Amazon Arms** (13 pieces from 10, Lasso of Truth at 14, Godkiller Ultimate at 30), replacing her strength / flight / aegis moves. Normal 60% 0.88 / 0.78 → 0.82 / 0.59, Hard 0.82 / 0.64 → 0.66 / 0.49, Legendary 0.62 / 0.41 → 0.53 / 0.29. Teen dip (0.50 street at 15–24 vs Cheetah) and late high (0.94 at 40+) logged.
+- **Legends still on generic moves:** Hulk (Normal 0.91 / 0.72), Black Panther (0.88 / 0.71), Wolverine (0.87 / 0.73). All three are above target; kits should bring them down as WW's did.
+- **Dustreach TK + Lightning God Mode is the weakest life measured** (Hard 0.31 / 0.07, Legendary 0.13 / 0.02): five strikes and one street guard until 30 (Push, Brace, Heavy Step, Spark Jab, Blindside, Pulse Shot). Same root as the Crownbridge ice life: Gen-0 kits that are mostly strikes.
+- **Harbor street-kid mystery** is fine on Normal (0.74 / 0.79) but stacks four guards at 15–30 (Dome, Stand Firm, Aegis, Door to Nowhere).
+
 ## From the 2026-11-09 pm pass (in progress)
 
 - **Done (increment 2):** Iron Man's **Armory** — 14 suit pieces from 10 to 40 with Mark upgrades that take the old piece's slot, replacing his generic Energy Projection / Flight moves and the street six; Unibeam is his Ultimate from 30; saved Iron Man lives bring it to the Arena. Normal 60%: 0.79 / 0.64 → 0.77 / 0.59 (3 seeds; seed 1 0.59 / 0.38 → 0.75 / 0.58), teen band 0.91 → 0.73 street, the 24–30 dip (0.66) gone (0.84).

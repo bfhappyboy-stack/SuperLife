@@ -1,5 +1,32 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-09 night): playtest first — Harbor street kid, Dustreach alien God Mode, Wonder Woman, Hulk, Black Panther, Wolverine
+
+**Builds (new this pass):** a Harbor Bay / *Street kid* mystery (Nell Okafor) and a Dustreach / *Alien planet* **God Mode** life with **Telekinesis + Lightning Control** (Kai Moreno), with **Wonder Woman, Hulk, Black Panther and Wolverine** (the four legends still on generic moves) and Cap, Spider-Man, Batman for reference. Three seeds to 50, all four difficulties, 1,664 villain boards per difficulty, same tell-reading policy (`/workspace/playtest/n1109/`). Phone screens at 390×844: Harbor 20 vs The Auditor, Wonder Woman 24 vs Cheetah, Black Panther 22 vs Klaw (all Normal).
+
+**Baseline, 60% play, street / boss (3 seeds):**
+
+| Build | Story | Normal | Hard | Legendary |
+|---|---|---|---|---|
+| Harbor street mystery | 1.00 / 1.00 | 0.74 / 0.79 | 0.47 / 0.67 | 0.23 / 0.42 |
+| Dustreach TK + lightning God Mode | 0.99 / 0.97 | 0.64 / 0.62 | **0.31 / 0.07** | **0.13 / 0.02** |
+| Wonder Woman | 0.99 / 0.99 | **0.88 / 0.78** | 0.82 / 0.64 | 0.62 / 0.41 |
+| Hulk | 1.00 / 1.00 | **0.91 / 0.72** | 0.79 / 0.53 | 0.64 / 0.32 |
+| Black Panther | 1.00 / 0.98 | **0.88 / 0.71** | 0.73 / 0.35 | 0.47 / 0.21 |
+| Wolverine | 1.00 / 1.00 | **0.87 / 0.73** | 0.79 / 0.54 | 0.59 / 0.24 |
+| Captain America | 0.98 / 0.96 | 0.86 / 0.68 | 0.77 / 0.56 | 0.66 / 0.44 |
+| Spider-Man | 1.00 / 0.94 | 0.80 / 0.69 | 0.55 / 0.36 | 0.34 / 0.15 |
+| Batman | 1.00 / 0.96 | 0.85 / 0.68 | 0.67 / 0.45 | 0.45 / 0.25 |
+| **All** | 0.99 / 0.98 | 0.81 / 0.71 | 0.63 / 0.47 | 0.44 / 0.26 |
+
+**Findings:**
+- **The four kit-less legends are all too easy on Normal** (0.87–0.91 street) and all fight with generic moves: Wonder Woman with Heavy Hands / Dive Kick / Aegis / Static Snap / Quick Cut / Mind Spike; Hulk with Heavy Hands / Stand Firm / Grit Knit / Freight Train / Heavy Step / Ground Pound; Black Panther with Heavy Hands / Counter Tap / Quick Cut / Slow Second / Grit Knit; Wolverine with Grit Knit / Counter Tap / Feel It Coming / Quick Cut / Static Snap / Heavy Hands (three guards, no claws).
+- **Dustreach TK + lightning God Mode is the weakest life measured** (Hard 0.31 / 0.07, Legendary 0.13 / 0.02): five strikes and a street guard until 30.
+- **Story stays a walkover** (0.99 / 0.98 at 60%, 0.94 / 0.86 at 30%).
+- **Power mixing at 15 re-verified** on the Dustreach life: Skip to 15 from 13 lands at 15 in one skip, the lock lifts, mentor Vael arrives and steers to Perfect Blank (Invisibility + Shape-shifting); three braids possible, the braid works and the six stays at 6.
+- **Move-select re-verified** on Wonder Woman 31 vs Cheetah: tapping Quick Cut plays it (Even Trade, log line, Expose pill), no console errors, no overflow at 390×844.
+- **Arena purses:** `purse.test.ts` (payout into the active life, loss share, daily taper) passes on this branch.
+
 ## Afternoon pass (2026-11-09 pm): playtest first — Story and Legendary, Neon legacy mystery, Crownbridge ice God Mode, Thor, Wolverine
 
 **Builds (new this pass):** a Neon Spire / *Cape in the closet* mystery (Vera Lux, wakes at 8), a Crownbridge / *Off-grid* **God Mode** custom life with **Ice Control + Force Field** (Ash Wren), and **Thor** and **Wolverine**, beside Spider-Man, Iron Man, Batman, Cap and Wonder Woman for reference. Aged to 50 on **all four difficulties** and now **three seeds per build** (seed 1 alone matches the am table exactly; seeds 2–3 show how much one life swings). 1,721 villain boards per difficulty, same tell-reading policy (`/workspace/playtest/pm1109/`). Phone screens at 390×844: Thor 20 vs Loki (Story), Crownbridge 30 vs Cinder Mallory (Legendary boss), Iron Man 26 vs Justin Hammer (Normal), the Skip to 15 summary and the mentor card at 15.
