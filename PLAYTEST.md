@@ -27,6 +27,23 @@
 - **Move-select re-verified** on Wonder Woman 31 vs Cheetah: tapping Quick Cut plays it (Even Trade, log line, Expose pill), no console errors, no overflow at 390×844.
 - **Arena purses:** `purse.test.ts` (payout into the active life, loss share, daily taper) passes on this branch.
 
+**After increments 2–8 (same 9 builds, same seeds and policy; street / boss at 60%):**
+
+| Build | Story | Normal | Hard | Legendary |
+|---|---|---|---|---|
+| Harbor street mystery | 1.00 / 1.00 | 0.74 / 0.79 | 0.47 / 0.67 | 0.23 / 0.42 |
+| Dustreach TK + lightning God Mode | 0.99 / 0.97 | 0.64 / 0.62 | 0.31 / 0.07 | 0.13 / 0.02 |
+| Wonder Woman (Amazon Arms) | 0.99 / 0.97 | 0.88 / 0.78 → **0.84 / 0.61** | 0.82 / 0.64 → **0.69 / 0.51** | 0.62 / 0.41 → **0.55 / 0.32** |
+| Hulk (Gamma Rage) | 1.00 / 0.92 | 0.91 / 0.72 → **0.81 / 0.51** | 0.79 / 0.53 → **0.67 / 0.31** | 0.64 / 0.32 → **0.44 / 0.27** |
+| Black Panther (Panther Habit) | 0.99 / 0.99 | 0.88 / 0.71 → **0.81 / 0.63** | 0.73 / 0.35 → **0.65 / 0.36** | 0.47 / 0.21 → **0.49 / 0.24** |
+| Wolverine (Claws & Healing Factor) | 1.00 / 0.96 | 0.87 / 0.73 → **0.78 / 0.58** | 0.79 / 0.54 → **0.65 / 0.40** | 0.59 / 0.24 → **0.40 / 0.23** |
+| Captain America (rogue edge) | 0.96 / 0.90 | 0.86 / 0.68 → **0.83 / 0.60** | 0.77 / 0.56 → **0.67 / 0.49** | 0.66 / 0.44 → **0.54 / 0.25** |
+| Spider-Man | 1.00 / 0.94 | 0.80 / 0.69 | 0.55 / 0.36 | 0.34 / 0.15 |
+| Batman | 1.00 / 0.96 | 0.85 / 0.68 | 0.67 / 0.45 | 0.45 / 0.25 |
+| **All** | 0.99 / 0.98 → 0.99 / 0.95 | 0.81 / 0.71 → **0.78 / 0.61** | 0.63 / 0.47 → **0.57 / 0.38** | 0.44 / 0.26 → **0.38 / 0.23** |
+
+Targets at 60%: Normal ~0.70–0.80 / ~0.55–0.60, Hard ~0.50 / 0.36, Legendary ~0.32 / 0.20. Bosses are now on target on every difficulty; legend street fights stay a notch high (0.78–0.85 Normal, 0.65–0.69 Hard) and the two non-legend lives sit below the legends.
+
 ## Afternoon pass (2026-11-09 pm): playtest first — Story and Legendary, Neon legacy mystery, Crownbridge ice God Mode, Thor, Wolverine
 
 **Builds (new this pass):** a Neon Spire / *Cape in the closet* mystery (Vera Lux, wakes at 8), a Crownbridge / *Off-grid* **God Mode** custom life with **Ice Control + Force Field** (Ash Wren), and **Thor** and **Wolverine**, beside Spider-Man, Iron Man, Batman, Cap and Wonder Woman for reference. Aged to 50 on **all four difficulties** and now **three seeds per build** (seed 1 alone matches the am table exactly; seeds 2–3 show how much one life swings). 1,721 villain boards per difficulty, same tell-reading policy (`/workspace/playtest/pm1109/`). Phone screens at 390×844: Thor 20 vs Loki (Story), Crownbridge 30 vs Cinder Mallory (Legendary boss), Iron Man 26 vs Justin Hammer (Normal), the Skip to 15 summary and the mentor card at 15.
