@@ -4,6 +4,13 @@
 
 Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 7: Superman's Kryptonian Arts
+
+- **Why:** with Flash fixed, Superman was the weakest legend (Normal 60% 0.57 / 0.39 on 3 seeds) and fought with Heavy Hands, Dive Kick, Stand Firm, Push, Spark Jab, Quick Cut: no heat vision, no freeze breath.
+- **What:** a **Kryptonian Arts** kit, 12 pieces from his wake at 13: Bulletproof, Heat Glare, Blur (13), X-Ray Read (15, Shock), Freeze Breath (17, Frost), Heat Vision (18, upgrades Heat Glare), Flying Tackle (20), Super-Breath (24, upgrades Blur), Man of Steel (28, Ward, upgrades Bulletproof), **Solar Flare** (30, Burn, upgrades Flying Tackle), Thunderclap (34), Fortress Training (38, Expose). It replaces his **Super Strength, Flight and Super Durability** moves; braided and stretch powers still bring theirs. The kit leads the Ultimate from 30.
+- **Balance** (60% play, street / boss, 3 seeds): Story 0.93 / 0.90 → 0.94 / 0.96; Normal 0.57 / 0.39 → **0.65 / 0.61**; Hard 0.45 / 0.30 → **0.49 / 0.38**; Legendary 0.26 / 0.13 → **0.37 / 0.30**. Boss n = 15. 13–15 fights against Lex are still hard (he is level 9 on a fresh teen); logged.
+- **Tests:** +1 (Superman's shelf has none of the replaced moves, Heat Vision and Man of Steel retire their old pieces, kit Ultimate at 31). The every-kit test covers him too. 226 game tests pass.
+
 ### Increment 6: Flash's Speed Force, and rogues who wait
 
 - **Why:** Flash was the weakest legend (Normal 60% 0.54 / 0.45, Legendary 0.26 / 0.23) and fought with Quick Cut / Volt Step / Afterimage. Digging in: 60 of his 206 villain fights before 25 were **Reverse-Flash (level 9, ~95 HP) calling out a powerless child** through the monthly arch-enemy pin, 11 to 24, and he lost all of the ones before 15.

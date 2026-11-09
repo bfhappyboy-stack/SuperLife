@@ -316,7 +316,7 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 
 ### Legend kits (shipped 2026-11-08 pm; Armory 2026-11-09 pm)
 
-A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**, **Captain America — The Shield**, **Flash — Speed Force**.
+A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**, **Captain America — The Shield**, **Flash — Speed Force**, **Superman — Kryptonian Arts**.
 
 - Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More final pieces than slots, so the six stays a choice.
 - **Upgrades** (`upgrades: <older piece>`): when a newer piece arrives, the older one retires from the shelf and the new one takes **its slot** in the six (the Mark I Plating slot becomes the Nanotech Shell). An upgrade always keeps the slot's style. The birthday banner says "Armory upgrade: X replaces Y".
@@ -421,7 +421,24 @@ Braided powers that contain Aegis Shell (Holy Hull) still bring their own moves.
 | 38 | Time Remnant | guard | shield · Ward | Tornado Arms |
 | 45 | Speed Force Storm | strike (area) | lightning · Shock | |
 
-A kit that starts at the wake (Flash, Spider-Man) doesn't need childhood coverage; a kit that starts in childhood (Batman, Iron Man, Thor, Cap) covers strike, guard and trick by 14.
+**Superman — Kryptonian Arts** (replaces Super Strength, Flight and Super Durability moves from the wake at 13; edge 0.55; his strongest kit strike is the Ultimate from 30)
+
+| Age | Piece | Style | Element / status | Upgrades |
+|---|---|---|---|---|
+| 13 | Bulletproof | guard | force | |
+| 13 | Heat Glare | strike | fire · Burn | |
+| 13 | Blur | trick (dash) | speed | |
+| 15 | X-Ray Read | trick (status) | Shock override | |
+| 17 | Freeze Breath | guard (status) | ice · Frost | |
+| 18 | Heat Vision | strike | fire · Burn | Heat Glare |
+| 20 | Flying Tackle | strike (dash) | speed | |
+| 24 | Super-Breath | trick (area) | wind · Frost | Blur |
+| 28 | Man of Steel | guard | shield · Ward | Bulletproof |
+| 30 | Solar Flare | strike | Burn override | Flying Tackle |
+| 34 | Thunderclap | strike (area) | force | |
+| 38 | Fortress Training | trick (status) | psychic · Expose | |
+
+A kit that starts at the wake (Flash, Spider-Man, Superman) doesn't need childhood coverage; a kit that starts in childhood (Batman, Iron Man, Thor, Cap) covers strike, guard and trick by 14.
 
 **Rogues wait (2026-11-09 pm):** a legend's own arch-rogue never calls out the hero (the monthly "arch-month" pin) before they can fight back: the powers waking or the kit's first piece, whichever is first. Before, kid Barry was called out by Reverse-Flash (level 9) almost every month from 11 to 24; kid Bruce Banner the same until 28. Canon beats and boss fights still happen on schedule.
 
