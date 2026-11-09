@@ -21,6 +21,25 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   "hero-black-panther": () => import("./hero-black-panther"),
   "hero-wolverine": () => import("./hero-wolverine"),
   "hero-flash": () => import("./hero-flash"),
+  // Painted villain portraits (2026-11-09): the 18 Arena villains. `VillainArt` uses them over its vector card.
+  "villain-goblin": () => import("./villain-goblin"),
+  "villain-venom": () => import("./villain-venom"),
+  "villain-ock": () => import("./villain-ock"),
+  "villain-joker": () => import("./villain-joker"),
+  "villain-bane": () => import("./villain-bane"),
+  "villain-stane": () => import("./villain-stane"),
+  "villain-ultron": () => import("./villain-ultron"),
+  "villain-abomination": () => import("./villain-abomination"),
+  "villain-lex": () => import("./villain-lex"),
+  "villain-zod": () => import("./villain-zod"),
+  "villain-doomsday": () => import("./villain-doomsday"),
+  "villain-cheetah": () => import("./villain-cheetah"),
+  "villain-red-skull": () => import("./villain-red-skull"),
+  "villain-loki": () => import("./villain-loki"),
+  "villain-hela": () => import("./villain-hela"),
+  "villain-killmonger": () => import("./villain-killmonger"),
+  "villain-sabretooth": () => import("./villain-sabretooth"),
+  "villain-reverse-flash": () => import("./villain-reverse-flash"),
 };
 
 const cache = new Map<string, string>();
