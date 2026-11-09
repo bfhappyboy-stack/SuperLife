@@ -280,3 +280,16 @@ test("Hulk's Gamma Rage replaces his strength / durability / Juggernaut moves an
   assert.equal(six.find((m) => m.ultimate)?.id, "gamma::worldbreaker", six.map((m) => m.id).join(","));
   assert.equal(new Set(six.map((m) => m.style)).size, 3);
 });
+
+// Black Panther's Panther Habit (2026-11-09 night): Dora drills from 16, vibranium from 18, Kinetic Release Ultimate at 30.
+test("Black Panther's Panther Habit replaces his strength / kinetic moves and Kinetic Release is the Ultimate at 30", () => {
+  assert.equal(kitMoveUnlocked({ preset: "black-panther", age: 15 }, moveById("panther::stance")! as never), false, "no kit before 16, so rogues still wait");
+  const g = live(createGame({ ...base, preset: "black-panther", seed: 9 } as never), 31);
+  const shelf = knownMoves(g).map((e) => e.def.id);
+  assert.ok(!shelf.some((id) => /^(super-strength|kinetic-impact|juggernaut-mass)::/.test(id)), shelf.join(","));
+  assert.ok(shelf.includes("panther::release") && !shelf.includes("panther::claws") && !shelf.includes("panther::challenge"), "Kinetic Release retires the claws");
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  assert.equal(six.find((m) => m.ultimate)?.id, "panther::release", six.map((m) => m.id).join(","));
+  assert.equal(new Set(six.map((m) => m.style)).size, 3);
+});

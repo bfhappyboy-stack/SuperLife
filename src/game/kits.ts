@@ -270,6 +270,31 @@ export const KITS: KitDef[] = [
       k("hulk", { id: "gamma::banner", name: "Banner's Read", blurb: "For one second the eyes go brown, and the plan is perfect.", minAge: 44, power: 6, style: "trick", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "psychic", applies: "shock" }),
     ],
   },
+  {
+    legend: "black-panther",
+    id: "kit:black-panther",
+    name: "Panther Habit",
+    blurb: "Dora Milaje drills from sixteen, then a vibranium suit that drinks every hit and gives it back.",
+    ultimateAge: 30,
+    leadsUltimate: true,
+    replaces: { powers: ["super-strength", "kinetic-impact", "juggernaut-mass"], line: "T'Challa's strength and kinetic punch come through the suit: these moves live in the Panther Habit." },
+    edge: 0.25,
+    piece: "Panther art",
+    moves: [
+      k("black-panther", { id: "panther::stance", name: "Okoye's Stance", blurb: "Feet wide, spear low. The general does not repeat herself.", minAge: 16, power: 4, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force" }),
+      k("black-panther", { id: "panther::challenge", name: "Challenge Strike", blurb: "Warrior Falls rules: hit first, hit clean.", minAge: 16, power: 4, style: "strike", kind: "burst", energy: 1, effect: "Single hit.", cooldown: 0, element: "force" }),
+      k("black-panther", { id: "panther::step", name: "Panther Step", blurb: "Silent on stone, gone by the time they turn.", minAge: 16, power: 4, style: "trick", kind: "dash", energy: 1, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "speed" }),
+      k("black-panther", { id: "panther::claws", name: "Vibranium Claws", blurb: "They slide out of the gloves without a sound.", minAge: 18, power: 6, style: "strike", kind: "burst", energy: 1, effect: "Wins leave them Exposed.", cooldown: 0, element: "shadow", upgrades: "panther::challenge" }),
+      k("black-panther", { id: "panther::weave", name: "Kinetic Weave", blurb: "The suit takes the bullet and hums.", minAge: 19, power: 6, style: "guard", kind: "guard", energy: 2, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force", upgrades: "panther::stance" }),
+      k("black-panther", { id: "panther::beads", name: "Kimoyo Beads", blurb: "Shuri's voice in his ear: \"Left hand. He always leads left.\"", minAge: 21, power: 5, style: "trick", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "psychic", applies: "shock" }),
+      k("black-panther", { id: "panther::pounce", name: "Panther Pounce", blurb: "From the rafters, claws first.", minAge: 23, power: 6, style: "trick", kind: "dash", energy: 2, effect: "Hits harder when it answers their tell. Wins leave them Exposed.", cooldown: 0, element: "shadow", upgrades: "panther::step" }),
+      k("black-panther", { id: "panther::flurry", name: "Claw Flurry", blurb: "Five cuts before the first one stings.", minAge: 26, power: 6, style: "strike", kind: "area", energy: 2, effect: "Hits wide.", cooldown: 1, element: "force" }),
+      k("black-panther", { id: "panther::release", name: "Kinetic Release", blurb: "Every hit he soaked, given back in one purple wave.", minAge: 30, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Shocked.", cooldown: 1, element: "energy", upgrades: "panther::claws" }),
+      k("black-panther", { id: "panther::charged", name: "Charged Habit", blurb: "The suit glows violet. It is full, and it is patient.", minAge: 33, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "panther::weave" }),
+      k("black-panther", { id: "panther::bast", name: "Bast's Shadow", blurb: "The goddess walks with him. Nobody sees which one moved.", minAge: 38, power: 6, style: "trick", kind: "status", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "shadow" }),
+      k("black-panther", { id: "panther::forever", name: "Wakanda Forever", blurb: "Arms crossed. Then everything he has.", minAge: 42, power: 8, style: "strike", kind: "area", energy: 3, effect: "Hits wide. Wins leave them Shocked.", cooldown: 1, element: "energy" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));

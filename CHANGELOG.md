@@ -1,8 +1,16 @@
 # Changelog
 
-## 2026-11-09 (night): Wonder Woman and Hulk kits, painted rogues (`devbot/2026-11-09-night`)
+## 2026-11-09 (night): Wonder Woman, Hulk and Black Panther kits, painted rogues (`devbot/2026-11-09-night`)
 
 Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 5: Black Panther's Panther Habit
+
+- **Why:** T'Challa fought with Heavy Hands, Counter Tap, Quick Cut, Slow Second, Grit Knit and a Ground Pound Ultimate: no claws, no vibranium, no kinetic release. Normal 60% 0.88 / 0.71, above target.
+- **What:** a **Panther Habit** kit, 12 pieces: Dora Milaje drills at 16 (Okoye's Stance, Challenge Strike, Panther Step), Vibranium Claws (18, Expose, upgrades the strike), Kinetic Weave (19, upgrades the stance), Kimoyo Beads (21, Shock), Panther Pounce (23, Expose, upgrades the step), Claw Flurry (26, area), **Kinetic Release** (30, Shock, upgrades the claws, his Ultimate), Charged Habit (33, Ward), Bast's Shadow (38, Expose), Wakanda Forever (42, area, Shock). It replaces his **Super Strength, Kinetic Impact and Juggernaut Mass** moves; Super Senses and his stretch powers still bring theirs. Kit edge 0.25.
+- **Starts at 16, not 10:** a first try from 10 let Klaw call out a 12-year-old prince (the rogues-wait rule uses the kit's first piece): 7 fights before 15 at 0.21. From 16, nothing before 15, same as before.
+- **Balance** (60% play, street / boss, 3 seeds, 195 villain boards, boss n = 6, noisy): Story 1.00 / 0.98 → 0.99 / 0.99; Normal 0.88 / 0.71 → **0.78 / 0.63**; Hard 0.73 / 0.35 → **0.58 / 0.28**; Legendary 0.47 / 0.21 → **0.41 / 0.21**.
+- **Tests:** +1 (no kit before 16, shelf has none of the replaced moves, Kinetic Release retires the claws and is the Ultimate at 31, all three styles). 230 game tests pass.
 
 ### Increment 4: Hulk's Gamma Rage
 

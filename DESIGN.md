@@ -316,12 +316,12 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 
 ### Legend kits (shipped 2026-11-08 pm; Armory 2026-11-09 pm)
 
-A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**, **Captain America — The Shield**, **Flash — Speed Force**, **Superman — Kryptonian Arts**, **Wonder Woman — Amazon Arms**, **Hulk — Gamma Rage**.
+A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**, **Captain America — The Shield**, **Flash — Speed Force**, **Superman — Kryptonian Arts**, **Wonder Woman — Amazon Arms**, **Hulk — Gamma Rage**, **Black Panther — Panther Habit**.
 
 - Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More final pieces than slots, so the six stays a choice.
 - **Upgrades** (`upgrades: <older piece>`): when a newer piece arrives, the older one retires from the shelf and the new one takes **its slot** in the six (the Mark I Plating slot becomes the Nanotech Shell). An upgrade always keeps the slot's style. The birthday banner says "Armory upgrade: X replaces Y".
 - **Replaces** (`replaces: { powers?, styles?, line }`): a kit can stand in for moves the legend's powers would give. Those power moves leave the shelf and can't be slotted (the shelf says why). Iron Man's Armory replaces Energy Projection and Flight moves (his repulsors and jets are the suit); Spider-Man's Web-Shooters replace every **guard** his powers would give, so his strikes and tricks come from his powers and every guard is a web. A legend with powers must declare what its kit replaces, so kits never just pile on.
-- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Thor 0.55, a god's hammer trains like a power; Flash 0.55, the kit is his power; Cap 0.30; Wonder Woman 0.20, her arms are trained; Hulk 0.15, his gamma moves start strong; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
+- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Thor 0.55, a god's hammer trains like a power; Flash 0.55, the kit is his power; Cap 0.30; Wonder Woman 0.20, her arms are trained; Hulk 0.15, his gamma moves start strong; Black Panther 0.25; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
 - From `ultimateAge` (Batman, Iron Man, Thor and Cap 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6). `leadsUltimate` lets the kit's Ultimate win over the power's (Iron Man's Unibeam, Thor's God Blast, Cap's Liberty Strike). A kit that leads the Ultimate should make its Ultimate piece an upgrade of an early strike, so it is in the six on the day it arrives. `ultimateAge: null` leaves the power's Ultimate alone.
 - Saved kit lives can enter the Arena with the same six (passive by their first power, else Read the Room).
 
@@ -469,6 +469,23 @@ Braided powers that contain Aegis Shell (Holy Hull) still bring their own moves.
 | 34 | Madder, Stronger | guard | life · Ward | Gamma Hide |
 | 40 | Ground Quake | trick (area) | Frost override | |
 | 44 | Banner's Read | trick (status) | Shock override | |
+
+**Black Panther — Panther Habit** (2026-11-09 night; Dora Milaje drills from 16, the herb wakes his powers at 18; replaces Super Strength, Kinetic Impact and Juggernaut Mass moves; his senses and stretch powers still bring theirs; edge 0.25; Kinetic Release is the Ultimate from 30). The kit starts at 16, not in childhood, so his rogues (Klaw, Man-Ape) still wait until he can fight back.
+
+| Age | Piece | Style | Element / status | Upgrades |
+|---|---|---|---|---|
+| 16 | Okoye's Stance | guard | force | |
+| 16 | Challenge Strike | strike | force | |
+| 16 | Panther Step | trick (dash) | speed | |
+| 18 | Vibranium Claws | strike | shadow · Expose | Challenge Strike |
+| 19 | Kinetic Weave | guard | force | Okoye's Stance |
+| 21 | Kimoyo Beads | trick (status) | Shock override | |
+| 23 | Panther Pounce | trick (dash) | shadow · Expose | Panther Step |
+| 26 | Claw Flurry | strike (area) | force | |
+| 30 | Kinetic Release | strike | energy · Shock | Vibranium Claws |
+| 33 | Charged Habit | guard | shield · Ward | Kinetic Weave |
+| 38 | Bast's Shadow | trick (status) | shadow · Expose | |
+| 42 | Wakanda Forever | strike (area) | energy · Shock | |
 
 A kit that starts at the wake (Flash, Spider-Man, Superman, Hulk) doesn't need childhood coverage; a kit that starts in childhood (Batman, Iron Man, Thor, Cap, Wonder Woman) covers strike, guard and trick by 14.
 
