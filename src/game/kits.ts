@@ -124,6 +124,31 @@ export const KITS: KitDef[] = [
       k("spider-man", { id: "web::snare", name: "Spider-Sense Snare", blurb: "The tingle, the web, already there when they move.", minAge: 32, power: 6, style: "guard", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "lightning", applies: "shock", upgrades: "web::yank" }),
     ],
   },
+  {
+    legend: "thor",
+    id: "kit:thor",
+    name: "Mjolnir",
+    blurb: "Asgard's training yard first, then the hammer that decides if you are worthy.",
+    ultimateAge: 30,
+    leadsUltimate: true,
+    replaces: { powers: ["super-strength"], line: "Thor's strength is in the hammer: Mjolnir does the heavy hitting." },
+    edge: 0.55,
+    piece: "hammer art",
+    moves: [
+      k("thor", { id: "mjolnir::shieldwall", name: "Shieldwall", blurb: "An Asgardian round shield, taller than you are.", minAge: 10, power: 6, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force" }),
+      k("thor", { id: "mjolnir::blade", name: "Practice Blade", blurb: "Sif hits harder. You learn anyway.", minAge: 12, power: 5, style: "strike", kind: "burst", energy: 1, effect: "Single hit.", cooldown: 0, element: "force" }),
+      k("thor", { id: "mjolnir::feint", name: "Warrior's Feint", blurb: "Fandral's trick: look left, go right.", minAge: 14, power: 5, style: "trick", kind: "dash", energy: 1, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "speed" }),
+      k("thor", { id: "mjolnir::strike", name: "Mjolnir Strike", blurb: "It came when you called. Now it hits.", minAge: 17, power: 5, style: "strike", kind: "burst", energy: 2, effect: "Wins leave them Shocked.", cooldown: 0, element: "lightning", upgrades: "mjolnir::blade" }),
+      k("thor", { id: "mjolnir::throw", name: "Hammer Throw", blurb: "Thrown wide. Back from behind them.", minAge: 18, power: 5, style: "trick", kind: "dash", energy: 2, effect: "Hits harder when it answers their tell. Wins leave them Shocked.", cooldown: 0, element: "lightning", upgrades: "mjolnir::feint" }),
+      k("thor", { id: "mjolnir::spin", name: "Hammer Spin", blurb: "Spun fast enough to stop arrows. And bullets.", minAge: 21, power: 5, style: "guard", kind: "guard", energy: 2, effect: "Wins leave them Frosted in the downdraft.", cooldown: 1, element: "wind", upgrades: "mjolnir::shieldwall" }),
+      k("thor", { id: "mjolnir::bifrost", name: "Bifrost Call", blurb: "The bridge opens behind them. They turn to look.", minAge: 26, power: 5, style: "trick", kind: "status", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "light" }),
+      k("thor", { id: "mjolnir::godblast", name: "God Blast", blurb: "Hammer raised. The sky answers all at once.", minAge: 30, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Shocked.", cooldown: 1, element: "lightning", upgrades: "mjolnir::strike" }),
+      k("thor", { id: "mjolnir::landing", name: "Thunder Landing", blurb: "Down from the sky like a verdict.", minAge: 33, power: 7, style: "strike", kind: "area", energy: 3, effect: "Hits wide. Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
+      k("thor", { id: "mjolnir::stormbreaker", name: "Stormbreaker Cleave", blurb: "A new weapon for a broken hammer. It cuts the storm in half.", minAge: 42, power: 8, style: "strike", kind: "burst", energy: 3, effect: "Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
+      k("thor", { id: "mjolnir::catch", name: "Hammer Catch", blurb: "He takes the hit on the hammer's face and hands it back.", minAge: 44, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "force", applies: "expose" }),
+      k("thor", { id: "mjolnir::odinforce", name: "Odinforce Ward", blurb: "Your father's light, finally yours to hold up.", minAge: 48, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "mjolnir::spin" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));

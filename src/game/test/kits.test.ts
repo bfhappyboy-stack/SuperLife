@@ -162,3 +162,20 @@ test("web-shooters leave the Ultimate to his powers, and his rogues hit harder t
   const joker = PRESETS.find((p) => p.id === "batman")!.villains.find((v) => v.alias === "The Joker")!;
   assert.equal(signatureMoves("The Joker", 1)![0]!.power, joker.moves[0]!.power + Math.round(joker.level / 2));
 });
+
+// Thor's Mjolnir (2026-11-09 pm): Asgard's yard from 10, the hammer from 17, God Blast Ultimate at 30.
+test("Thor's life: Mjolnir replaces his strength moves, upgrades in place, and God Blast is the Ultimate at 30", () => {
+  const seen: string[] = [];
+  const g = live(createGame({ ...base, preset: "thor", seed: 6 } as never), 31, seen);
+  const shelf = knownMoves(g).map((e) => e.def.id);
+  assert.ok(!shelf.some((id) => id.startsWith("super-strength::")), shelf.join(","));
+  assert.ok(shelf.includes("mjolnir::godblast") && !shelf.includes("mjolnir::strike") && !shelf.includes("mjolnir::blade"));
+  assert.ok(seen.some((line) => /Mjolnir upgrade: Mjolnir Strike replaces Practice Blade/.test(line)), seen.filter((l) => /Mjolnir/.test(l)).join(" | "));
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  assert.ok(!six.some((m) => (m.id ?? "").startsWith("street::")));
+  const ult = six.filter((m) => m.ultimate);
+  assert.equal(ult.length, 1);
+  assert.equal(ult[0]!.id, "mjolnir::godblast");
+  assert.equal(new Set(six.map((m) => m.style)).size, 3);
+});

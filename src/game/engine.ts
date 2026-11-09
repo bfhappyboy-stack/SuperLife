@@ -2348,7 +2348,7 @@ function beltBirthday(d: Game, banners: string[]) {
   const upgrades = fresh.filter((move) => move.upgrades);
   if (added.length) banners.push(`New in the ${kit.name}: ${added.map((move) => move.name).join(", ")}.`);
   for (const move of upgrades) banners.push(`${kit.name} upgrade: ${move.name} replaces ${kit.moves.find((old) => old.id === move.upgrades)?.name ?? "the old piece"}.`);
-  if (d.age === kit.ultimateAge) banners.push(`The ${kit.name}'s strongest ${kit.piece} is now your Ultimate at full Momentum.`);
+  if (d.age === kit.ultimateAge) banners.push(`${kit.name}: your strongest ${kit.piece} is now your Ultimate at full Momentum.`);
 }
 
 export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
