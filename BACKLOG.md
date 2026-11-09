@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-09 am pass (in progress)
+
+- **Done (increment 2):** painted portraits for the 18 Arena villains, used everywhere the vector card was.
+- **Painted rogues next (31 left on vector cards):** most-fought first: Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith, then the 15 drawn 2026-11-03 night. One webp module + one loader line each.
+- **Iron Man doesn't fight like Iron Man:** street moves until 24, then Pulse Shot / Dive Kick / Heavy Hands / Haymaker; weakest legend measured (Normal 60% 0.59 / 0.38). Candidate: an Armory kit like Batman's belt (repulsors, Unibeam, armour guards).
+- **Spider-Man too easy on Normal** (0.96 / 0.93 at 60%), and no webs in his six. Candidate: a Web-Shooters kit that replaces his strongest generic guards rather than adding to them.
+
 ## From the 2026-11-08 pm pass (in progress)
 
 - **Done (increment 2):** Batman's Utility Belt — 8 age-gated gadgets replace his lifelong street six; Ultimate from 30; saved Batman lives can enter the Arena. Candidate: kits for future powerless legends (e.g. Hawkeye, Black Widow) are one data entry each.

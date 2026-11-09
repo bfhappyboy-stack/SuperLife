@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-09 (am): painted villains (`devbot/2026-11-09-am`)
+
+Built on `origin/devbot/2026-11-08-night` (3947fa9). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 2: painted portraits for the 18 Arena villains
+
+- **Why:** every duel put a painted hero card next to a flat vector villain bust, and the vector cards were always the stand-in for painted art (user request 4). An image generator is now available to the dev bot.
+- **What:** Green Goblin, Venom, Doctor Octopus, Joker, Bane, Iron Monger, Ultron, Abomination, Lex Luthor, Zod, Doomsday, Cheetah, Red Skull, Loki, Hela, Killmonger, Sabretooth and Reverse-Flash now have painted 540×960 portraits in the legend heroes' style (stormy sky, their home turf, one strong rim light, dark floor). Webp inlined as lazy chunks (`src/assets/art/villain-<id>.ts`, 27–59 kB each, ~0.8 MB total, none on first paint).
+- **Where they show:** `VillainArt` uses the painting whenever one is registered, so it lands everywhere the vector card did: Arena draft, sheet, order, reveal, round intro and duel cards, the life-sim FIGHT! / BOSS! intro, the ring standee and the header avatar (zoomed on the face). The vector card stays as the loading and no-painting fallback.
+- **Tests:** +1 (every Arena villain has a registered painting; the module is a webp data URI). 217 game tests pass.
+
+### Increment 1: playtest
+
+- Spider-Man, Iron Man, a Hood / foster mystery and Flash to 50 on Normal and Hard; phone screens. Notes and table in PLAYTEST.md. No code changes.
+
 ## 2026-11-08 (night): legends on the duel stage (`devbot/2026-11-08-night`)
 
 Built on `origin/devbot/2026-11-08-pm` (5ca0283). `main` is unchanged since 702d68d. Typechecked, linted (only the old `src/lib` no-empty error remains), 216 game tests, built and loaded at 390×844 before push.
