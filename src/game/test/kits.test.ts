@@ -238,3 +238,16 @@ test("a legend's own arch-rogue never calls out a child who can't fight back yet
   assert.ok(armed, "Thawne should turn up in at least one of these lives");
   assert.deepEqual(callouts.filter((age) => age < 25), [], `called out at ${callouts.join(",")}`);
 });
+
+// Superman's Kryptonian Arts (2026-11-09 pm): heat vision, freeze breath and the rest replace his generic strength/flight/durability moves.
+test("Superman's Kryptonian Arts replace his generic power moves, upgrade in place, and arm a kit Ultimate at 30", () => {
+  const g = live(createGame({ ...base, preset: "superman", seed: 9 } as never), 31);
+  const shelf = knownMoves(g).map((e) => e.def.id);
+  assert.ok(!shelf.some((id) => /^(super-strength|flight|super-durability)::/.test(id)), shelf.join(","));
+  assert.ok(shelf.includes("krypton::heat") && !shelf.includes("krypton::glare"), "Heat Vision retires Heat Glare");
+  assert.ok(shelf.includes("krypton::steel") && !shelf.includes("krypton::bulletproof"), "Man of Steel retires Bulletproof");
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  const ult = six.find((m) => m.ultimate);
+  assert.ok(ult && (ult.id ?? "").startsWith("krypton::"), six.map((m) => m.id).join(","));
+});

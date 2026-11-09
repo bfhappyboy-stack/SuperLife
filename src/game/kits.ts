@@ -197,6 +197,31 @@ export const KITS: KitDef[] = [
       k("flash", { id: "speedforce::storm", name: "Speed Force Storm", blurb: "The sky over the city turns blue and starts to run.", minAge: 45, power: 8, style: "strike", kind: "area", energy: 3, effect: "Hits wide. Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
     ],
   },
+  {
+    legend: "superman",
+    id: "kit:superman",
+    name: "Kryptonian Arts",
+    blurb: "A yellow sun, a farm in Kansas, and a lot of practice holding back. Every move is one he learned to aim.",
+    ultimateAge: 30,
+    leadsUltimate: true,
+    replaces: { powers: ["super-strength", "flight", "super-durability"], line: "Clark fights with what Krypton gave him: these moves come from the Kryptonian Arts." },
+    edge: 0.55,
+    piece: "Kryptonian art",
+    moves: [
+      k("superman", { id: "krypton::bulletproof", name: "Bulletproof", blurb: "Bullets bounce. The shirt doesn't.", minAge: 13, power: 5, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force" }),
+      k("superman", { id: "krypton::glare", name: "Heat Glare", blurb: "Eyes go red. The barn gets warm.", minAge: 13, power: 5, style: "strike", kind: "burst", energy: 1, effect: "Wins leave them Burning.", cooldown: 0, element: "fire" }),
+      k("superman", { id: "krypton::blur", name: "Blur", blurb: "There, then not, then behind you.", minAge: 13, power: 5, style: "trick", kind: "dash", energy: 1, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "speed" }),
+      k("superman", { id: "krypton::xray", name: "X-Ray Read", blurb: "He sees the hand in the pocket and the fear behind it.", minAge: 15, power: 4, style: "trick", kind: "status", energy: 1, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "psychic", applies: "shock" }),
+      k("superman", { id: "krypton::freeze", name: "Freeze Breath", blurb: "One breath and the punch stops in mid-air.", minAge: 17, power: 6, style: "guard", kind: "status", energy: 2, effect: "Wins leave them Frosted.", cooldown: 1, element: "ice" }),
+      k("superman", { id: "krypton::heat", name: "Heat Vision", blurb: "He finally lets it all the way out.", minAge: 18, power: 7, style: "strike", kind: "burst", energy: 2, effect: "Wins leave them Burning.", cooldown: 0, element: "fire", upgrades: "krypton::glare" }),
+      k("superman", { id: "krypton::tackle", name: "Flying Tackle", blurb: "Through three walls and a parking garage.", minAge: 20, power: 6, style: "strike", kind: "dash", energy: 2, effect: "Single hit.", cooldown: 1, element: "speed" }),
+      k("superman", { id: "krypton::breath", name: "Super-Breath", blurb: "One breath clears the street.", minAge: 24, power: 6, style: "trick", kind: "area", energy: 2, effect: "Hits wide. Wins leave them Frosted.", cooldown: 1, element: "wind", upgrades: "krypton::blur" }),
+      k("superman", { id: "krypton::steel", name: "Man of Steel", blurb: "He stands still and lets the world find out.", minAge: 28, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "shield", upgrades: "krypton::bulletproof" }),
+      k("superman", { id: "krypton::flare", name: "Solar Flare", blurb: "Every sunrise he ever stored, at once.", minAge: 30, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Burning.", cooldown: 1, element: "light", applies: "burn", upgrades: "krypton::tackle" }),
+      k("superman", { id: "krypton::clap", name: "Thunderclap", blurb: "Two hands, one sonic boom.", minAge: 34, power: 7, style: "strike", kind: "area", energy: 3, effect: "Hits wide.", cooldown: 1, element: "force" }),
+      k("superman", { id: "krypton::fortress", name: "Fortress Training", blurb: "Jor-El's lessons, finally making sense.", minAge: 38, power: 6, style: "trick", kind: "status", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "psychic" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));
