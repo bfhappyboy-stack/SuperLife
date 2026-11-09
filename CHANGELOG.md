@@ -4,6 +4,17 @@
 
 Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 2: Iron Man's Armory
+
+- **Why:** Tony Stark fought with six street moves until his powers woke at 24, then with Pulse Shot, Dive Kick, Heavy Hands, Stand Firm, Slip and Haymaker (four strikes). No repulsors, no Unibeam, no armour. User request (Nov 9): a signature kit like Batman's belt.
+- **What:** an **Armory** kit (`src/game/kits.ts`), 14 pieces from 10 to 40: Tin-Can Shield, Pulse Glove, Flash Flare, Arc Taser, Chest Reactor, Mark I Plating, Mark I Flamethrower, Repulsor Blast, Boot Jets, JARVIS Targeting, Shoulder Missiles, **Unibeam**, Nanotech Shell, Hulkbuster Brace.
+- **Suit upgrades:** kit pieces can now `upgrade` an older piece. When the new Mark arrives the old piece retires and the new one takes its slot, so the six keeps its shape (Pulse Glove → Repulsor Blast at 24, Chest Reactor → Unibeam at 30, Mark I Plating → Nanotech Shell at 36…). The birthday banner says "Armory upgrade: X replaces Y"; the locked shelf shows "Upgrades X".
+- **Replaces:** a kit can now stand in for power moves. Iron Man's Energy Projection and Flight moves leave his shelf (the suit is where they come from); old saves drop them and refill from the Armory on load. Powers he braids later still bring their own moves.
+- **Ultimate:** Unibeam (the strongest piece) is his Ultimate from 30, ahead of his power's (`leadsUltimate`).
+- **Balance** (Normal, 60% play, street / boss, 3 seeds): 0.79 / 0.64 → **0.77 / 0.59**; Story 1.00 / 0.92 → 1.00 / 0.95; Hard 0.59 / 0.42 → **0.49 / 0.41**; Legendary 0.39 / 0.20 → **0.29 / 0.18**. Seed 1 alone (the am table's life): Normal 0.59 / 0.38 → 0.75 / 0.58. His worst stretch (24–30, 0.66) is now 0.84; teens are 0.73 street (were 0.91 on street moves against teen foes).
+- Kits get a per-kit `edge` (Iron Man 0.40, default 0.25) and a `piece` word for banners; the Moves shelf strings name the kit instead of "the belt".
+- **Tests:** +2 (Armory unlocks, upgrades and hidden power moves; Iron Man's six at 23 and 31, Unibeam Ultimate, Arena saved life). Kit data test now checks upgrade lines. 219 game tests pass.
+
 ### Increment 1: playtest
 
 - Story and Legendary as well as Normal and Hard; a Neon Spire legacy mystery, a Crownbridge ice + force-field God Mode life, Thor and Wolverine beside five reference legends; three seeds per build. Power mixing at 15 (mentor, Skip to 15) and move-select re-checked on the phone. Notes and table in PLAYTEST.md. No code changes.

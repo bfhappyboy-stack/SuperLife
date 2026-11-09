@@ -1,10 +1,17 @@
 # SuperLife — Backlog
 
+## From the 2026-11-09 pm pass (in progress)
+
+- **Done (increment 2):** Iron Man's **Armory** — 14 suit pieces from 10 to 40 with Mark upgrades that take the old piece's slot, replacing his generic Energy Projection / Flight moves and the street six; Unibeam is his Ultimate from 30; saved Iron Man lives bring it to the Arena. Normal 60%: 0.79 / 0.64 → 0.77 / 0.59 (3 seeds; seed 1 0.59 / 0.38 → 0.75 / 0.58), teen band 0.91 → 0.73 street, the 24–30 dip (0.66) gone (0.84).
+- **Story is a walkover** (0.99 / 0.95 at 60%, 0.94 / 0.82 at 30%). Candidate: Story bosses keep their phase-2 gimmick at half strength so they still read as bosses.
+- **Thor fights generically and is the weakest legend** (four strikes + street guard/trick at 20; Hard 0.54 / 0.19). Candidate: a Mjolnir kit (throw, recall, Bifrost, God Blast) that replaces his generic strike moves.
+- **Crownbridge ice God Mode is the hardest life** (Legendary 0.17 / 0.03): strike-heavy Gen-0 mix. Same root as the mystery-life spread below.
+
 ## From the 2026-11-09 am pass (in progress)
 
 - **Done (increment 2):** painted portraits for the 18 Arena villains, used everywhere the vector card was.
 - **Painted rogues next (31 left on vector cards):** most-fought first: Mysterio, Vulture, Kraven, Two-Face, Riddler, Scarecrow, Penguin, Whiplash, Mandarin, Leader, Brainiac, Winter Soldier, Zemo, Klaw, Circe, Malekith, then the 15 drawn 2026-11-03 night. One webp module + one loader line each.
-- **Iron Man doesn't fight like Iron Man:** street moves until 24, then Pulse Shot / Dive Kick / Heavy Hands / Haymaker; weakest legend measured (Normal 60% 0.59 / 0.38). Candidate: an Armory kit like Batman's belt (repulsors, Unibeam, armour guards).
+- **Iron Man doesn't fight like Iron Man:** done 2026-11-09 pm (Armory kit).
 - **Spider-Man too easy on Normal** (0.96 / 0.93 at 60%), and no webs in his six. Candidate: a Web-Shooters kit that replaces his strongest generic guards rather than adding to them.
 
 ## From the 2026-11-08 pm pass (in progress)

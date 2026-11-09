@@ -314,14 +314,18 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
    - Charge cadence (fixed 2026-11-08 am): the charged hit comes on the second turn of phase 2 and then every third turn (`CHARGE_EVERY = 3`). Before, it charged every turn after the first.
 10. **Strategic loadouts (Stage 3 start — coverage shipped 2026-11-07 night):** Exactly 6 moves, two sets (A/B). Auto-fill and street padding prefer a missing strike/guard/trick so every tell has an answer; the Moves shelf warns when the equipped six still lacks a style (e.g. "No guard move: strike tells have no answer"). Authored early moves for durability / force-field / aegis / strength favour coverage. Future: a "Burst window" tag on authored finishers so the Momentum spend feels authored, not generic.
 
-### Legend kits (shipped 2026-11-08 pm)
+### Legend kits (shipped 2026-11-08 pm; Armory 2026-11-09 pm)
 
-A legend with **no powers** fights with a gear kit instead of street moves forever. Data in `src/game/kits.ts` (`KITS`), one entry per legend; today only **Batman — Utility Belt**.
+A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**.
 
-- Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More gadgets than slots (8 for 6), so the six stays a choice.
-- Strength: base power + 0.30 × power level (powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
-- From `ultimateAge` (Batman 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6).
-- Saved kit lives can enter the Arena (passive Read the Room).
+- Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More final pieces than slots, so the six stays a choice.
+- **Upgrades** (`upgrades: <older piece>`): when a newer piece arrives, the older one retires from the shelf and the new one takes **its slot** in the six (the Mark I Plating slot becomes the Nanotech Shell). An upgrade always keeps the slot's style. The birthday banner says "Armory upgrade: X replaces Y".
+- **Replaces** (`replaces: { powers?, styles?, line }`): a kit can stand in for moves the legend's powers would give. Those power moves leave the shelf and can't be slotted (the shelf says why). Iron Man's Armory replaces Energy Projection and Flight moves (his repulsors and jets are the suit). A legend with powers must declare what its kit replaces, so kits never just pile on.
+- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
+- From `ultimateAge` (Batman 30, Iron Man 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6). `leadsUltimate` lets the kit's Ultimate win over the power's (Iron Man). `ultimateAge: null` leaves the power's Ultimate alone.
+- Saved kit lives can enter the Arena with the same six (passive by their first power, else Read the Room).
+
+**Batman — Utility Belt**
 
 | Age | Gadget | Style | Element / status |
 |---|---|---|---|
@@ -333,6 +337,27 @@ A legend with **no powers** fights with a gear kit instead of street moves forev
 | 25 | Explosive Gel | strike | fire · Burn |
 | 28 | Detective Mode | trick (status) | psychic · **Shock** override |
 | 32 | I Am Vengeance | strike | shadow · Expose |
+
+**Iron Man — Armory** (replaces Energy Projection and Flight moves; Unibeam is the Ultimate from 30)
+
+| Age | Piece | Style | Element / status | Upgrades |
+|---|---|---|---|---|
+| 10 | Tin-Can Shield | guard | force | |
+| 12 | Pulse Glove | strike | energy · Shock | |
+| 14 | Flash Flare | trick (status) | light · Expose | |
+| 17 | Arc Taser | trick (status) | lightning · Shock | |
+| 20 | Chest Reactor | strike | energy · Shock | |
+| 22 | Mark I Plating | guard | shield · Ward | Tin-Can Shield |
+| 22 | Mark I Flamethrower | strike (area) | fire · Burn | |
+| 24 | Repulsor Blast | strike | energy · Shock | Pulse Glove |
+| 24 | Boot Jets | trick (dash) | speed | Flash Flare |
+| 28 | JARVIS Targeting | trick (status) | psychic · Expose | Arc Taser |
+| 28 | Shoulder Missiles | strike (area) | fire · Burn | Mark I Flamethrower |
+| 30 | Unibeam | strike | energy · Shock | Chest Reactor |
+| 36 | Nanotech Shell | guard | shield · Ward | Mark I Plating |
+| 40 | Hulkbuster Brace | guard | force | |
+
+Auto six by age: 10–21 the pieces as they arrive (street padding until six); 22–29 Plating, Repulsor/Pulse, Jets/Flare, JARVIS/Taser, Reactor, Missiles/Flamethrower; from 30 Unibeam takes the Reactor slot. At 40 seven final pieces compete for six.
 
 ### Feel on phone (Stage 1 partial)
 
