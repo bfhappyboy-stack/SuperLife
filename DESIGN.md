@@ -316,13 +316,13 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 
 ### Legend kits (shipped 2026-11-08 pm; Armory 2026-11-09 pm)
 
-A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**.
+A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**.
 
 - Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More final pieces than slots, so the six stays a choice.
 - **Upgrades** (`upgrades: <older piece>`): when a newer piece arrives, the older one retires from the shelf and the new one takes **its slot** in the six (the Mark I Plating slot becomes the Nanotech Shell). An upgrade always keeps the slot's style. The birthday banner says "Armory upgrade: X replaces Y".
 - **Replaces** (`replaces: { powers?, styles?, line }`): a kit can stand in for moves the legend's powers would give. Those power moves leave the shelf and can't be slotted (the shelf says why). Iron Man's Armory replaces Energy Projection and Flight moves (his repulsors and jets are the suit); Spider-Man's Web-Shooters replace every **guard** his powers would give, so his strikes and tricks come from his powers and every guard is a web. A legend with powers must declare what its kit replaces, so kits never just pile on.
-- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
-- From `ultimateAge` (Batman 30, Iron Man 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6). `leadsUltimate` lets the kit's Ultimate win over the power's (Iron Man). `ultimateAge: null` leaves the power's Ultimate alone.
+- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Thor 0.55, a god's hammer trains like a power; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
+- From `ultimateAge` (Batman, Iron Man and Thor 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6). `leadsUltimate` lets the kit's Ultimate win over the power's (Iron Man's Unibeam, Thor's God Blast). `ultimateAge: null` leaves the power's Ultimate alone.
 - Saved kit lives can enter the Arena with the same six (passive by their first power, else Read the Room).
 
 **Batman — Utility Belt**
@@ -367,6 +367,25 @@ A legend whose fighting comes from **gear, not a power**, fights with a kit inst
 | 23 | Web Cocoon | guard (status) | Frost override | Web Net |
 | 26 | Web Wall | guard | shield · Ward | Web Shield |
 | 32 | Spider-Sense Snare | guard (status) | Shock override | Web Yank |
+
+**Thor — Mjolnir** (replaces Super Strength moves; God Blast is the Ultimate from 30)
+
+| Age | Piece | Style | Element / status | Upgrades |
+|---|---|---|---|---|
+| 10 | Shieldwall | guard | force | |
+| 12 | Practice Blade | strike | force | |
+| 14 | Warrior's Feint | trick (dash) | speed | |
+| 17 | Mjolnir Strike | strike | lightning · Shock | Practice Blade |
+| 18 | Hammer Throw | trick (dash) | lightning · Shock | Warrior's Feint |
+| 21 | Hammer Spin | guard | wind · Frost | Shieldwall |
+| 26 | Bifrost Call | trick (status) | light · Expose | |
+| 30 | God Blast | strike | lightning · Shock | Mjolnir Strike |
+| 33 | Thunder Landing | strike (area) | lightning · Shock | |
+| 42 | Stormbreaker Cleave | strike | lightning · Shock | |
+| 44 | Hammer Catch | guard | Expose override | |
+| 48 | Odinforce Ward | guard | shield · Ward | Hammer Spin |
+
+Before his powers wake (16) the yard pieces carry him; once they wake his lightning and storm moves fill the rest of the six beside the hammer's three slots.
 
 **Rogue edge:** a preset can set `rogueEdge` (Spider-Man +2): added to every signature move of that legend's rogues in life-sim fights. His gallery was written like a powerless hero's (moves 4–7) while he fights with three powers.
 

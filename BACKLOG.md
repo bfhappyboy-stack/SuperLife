@@ -6,7 +6,8 @@
 - **Done (increment 3):** Spider-Man's **Web-Shooters** — 6 web guards (15–32, three upgrades) replace every guard his powers gave; his rogues get +2 on signature moves (`rogueEdge`). Normal 60%: 0.94 / 0.88 → 0.80 / 0.69 (3 seeds; seed 1 0.96 / 0.93 → 0.79 / 0.53); Hard 0.77 / 0.54 → 0.55 / 0.36; Legendary 0.54 / 0.21 → 0.34 / 0.15.
 - **Normal boss still high for legends** (Spider-Man 0.69, Batman 0.68, Wonder Woman 0.78 vs ~0.55 target) while Hard / Legendary are on target. Candidate: retune Normal boss HP or legend boss gimmicks rather than legend kits.
 - **Story is a walkover** (0.99 / 0.95 at 60%, 0.94 / 0.82 at 30%). Candidate: Story bosses keep their phase-2 gimmick at half strength so they still read as bosses.
-- **Thor fights generically and is the weakest legend** (four strikes + street guard/trick at 20; Hard 0.54 / 0.19). Candidate: a Mjolnir kit (throw, recall, Bifrost, God Blast) that replaces his generic strike moves.
+- **Done (increment 4):** Thor's **Mjolnir** — 12 pieces (yard 10–14, hammer from 17, God Blast Ultimate at 30, Stormbreaker at 42) replacing his Super Strength moves. 60% street / boss, 3 seeds: Normal 0.72 / 0.50 → 0.77 / 0.46, Hard 0.54 / 0.19 → 0.57 / 0.38, Legendary 0.30 / 0.06 → 0.43 / 0.10. His bosses (Loki, Hela, Malekith at 8–9) stay the hardest in the game; Legendary street a little high.
+- **Thor still four strikes once his powers wake** (God Blast, Static Snap, Cloud Bolt, Squall Slap + hammer guard + throw). His lightning / storm book is all strikes early. Candidate: an authored early trick for Storm Calling.
 - **Crownbridge ice God Mode is the hardest life** (Legendary 0.17 / 0.03): strike-heavy Gen-0 mix. Same root as the mystery-life spread below.
 
 ## From the 2026-11-09 am pass (in progress)

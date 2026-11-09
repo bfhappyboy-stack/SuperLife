@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 4: Thor's Mjolnir
+
+- **Why:** Thor was the weakest legend in the playtest (Hard 60% 0.54 / 0.19, Legendary 0.30 / 0.06) and fought generically: at 20 vs Loki his six was Slip, Heavy Hands, Cloud Bolt, Squall Slap, Thunder Clap, Brace. No hammer. Same treatment as Iron Man, as its own increment.
+- **What:** a **Mjolnir** kit, 12 pieces: Asgard's yard first (Shieldwall 10, Practice Blade 12, Warrior's Feint 14), then the hammer (Mjolnir Strike 17, Hammer Throw 18, Hammer Spin 21, Bifrost Call 26, **God Blast** 30, Thunder Landing 33, Stormbreaker Cleave 42, Hammer Catch 44, Odinforce Ward 48). Five upgrade in place (Practice Blade → Mjolnir Strike → God Blast, Shieldwall → Hammer Spin → Odinforce Ward, Warrior's Feint → Hammer Throw). It replaces his **Super Strength** moves (Heavy Hands, Stand Firm): his strength is the hammer. His lightning and storm powers still fill the rest of the six. God Blast is his Ultimate from 30.
+- **Balance** (60% play, street / boss, 3 seeds): Story 0.98 / 0.96 → 0.98 / 0.94; Normal 0.72 / 0.50 → **0.77 / 0.46**; Hard 0.54 / 0.19 → **0.57 / 0.38**; Legendary 0.30 / 0.06 → **0.43 / 0.10**. Boss n = 8, so the boss column is noisy; his gallery (Loki, Hela, Malekith, Surtur at 8–10) is the strongest in the game.
+- The kit Ultimate banner now reads "<Kit>: your strongest <piece> is now your Ultimate at full Momentum."
+- **Tests:** +1 (Thor's shelf has no strength moves, the Mjolnir upgrade banner, God Blast Ultimate at 31, all three styles). 222 game tests pass.
+
 ### Increment 3: Spider-Man's web-shooters
 
 - **Why:** Spider-Man was far too easy (Normal 60% 0.94 / 0.88 on 3 seeds, 0.96 / 0.93 on seed 1): three 13-power guards (Counter Tap, Stand Firm, Slow Second) from his senses / strength / speed mix, and no webs anywhere. User request (Nov 9): a web-shooter kit that **replaces** his generic guards rather than adding to them.
