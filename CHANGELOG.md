@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 3: Spider-Man's web-shooters
+
+- **Why:** Spider-Man was far too easy (Normal 60% 0.94 / 0.88 on 3 seeds, 0.96 / 0.93 on seed 1): three 13-power guards (Counter Tap, Stand Firm, Slow Second) from his senses / strength / speed mix, and no webs anywhere. User request (Nov 9): a web-shooter kit that **replaces** his generic guards rather than adding to them.
+- **What:** a **Web-Shooters** kit: Web Shield (15), Web Net (16, Frost), Web Yank (19, Expose), Web Cocoon (23, upgrades Net), Web Wall (26, Ward, upgrades Shield), Spider-Sense Snare (32, Shock, upgrades Yank). It uses the new `replaces` rule by **style**: every guard his powers would give leaves his shelf, so all his guards are webs and his strikes and tricks still come from his powers. Webs gain little from power level (edge 0.10); they win on statuses. His power keeps the Ultimate.
+- **His rogues:** Goblin, Doc Ock, Venom, Kraven, Mysterio and Vulture were written with 4–7 power moves, like Batman's gallery, while Peter fights with three powers. New preset field `rogueEdge` (Spider-Man +2) adds to every signature move of that legend's rogues in life-sim fights. Arena is unchanged.
+- **Balance** (60% play, street / boss, 3 seeds): Story 1.00 / 0.99 → 1.00 / 0.94; Normal 0.94 / 0.88 → **0.80 / 0.69**; Hard 0.77 / 0.54 → **0.55 / 0.36**; Legendary 0.54 / 0.21 → **0.34 / 0.15**. Seed 1 (the am table's life): Normal 0.96 / 0.93 → 0.79 / 0.53. Web guards alone took Normal to 0.89 / 0.80; the rogue edge did the rest.
+- **Tests:** +2 (webs replace power guards on the shelf, in the six and in old saves; the kit leaves the Ultimate alone; rogue edge applies only to his gallery). 221 game tests pass.
+
 ### Increment 2: Iron Man's Armory
 
 - **Why:** Tony Stark fought with six street moves until his powers woke at 24, then with Pulse Shot, Dive Kick, Heavy Hands, Stand Firm, Slip and Haymaker (four strikes). No repulsors, no Unibeam, no armour. User request (Nov 9): a signature kit like Batman's belt.

@@ -316,12 +316,12 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 
 ### Legend kits (shipped 2026-11-08 pm; Armory 2026-11-09 pm)
 
-A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**.
+A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**.
 
 - Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More final pieces than slots, so the six stays a choice.
 - **Upgrades** (`upgrades: <older piece>`): when a newer piece arrives, the older one retires from the shelf and the new one takes **its slot** in the six (the Mark I Plating slot becomes the Nanotech Shell). An upgrade always keeps the slot's style. The birthday banner says "Armory upgrade: X replaces Y".
-- **Replaces** (`replaces: { powers?, styles?, line }`): a kit can stand in for moves the legend's powers would give. Those power moves leave the shelf and can't be slotted (the shelf says why). Iron Man's Armory replaces Energy Projection and Flight moves (his repulsors and jets are the suit). A legend with powers must declare what its kit replaces, so kits never just pile on.
-- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
+- **Replaces** (`replaces: { powers?, styles?, line }`): a kit can stand in for moves the legend's powers would give. Those power moves leave the shelf and can't be slotted (the shelf says why). Iron Man's Armory replaces Energy Projection and Flight moves (his repulsors and jets are the suit); Spider-Man's Web-Shooters replace every **guard** his powers would give, so his strikes and tricks come from his powers and every guard is a web. A legend with powers must declare what its kit replaces, so kits never just pile on.
+- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
 - From `ultimateAge` (Batman 30, Iron Man 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6). `leadsUltimate` lets the kit's Ultimate win over the power's (Iron Man). `ultimateAge: null` leaves the power's Ultimate alone.
 - Saved kit lives can enter the Arena with the same six (passive by their first power, else Read the Room).
 
@@ -356,6 +356,19 @@ A legend whose fighting comes from **gear, not a power**, fights with a kit inst
 | 30 | Unibeam | strike | energy · Shock | Chest Reactor |
 | 36 | Nanotech Shell | guard | shield · Ward | Mark I Plating |
 | 40 | Hulkbuster Brace | guard | force | |
+
+**Spider-Man — Web-Shooters** (replace his power guards; his power keeps the Ultimate)
+
+| Age | Web | Kind | Status | Upgrades |
+|---|---|---|---|---|
+| 15 | Web Shield | guard | — | |
+| 16 | Web Net | guard (status) | Frost override | |
+| 19 | Web Yank | guard | Expose override | |
+| 23 | Web Cocoon | guard (status) | Frost override | Web Net |
+| 26 | Web Wall | guard | shield · Ward | Web Shield |
+| 32 | Spider-Sense Snare | guard (status) | Shock override | Web Yank |
+
+**Rogue edge:** a preset can set `rogueEdge` (Spider-Man +2): added to every signature move of that legend's rogues in life-sim fights. His gallery was written like a powerless hero's (moves 4–7) while he fights with three powers.
 
 Auto six by age: 10–21 the pieces as they arrive (street padding until six); 22–29 Plating, Repulsor/Pulse, Jets/Flare, JARVIS/Taser, Reactor, Missiles/Flamethrower; from 30 Unibeam takes the Reactor slot. At 40 seven final pieces compete for six.
 
