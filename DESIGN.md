@@ -316,12 +316,12 @@ Designed now so Stage 1 doesn't paint us into a corner. Each stage must ship com
 
 ### Legend kits (shipped 2026-11-08 pm; Armory 2026-11-09 pm)
 
-A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**, **Captain America — The Shield**.
+A legend whose fighting comes from **gear, not a power**, fights with a kit instead of street or generic power moves. Data in `src/game/kits.ts` (`KITS`), one entry per legend: **Batman — Utility Belt**, **Iron Man — Armory**, **Spider-Man — Web-Shooters**, **Thor — Mjolnir**, **Captain America — The Shield**, **Flash — Speed Force**.
 
 - Kit moves are ordinary moves with a `kit:<legend>` source. They unlock **by age** (`minAge`), rank up by use, and only that legend's life can equip them. More final pieces than slots, so the six stays a choice.
 - **Upgrades** (`upgrades: <older piece>`): when a newer piece arrives, the older one retires from the shelf and the new one takes **its slot** in the six (the Mark I Plating slot becomes the Nanotech Shell). An upgrade always keeps the slot's style. The birthday banner says "Armory upgrade: X replaces Y".
 - **Replaces** (`replaces: { powers?, styles?, line }`): a kit can stand in for moves the legend's powers would give. Those power moves leave the shelf and can't be slotted (the shelf says why). Iron Man's Armory replaces Energy Projection and Flight moves (his repulsors and jets are the suit); Spider-Man's Web-Shooters replace every **guard** his powers would give, so his strikes and tricks come from his powers and every guard is a web. A legend with powers must declare what its kit replaces, so kits never just pile on.
-- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Thor 0.55, a god's hammer trains like a power; Cap 0.30; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
+- Strength: base power + `edge` × power level (default 0.25; Iron Man 0.40; Thor 0.55, a god's hammer trains like a power; Flash 0.55, the kit is his power; Cap 0.30; Spider-Man's webs 0.10, they win on statuses; powers 0.55, street 0.35) + 1 per decade of wear from 25 (max +3).
 - From `ultimateAge` (Batman, Iron Man, Thor and Cap 30) the kit's strongest equipped move is the Ultimate (same rules as §17 item 6). `leadsUltimate` lets the kit's Ultimate win over the power's (Iron Man's Unibeam, Thor's God Blast, Cap's Liberty Strike). A kit that leads the Ultimate should make its Ultimate piece an upgrade of an early strike, so it is in the six on the day it arrives. `ultimateAge: null` leaves the power's Ultimate alone.
 - Saved kit lives can enter the Arena with the same six (passive by their first power, else Read the Room).
 
@@ -405,6 +405,25 @@ Before his powers wake (16) the yard pieces carry him; once they wake his lightn
 | 45 | Worthy | strike | lightning · Shock | |
 
 Braided powers that contain Aegis Shell (Holy Hull) still bring their own moves.
+
+**Flash — Speed Force** (replaces Super Speed and Thunder Sprint moves from the wake at 25; Infinite Mass Punch is the Ultimate from 33)
+
+| Age | Piece | Style | Element / status | Upgrades |
+|---|---|---|---|---|
+| 25 | Lightning Jab | strike | lightning · Shock | |
+| 25 | Speed Mirage | guard | speed | |
+| 25 | Phase Step | trick (dash) | warp · Expose | |
+| 27 | Tornado Arms | guard | wind · Frost | Speed Mirage |
+| 29 | Lightning Throw | strike | lightning · Shock | |
+| 31 | Speed Steal | trick (status) | Frost override | |
+| 33 | Infinite Mass Punch | strike | Expose override | Lightning Jab |
+| 36 | Rewind | trick (status) | Ward override | |
+| 38 | Time Remnant | guard | shield · Ward | Tornado Arms |
+| 45 | Speed Force Storm | strike (area) | lightning · Shock | |
+
+A kit that starts at the wake (Flash, Spider-Man) doesn't need childhood coverage; a kit that starts in childhood (Batman, Iron Man, Thor, Cap) covers strike, guard and trick by 14.
+
+**Rogues wait (2026-11-09 pm):** a legend's own arch-rogue never calls out the hero (the monthly "arch-month" pin) before they can fight back: the powers waking or the kit's first piece, whichever is first. Before, kid Barry was called out by Reverse-Flash (level 9) almost every month from 11 to 24; kid Bruce Banner the same until 28. Canon beats and boss fights still happen on schedule.
 
 **Rogue edge:** a preset can set `rogueEdge` (Spider-Man +2): added to every signature move of that legend's rogues in life-sim fights. His gallery was written like a powerless hero's (moves 4–7) while he fights with three powers.
 

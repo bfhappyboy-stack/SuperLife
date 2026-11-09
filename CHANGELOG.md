@@ -4,6 +4,15 @@
 
 Built on `origin/devbot/2026-11-09-am` (a754682). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 6: Flash's Speed Force, and rogues who wait
+
+- **Why:** Flash was the weakest legend (Normal 60% 0.54 / 0.45, Legendary 0.26 / 0.23) and fought with Quick Cut / Volt Step / Afterimage. Digging in: 60 of his 206 villain fights before 25 were **Reverse-Flash (level 9, ~95 HP) calling out a powerless child** through the monthly arch-enemy pin, 11 to 24, and he lost all of the ones before 15.
+- **Rogues wait:** a legend's own arch-rogue never sends the monthly "Show up" pin before the hero can fight back: the powers waking or the kit's first piece, whichever comes first (Iron Man's Armory and Thor's yard start at 10, so they are unchanged). Canon beats and boss steps are untouched. Affects Flash (until 25) and Hulk (until 28).
+- **Speed Force kit**, 10 pieces from his wake at 25: Lightning Jab, Speed Mirage, Phase Step, Tornado Arms (27), Lightning Throw (29), Speed Steal (31, Frost), **Infinite Mass Punch** (33, Expose, upgrades the jab, his Ultimate), Rewind (36, Ward), Time Remnant (38), Speed Force Storm (45). It replaces his Super Speed and Thunder Sprint moves.
+- **Balance** (60% play, street / boss, 3 seeds): Story 0.87 / 0.93 → 0.97 / 0.89; Normal 0.54 / 0.45 → **0.71 / 0.50**; Hard 0.42 / 0.35 → **0.57 / 0.34**; Legendary 0.26 / 0.23 → **0.43 / 0.21**. Hulk: Normal 0.91 / 0.74 → 0.91 / 0.72, Hard 0.75 / 0.53 → 0.79 / 0.53, Legendary 0.52 / 0.28 → 0.64 / 0.32. Every other build measured is identical to before (same lives).
+- Kit data test: a kit that starts at the wake doesn't need childhood style coverage.
+- **Tests:** +2 (Flash's shelf and Ultimate; a kid Flash with Reverse-Flash as arch-enemy gets no call-outs before 25 across three lives, where the old code sent them from 11). 225 game tests pass.
+
 ### Increment 5: Captain America's Shield
 
 - **Why:** Cap fought with Heavy Hands, Aegis, Holy Hull, Counter Tap: no shield moves at all, and he was the strongest legend (Normal 60% 0.92 / 0.81).
