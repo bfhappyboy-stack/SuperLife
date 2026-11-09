@@ -248,6 +248,28 @@ export const KITS: KitDef[] = [
       k("wonder-woman", { id: "amazon::zeus", name: "Zeus's Thunder", blurb: "Her father's lightning, caught on the bracers and thrown back.", minAge: 48, power: 8, style: "strike", kind: "area", energy: 3, effect: "Hits wide. Wins leave them Shocked.", cooldown: 1, element: "lightning" }),
     ],
   },
+  {
+    legend: "hulk",
+    id: "kit:hulk",
+    name: "Gamma Rage",
+    blurb: "The madder he gets, the stronger he gets. Banner is still in there, taking notes.",
+    ultimateAge: 33,
+    leadsUltimate: true,
+    replaces: { powers: ["super-strength", "super-durability", "juggernaut-mass"], line: "Hulk's strength and hide are the gamma: these moves come from Gamma Rage." },
+    edge: 0.15,
+    piece: "gamma move",
+    moves: [
+      k("hulk", { id: "gamma::smash", name: "Hulk Smash", blurb: "Two fists, overhead, no plan needed.", minAge: 28, power: 5, style: "strike", kind: "burst", energy: 1, effect: "Single hit.", cooldown: 0, element: "force" }),
+      k("hulk", { id: "gamma::hide", name: "Gamma Hide", blurb: "Tank shells bounce. So does pride.", minAge: 28, power: 5, style: "guard", kind: "guard", energy: 1, effect: "Takes the edge off what comes back.", cooldown: 0, element: "force" }),
+      k("hulk", { id: "gamma::leap", name: "Gamma Leap", blurb: "Three miles in one jump, landing on purpose.", minAge: 28, power: 5, style: "trick", kind: "dash", energy: 1, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "wind" }),
+      k("hulk", { id: "gamma::roar", name: "Hulk Roar", blurb: "Windows go first. Then their nerve.", minAge: 30, power: 5, style: "trick", kind: "status", energy: 2, effect: "Wins leave them Exposed.", cooldown: 1, element: "force", applies: "expose" }),
+      k("hulk", { id: "gamma::clap", name: "Gamma Clap", blurb: "Palms together. The street goes flat.", minAge: 31, power: 7, style: "strike", kind: "area", energy: 2, effect: "Hits wide. Wins leave them Frosted, knocked off their feet.", cooldown: 1, element: "wind" }),
+      k("hulk", { id: "gamma::worldbreaker", name: "World Breaker", blurb: "Angry enough to crack the planet. Aimed at one person.", minAge: 33, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Exposed.", cooldown: 1, element: "force", applies: "expose", upgrades: "gamma::smash" }),
+      k("hulk", { id: "gamma::madder", name: "Madder, Stronger", blurb: "Every hit he takes makes the next one worse. For them.", minAge: 34, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "life", upgrades: "gamma::hide" }),
+      k("hulk", { id: "gamma::quake", name: "Ground Quake", blurb: "He stamps once. Everybody sits down.", minAge: 40, power: 7, style: "trick", kind: "area", energy: 2, effect: "Hits wide. Wins leave them Frosted.", cooldown: 1, element: "force", applies: "frost" }),
+      k("hulk", { id: "gamma::banner", name: "Banner's Read", blurb: "For one second the eyes go brown, and the plan is perfect.", minAge: 44, power: 6, style: "trick", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "psychic", applies: "shock" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));

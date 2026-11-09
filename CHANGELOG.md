@@ -1,8 +1,15 @@
 # Changelog
 
-## 2026-11-09 (night): Wonder Woman's kit, painted rogues (`devbot/2026-11-09-night`)
+## 2026-11-09 (night): Wonder Woman and Hulk kits, painted rogues (`devbot/2026-11-09-night`)
 
 Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 4: Hulk's Gamma Rage
+
+- **Why:** Hulk fought with Heavy Hands, Stand Firm, Grit Knit, Freight Train, Heavy Step and a Ground Pound Ultimate (generic strength / Juggernaut moves) and sat above target (Normal 60% 0.91 / 0.72, Hard 0.79 / 0.53).
+- **What:** a **Gamma Rage** kit, 9 pieces from the gamma blast at 28: Hulk Smash, Gamma Hide, Gamma Leap (28), Hulk Roar (30, Expose), Gamma Clap (31, area, Frost: a second strike so a trick tell always has an answer), **World Breaker** (33, Expose, upgrades Hulk Smash, his Ultimate), Madder, Stronger (34, Ward, upgrades Gamma Hide), Ground Quake (40, area, Frost), Banner's Read (44, Shock). It replaces his **Super Strength, Super Durability and Juggernaut Mass** moves; Regeneration (Grit Knit) and his stretch powers still bring theirs. Kit edge 0.15 (his gamma moves start strong instead of growing).
+- **Balance** (60% play, street / boss, 3 seeds, 140 villain boards, boss n = 18): Story 1.00 / 1.00 → 1.00 / 0.92; Normal 0.91 / 0.72 → **0.87 / 0.54**; Hard 0.79 / 0.53 → **0.62 / 0.31**; Legendary 0.64 / 0.32 → **0.45 / 0.25**. Street stays a little high (like every legend on Normal street, 0.82–0.87); bosses are on target.
+- **Tests:** +1 (shelf has none of the replaced moves, World Breaker and Madder, Stronger retire the old pieces, kit Ultimate at 35, all three styles). 229 game tests pass.
 
 ### Increment 3: painted portraits for the 31 legend rogues
 

@@ -267,3 +267,16 @@ test("Wonder Woman's Amazon Arms replace her generic power moves, the lasso arri
   assert.equal(six.find((m) => m.ultimate)?.id, "amazon::godkiller", six.map((m) => m.id).join(","));
   assert.equal(new Set(six.map((m) => m.style)).size, 3);
 });
+
+// Hulk's Gamma Rage (2026-11-09 night): smash, hide and leap from the gamma at 28, World Breaker Ultimate at 33.
+test("Hulk's Gamma Rage replaces his strength / durability / Juggernaut moves and World Breaker is the Ultimate at 33", () => {
+  const g = live(createGame({ ...base, preset: "hulk", seed: 9 } as never), 35);
+  const shelf = knownMoves(g).map((e) => e.def.id);
+  assert.ok(!shelf.some((id) => /^(super-strength|super-durability|juggernaut-mass)::/.test(id)), shelf.join(","));
+  assert.ok(shelf.includes("gamma::worldbreaker") && !shelf.includes("gamma::smash"), "World Breaker retires Hulk Smash");
+  assert.ok(shelf.includes("gamma::madder") && !shelf.includes("gamma::hide"), "Madder, Stronger retires Gamma Hide");
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  assert.equal(six.find((m) => m.ultimate)?.id, "gamma::worldbreaker", six.map((m) => m.id).join(","));
+  assert.equal(new Set(six.map((m) => m.style)).size, 3);
+});
