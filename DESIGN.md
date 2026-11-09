@@ -508,7 +508,7 @@ A kit that starts at the wake (Flash, Spider-Man, Superman, Hulk) doesn't need c
 
 **Rogues wait (2026-11-09 pm):** a legend's own arch-rogue never calls out the hero (the monthly "arch-month" pin) before they can fight back: the powers waking or the kit's first piece, whichever is first. Before, kid Barry was called out by Reverse-Flash (level 9) almost every month from 11 to 24; kid Bruce Banner the same until 28. Canon beats and boss fights still happen on schedule.
 
-**Rogue edge:** a preset can set `rogueEdge` (Spider-Man +2): added to every signature move of that legend's rogues in life-sim fights. His gallery was written like a powerless hero's (moves 4–7) while he fights with three powers.
+**Rogue edge:** a preset can set `rogueEdge` (Spider-Man +2; Captain America +2 since 2026-11-09 night): added to every signature move of that legend's rogues in life-sim fights. His gallery was written like a powerless hero's (moves 4–7) while he fights with three powers.
 
 Auto six by age: 10–21 the pieces as they arrive (street padding until six); 22–29 Plating, Repulsor/Pulse, Jets/Flare, JARVIS/Taser, Reactor, Missiles/Flamethrower; from 30 Unibeam takes the Reactor slot. At 40 seven final pieces compete for six.
 

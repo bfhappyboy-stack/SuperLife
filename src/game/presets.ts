@@ -946,6 +946,7 @@ export const PRESETS: HeroPreset[] = [
     color: "#3a6fd8",
     boost: { karma: 10 },
     powers: ["super-strength", "aegis-shell", "regeneration"],
+    rogueEdge: 2,
     stretch: ["super-speed", "super-durability", "super-senses", "force-field"],
     decades: [
       { title: "Brooklyn Kid", premise: "{name} is small, sick, and starts fights he can't win. His mother patches him up and tells him not to stop." },

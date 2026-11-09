@@ -305,3 +305,11 @@ test("Wolverine's Claws & Healing Factor replace his regeneration / pain-map mov
   assert.equal(six.find((m) => m.ultimate)?.id, "claws::barrage", six.map((m) => m.id).join(","));
   assert.equal(new Set(six.map((m) => m.style)).size, 3);
 });
+
+// 2026-11-09 night: Captain America was still the strongest legend (Hard 0.77 / 0.56); his gallery gets the same +2 rogue edge as Spider-Man's.
+test("Captain America's rogues carry a +2 rogue edge", () => {
+  const cap = PRESETS.find((p) => p.id === "captain-america")!;
+  assert.equal(cap.rogueEdge, 2);
+  const rogue = cap.villains[0]!;
+  assert.equal(signatureMoves(rogue.alias, 1)![0]!.power, rogue.moves[0]!.power + Math.round(rogue.level / 2) + 2);
+});

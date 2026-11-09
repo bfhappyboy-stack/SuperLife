@@ -4,6 +4,13 @@
 
 Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
 
+### Increment 7: Captain America's rogues get the rogue edge
+
+- **Why:** with every legend on a kit, Cap was still the strongest (Normal 60% 0.86 / 0.68, Hard 0.77 / 0.56, Legendary 0.66 / 0.44). His kit's power-level share barely matters (edge 0.30 → 0.20 moved nothing), and making The Shield replace his serum strength too made it *easier* (foes scale with his power level, and a street Haymaker crept back into the six), so neither was shipped.
+- **What:** `rogueEdge: 2` on the Captain America preset, the same lever as Spider-Man's: Red Skull, Winter Soldier, Zemo, Crossbones and the rest hit +2 on their signature moves in life-sim fights. Arena is unchanged.
+- **Balance** (60% play, street / boss, 3 seeds, 164 villain boards, boss n = 6): Story 0.98 / 0.96 → 0.95 / 0.90; Normal 0.86 / 0.68 → **0.80 / 0.56**; Hard 0.77 / 0.56 → **0.67 / 0.47**; Legendary 0.66 / 0.44 → **0.56 / 0.26**. Now in the pack with Wonder Woman and Wolverine.
+- **Tests:** +1 (Cap's rogue edge). 232 game tests pass.
+
 ### Increment 6: Wolverine's Claws & Healing Factor
 
 - **Why:** Logan fought with Grit Knit, Counter Tap, Feel It Coming, Quick Cut, Static Snap, Heavy Hands: three guards and no claws. Normal 60% 0.87 / 0.73, above target. Last legend on generic moves.
