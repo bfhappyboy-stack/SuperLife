@@ -293,3 +293,15 @@ test("Black Panther's Panther Habit replaces his strength / kinetic moves and Ki
   assert.equal(six.find((m) => m.ultimate)?.id, "panther::release", six.map((m) => m.id).join(","));
   assert.equal(new Set(six.map((m) => m.style)).size, 3);
 });
+
+// Wolverine's Claws & Healing Factor (2026-11-09 night): bone claws at 12, adamantium at 25, Berserker Barrage Ultimate at 30.
+test("Wolverine's Claws & Healing Factor replace his regeneration / pain-map moves and Berserker Barrage is the Ultimate at 30", () => {
+  const g = live(createGame({ ...base, preset: "wolverine", seed: 9 } as never), 31);
+  const shelf = knownMoves(g).map((e) => e.def.id);
+  assert.ok(!shelf.some((id) => /^(regeneration|pain-map)::/.test(id)), shelf.join(","));
+  assert.ok(shelf.includes("claws::barrage") && !shelf.includes("claws::adamantium") && !shelf.includes("claws::bone"), "the barrage retires both claws");
+  const six = battleMoves(g);
+  assert.equal(six.length, 6);
+  assert.equal(six.find((m) => m.ultimate)?.id, "claws::barrage", six.map((m) => m.id).join(","));
+  assert.equal(new Set(six.map((m) => m.style)).size, 3);
+});

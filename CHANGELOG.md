@@ -1,8 +1,15 @@
 # Changelog
 
-## 2026-11-09 (night): Wonder Woman, Hulk and Black Panther kits, painted rogues (`devbot/2026-11-09-night`)
+## 2026-11-09 (night): kits for Wonder Woman, Hulk, Black Panther and Wolverine; painted rogues (`devbot/2026-11-09-night`)
 
 Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.
+
+### Increment 6: Wolverine's Claws & Healing Factor
+
+- **Why:** Logan fought with Grit Knit, Counter Tap, Feel It Coming, Quick Cut, Static Snap, Heavy Hands: three guards and no claws. Normal 60% 0.87 / 0.73, above target. Last legend on generic moves.
+- **What:** a **Claws & Healing Factor** kit, 12 pieces from the wake at 12: Bone Claws, Healing Factor (Ward) (12), Feral Lunge (13), Scent Track (16, Shock), Snikt Flurry (20, area), Adamantium Claws (25, Expose, upgrades the bone claws), Adamantium Skeleton (25, guard), Berserker Charge (28, Expose, upgrades the lunge), **Berserker Barrage** (30, Expose, upgrades the adamantium claws, his Ultimate), Unkillable (34, Ward, upgrades Healing Factor), Fastball Special (40, area, Expose), Weapon X Instinct (46, upgrades Scent Track). It replaces his **Regeneration and Pain Map** moves; Super Senses and his stretch powers still bring theirs. Kit edge 0.15.
+- **Balance** (60% play, street / boss, 3 seeds, 210 villain boards, boss n = 15): Story 1.00 / 1.00 → 1.00 / 0.97; Normal 0.87 / 0.73 → **0.79 / 0.64**; Hard 0.79 / 0.54 → **0.65 / 0.44**; Legendary 0.59 / 0.24 → **0.40 / 0.22**. Sabretooth at 12–14 is now 0.47 (was 0.70).
+- **Tests:** +1 (shelf has none of the replaced moves, the barrage retires both claws and is the Ultimate at 31, all three styles). 231 game tests pass.
 
 ### Increment 5: Black Panther's Panther Habit
 

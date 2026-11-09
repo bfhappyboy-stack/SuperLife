@@ -295,6 +295,31 @@ export const KITS: KitDef[] = [
       k("black-panther", { id: "panther::forever", name: "Wakanda Forever", blurb: "Arms crossed. Then everything he has.", minAge: 42, power: 8, style: "strike", kind: "area", energy: 3, effect: "Hits wide. Wins leave them Shocked.", cooldown: 1, element: "energy" }),
     ],
   },
+  {
+    legend: "wolverine",
+    id: "kit:wolverine",
+    name: "Claws & Healing Factor",
+    blurb: "Bone claws at twelve, adamantium at twenty-five, and a body that will not stay down.",
+    ultimateAge: 30,
+    leadsUltimate: true,
+    replaces: { powers: ["regeneration", "pain-map"], line: "Logan fights with claws and a healing factor: these moves come from Claws & Healing Factor." },
+    edge: 0.15,
+    piece: "claw art",
+    moves: [
+      k("wolverine", { id: "claws::bone", name: "Bone Claws", blurb: "Three from each hand. It hurts every single time.", minAge: 12, power: 5, style: "strike", kind: "burst", energy: 1, effect: "Single hit.", cooldown: 0, element: "force" }),
+      k("wolverine", { id: "claws::healing", name: "Healing Factor", blurb: "The cut closes while they watch.", minAge: 12, power: 5, style: "guard", kind: "guard", energy: 1, effect: "Wins leave you a Ward.", cooldown: 0, element: "life" }),
+      k("wolverine", { id: "claws::lunge", name: "Feral Lunge", blurb: "Low, fast, and from the side nobody guards.", minAge: 13, power: 5, style: "trick", kind: "dash", energy: 1, effect: "Hits harder when it answers their tell.", cooldown: 0, element: "speed" }),
+      k("wolverine", { id: "claws::scent", name: "Scent Track", blurb: "He smells the fear before they know they feel it.", minAge: 16, power: 4, style: "trick", kind: "status", energy: 1, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "psychic", applies: "shock" }),
+      k("wolverine", { id: "claws::snikt", name: "Snikt Flurry", blurb: "Snikt. Then six cuts in one breath.", minAge: 20, power: 6, style: "strike", kind: "area", energy: 2, effect: "Hits wide.", cooldown: 1, element: "force" }),
+      k("wolverine", { id: "claws::adamantium", name: "Adamantium Claws", blurb: "Weapon X coated the bones. Now they cut anything.", minAge: 25, power: 7, style: "strike", kind: "burst", energy: 2, effect: "Wins leave them Exposed.", cooldown: 0, element: "force", applies: "expose", upgrades: "claws::bone" }),
+      k("wolverine", { id: "claws::skeleton", name: "Adamantium Skeleton", blurb: "The blade breaks on his arm. He looks at it, then at you.", minAge: 25, power: 6, style: "guard", kind: "guard", energy: 2, effect: "Takes the edge off what comes back.", cooldown: 1, element: "force" }),
+      k("wolverine", { id: "claws::charge", name: "Berserker Charge", blurb: "The eyes go flat. Something older is driving.", minAge: 28, power: 7, style: "trick", kind: "dash", energy: 2, effect: "Hits harder when it answers their tell. Wins leave them Exposed.", cooldown: 0, element: "shadow", upgrades: "claws::lunge" }),
+      k("wolverine", { id: "claws::barrage", name: "Berserker Barrage", blurb: "He stops counting. So do they.", minAge: 30, power: 9, style: "strike", kind: "burst", energy: 3, effect: "One target, full weight. Wins leave them Exposed.", cooldown: 1, element: "force", applies: "expose", upgrades: "claws::adamantium" }),
+      k("wolverine", { id: "claws::unkillable", name: "Unkillable", blurb: "Burned to the skeleton, and still walking forward.", minAge: 34, power: 7, style: "guard", kind: "guard", energy: 2, effect: "Wins leave you a Ward.", cooldown: 1, element: "life", upgrades: "claws::healing" }),
+      k("wolverine", { id: "claws::fastball", name: "Fastball Special", blurb: "A big friend throws. He lands claws first.", minAge: 40, power: 7, style: "trick", kind: "area", energy: 2, effect: "Hits wide. Wins leave them Exposed.", cooldown: 1, element: "speed", applies: "expose" }),
+      k("wolverine", { id: "claws::instinct", name: "Weapon X Instinct", blurb: "A century of fights, all remembered by the body.", minAge: 46, power: 6, style: "trick", kind: "status", energy: 2, effect: "Shocks them: their tells can't lie.", cooldown: 1, element: "psychic", applies: "shock", upgrades: "claws::scent" }),
+    ],
+  },
 ];
 
 const BY_LEGEND = new Map(KITS.map((kit) => [kit.legend, kit]));
