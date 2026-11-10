@@ -445,6 +445,8 @@ export interface Game {
   preset?: string | null;
   /** The mentor who found you at 15 (mentors.ts). Missing before 15 and on old saves until their next birthday. */
   mentor?: MentorState | null;
+  /** The power you're slowly training toward (2026-11-10 eve): a base to wake, or a braid. One at a time. */
+  training?: TrainingProject | null;
   /** Arena purses paid into this life (anti-farm ledger). */
   arenaPurse?: ArenaPurseLedger;
   /** The big reveal waiting to play. UI-only, cleared on dismiss. */
@@ -514,6 +516,16 @@ export interface ActionItem {
   detail?: string;
   disabled?: string;
   accent?: boolean;
+}
+
+export interface TrainingProject {
+  id: string;
+  kind: "awaken" | "braid";
+  progress: number;
+  need: number;
+  /** Who is teaching it (a mentor's or hero's name, or "you"). */
+  by?: string;
+  since: number;
 }
 
 export interface MentorState {

@@ -7,6 +7,7 @@ import type { CatalogPower } from "./combo";
 import type { DuelMove, Game, MoveStyle } from "./types";
 import { markUltimate } from "./battle";
 import { isKitPower, kitById, kitEdge, kitFor, kitHidesPowerMove, kitMoveById, kitMoveRetired, kitMoveUnlocked, kitRank, kitUpgradeTip, type KitMove } from "./kits";
+import { TECHNIQUES, TECH_C, TECH_D, type Technique } from "./moves.techniques";
 
 const HAND = new Map<string, MoveDef[]>();
 for (const entry of MOVE_BOOK) {
@@ -71,6 +72,18 @@ export function movesForPower(power: CatalogPower): MoveDef[] {
 }
 
 function rawMovesForPower(power: CatalogPower): MoveDef[] {
+  const core = coreMovesForPower(power);
+  const tech = power.generation === 0 ? TECHNIQUES[power.id] : undefined;
+  if (!tech) return core;
+  // Mastery techniques (2026-11-10 eve): a third move at rank C, a fourth at rank A.
+  const mk = (key: "c" | "d", row: Technique, nums: typeof TECH_C | typeof TECH_D): MoveDef => ({
+    id: `${power.id}::${key}`, name: row.name, powerId: power.id, blurb: row.blurb, effect: row.effect, style: row.style, kind: row.kind,
+    minMastery: nums.minMastery, power: nums.power, energy: nums.energy, cooldown: nums.cooldown,
+  });
+  return [...core, mk("c", tech.c, TECH_C), mk("d", tech.d, TECH_D)];
+}
+
+function coreMovesForPower(power: CatalogPower): MoveDef[] {
   const hand = HAND.get(power.id);
   const words = AUTHORED[power.id];
   const plain = generatedMoves(power);
