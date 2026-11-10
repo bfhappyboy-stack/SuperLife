@@ -345,6 +345,8 @@ function Life({ game }: { game: Game }) {
           )}
 
           <div ref={scroller} data-desk={desk} className="desk relative z-10 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
+            {/* The Money hub has its own header and floats each result above Play, so the month card steps aside there. */}
+            {(choosing || !(desk === "work" && activeShelf === "Money")) && (
             <article key={`${game.card.kicker}-${game.card.body.length}`} className="card-paper anim-rise relative overflow-hidden px-4 py-3.5">
               <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-gold to-cape" />
               <div className="flex items-start justify-between gap-3">
@@ -373,6 +375,7 @@ function Life({ game }: { game: Game }) {
               )}
               {choosing && game.card.money && <MoneyLine report={game.card.money} />}
             </article>
+            )}
             {!choosing && desk === "life" && game.card.money && (
               <MoneyReport
                 key={`${game.age}-${game.month}`}
@@ -397,7 +400,7 @@ function Life({ game }: { game: Game }) {
                 }}
               />
             )}
-            {!choosing && <p className="desk-accent t-label mt-4">{DESK_LINE[desk]}</p>}
+            {!choosing && !(desk === "work" && activeShelf === "Money") && <p className="desk-accent t-label mt-4">{DESK_LINE[desk]}</p>}
             {!choosing && desk === "work" && activeShelf !== "Shop" && activeShelf !== "Money" && (
               <p className="mt-2 text-sm text-muted">
                 {school ? school.name : "No hero school"}

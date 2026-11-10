@@ -4,6 +4,12 @@
 
 Built on `origin/devbot/2026-11-10-am` (334053c). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 3: the Money hub fits a phone, and every result shows where you are
+
+- **Why (playtest):** at 390×844 the hub's tab content started below the Play bar: the month card, the desk's one-line description, the net-worth card and the news ticker all sat above the tabs; and an action's result line appeared above the tabs, off screen when you'd scrolled down to a business card.
+- **What:** on Work ▸ Money the month card and the desk description step aside (the hub is its own header; choices still show the card); the news ticker moves to the Markets tab, where the news is what you read (Life ▸ Today keeps its ticker); the net-worth card is a little tighter. Tabs now sit ~160 px higher, so the first business / home card is on screen without scrolling. Each action's result floats in a toast just above the Play bar for ~4 s (tap to dismiss) wherever you've scrolled.
+- **Tests:** UI only; 280 game tests pass.
+
 ### Increment 2: managers, crew morale, things that happen at your business, fights that reach it
 
 - **Why (playtest + owner's spec):** a café sat at reputation 40 for 17 years with nothing happening to it, and kept selling at full speed after you moved city. The spec asks for managers, staff morale / skills, rivals and scandals, expansion to other cities and hero tie-ins.

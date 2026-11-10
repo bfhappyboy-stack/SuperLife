@@ -225,12 +225,19 @@ export function MoneyHub({ game, onAct }: { game: Game; onAct: (id: string) => v
     waiting.current = null;
     const line = game.card.banner[0];
     if (line) setToast({ key: Date.now(), text: line });
+    else setToast(null);
     const delta = Math.round(game.stats.money - w.cash);
     if (delta) {
       setFlash({ key: Date.now(), amount: delta });
       buzz(delta > 0 ? "win" : "tap");
     }
   }, [game]);
+  // The action's result floats just above the Play bar, so it's seen wherever you scrolled to (2026-11-10 pm).
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 3800);
+    return () => window.clearTimeout(id);
+  }, [toast]);
   if (!e) return null;
   const run = (id: string) => {
     waiting.current = { cash: game.stats.money };
@@ -246,7 +253,7 @@ export function MoneyHub({ game, onAct }: { game: Game; onAct: (id: string) => v
   if (ECON_FLAGS.business) tabs.push({ id: "business", label: "Business", icon: Store });
   return (
     <section className="mt-3 flex flex-col gap-3" aria-label="Money and life">
-      <div className="card overflow-hidden px-4 py-4">
+      <div className="card overflow-hidden px-4 py-3.5">
         <div className="pointer-events-none absolute -top-16 -right-10 size-44 rounded-full opacity-40 blur-2xl" style={{ background: "radial-gradient(circle, var(--color-gold), transparent 70%)" }} />
         <div className="flex items-center gap-3">
           <IconTile color="#5fe08f" size="size-11">
@@ -290,15 +297,21 @@ export function MoneyHub({ game, onAct }: { game: Game; onAct: (id: string) => v
         {e.arrears > 0 && <p className="mt-2 rounded-lg bg-bad/20 px-3 py-2 text-xs font-bold text-[#ffb3b9]">Behind on housing bills {e.arrears}/3. Get above $0 or downsize, or you lose the place.</p>}
       </div>
 
-      <NewsTicker game={game} />
-
       {toast && (
-        <p key={toast.key} role="status" className="anim-rise rounded-xl border border-gold/30 bg-gold/10 px-3 py-2 text-xs font-bold text-fg">
+        <p
+          key={toast.key}
+          role="status"
+          onClick={() => setToast(null)}
+          className="anim-rise fixed inset-x-4 z-40 mx-auto max-w-md rounded-xl border border-gold/40 bg-[#231a14]/95 px-3.5 py-2.5 text-xs font-bold text-fg shadow-[0_10px_30px_rgb(0_0_0/0.5)] backdrop-blur"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 150px)" }}
+        >
           {toast.text}
         </p>
       )}
 
       <Seg value={tab} options={tabs} onPick={(id) => { setTab(id); setToast(null); }} label="Money tabs" />
+
+      {tab === "markets" && <NewsTicker game={game} />}
 
       {tab === "home" && <HomeTab game={game} e={e} run={run} />}
       {tab === "markets" && <MarketsTab game={game} e={e} run={run} />}
