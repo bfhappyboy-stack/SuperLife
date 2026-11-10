@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-10-night` (aae1d85). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 2: the money report on every Play step, a ticking cash counter, recaps lead with your life
+
+- **Why (playtest):** a Play season's card led with rival-cape ticker lines in bold ("Afterimage: sponsoring a cereal that hates them") and buried the money in a truncated sentence; with markets, rent and businesses all moving, a player couldn't tell what the season did to them.
+- **Money report (`periodReport`, economy.ts; `card.money`):** every Play step that passes time (month, season or year, including steps that stop for an event) carries a report: net cash for the period (ticks up), a bar per group (Pay, Business, Tenants & roommates, Dividends, Home, Living costs, Everything else: shifts, gigs and shopping, so it adds up to your real cash change), net worth and its change, up to two moves in what you own (shares, goods, your district's homes, marked YOURS) plus the biggest mover in your city, and the top two headlines (your fights first). A **Money ›** button opens the hub. While a choice is waiting, the card shows one slim line ("2 months: cash +$10,237 · home −$1,960"). The economy keeps its last 12 monthly ledgers for this (`EconState.months`, optional; old saves fill it as they play).
+- **Cash ticks:** the header money figure counts to its new value and floats the change (+$12,229 green / −$ red); instant under reduced motion.
+- **Recaps lead with you:** rival-cape ticker lines (`isChatter`) go last in fast-forward notes (at most one) and are dropped from a Play card that has a money report.
+- **Tests:** +2 (`flow.test.ts`: the report equals the ledger plus off-ledger cash and the real cash change, pay / rent / living groups, "yours" is yours, leads with you; children get none). 269 game tests pass.
+
 ### Increment 1: cost of living, a fairer heavy shift, your six stays yours, estates take no lodgers
 
 - **Why (playtest):** a Metro office worker on Play only banked **$759k by 28 and $1.8M by 40**. There was no cost of living at all, and Life Flow ran "Work a heavy shift" (8% of a year's pay, once a month) every month, nearly doubling pay. Money stopped meaning anything.
