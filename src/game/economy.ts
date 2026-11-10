@@ -1167,7 +1167,7 @@ export function econAct(g: Game, id: string, movesLeft: number): EconResult {
 function econActInner(g: Game, id: string, movesLeft: number): EconResult {
   const e = ensureEconomy(g);
   const [, verb, a = "", b = "", c = ""] = id.split("|");
-  const noMove = movesLeft <= 0 ? { ok: false, line: "Moving day takes a move, and none are left this month." } : null;
+  const noMove = movesLeft <= 0 ? { ok: false, line: "Moving day takes a block of free time, and none is left this month." } : null;
   if (verb === "mate") return mateAct(g, e, a, b, movesLeft);
   if (verb === "biz") return ECON_FLAGS.business ? bizAct(g, e, a, b, c, movesLeft) : { ok: false, line: "Not open yet." };
   switch (verb) {
@@ -1647,7 +1647,7 @@ export function bizAct(g: Game, e: EconState, verb: string, a: string, b: string
   switch (verb) {
     case "found": {
       if (!def) return { ok: false, line: "Not possible." };
-      if (movesLeft <= 0) return { ok: false, line: "Opening day takes a move, and none are left this month." };
+      if (movesLeft <= 0) return { ok: false, line: "Opening day takes a block of free time, and none is left this month." };
       const q = quoteBiz(g, def.id);
       if (!q.ok) return { ok: false, line: q.why ?? "Not possible." };
       g.stats.money -= def.cost;
@@ -1677,7 +1677,7 @@ export function bizAct(g: Game, e: EconState, verb: string, a: string, b: string
     case "shift": {
       if (!biz || !def || def.empire) return { ok: false, line: "Not possible." };
       if (biz.cityId !== g.cityId) return { ok: false, line: "That business is in another city." };
-      if (movesLeft <= 0) return { ok: false, line: "No moves left this month." };
+      if (movesLeft <= 0) return { ok: false, line: "No free time left this month." };
       biz.rep = Math.min(100, biz.rep + 6);
       return { ok: true, spend: true, line: `You work a shift at ${biz.name}. Customers notice the owner behind the counter (+6 reputation).` };
     }

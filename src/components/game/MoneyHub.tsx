@@ -433,7 +433,7 @@ function HomeTab({ game, e, run }: { game: Game; e: EconState; run: (id: string)
             );
           })}
         </div>
-        <p className="text-xs text-muted">{districtOf(city, dist)?.blurb} 12-month trend under each name. Moving uses one of the month's moves.</p>
+        <p className="text-xs text-muted">{districtOf(city, dist)?.blurb} 12-month trend under each name. Moving day takes a block of this month's free time.</p>
         <div className="stagger flex flex-col gap-2" key={dist}>
           {HOMES.map((def) => {
             const rentGate = homeGate(game, def, "rent");
@@ -510,7 +510,7 @@ function RentPanel({ game, homeId, dist, noMoves, run }: { game: Game; homeId: s
       <Row label="Due today" value={fmt(q.cash)} />
       <Row label="Share of your pay" value={wage ? `${Math.round(q.burden * 100)}%` : "No pay yet"} tone={q.burden > 0.5 || !wage ? "bad" : q.burden > 0.35 ? undefined : "good"} />
       <button type="button" disabled={!q.ok || noMoves} onClick={() => run(`econ|rent|${homeId}|${dist}`)} className="btn btn-gold mt-1 !min-h-11 text-sm">
-        {noMoves ? "No moves left this month" : q.ok ? "Sign the lease" : q.why}
+        {noMoves ? "No free time left this month" : q.ok ? "Sign the lease" : q.why}
       </button>
     </div>
   );
@@ -543,7 +543,7 @@ function BuyPanel({ game, homeId, dist, share, setShare, noMoves, run }: { game:
       <Row label="Upkeep" value={`${fmt(q.upkeep)}/mo`} />
       <p className="text-[11px] text-muted">Sell any time at market value, less {Math.round(SELL_FEE * 100)}% fees and what you still owe. A bigger deposit gets a better rate.</p>
       <button type="button" disabled={!q.ok || noMoves} onClick={() => run(`econ|buy|${homeId}|${dist}|${Math.max(MIN_DEPOSIT * 100, share)}`)} className="btn btn-gold mt-1 !min-h-11 text-sm">
-        {noMoves ? "No moves left this month" : q.ok ? `Buy · ${fmt(q.cash)} today` : q.why}
+        {noMoves ? "No free time left this month" : q.ok ? `Buy · ${fmt(q.cash)} today` : q.why}
       </button>
     </div>
   );
@@ -893,13 +893,13 @@ function BusinessTab({ game, e, run }: { game: Game; e: EconState; run: (id: str
                 </div>
               </div>
               <button type="button" disabled={!q.ok || game.majorsLeft <= 0} onClick={() => run(`econ|biz|found|${def.id}`)} className="btn btn-gold mt-2.5 !min-h-11 w-full text-sm">
-                {q.ok ? (game.majorsLeft > 0 ? `Open it · ${fmt(def.cost)}` : "No moves left this month") : q.why}
+                {q.ok ? (game.majorsLeft > 0 ? `Open it · ${fmt(def.cost)}` : "No free time left this month") : q.why}
               </button>
             </article>
           );
         })}
       </div>
-      <p className="text-xs text-muted">Opening takes one of the month's moves and about {BIZ_RAMP} months to ramp up. Demand follows the markets: coffee prices squeeze cafés, a nervous city hires security.</p>
+      <p className="text-xs text-muted">Opening day takes a block of free time and it needs about {BIZ_RAMP} months to ramp up. Demand follows the markets: coffee prices squeeze cafés, a nervous city hires security.</p>
     </div>
   );
 }
