@@ -4,6 +4,17 @@
 
 Built on `origin/main` (8d5ade2). Typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push. Old saves migrate (`ensureEconomy` in `migrate`).
 
+### Increment 2: businesses — open, staff, upgrade, sell; Tony and Bruce chair their family companies
+
+- **Why:** the owner asked to "make and run businesses and make upgrades and have staff". Stage (c) of the economy plan.
+- **What (`economy.ts`, data-driven `BIZ`):** six businesses to open in your city — food truck (16+, $30k), corner café (18+, $95k), boxing gym (21+, $240k), security firm (21+, $420k), tech start-up (22+, $800k), city newspaper (25+, $1.6M) — each with three upgrades (more sales, more staff needed, reputation). Monthly books: revenue (city, staff, upgrades, reputation, demand that follows a market series — coffee prices squeeze cafés, a nervous Cape Capital hires security, Bugle shares lift newspapers) minus stock & supplies, wages, premises and upkeep. New businesses ramp over 6 months (expect early losses).
+- **Diminishing returns:** staff output is 1 − e^(−1.4·staff/need) (normalised), so the 5th hire adds less than the 1st and doubling staff gives only ~+27%; three businesses max; upgrades add premises cost and staff needs; sale price ≈ two years of recent profit, never below half of what you put in. Steady-state payback is 2–7 years (tested).
+- **Owner play:** hire / let go (+/−), buy upgrades, **Work a shift** (a move: +6 reputation), see the books, sell (confirm shows the price). Profit and loss land in the monthly ledger; three red months in a row warns you.
+- **God Mode:** **Bruce chairs Wayne Enterprises** (from 18) and **Tony chairs Stark Industries** (from 21): run by the board, they pay a chair's draw that follows the share price (~$17–42k/mo) and take two big projects each (Applied Sciences / Wayne Foundation; Clean energy / Stark Expo). Can't be sold. Peter has no company.
+- **UI:** Money ▸ **Business** tab (now on: `ECON_FLAGS.business = true`).
+- **Saves:** older economies get a business book on load (and a legend's family company).
+- **Tests:** +7 (`business.test.ts`: data, diminishing staff returns, payback bands, found → run → upgrade → sell through the ledger, understaffing hurts revenue and reputation, legend companies and their age locks, save repair). 254 game tests pass.
+
 ### Increment 1: living markets + housing, one Money hub
 
 - **Why:** the owner wants the world to feel like it's really moving, and a life-sim spine: rent, buy and sell homes, moving markets for different things. The old Market priced property once a birthday and nothing else moved.
@@ -13,7 +24,7 @@ Built on `origin/main` (8d5ade2). Typechecked, linted (only the old `src/lib` no
 - **Real benefits:** where you live gives monthly Comfort (joy), Recovery (HP), Cover (heat fades) and **Training** (+2–8% in fights and stunts). Couch-surfing or still in the family home past 30 costs joy. Three months in the red on housing bills → eviction / foreclosure (85% sale).
 - **Monthly money:** wages, League stipend, villain retainer and fame endorsements now arrive monthly in the hub's ledger (they used to land in one lump at the birthday).
 - **God Mode starts:** Bruce lives in **Wayne Manor** (estate, the trust pays upkeep) with Wayne Enterprises shares in trust until 18; Tony in **Stark Mansion** with Stark Industries shares in trust until 21; Peter rents a rent-controlled **Queens walk-up** from 18.
-- **UI:** Work ▸ **Money** (new first shelf): net-worth card with sparkline, cash / last month / assets, where you live, live news ticker, **Home** tab (where you live, last month's ledger, your homes, find a place with district trend cards) and **Markets** tab (Stocks / Goods / Homes / Rates boards, sparklines, 2-year charts, ×1/×10/×100/Max with fee preview). A live ticker on Life ▸ Today opens it. The old Market is now **Shop**; its property tab is **Bases** (hideouts, warehouse base, HQ, safehouses; homes you already own there still show). A **Business** tab is behind `ECON_FLAGS.business` (off).
+- **UI:** Work ▸ **Money** (new first shelf): net-worth card with sparkline, cash / last month / assets, where you live, live news ticker, **Home** tab (where you live, last month's ledger, your homes, find a place with district trend cards) and **Markets** tab (Stocks / Goods / Homes / Rates boards, sparklines, 2-year charts, ×1/×10/×100/Max with fee preview). A live ticker on Life ▸ Today opens it. The old Market is now **Shop**; its property tab is **Bases** (hideouts, warehouse base, HQ, safehouses; homes you already own there still show). A **Business** tab was behind `ECON_FLAGS.business` (off) until increment 2.
 - **Net worth** in chapter snapshots now counts home equity, portfolio and deposits.
 - **Tests:** +14 (`economy.test.ts`: data integrity, determinism / no RNG, 80-year bounds, mortgage maths and payoff at term, lending caps, selling, trade round trip, renting and eviction, monthly wages, letting, perks, upgrades, couch, fight shocks, God Mode starts, save migration / repair). 247 game tests pass.
 

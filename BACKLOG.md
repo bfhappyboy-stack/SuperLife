@@ -3,7 +3,8 @@
 ## From the 2026-11-10 night pass (living economy)
 
 - **Done (increment 1):** living markets (district house prices, 9 stocks, 6 goods, base rate, data-driven news, fights move markets) and housing (rent / buy / mortgage / sell / let / upgrades / perks / eviction) in one Work ▸ Money hub. 247 game tests.
-- **Next: Businesses (stage c)** behind `ECON_FLAGS.business`: found or buy a business (café, gym, tech start-up, security firm, newspaper), hire staff, upgrades, monthly P&L; Tony starts owning Stark Industries, Bruce Wayne Enterprises (today they hold trust shares).
+- **Done (increment 2):** businesses (six kinds, staff with diminishing returns, upgrades, reputation, market-linked demand, sell) and legend family companies (Wayne Enterprises from 18, Stark Industries from 21). 254 game tests.
+- **Business next:** named staff with traits (a manager who runs it when you move city), random events (inspection, robbery during a villain fight, viral review), franchising a second site; hero tie-ins (your security firm gets League contracts as your rank rises; the newspaper prints your fights).
 - **Rent burden in NYC is heavy** for a low-wage adult (even a Queens tiny flat is ~$1k/mo at market rent). Intended pressure, but watch playtests; a roommate option or a housing allowance from the League are candidates.
 - **The old Market's homes** (studio, brownstone, rental, penthouse) are hidden from the Shop for new purchases; owned ones keep working. Candidate: migrate them into real homes in the hub.
 - **Selling Wayne Manor is allowed** (for $13M+). Candidate: lock legend estates or make it a story beat.

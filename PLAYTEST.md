@@ -8,6 +8,7 @@
 - **Peter:** family home until 18, then a rent-controlled Queens walk-up at ~$720/mo; +$2.8k a month at 23.
 - **Stocks** were running 4–5× in 35 years; anchors and drift were cut so growth is gentle and bounded (80-year bounds test); district ordering holds (Midtown > Brooklyn > Queens).
 - **Phone (390×844):** hub top card, ticker, Home and Markets tabs, district cards, trade panel all fit; four-option boards fit one row. No console errors.
+- **Businesses (increment 2):** first tuning paid a café back in 6 months (~$15k/mo); added supplies cost and city-scaled wages: steady profit now Metro truck ~$1.9k, café ~$3.7k, gym ~$6.8k, security ~$9.3k, start-up ~$14.6k, newspaper ~$24k a month (payback 2–6 years). A new café runs −$5k → +$1.8k over its first 7 months. Wayne Enterprises draw ~$25k/mo from 18. Business tab fits at 390×844.
 
 ## Night pass (2026-11-09 night): playtest first — Harbor street kid, Dustreach alien God Mode, Wonder Woman, Hulk, Black Panther, Wolverine
 
