@@ -1563,6 +1563,11 @@ const ROSTER_BEATS = [
   "retired for a week, then didn't",
   "sponsoring a cereal that hates them",
 ];
+/** Rival-cape ticker lines ("Kiln: benched after a quote.", "X leaves the board. Y takes the square."): flavour, not news about you. */
+export function isChatter(line: string): boolean {
+  return / leaves the board\. .+ takes the square\.$/.test(line) || ROSTER_BEATS.some((beat) => line.endsWith(`: ${beat}.`));
+}
+
 const MONTH_QUIET = [
   "The month stays ordinary. You almost file a complaint.",
   "Groceries, weather, a group chat. You live all of it.",

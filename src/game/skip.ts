@@ -7,7 +7,7 @@
  * their minis a little under your own average, skips the fights and stunts you would pick yourself, and
  * lets ordinary weeks pass quietly (fewer small events, good and bad).
  */
-import { act, actionsFor, ageUp, choose, focusId, resolveMini } from "./engine";
+import { act, actionsFor, ageUp, choose, focusId, isChatter, resolveMini } from "./engine";
 import { getPower } from "./combo";
 import { masteryLevel, powerRank } from "./mastery";
 import { firstName } from "./format";
@@ -286,12 +286,14 @@ export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean
   const months = skipMonths(start, span);
   const did = new Map<string, { label: string; count: number }>();
   const notes: string[] = [];
+  const chatter: string[] = [];
   const seen = new Set<string>();
   const note = (line: string) => {
     const t = line.trim();
     if (!t || seen.has(t)) return;
     seen.add(t);
-    notes.push(t);
+    // Rival capes' ticker lines go last, so the summary leads with your own life.
+    (isChatter(t) ? chatter : notes).push(t);
   };
   let g = start;
   let stop: SkipReport["stop"] = null;
@@ -338,7 +340,7 @@ export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean
     }
   }
   if (handled) did.set("auto-moments", { label: "Small moments handled", count: handled });
-  g.skipReport = buildReport(start, g, span, passed, months, did, notes, stop);
+  g.skipReport = buildReport(start, g, span, passed, months, did, [...notes, ...chatter.slice(0, notes.length >= 3 ? 0 : 1)], stop);
   return g;
 }
 

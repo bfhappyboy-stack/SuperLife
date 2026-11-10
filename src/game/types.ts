@@ -1,5 +1,5 @@
 import type { MarketState } from "./market";
-import type { EconState } from "./economy";
+import type { EconState, PeriodReport } from "./economy";
 import type { MiniKind, MiniVerb, SkillKind } from "./minis";
 import type { Chapter, ChapterNotice } from "./chapters";
 export type PowerId =
@@ -325,6 +325,8 @@ export interface Card {
   banner: string[];
   body: string;
   deltas: Delta[];
+  /** A Play step's money report (cash in and out, market moves, headlines). */
+  money?: PeriodReport | null;
 }
 
 export interface HistoryEntry {

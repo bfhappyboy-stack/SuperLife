@@ -331,6 +331,8 @@ export interface EconState {
   biz?: Biz[];
   /** People who live with you. */
   mates?: Mate[];
+  /** The last 12 months' ledgers, oldest first (the season / year money report). */
+  months?: MonthSummary[];
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -997,6 +999,9 @@ export function economyMonth(g: Game): MonthOut {
   g.stats.money = clamp(g.stats.money, -20000, 100_000_000);
   const swing = portfolioValue(e) + homesEquity(e) - before;
   e.last = { at: now, lines, net: lines.reduce((s, l) => s + l.amount, 0), swing: Math.round(swing), perks };
+  const months = e.months ?? (e.months = []);
+  months.push(e.last);
+  if (months.length > 12) months.splice(0, months.length - 12);
   e.worth.push(netWorth(g));
   if (e.worth.length > HIST) e.worth.splice(0, e.worth.length - HIST);
 
@@ -1940,4 +1945,114 @@ export function mateAct(g: Game, e: EconState, verb: string, a: string, movesLef
     default:
       return { ok: false, line: "Not possible." };
   }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The money report (2026-11-10 am): what a Play step did to your money, in one card.
+// ---------------------------------------------------------------------------------------------------------
+
+export interface PeriodGroup {
+  key: "pay" | "home" | "living" | "biz" | "tenants" | "divs" | "other";
+  label: string;
+  amount: number;
+}
+
+export interface PeriodMover {
+  key: string;
+  name: string;
+  /** Change over the period, e.g. 0.062 = +6.2%. */
+  pct: number;
+  /** You hold it, live there, or own a home there. */
+  mine: boolean;
+}
+
+export interface PeriodReport {
+  months: number;
+  /** Cash in minus cash out from the ledger (wages, rent, business, tenants...). */
+  net: number;
+  groups: PeriodGroup[];
+  movers: PeriodMover[];
+  headlines: { text: string; tone: 1 | -1 | 0; tag: News["tag"] }[];
+  /** Net worth now, and its change over the period (markets and equity included). */
+  worth: number;
+  worthDelta: number;
+}
+
+const GROUP_ORDER: { key: PeriodGroup["key"]; label: string; test: (label: string) => boolean }[] = [
+  { key: "pay", label: "Pay", test: (l) => l === "Paycheck" || l === "Retainer" || l === "League stipend" },
+  { key: "biz", label: "Business", test: (l) => l.startsWith("Business ·") || l.startsWith("Chair's draw ·") },
+  { key: "tenants", label: "Tenants & roommates", test: (l) => l.startsWith("Tenants ·") || l.startsWith("Roommate") },
+  { key: "divs", label: "Dividends", test: (l) => l === "Dividends" },
+  { key: "home", label: "Home", test: (l) => l === "Rent" || l.startsWith("Mortgage ·") || l.startsWith("Upkeep ·") },
+  { key: "living", label: "Living costs", test: (l) => l === "Living costs" },
+];
+
+function seriesName(key: string): string {
+  if (key.startsWith("s:")) return stockById(key.slice(2))?.name ?? key;
+  if (key.startsWith("g:")) return goodById(key.slice(2))?.name ?? key;
+  const [, cityId = "", distId = ""] = key.split(":");
+  return `${districtOf(cityId, distId)?.name ?? distId} homes`;
+}
+
+/** The change of one series over the last `n` months (0 if there isn't enough history). */
+export function seriesChange(e: EconState, key: string, n: number): number {
+  const hist = e.h[key] ?? [];
+  if (hist.length < 2 || n <= 0) return 0;
+  const last = hist[hist.length - 1]!;
+  const then = hist[Math.max(0, hist.length - 1 - n)]!;
+  return then ? last / then - 1 : 0;
+}
+
+/**
+ * Everything the economy did since month index `sinceAt` (exclusive): the ledger by group, the biggest moves in
+ * what you own (and the biggest in your city), and the headlines. Null when nothing happened worth a card.
+ */
+export function periodReport(g: Game, sinceAt: number): PeriodReport | null {
+  const e = econOf(g);
+  if (!e || !ECON_FLAGS.hub) return null;
+  const done = (e.months ?? []).filter((m) => m.at > sinceAt);
+  if (!done.length) return null;
+  const n = done.length;
+  const totals = new Map<PeriodGroup["key"], number>();
+  for (const m of done) {
+    for (const line of m.lines) {
+      const group = GROUP_ORDER.find((row) => row.test(line.label));
+      const key = group?.key ?? "other";
+      totals.set(key, (totals.get(key) ?? 0) + line.amount);
+    }
+  }
+  const groups: PeriodGroup[] = [...GROUP_ORDER.map((row) => ({ key: row.key, label: row.label })), { key: "other" as const, label: "Other" }]
+    .map((row) => ({ ...row, amount: Math.round(totals.get(row.key) ?? 0) }))
+    .filter((row) => row.amount !== 0);
+  const net = groups.reduce((sum, row) => sum + row.amount, 0);
+
+  // What you own or live in, then the city's own districts.
+  const mine = new Set<string>();
+  for (const [id, lot] of Object.entries(e.stocks)) if (lot.n > 0) mine.add(`s:${id}`);
+  for (const [id, lot] of Object.entries(e.goods)) if (lot.n > 0) mine.add(`g:${id}`);
+  for (const home of e.homes) mine.add(`p:${marketCity(home.cityId)}:${home.districtId}`);
+  if (e.lease) mine.add(`p:${marketCity(e.lease.cityId)}:${e.lease.districtId}`);
+  const city = marketCity(g.cityId);
+  const rows = [...mine].map((key) => ({ key, name: seriesName(key), pct: seriesChange(e, key, n), mine: true }));
+  rows.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
+  const movers: PeriodMover[] = rows.filter((row) => Math.abs(row.pct) >= 0.005).slice(0, 2);
+  const local = [...districtsOf(city).map((d) => `p:${city}:${d.id}`), ...STOCKS.filter((s) => s.cityId === city).map((s) => `s:${s.id}`)]
+    .filter((key) => !mine.has(key))
+    .map((key) => ({ key, name: seriesName(key), pct: seriesChange(e, key, n), mine: false }))
+    .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))[0];
+  if (local && Math.abs(local.pct) >= 0.02) movers.push(local);
+
+  const rank = (item: News) => (item.tag === "hero" || item.tag === "villain" ? 0 : item.cityId === city ? 1 : 2);
+  const seen = new Set<string>();
+  const headlines = e.news
+    .filter((item) => item.at > sinceAt && !seen.has(item.text) && seen.add(item.text))
+    .sort((a, b) => rank(a) - rank(b) || b.at - a.at)
+    .slice(0, 3)
+    .map((item) => ({ text: item.text, tone: item.tone, tag: item.tag }));
+
+  const worthHist = e.worth;
+  const worth = netWorth(g);
+  const before = worthHist.length > n ? worthHist[worthHist.length - 1 - n]! : worthHist[0] ?? worth;
+  if (!groups.length && !movers.length && !headlines.length) return null;
+  return { months: n, net, groups, movers, headlines, worth, worthDelta: Math.round(worth - before) };
 }
