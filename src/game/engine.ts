@@ -39,6 +39,7 @@ import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp, youthGain } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
+import { tieAct, tieMonth } from "./ties";
 import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainPhase3, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
@@ -2534,6 +2535,7 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
     }
   }
   banners.push(...tickRoster(d));
+  if (d.phase === "live") tieMonth(d, banners);
   if (d.phase === "live") monthlyBody(d, banners);
   if (d.phase === "live" && d.stats.health <= 0) {
     collapse(d, "Your legs file a complaint and the floor accepts it.");
@@ -2929,6 +2931,14 @@ export function act(game: Game, id: string): Game {
     }).slice(0, 6);
     fillLoadout(d);
     return d;
+  }
+  if (id.startsWith("tie|")) {
+    const res = tieAct(d, id);
+    if (res.ok) pushHistory(d, res.line);
+    d.stats.money = clamp(d.stats.money, -20000, 100_000_000);
+    d.card = { kicker: whenLabel(d.age, d.month), banner: [res.line], body: d.card.body, deltas: [] };
+    peaks(d);
+    return res.ok ? d : { ...d };
   }
   if (id.startsWith("econ|")) {
     const res = econAct(d, id, d.majorsLeft);

@@ -15,6 +15,7 @@ import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
 import { RoutineCard } from "@/components/game/Routine";
 import { FLOW_ON, stepLabel } from "@/game/flow";
 import { autoResolveOdds } from "@/game/skip";
+import { borrowAmounts, borrowBlock, canTalkMoney, lendAmounts, loanLine, openLoan, temperOf, termFor, trustOf } from "@/game/ties";
 import { CityScene, TitleArt } from "@/components/game/Scene";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
@@ -477,7 +478,7 @@ function Life({ game }: { game: Game }) {
             {!choosing && desk === "cases" && activeShelf === "Files" && <div className="mt-3"><CaseFile game={game} /></div>}
             {!choosing && desk === "cases" && activeShelf === "Board" && <div className="mt-3"><Roster game={game} /></div>}
             {!choosing && desk === "people" && activeShelf === "Circle" && (
-              <PeopleStack game={game} actions={visible} onPress={(action) => { setAck(`${action.label} — pressed.`); act(action.id); }} />
+              <PeopleStack game={game} actions={visible} onPress={(action) => { setAck(`${action.label} — pressed.`); act(action.id); }} onTie={(id) => act(id)} />
             )}
             {!choosing && !(desk === "cases" && activeShelf === "Board") && !(desk === "work" && (activeShelf === "Shop" || activeShelf === "Money")) && !(desk === "people" && activeShelf === "Circle") && (
               <div className="mt-3 flex flex-col gap-4">
@@ -935,7 +936,7 @@ function ActionRow({ action, file, onPress }: { action: ActionItem; file?: boole
   );
 }
 
-function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionItem[]; onPress: (action: ActionItem) => void }) {
+function PeopleStack({ game, actions, onPress, onTie }: { game: Game; actions: ActionItem[]; onPress: (action: ActionItem) => void; onTie: (id: string) => void }) {
   const buckets: { title: string; person?: Person; items: ActionItem[] }[] = [];
   for (const action of actions) {
     const last = buckets[buckets.length - 1];
@@ -975,6 +976,7 @@ function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionIt
                 )}
               </div>
             </div>
+            {person && canTalkMoney(game, person) && <TieBlock game={game} person={person} onTie={onTie} />}
             <div className="relative mt-3 flex flex-col gap-2">
               {bucket.items.map((action) => (
                 <ActionRow key={action.id} action={action} onPress={() => onPress(action)} />
@@ -983,6 +985,79 @@ function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionIt
           </article>
         );
       })}
+    </div>
+  );
+}
+
+/** Ties (2026-11-10 late): personality, trust, history and the money between you, on the person's card. */
+function TieBlock({ game, person, onTie }: { game: Game; person: Person; onTie: (id: string) => void }) {
+  const [open, setOpen] = useState<null | "lend" | "borrow">(null);
+  const temper = temperOf(person);
+  const trust = trustOf(person);
+  const loan = openLoan(game, person.id);
+  const ask = game.tieAsk?.personId === person.id ? game.tieAsk : null;
+  const last = person.history?.[person.history.length - 1];
+  const block = borrowBlock(game, person);
+  const lend = lendAmounts(game);
+  const who = firstName(person.name);
+  return (
+    <div className="relative mt-2.5 flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+        <span className="chip !py-0.5 text-fg" title={temper.line}>{temper.label}<span className="font-semibold text-muted">· {temper.line}</span></span>
+        <span className={`chip !py-0.5 t-num ${trust < 40 ? "text-bad" : trust >= 70 ? "text-good" : "text-fg"}`}>Trust {Math.round(trust)}</span>
+      </div>
+      {last && <p className="truncate text-[11px] text-muted">Last: {last.line}, age {Math.floor(last.at / 12)}.</p>}
+      {ask && (
+        <div className="rounded-xl border border-gold/50 bg-gold/10 px-3 py-2">
+          <p className="text-xs font-bold text-fg">{who} asks to borrow {money(ask.amount)} for {ask.reason}.</p>
+          <div className="mt-1.5 flex gap-2">
+            <button type="button" onClick={() => onTie("tie|help|yes")} disabled={game.stats.money < ask.amount || !!loan} className="min-h-9 flex-1 rounded-lg bg-gold px-2 text-xs font-extrabold text-paper-ink disabled:opacity-40">Lend {money(ask.amount)}</button>
+            <button type="button" onClick={() => onTie("tie|help|no")} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg">Not this time</button>
+          </div>
+        </div>
+      )}
+      {loan ? (
+        <div className="rounded-xl bg-black/25 px-3 py-2">
+          <p className="text-xs font-bold text-fg">{loanLine(game, loan, person)}</p>
+          <div className="mt-1.5 flex gap-2">
+            {loan.dir === "lent" ? (
+              <>
+                <button type="button" onClick={() => onTie(`tie|chase|${loan.id}`)} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg">Ask for it back</button>
+                <button type="button" onClick={() => onTie(`tie|forgive|${loan.id}`)} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg">Let it go</button>
+              </>
+            ) : (
+              <button type="button" onClick={() => onTie(`tie|payoff|${loan.id}`)} disabled={game.stats.money < loan.left} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg disabled:opacity-40">Pay it all now ({money(loan.left)})</button>
+            )}
+          </div>
+        </div>
+      ) : ask ? null : (
+        <div className="flex gap-2">
+          <button type="button" aria-expanded={open === "lend"} onClick={() => setOpen(open === "lend" ? null : "lend")} disabled={!lend.length} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg disabled:opacity-40"><Banknote className="mr-1 inline size-3.5" aria-hidden />Lend money</button>
+          <button type="button" aria-expanded={open === "borrow"} onClick={() => setOpen(open === "borrow" ? null : "borrow")} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg">Ask to borrow</button>
+        </div>
+      )}
+      {!loan && open === "lend" && (
+        <div className="flex flex-col gap-1.5 rounded-xl bg-black/20 px-3 py-2">
+          <p className="text-[11px] text-muted">{who} would pay it back monthly. {temper.line}</p>
+          <div className="flex gap-2">
+            {lend.map((a) => (
+              <button key={a} type="button" onClick={() => { setOpen(null); onTie(`tie|lend|${person.id}|${a}`); }} className="min-h-9 flex-1 rounded-lg bg-gold/90 px-1 text-xs font-extrabold text-paper-ink">{money(a)}<span className="block text-[9px] font-bold opacity-75">{termFor(a)} months</span></button>
+            ))}
+          </div>
+        </div>
+      )}
+      {!loan && open === "borrow" && (
+        <div className="flex flex-col gap-1.5 rounded-xl bg-black/20 px-3 py-2">
+          {block ? <p className="text-[11px] font-bold text-bad">{block}</p> : <p className="text-[11px] text-muted">Paid back from your cash each month. Missing payments costs trust.</p>}
+          {!block && (
+            <div className="flex gap-2">
+              {borrowAmounts(person).map((a) => (
+                <button key={a} type="button" onClick={() => { setOpen(null); onTie(`tie|borrow|${person.id}|${a}`); }} className="min-h-9 flex-1 rounded-lg bg-black/40 px-1 text-xs font-extrabold text-fg">{money(a)}<span className="block text-[9px] font-bold opacity-75">{money(Math.ceil(a / termFor(a)))}/mo</span></button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
