@@ -856,14 +856,47 @@ export function noteFight(g: Game, won: boolean, foeName: string): string | null
     shockNow(e, `p:${cityId}:${dist.id}`, 0.02);
     if (co) shockNow(e, `s:${co.id}`, 0.04);
     addNews(e, { at: now, text: `${hero} stops ${foeName} in ${dist.name}, ${city}.${co ? ` ${co.name} ticks up.` : ""}`, tone: 1, tag: "hero", cityId });
-    return `${dist.name} homes +2%${co ? `, ${co.name} +4%` : ""}.`;
+    const biz = bizFightNote(g, e, true, dist.name, now);
+    return `${dist.name} homes +2%${co ? `, ${co.name} +4%` : ""}.${biz ? ` ${biz}` : ""}`;
   }
   shockNow(e, `p:${cityId}:${dist.id}`, -0.04);
   if (co) shockNow(e, `s:${co.id}`, -0.05);
   shockNow(e, "s:CAPE", 0.03);
   shockNow(e, "g:steel", 0.02);
   addNews(e, { at: now, text: `${foeName} wrecks ${dist.name}, ${city}. Insurers wince${co ? `; ${co.name} slips` : ""}.`, tone: -1, tag: "villain", cityId });
-  return `${dist.name} homes −4%${co ? `, ${co.name} −5%` : ""}.`;
+  const biz = bizFightNote(g, e, false, dist.name, now);
+  return `${dist.name} homes −4%${co ? `, ${co.name} −5%` : ""}.${biz ? ` ${biz}` : ""}`;
+}
+
+/**
+ * Your businesses feel your fights (2026-11-10 pm). A win brings foot traffic (+2 reputation at your businesses
+ * in this city); a loss can mean a break-in at one of them, unless your own security firm has the block.
+ */
+function bizFightNote(g: Game, e: EconState, won: boolean, distName: string, now: number): string | null {
+  const here = (e.biz ?? []).filter((b) => b.cityId === g.cityId && !bizById(b.kind)?.empire && !(b.lockUntil && g.age < b.lockUntil));
+  if (!here.length) return null;
+  if (won) {
+    for (const b of here) b.rep = Math.min(100, b.rep + 2);
+    const text = `Foot traffic is up after the fight in ${distName}: +2 reputation at ${here.length > 1 ? "your businesses" : here[0]!.name}.`;
+    for (const b of here) note(b, now, text, 1);
+    return text;
+  }
+  if (hash(e.seed, now, "breakin") >= 0.4) return null;
+  const guard = here.find((b) => b.kind === "security" && b.rep >= TIE_IN_REP);
+  const hit = here.filter((b) => b.kind !== "security");
+  const b = hit[Math.floor(hash(e.seed, now, "breakinbiz") * hit.length)];
+  if (!b) return null;
+  if (guard) {
+    const text = `${guard.name} had guards on ${b.name} the night the block burned. Not a window broken.`;
+    note(b, now, text, 0);
+    return text;
+  }
+  const def = bizById(b.kind)!;
+  const loss = Math.round((def.rev * cityMul(b.cityId) * 0.08) / 10) * 10;
+  g.stats.money -= loss;
+  const text = `Looters hit ${b.name} in the chaos: ${fmt(loss)} in stock and glass.`;
+  note(b, now, text, -1);
+  return text;
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1352,6 +1385,9 @@ export function econRelocate(g: Game): string | null {
   }
   const mates = matesLeave(g, e);
   if (mates) parts.push(mates);
+  // Businesses stay where they are (2026-11-10 pm): with a manager they run as usual; without one they slide.
+  const left = (e.biz ?? []).filter((b) => !bizById(b.kind)?.empire && b.cityId !== g.cityId && !b.mgr);
+  if (left.length) parts.push(`${left.map((b) => b.name).join(" and ")} ${left.length > 1 ? "stay" : "stays"} behind with nobody in charge (sales −${Math.round((1 - AWAY_MUL) * 100)}%). Hire a manager: Work ▸ Money ▸ Business.`);
   return parts.length ? parts.join(" ") : null;
 }
 
@@ -1550,7 +1586,212 @@ export interface Biz {
   lockUntil?: number;
   /** Months in a row in the red. */
   red?: number;
+  /** Crew morale 0–100 (2026-11-10 pm). 70 is neutral; missing on old saves = 70. */
+  morale?: number;
+  /** The manager you hired, if any. */
+  mgr?: { id: string; since: number };
+  /** A rival opened nearby: sales are down until this month. */
+  rival?: number;
+  /** What happened lately, newest last (max 4). */
+  log?: BizNote[];
+  /** The last event's kind (no repeats back to back). */
+  lastEv?: string;
 }
+
+export interface BizNote {
+  at: number;
+  text: string;
+  tone: 1 | 0 | -1;
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Managers, morale and the month's news at your business (2026-11-10 pm). The owner's spec: staff morale and
+// skills, a manager, rivals and scandals, expansion to other cities. Kept to one bar (morale), one hire
+// (a manager with one clear trait) and a short log of what happened, so a business is something to react to.
+// ---------------------------------------------------------------------------------------------------------
+
+export type MgrTrait = "steady" | "hustler" | "frugal" | "fixer";
+
+export interface MgrDef {
+  id: string;
+  name: string;
+  trait: MgrTrait;
+  line: string;
+}
+
+export const MANAGERS: MgrDef[] = [
+  { id: "dana", name: "Dana Ruiz", trait: "steady", line: "Ran a diner for twenty years. Nobody quits on Dana." },
+  { id: "marcus", name: "Marcus Bell", trait: "hustler", line: "Could sell umbrellas to a weather god. Pushes the crew hard." },
+  { id: "priya", name: "Priya Shah", trait: "frugal", line: "Reads invoices for fun. Haggles with everyone, kindly." },
+  { id: "teo", name: "Teo Alvarez", trait: "fixer", line: "Knows the inspector, the landlord and three reporters by name." },
+  { id: "june", name: "June Park", trait: "steady", line: "Remembers every birthday on the rota. The rota loves her." },
+  { id: "omar", name: "Omar Haddad", trait: "hustler", line: "Opens early, closes late, upsells the mayor." },
+  { id: "lena", name: "Lena Novak", trait: "frugal", line: "Switched suppliers twice before her first coffee." },
+  { id: "cyrus", name: "Cyrus Grant", trait: "fixer", line: "Ex-city hall. Bad news reaches him first and leaves quietly." },
+];
+export const mgrById = (id: string | undefined) => MANAGERS.find((m) => m.id === id);
+export const MGR_TRAIT: Record<MgrTrait, { label: string; short: string }> = {
+  steady: { label: "Steady", short: "Crew morale +15" },
+  hustler: { label: "Hustler", short: "Sales +8%, morale −5" },
+  frugal: { label: "Penny-wise", short: "Supplies −15%" },
+  fixer: { label: "Fixer", short: "Bad news hits half as hard" },
+};
+/** A manager costs about 7% of the place's base sales a month (min $1,200). */
+export const MGR_SHARE = 0.07;
+export const MORALE_START = 70;
+/** Without you or a manager on site, a business sells this much. */
+export const AWAY_MUL = 0.8;
+/** Monthly chance something happens at a business (after its first three months). */
+export const BIZ_EVENT_CHANCE = 0.09;
+export const RIVAL_MONTHS = 6;
+
+export function mgrWage(def: BizDef, cityId: string): number {
+  return Math.max(1200, Math.round((def.rev * MGR_SHARE * cityMul(cityId)) / 10) * 10);
+}
+
+/** Three managers looking for work at this business; the list changes every season. */
+export function mgrCandidates(e: EconState, b: Biz, now: number): MgrDef[] {
+  const busy = new Set((e.biz ?? []).map((x) => x.mgr?.id).filter(Boolean));
+  return MANAGERS.filter((m) => !busy.has(m.id))
+    .map((m) => ({ m, k: hash(e.seed, Math.floor(now / 3), b.uid, m.id, "mgr") }))
+    .sort((x, y) => x.k - y.k)
+    .slice(0, 3)
+    .map((row) => row.m);
+}
+
+const moraleOf = (b: Biz) => (typeof b.morale === "number" ? b.morale : MORALE_START);
+
+/** "Happy crew", "Grumbling"...: the morale bar's word. */
+export function moraleWord(m: number): string {
+  if (m >= 80) return "Fired up";
+  if (m >= 60) return "Happy crew";
+  if (m >= 45) return "Getting by";
+  if (m >= 30) return "Grumbling";
+  return "Ready to walk";
+}
+
+/** Where morale is heading and the biggest reason, for the card. */
+export function moraleTarget(g: Game, b: Biz): { target: number; why: string } {
+  const need = bizNeed(b);
+  const trait = mgrById(b.mgr?.id)?.trait;
+  const away = b.cityId !== g.cityId && !b.mgr;
+  let target = MORALE_START;
+  const reasons: [number, string][] = [];
+  if (need && b.staff < need) {
+    const hit = Math.round(30 * (1 - b.staff / need));
+    target -= hit;
+    reasons.push([-hit, "short-staffed"]);
+  }
+  if (trait === "steady") {
+    target += 15;
+    reasons.push([15, "a steady manager"]);
+  }
+  if (trait === "hustler") {
+    target -= 5;
+    reasons.push([-5, "a pushy manager"]);
+  }
+  if (b.rep >= 70) {
+    target += 5;
+    reasons.push([5, "a proud name"]);
+  }
+  if (away) {
+    target -= 10;
+    reasons.push([-10, "nobody in charge"]);
+  }
+  reasons.sort((x, y) => Math.abs(y[0]) - Math.abs(x[0]));
+  return { target: clamp(target, 10, 95), why: reasons[0]?.[1] ?? "" };
+}
+
+function note(b: Biz, at: number, text: string, tone: BizNote["tone"]) {
+  const log = b.log ?? (b.log = []);
+  log.push({ at, text, tone });
+  if (log.length > 4) log.splice(0, log.length - 4);
+}
+
+const VIRAL: Record<string, string> = {
+  truck: "A food critic posts a 2am taco review",
+  cafe: "A latte-art video from your café goes viral",
+  gym: "A local kid trained at your gym wins the Golden Gloves",
+  security: "Your guards stop a smash-and-grab on camera",
+  startup: "A tech blog names your app one to watch",
+  paper: "Your front page gets framed in every bar in town",
+};
+const ORDER: Record<string, string> = {
+  truck: "A film crew books the truck for a week of night shoots",
+  cafe: "The precinct orders coffee for every shift this month",
+  gym: "Fight night sells out, standing room only",
+  security: "A gala hires every guard you have",
+  startup: "An enterprise client signs a big pilot",
+  paper: "An exclusive sells out by noon, twice",
+};
+
+/** One possible event at a business this month (deterministic from the seed; never the engine dice). */
+function bizEvent(g: Game, e: EconState, b: Biz, def: BizDef, now: number): BizNote | null {
+  if (now - b.since < 3 || hash(e.seed, now, b.uid, "event") >= BIZ_EVENT_CHANCE) return null;
+  // Breathing room: nothing new within four months of the last thing, and never the same thing twice running.
+  const lastAt = b.log?.at(-1)?.at ?? -99;
+  if (now - lastAt < 4) return null;
+  const R = def.rev * cityMul(b.cityId);
+  const fixer = mgrById(b.mgr?.id)?.trait === "fixer";
+  const soft = (n: number) => (fixer ? n / 2 : n);
+  const morale = moraleOf(b);
+  const pool: [string, number][] = [
+    ["viral", 3],
+    ["order", 3],
+    ["inspect", 3],
+    ["rival", b.rival && now < b.rival ? 0 : 2],
+    ["scandal", 1],
+    ["poach", b.staff > 1 ? (morale < 35 ? 6 : morale < 50 ? 2 : 0) : 0],
+  ].map(([id, w]) => [id, id === b.lastEv ? 0 : w] as [string, number]);
+  const total = pool.reduce((s, [, w]) => s + w, 0);
+  let pick = hash(e.seed, now, b.uid, "eventkind") * total;
+  let kind = "viral";
+  for (const [id, w] of pool) {
+    if ((pick -= w) < 0) {
+      kind = id;
+      break;
+    }
+  }
+  b.lastEv = kind;
+  switch (kind) {
+    case "viral": {
+      const cash = Math.round((R * 0.08) / 10) * 10;
+      b.rep = Math.min(100, b.rep + 6);
+      g.stats.money += cash;
+      return { at: now, tone: 1, text: `${VIRAL[def.id] ?? "Word gets around about " + b.name}. +6 reputation, +${fmt(cash)} this month.` };
+    }
+    case "order": {
+      const cash = Math.round((R * 0.14) / 10) * 10;
+      g.stats.money += cash;
+      return { at: now, tone: 1, text: `${ORDER[def.id] ?? "A big order lands"}: +${fmt(cash)} for ${b.name}.` };
+    }
+    case "inspect": {
+      if (b.rep >= 70) {
+        b.morale = Math.min(100, morale + 3);
+        return { at: now, tone: 0, text: `Inspectors visit ${b.name} and leave impressed. The crew is quietly proud.` };
+      }
+      const fine = Math.round(soft(R * 0.06) / 10) * 10;
+      g.stats.money -= fine;
+      return { at: now, tone: -1, text: `Inspectors find a list of small sins at ${b.name}: a ${fmt(fine)} fine.${fixer ? " Your manager talked it down." : ""}` };
+    }
+    case "rival": {
+      b.rival = now + RIVAL_MONTHS;
+      return { at: now, tone: -1, text: `A rival ${def.name.toLowerCase()} opens two blocks from ${b.name}. Sales −${b.rep >= 75 ? 6 : 12}% for ${RIVAL_MONTHS} months; each shift you work wins regulars back.` };
+    }
+    case "scandal": {
+      const hit = Math.round(soft(8));
+      b.rep = Math.max(0, b.rep - hit);
+      b.morale = Math.max(0, morale - 8);
+      return { at: now, tone: -1, text: `A staffer's rant about ${b.name} goes viral for the wrong reasons. −${hit} reputation, morale dips.${fixer ? " Your manager kept it to one news cycle." : ""}` };
+    }
+    case "poach": {
+      b.staff -= 1;
+      return { at: now, tone: -1, text: `One of your best people at ${b.name} walks out for a rival. Morale was low: a full crew or a steady manager fixes that.` };
+    }
+  }
+  return null;
+}
+
 
 const LEGEND_BIZ: Record<string, { kind: string; lockUntil: number }> = {
   batman: { kind: "wayne", lockUntil: 18 },
@@ -1571,6 +1812,9 @@ export function ensureBusiness(g: Game, e: EconState): void {
     if (!Array.isArray(b.pl)) b.pl = [];
     if (typeof b.staff !== "number") b.staff = 0;
     if (typeof b.rep !== "number") b.rep = BIZ_START_REP;
+    if (typeof b.morale !== "number") b.morale = MORALE_START;
+    if (b.mgr && !mgrById(b.mgr.id)) delete b.mgr;
+    if (!Array.isArray(b.log)) b.log = [];
   }
 }
 
@@ -1606,7 +1850,7 @@ export interface BizMonth {
 }
 
 /** One month's books. `noise` false gives the steady-state estimate the UI shows. */
-export function bizBooks(e: EconState, b: Biz, now: number, noise = true): BizMonth {
+export function bizBooks(e: EconState, b: Biz, now: number, noise = true, away = false): BizMonth {
   const def = bizById(b.kind)!;
   const bonus = 1 + b.ups.reduce((s, id) => s + (def.upgrades.find((u) => u.id === id)?.rev ?? 0), 0);
   if (def.empire) {
@@ -1617,9 +1861,15 @@ export function bizBooks(e: EconState, b: Biz, now: number, noise = true): BizMo
   const ramp = Math.min(1, 0.5 + (0.5 * Math.max(0, now - b.since)) / BIZ_RAMP);
   const rep = 0.7 + (0.6 * clamp(b.rep, 0, 100)) / 100;
   const wobble = noise ? 1 + (hash(e.seed, now, b.uid, "biz") - 0.5) * 0.16 : 1;
-  const revenue = Math.round(def.rev * cityMul(b.cityId) * staffFactor(b.staff, bizNeed(b)) * bonus * rep * demandOf(e, def) * ramp * wobble);
-  const wages = Math.round(b.staff * def.wage * cityMul(b.cityId));
-  const goods = Math.round(revenue * (def.cogs ?? 0));
+  // 2026-11-10 pm: crew morale (neutral at 70), the manager's trait, a rival nearby, an owner who's away.
+  const trait = mgrById(b.mgr?.id)?.trait;
+  const crew = 1 + (moraleOf(b) - MORALE_START) * 0.004;
+  const hustle = trait === "hustler" ? 1.08 : 1;
+  const rival = b.rival && now < b.rival ? (b.rep >= 75 ? 0.94 : 0.88) : 1;
+  const absent = away && !b.mgr ? AWAY_MUL : 1;
+  const revenue = Math.round(def.rev * cityMul(b.cityId) * staffFactor(b.staff, bizNeed(b)) * bonus * rep * demandOf(e, def) * ramp * wobble * crew * hustle * rival * absent);
+  const wages = Math.round(b.staff * def.wage * cityMul(b.cityId)) + (b.mgr ? mgrWage(def, b.cityId) : 0);
+  const goods = Math.round(revenue * (def.cogs ?? 0) * (trait === "frugal" ? 0.85 : 1));
   const premises = Math.round(def.premises * cityMul(b.cityId) * (1 + 0.25 * b.ups.length));
   const upkeep = Math.round(b.invested * 0.004);
   return { revenue, goods, wages, premises, upkeep, profit: revenue - goods - wages - premises - upkeep };
@@ -1660,11 +1910,27 @@ export function bizMonth(g: Game, e: EconState, add: (label: string, amount: num
       if (g.age === b.lockUntil - 1 && g.month === 11) banners.push(`Next birthday you take the chair at ${b.name}. Work ▸ Money ▸ Business.`);
       continue;
     }
-    const books = bizBooks(e, b, now);
-    // Reputation drifts toward what the place deserves: upgrades lift it, short staff drags it.
+    const away = b.cityId !== g.cityId;
+    const books = bizBooks(e, b, now, true, away);
+    // Reputation drifts toward what the place deserves: upgrades lift it, short staff drags it, a manager
+    // keeps it sharp, nobody in charge lets it slide.
     const need = bizNeed(b);
-    const target = BIZ_START_REP + b.ups.reduce((s, id) => s + (def.upgrades.find((u) => u.id === id)?.rep ?? 0), 0) + (need ? clamp((b.staff / need - 1) * 20, -25, 8) : 10);
+    const target =
+      BIZ_START_REP +
+      b.ups.reduce((s, id) => s + (def.upgrades.find((u) => u.id === id)?.rep ?? 0), 0) +
+      (need ? clamp((b.staff / need - 1) * 20, -25, 8) : 10) +
+      (def.empire ? 0 : b.mgr ? 8 : away ? -12 : 0);
     b.rep = Math.round(clamp(b.rep + clamp((target - b.rep) * 0.15, -4, 4), 0, 100));
+    if (!def.empire) {
+      const m = moraleOf(b);
+      const mt = moraleTarget(g, b).target;
+      b.morale = Math.round(clamp(m + clamp((mt - m) * 0.2, -6, 6), 0, 100));
+      const ev = bizEvent(g, e, b, def, now);
+      if (ev) {
+        note(b, now, ev.text, ev.tone);
+        banners.push(ev.text);
+      }
+    }
     add(`${def.empire ? "Chair's draw" : "Business"} · ${b.name}`, books.profit);
     b.pl.push(books.profit);
     if (b.pl.length > BIZ_HIST) b.pl.splice(0, b.pl.length - BIZ_HIST);
@@ -1733,7 +1999,26 @@ export function bizAct(g: Game, e: EconState, verb: string, a: string, b: string
       if (movesLeft <= 0) return { ok: false, line: "No free time left this month." };
       const gain = shiftGain(biz.rep);
       biz.rep = Math.min(100, biz.rep + gain);
-      return { ok: true, spend: true, line: `You work a shift at ${biz.name}. Customers notice the owner behind the counter (+${gain} reputation).` };
+      biz.morale = Math.min(100, moraleOf(biz) + 3);
+      const now = at(g);
+      const rivalNote = biz.rival && now < biz.rival ? " You win a few regulars back from the rival." : "";
+      if (biz.rival && now < biz.rival) biz.rival -= 1;
+      return { ok: true, spend: true, line: `You work a shift at ${biz.name}. Customers notice the owner behind the counter (+${gain} reputation).${rivalNote}` };
+    }
+    case "mgr": {
+      if (!biz || !def || def.empire) return { ok: false, line: "Not possible." };
+      if (biz.mgr) return { ok: false, line: `${mgrById(biz.mgr.id)?.name ?? "Someone"} already runs ${biz.name}.` };
+      const pick = mgrCandidates(e, biz, at(g)).find((m) => m.id === b);
+      if (!pick) return { ok: false, line: "They took another job." };
+      biz.mgr = { id: pick.id, since: at(g) };
+      return { ok: true, line: `${pick.name} takes over the day-to-day at ${biz.name} (${fmt(mgrWage(def, biz.cityId))}/mo). ${MGR_TRAIT[pick.trait].label}: ${MGR_TRAIT[pick.trait].short.toLowerCase()}. It keeps running well while you're away.` };
+    }
+    case "mgrout": {
+      if (!biz?.mgr) return { ok: false, line: "No manager to let go." };
+      const name = mgrById(biz.mgr.id)?.name ?? "Your manager";
+      delete biz.mgr;
+      biz.morale = Math.max(0, moraleOf(biz) - 5);
+      return { ok: true, line: `${name} clears out the office at ${biz.name}. You're in charge again.` };
     }
     case "sell": {
       if (!biz || !def || def.empire) return { ok: false, line: def?.empire ? "The family company isn't for sale." : "Not possible." };

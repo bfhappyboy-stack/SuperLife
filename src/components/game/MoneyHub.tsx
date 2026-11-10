@@ -16,6 +16,7 @@ import {
   quoteRent, quoteTrade, SELL_FEE, stockById, stockViews, TRADE_AGE, type EconState, type News, type OwnedHome, type SeriesView,
   BIZ, bizBooks, bizById, bizNeed, bizValue, quoteBiz, BIZ_RAMP, CITY_PROP, type Biz,
   mateCandidates, matesHere, mateShare, mateShareIfJoined, roomsHere, TIE_IN_REP,
+  AWAY_MUL, MGR_TRAIT, mgrById, mgrCandidates, mgrWage, moraleTarget, moraleWord, MORALE_START,
 } from "@/game/economy";
 import { cityById } from "@/game/data";
 import type { Game } from "@/game/types";
@@ -863,7 +864,7 @@ function BusinessTab({ game, e, run }: { game: Game; e: EconState; run: (id: str
       ) : (
         <article className="card px-4 py-3">
           <p className="font-bold text-fg">Be your own boss</p>
-          <p className="mt-1 text-xs text-muted">Open a business, hire staff, buy upgrades. Profit (or loss) lands every month. More staff helps, but each hire adds less than the last. Sell any time for about two years of profit.</p>
+          <p className="mt-1 text-xs text-muted">Open a business, hire staff, buy upgrades. Profit (or loss) lands every month. More staff helps, but each hire adds less than the last; a happy crew sells more, and a manager runs it if you move city. Sell any time for about two years of profit.</p>
         </article>
       )}
       <p className="t-label mt-1 flex items-center gap-1.5 text-muted">
@@ -908,11 +909,25 @@ function BusinessTab({ game, e, run }: { game: Game; e: EconState; run: (id: str
 function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game: Game; e: EconState; b: Biz; run: (id: string) => void; confirm: string | null; setConfirm: (id: string | null) => void; open: boolean; setOpen: (v: boolean) => void }) {
   const def = bizById(b.kind)!;
   const Icon = BIZ_ICON[b.kind] ?? Store;
-  const books = bizBooks(e, b, game.age * 12 + game.month, false);
+  const books = bizBooks(e, b, game.age * 12 + game.month, false, b.cityId !== game.cityId);
   const last = b.pl.at(-1);
+  // A brand-new place shows where it's heading (the found card's promise), not its first, half-empty month.
+  const steady = bizBooks(e, { ...b, since: -999 }, game.age * 12 + game.month, false, b.cityId !== game.cityId).profit;
   const need = bizNeed(b);
   const value = bizValue(e, b);
   const locked = !!b.lockUntil && game.age < b.lockUntil;
+  const now = game.age * 12 + game.month;
+  const away = b.cityId !== game.cityId;
+  const morale = b.morale ?? MORALE_START;
+  const mood = moraleTarget(game, b);
+  const latest = (b.log ?? []).at(-1);
+  const rivalLeft = b.rival && now < b.rival ? b.rival - now : 0;
+  // Upgrade fanfare: anything bought while this card is on screen pops in gold.
+  const seen = useRef(new Set(b.ups));
+  const fresh = b.ups.filter((id) => !seen.current.has(id));
+  useEffect(() => {
+    if (fresh.length) buzz("win");
+  }, [fresh.length]);
   return (
     <article className={`card px-3 py-3 ${def.empire ? "!border-gold/50" : ""}`}>
       <div className="flex gap-3">
@@ -923,13 +938,16 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="truncate font-bold leading-tight text-fg">{b.name}</p>
-              <p className="truncate text-[11px] font-semibold text-muted">{def.empire ? "Family company · you chair the board" : `${def.name} · ${cityById(b.cityId).name}`}</p>
+              <p className="truncate text-[11px] font-semibold text-muted">
+                {def.empire ? "Family company · you chair the board" : `${def.name} · ${cityById(b.cityId).name}`}
+                {away && <span className={b.mgr ? "text-good" : "text-bad"}>{b.mgr ? " · run by your manager" : ` · away, sales −${Math.round((1 - AWAY_MUL) * 100)}%`}</span>}
+              </p>
             </div>
             <div className="shrink-0 text-right">
-              <p className={`t-num text-base ${locked ? "text-muted" : (last ?? books.profit) >= 0 ? "text-good" : "text-bad"}`}>
-                {locked ? "In trust" : `${(last ?? books.profit) >= 0 ? "+" : "−"}${fmt(Math.abs(last ?? books.profit))}`}
+              <p className={`t-num text-base ${locked ? "text-muted" : (last ?? steady) >= 0 ? "text-good" : "text-bad"}`}>
+                {locked ? "In trust" : `${(last ?? steady) >= 0 ? "+" : "−"}${fmt(Math.abs(last ?? steady))}`}
               </p>
-              {!locked && <p className="text-[10px] font-bold text-muted">{last != null ? "last month" : "expected"}</p>}
+              {!locked && <p className="text-[10px] font-bold text-muted">{last != null ? "last month" : "once it finds its feet"}</p>}
             </div>
           </div>
           {b.pl.length > 1 && (
@@ -939,12 +957,26 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
             </div>
           )}
           {!def.empire && (
-            <div className="mt-1.5 flex items-center gap-2">
-              <span className="text-[10px] font-bold text-muted uppercase">Rep</span>
-              <div className="stat-bar !h-1.5 flex-1" aria-label={`Reputation ${b.rep}`}>
-                <div className="stat-fill" style={{ width: `${b.rep}%`, "--fill": "#ffd76a" } as CSSProperties} />
+            <div className="mt-1.5 grid grid-cols-2 gap-x-3">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-muted uppercase">Rep</span>
+                <div className="stat-bar !h-1.5 flex-1" aria-label={`Reputation ${b.rep}`}>
+                  <div className="stat-fill" style={{ width: `${b.rep}%`, "--fill": "#ffd76a" } as CSSProperties} />
+                </div>
+                <span className="t-num text-[11px] text-fg">{b.rep}</span>
               </div>
-              <span className="t-num text-[11px] text-fg">{b.rep}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-muted uppercase">Crew</span>
+                <div className="stat-bar !h-1.5 flex-1" aria-label={`Morale ${morale}`}>
+                  <div className="stat-fill" style={{ width: `${morale}%`, "--fill": morale >= 60 ? "#5fe08f" : morale >= 40 ? "#ffb35a" : "#ff5d6c" } as CSSProperties} />
+                </div>
+                <span className="t-num text-[11px] text-fg">{morale}</span>
+              </div>
+              <p className="col-span-2 mt-0.5 text-[11px] text-muted">
+                <span className={`font-bold ${morale >= 60 ? "text-good" : morale >= 40 ? "text-gold" : "text-bad"}`}>{moraleWord(morale)}</span>
+                {mood.target !== morale && mood.why ? ` · ${mood.target > morale ? "rising" : "falling"}: ${mood.why}` : ""}
+                {rivalLeft > 0 && <span className="font-bold text-bad"> · rival nearby, {rivalLeft} mo</span>}
+              </p>
             </div>
           )}
           {locked && <p className="mt-1 text-[11px] font-bold text-gold">The board runs it until you're {b.lockUntil}. Then the chair's draw (about {fmt(books.profit)}/mo, following the share price) is yours.</p>}
@@ -968,6 +1000,13 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
           </button>
         </div>
       )}
+      {!def.empire && <ManagerRow game={game} e={e} b={b} run={run} confirm={confirm} setConfirm={setConfirm} />}
+      {!def.empire && latest && now - latest.at <= 12 && (
+        <p className={`mt-2 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold ${latest.tone > 0 ? "bg-good/10 text-good" : latest.tone < 0 ? "bg-bad/10 text-bad" : "bg-white/5 text-muted"}`}>
+          {latest.tone > 0 ? <ArrowUpRight className="mr-1 inline size-3" aria-hidden /> : latest.tone < 0 ? <ArrowDownRight className="mr-1 inline size-3" aria-hidden /> : null}
+          {latest.text}
+        </p>
+      )}
       {open && !def.empire && (
         <div className="anim-rise mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 rounded-xl bg-black/25 px-3 py-2 text-[11px]">
           <span className="text-muted">Revenue</span><span className="t-num text-right text-good">+{fmt(books.revenue)}</span>
@@ -990,7 +1029,9 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
                 <p className="truncate text-[11px] text-muted">{u.blurb}</p>
               </div>
               {has ? (
-                <span className="chip shrink-0 !text-[10px] text-good"><Check className="size-3" aria-hidden /> Done</span>
+                <span className={`chip shrink-0 !text-[10px] ${fresh.includes(u.id) ? "anim-pop shine-once !border-gold/60 text-gold" : "text-good"}`}>
+                  <Check className="size-3" aria-hidden /> {fresh.includes(u.id) ? "Upgraded!" : "Done"}
+                </span>
               ) : (
                 <button type="button" disabled={locked || game.stats.money < u.cost} onClick={() => run(`econ|biz|up|${b.uid}|${u.id}`)} className="btn btn-gold !min-h-11 shrink-0 !px-3 text-xs">
                   {fmt(u.cost)}
@@ -1026,6 +1067,67 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
         </div>
       )}
     </article>
+  );
+}
+
+function ManagerRow({ game, e, b, run, confirm, setConfirm }: { game: Game; e: EconState; b: Biz; run: (id: string) => void; confirm: string | null; setConfirm: (id: string | null) => void }) {
+  const [hiring, setHiring] = useState(false);
+  const def = bizById(b.kind)!;
+  const wage = mgrWage(def, b.cityId);
+  const mgr = mgrById(b.mgr?.id);
+  const away = b.cityId !== game.cityId;
+  if (mgr) {
+    const t = MGR_TRAIT[mgr.trait];
+    return (
+      <div className="mt-2 flex items-center gap-2 rounded-xl bg-black/25 px-2.5 py-2">
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gold/15 text-sm font-black text-gold">{mgr.name[0]}</span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-bold text-fg">{mgr.name} <span className="font-semibold text-muted">· manager</span></p>
+          <p className="truncate text-[11px] text-muted"><span className="font-bold text-gold">{t.label}</span> · {t.short} · {fmt(wage)}/mo</p>
+        </div>
+        {confirm === `mgr:${b.uid}` ? (
+          <button type="button" onClick={() => { run(`econ|biz|mgrout|${b.uid}`); setConfirm(null); }} className="btn btn-primary !min-h-11 !px-3 text-xs">Let go</button>
+        ) : (
+          <button type="button" aria-label={`Let ${mgr.name} go`} onClick={() => setConfirm(`mgr:${b.uid}`)} className="btn btn-ghost !min-h-11 !min-w-11 !px-0">
+            <Minus className="size-4" aria-hidden />
+          </button>
+        )}
+      </div>
+    );
+  }
+  const cands = mgrCandidates(e, b, game.age * 12 + game.month);
+  return (
+    <div className={`mt-2 rounded-xl px-2.5 py-2 ${away ? "bg-bad/10" : "bg-black/25"}`}>
+      <div className="flex items-center gap-2">
+        <Crown className={`size-4 shrink-0 ${away ? "text-bad" : "text-muted"}`} aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold text-fg">No manager</p>
+          <p className="text-[11px] text-muted">{away ? "Nobody's in charge while you're away." : "Hire one to keep the name up and run it if you move city."}</p>
+        </div>
+        <button type="button" aria-expanded={hiring} onClick={() => setHiring(!hiring)} className="btn btn-gold !min-h-11 shrink-0 !px-3 text-xs">
+          Hire
+          <ChevronDown className={`size-3.5 transition-transform ${hiring ? "rotate-180" : ""}`} aria-hidden />
+        </button>
+      </div>
+      {hiring && (
+        <ul className="anim-rise mt-2 flex flex-col gap-2">
+          {cands.map((m) => (
+            <li key={m.id} className="flex items-center gap-2.5 rounded-xl bg-black/25 px-2.5 py-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-fg">{m.name} <span className="text-[11px] font-bold text-gold">· {MGR_TRAIT[m.trait].label}</span></p>
+                <p className="text-[11px] text-muted">{m.line}</p>
+                <p className="mt-0.5 text-[10px] font-bold text-muted">{MGR_TRAIT[m.trait].short} · keeps reputation up</p>
+              </div>
+              <button type="button" onClick={() => { run(`econ|biz|mgr|${b.uid}|${m.id}`); setHiring(false); }} className="btn btn-gold !min-h-11 shrink-0 flex-col !gap-0 !px-3 text-xs">
+                <span>Hire</span>
+                <span className="text-[10px] font-bold opacity-80">{fmt(wage)}/mo</span>
+              </button>
+            </li>
+          ))}
+          <li className="text-[11px] text-muted">New candidates each season.</li>
+        </ul>
+      )}
+    </div>
   );
 }
 
