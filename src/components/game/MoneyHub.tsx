@@ -15,7 +15,7 @@ import {
   homeGate, homeUpkeep, homeValue, HOUSING_AGE, letIncome, livingOf, marketCity, marketRent, maxBuy, MIN_DEPOSIT, netWorth, portfolioValue, quoteHome,
   quoteRent, quoteTrade, SELL_FEE, stockById, stockViews, TRADE_AGE, type EconState, type News, type OwnedHome, type SeriesView,
   BIZ, bizBooks, bizById, bizNeed, bizValue, quoteBiz, BIZ_RAMP, CITY_PROP, type Biz,
-  mateCandidates, matesHere, mateShare, mateShareIfJoined, roomsHere,
+  mateCandidates, matesHere, mateShare, mateShareIfJoined, roomsHere, TIE_IN_REP,
 } from "@/game/economy";
 import { cityById } from "@/game/data";
 import type { Game } from "@/game/types";
@@ -886,6 +886,7 @@ function BusinessTab({ game, e, run }: { game: Game; e: EconState; run: (id: str
                     <p className="t-num shrink-0 text-base text-gold">{fmt(def.cost)}</p>
                   </div>
                   <p className="text-xs text-muted">{def.blurb}</p>
+                  {def.perk && <p className="mt-1 text-[11px] font-bold text-gold">Hero perk: {def.perk}</p>}
                   <p className="mt-1 text-[11px] font-semibold text-muted">
                     <Users className="mr-1 inline size-3" aria-hidden />
                     {def.staff} staff · aims for <span className={q.profit >= 0 ? "text-good" : "text-bad"}>{q.profit >= 0 ? "+" : "−"}{fmt(Math.abs(q.profit))}/mo</span> once it finds its feet
@@ -999,6 +1000,11 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
           );
         })}
       </div>
+      {def.perk && (
+        <p className={`mt-2 text-[11px] font-bold ${b.rep >= TIE_IN_REP ? "text-gold" : "text-muted"}`}>
+          Hero perk{b.rep >= TIE_IN_REP ? "" : ` (reputation ${b.rep}/${TIE_IN_REP})`}: {def.perk}
+        </p>
+      )}
       {!def.empire && (
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" disabled={game.majorsLeft <= 0 || b.cityId !== game.cityId} onClick={() => run(`econ|biz|shift|${b.uid}`)} className="btn btn-ghost !min-h-11 !px-3 text-xs">

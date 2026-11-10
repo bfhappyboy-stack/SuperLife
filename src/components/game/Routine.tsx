@@ -2,7 +2,7 @@
  * Life Flow: "Your routine" on Life ▸ Today. Pin up to three everyday things; they fill every block of free
  * time you don't spend yourself when you tap Play. Empty = the game follows what you've been doing lately.
  */
-import { Check, Repeat, X } from "lucide-react";
+import { Briefcase, Check, Heart, Repeat, X } from "lucide-react";
 import { useState } from "react";
 import { buzz } from "@/components/game/haptics";
 import { ROUTINE_MAX, routineOptions } from "@/game/flow";
@@ -40,7 +40,7 @@ export function RoutineCard({ game }: { game: Game }) {
       </div>
       {edit && (
         <div className="anim-rise mt-2.5">
-          <p className="text-xs text-muted">Pick up to {ROUTINE_MAX}, in order. Play spends any free time you don&apos;t use on these. Fights, dates and big moves stay yours.</p>
+          <p className="text-xs text-muted">Pick up to {ROUTINE_MAX}, in order: habits, a shift at your business, time with someone. Play spends any free time you don&apos;t use on these. Fights, dates and big moves stay yours.</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {options.map((o) => {
               const n = pinned.indexOf(o.id);
@@ -48,6 +48,8 @@ export function RoutineCard({ game }: { game: Game }) {
               return (
                 <button key={o.id} type="button" aria-pressed={on} onClick={() => toggle(o.id)} className={`chip !min-h-11 !px-3 text-xs ${on ? "!border-gold/70 !bg-gold/15 text-fg" : "text-muted"}`}>
                   {on ? <span className="t-num grid size-4 place-items-center rounded-full bg-gold text-[10px] text-ink">{n + 1}</span> : <Check className="size-3 opacity-30" aria-hidden />}
+                  {o.kind === "work" && <Briefcase className="size-3 text-gold" aria-hidden />}
+                  {o.kind === "people" && <Heart className="size-3 text-cape" aria-hidden />}
                   {o.label}
                 </button>
               );

@@ -137,3 +137,67 @@ test("older economy saves get a business book (and a legend's company) on load",
   econOf(g)!.biz = [{ uid: "x", kind: "nope" } as never];
   assert.equal(ensureEconomy(g).biz!.length, 0);
 });
+
+test("shifts: owner shifts lift reputation with diminishing returns, and can be pinned to the Life Flow routine (2026-11-10 am)", async () => {
+  const { shiftGain } = await import("../economy.ts");
+  const { routineOptions, setRoutine, playStep, setPace, SHIFT_ROUTINE } = await import("../flow.ts");
+  assert.equal(shiftGain(40), 6);
+  assert.ok(shiftGain(70) < shiftGain(40) && shiftGain(95) === 1 && shiftGain(100) === 1, "less each time it's better known");
+  let g = adult(30, 500_000);
+  g = act(g, "econ|biz|found|cafe");
+  const biz = econOf(g)!.biz!.find((b) => b.kind === "cafe")!;
+  const opts = routineOptions(g);
+  const id = `${SHIFT_ROUTINE}${biz.uid}`;
+  assert.ok(opts.some((o) => o.id === id && /Shift at/.test(o.label)), opts.map((o) => o.id).join(","));
+  assert.ok(opts.some((o) => o.id.startsWith("time:")), "time with someone can be pinned too");
+  g = setRoutine(g, [id, "fight-everyone", "books"]);
+  assert.deepEqual(g.routine, [id, "books"]);
+  g = setPace(g, "month");
+  g.majorsLeft = 3;
+  const rep = biz.rep;
+  const after = playStep(g);
+  const now = econOf(after)!.biz!.find((b) => b.uid === biz.uid)!;
+  assert.ok(now.rep > rep, `rep ${rep} -> ${now.rep}: the routine worked shifts`);
+});
+
+test("hero tie-ins: a well-run security firm passes leads, a start-up sends gadgets; each gives a one-fight edge (2026-11-10 am)", async () => {
+  const { bizFightEdge, spendBizEdge, LEAD_EDGE, GADGET_EDGE } = await import("../economy.ts");
+  let g = adult(32, 3_000_000);
+  g = act(g, "econ|biz|found|security");
+  g.majorsLeft = 3;
+  g = act(g, "econ|biz|found|startup");
+  for (const b of econOf(g)!.biz!) b.rep = 70;
+  let leads = 0;
+  let gadgets = 0;
+  for (let i = 0; i < 36; i += 1) {
+    g = month(g);
+    for (const b of econOf(g)!.biz!) b.rep = 70;
+    if (g.flags.lead) {
+      leads += 1;
+      const edge = bizFightEdge(g);
+      assert.ok(edge.bonus >= LEAD_EDGE && edge.notes.length >= 1);
+      spendBizEdge(g);
+      assert.equal(g.flags.lead, undefined, "one fight uses the lead");
+    }
+    if ((g.flags.gadget ?? 0) >= 2) {
+      gadgets += 1;
+      assert.ok(bizFightEdge(g).bonus >= GADGET_EDGE);
+      spendBizEdge(g);
+      assert.equal(g.flags.gadget, 1, "one gadget per fight");
+    }
+  }
+  assert.ok(leads >= 3 && leads <= 14, `leads ${leads} in 3 years`);
+  assert.ok(gadgets >= 1, `gadgets ${gadgets}`);
+  assert.ok(bizFightEdge(g).bonus <= LEAD_EDGE + GADGET_EDGE + 1e-9, "never more than a lead and a gadget");
+  const low = adult(32, 3_000_000);
+  const l2 = act(low, "econ|biz|found|security");
+  for (const b of econOf(l2)!.biz!) b.rep = 30;
+  let lowLeads = 0;
+  let h = l2;
+  for (let i = 0; i < 24; i += 1) {
+    h = month(h);
+    for (const b of econOf(h)!.biz!) b.rep = 30;
+    if (h.flags.lead) lowLeads += 1;
+  }
+  assert.equal(lowLeads, 0, "a struggling firm hears nothing");
+});
