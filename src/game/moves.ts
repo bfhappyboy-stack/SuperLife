@@ -373,6 +373,7 @@ export function fillLoadout(game: Game): void {
   // Auto top-up covers the three styles first (strike, guard, trick), so every tell has an answer.
   // A slot the player filled by hand is never touched.
   const pool = knownMoves(game).filter((entry) => entry.unlocked && !have.has(entry.def.id)).map((entry) => entry.def);
+  const wasFull = game.loadout.length >= MOVESET_SIZE;
   while (game.loadout.length < MOVESET_SIZE && pool.length) {
     const gap = missingStyles(styleCounts(game.loadout.map((id) => moveById(id)?.style)));
     let pick = gap.length ? pool.findIndex((def) => def.style === gap[0]) : -1;
@@ -383,7 +384,9 @@ export function fillLoadout(game: Game): void {
   }
   // Once the six is full, if a style is still missing and the bench has one, swap out a surplus style.
   // Keeps authored defaults (and late unlocks) from locking a hero into five strikes.
-  for (;;) {
+  // A full six the player set by hand is theirs, even if it skips a style (2026-11-10 am: dropping your only
+  // guard used to be undone by the next action's top-up).
+  for (; !wasFull || !game.handSix; ) {
     const counts = styleCounts(game.loadout.map((id) => moveById(id)?.style));
     const gap = missingStyles(counts)[0];
     if (!gap) break;
@@ -419,10 +422,12 @@ export function toggleLoadout(game: Game, moveId: string): string {
     const next = benchMoves(game, [moveId])[0];
     if (!next) return `Every move you know is already in the six. Unlock another to swap ${def.name} out.`;
     game.loadout = game.loadout.map((id, index) => (index === at ? next.id : id));
+    game.handSix = true;
     return `${def.name} leaves the six. ${next.name} takes slot ${at + 1}.`;
   }
   if (game.loadout.length >= MOVESET_SIZE) return "Six moves already. Pick a slot to swap it into.";
   game.loadout = [...game.loadout, moveId];
+  game.handSix = true;
   return `${def.name} takes slot ${game.loadout.length}.`;
 }
 
@@ -453,12 +458,14 @@ export function placeInSlot(game: Game, slot: number, moveId: string): SlotResul
     loadout[target] = moveId;
     loadout[from] = other;
     game.loadout = loadout;
+    game.handSix = true;
     const otherName = moveById(other)?.name ?? "That move";
     return { ok: true, line: `${def.name} moves to slot ${target + 1}. ${otherName} takes slot ${from + 1}.` };
   }
   const out = loadout[target];
   loadout[target] = moveId;
   game.loadout = loadout.slice(0, MOVESET_SIZE);
+  game.handSix = true;
   const outName = out ? moveById(out)?.name : null;
   return { ok: true, line: outName ? `${def.name} in, ${outName} out. Slot ${target + 1}.` : `${def.name} takes slot ${target + 1}.` };
 }

@@ -661,6 +661,27 @@ export function annualWage(g: Game): number {
   return pay;
 }
 
+/** Base monthly cost of living (food, transport, phone, bills) in a city priced at 1.0. */
+export const LIVING_BASE = 700;
+/** Lifestyle creep: the share of a monthly wage that turns into a nicer everyday life. */
+export const LIVING_CREEP = 0.25;
+export const LIVING_PER_CHILD = 350;
+
+/**
+ * Cost of living from 18, every month (2026-11-10 am: without it a desk job banked ~$1.8M by 40 and money
+ * stopped mattering). Scales with the city and gently with income; children add; half at the family home or a
+ * family estate. It never pushes you below $0 on its own: you scrape by, and rent is what can still sink you.
+ */
+export function livingCosts(g: Game): number {
+  if (g.age < HOUSING_AGE || g.phase === "dead") return 0;
+  const prop = 0.6 + 0.4 * (CITY_PROP[marketCity(g.cityId)] ?? 1);
+  const kids = g.relationships.filter((r) => r.role === "child" && r.alive && r.age < 18).length;
+  let cost = LIVING_BASE * prop + (annualWage(g) / 12) * LIVING_CREEP + kids * LIVING_PER_CHILD * prop;
+  const live = livingOf(g);
+  if (live.kind === "family" || live.home?.estate) cost *= 0.5;
+  return Math.round(cost / 10) * 10;
+}
+
 export function portfolioValue(e: EconState): number {
   let v = 0;
   for (const [id, lot] of Object.entries(e.stocks)) v += lot.n * stockPrice(e, id);
@@ -889,6 +910,8 @@ export function economyMonth(g: Game): MonthOut {
 
   const wage = annualWage(g);
   if (wage > 0) add(g.jobId ? "Paycheck" : g.flags.villainContract ? "Retainer" : "League stipend", wage / 12);
+  const living = Math.min(livingCosts(g), Math.max(0, Math.round(g.stats.money)));
+  if (living > 0) add("Living costs", -living);
 
   let housing = 0;
   if (e.living === "lease" && e.lease) {
@@ -1751,6 +1774,8 @@ export function livingKey(e: EconState): string {
 export function roomsHere(g: Game): number {
   const live = livingOf(g);
   if (live.kind !== "lease" && live.kind !== "own") return 0;
+  // A family estate takes no lodgers (2026-11-10 am): the cave under the house and the staff who keep it.
+  if (live.home?.estate) return 0;
   return ROOMS[live.homeId ?? ""] ?? 0;
 }
 

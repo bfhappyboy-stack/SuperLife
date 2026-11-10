@@ -2769,6 +2769,9 @@ function fitAct(d: Game, id: string): Game {
   return d;
 }
 
+/** A heavy shift pays this share of the yearly wage (was 8%; with Life Flow running it every month it nearly doubled pay). */
+export const SHIFT_SHARE = 0.03;
+
 export function act(game: Game, id: string): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
@@ -3242,7 +3245,7 @@ export function act(game: Game, id: string): Game {
     if (!job || d.flags.shifted || noTime(d, true)) return game;
     spend(d);
     d.flags.shifted = 1;
-    const bonus = Math.round(job.pay * 0.08 * ([1, 1.1, 1.2, 1.35, 1.5][d.jobRank] ?? 1));
+    const bonus = Math.round(job.pay * SHIFT_SHARE * ([1, 1.1, 1.2, 1.35, 1.5][d.jobRank] ?? 1));
     const deltas: Delta[] = [];
     applyEffects(d, { money: bonus, happiness: -1 }, deltas);
     setStory(d, `You work a heavy shift at ${job.name}. The money is immediate. So is the back.`, deltas, []);

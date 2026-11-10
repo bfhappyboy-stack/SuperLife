@@ -398,6 +398,8 @@ export interface Game {
   /** Fight-move experience, keyed by move id. Separate from power mastery. */
   moveExp: Record<string, number>;
   loadout: string[];
+  /** The player has arranged the six by hand: the auto style-balancer leaves a full six alone. */
+  handSix?: boolean;
   moveSets: MoveSet[];
   wardrobe: Wardrobe;
   focusPower: string | null;
