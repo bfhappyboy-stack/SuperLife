@@ -23,7 +23,7 @@ export const FAMILY_COLOR: Record<CapeFamily, string> = {
 };
 
 /** Filled glyphs for power families. viewBox 0 0 24 24. */
-const FAMILY_PATH: Record<CapeFamily, string> = {
+export const FAMILY_PATH: Record<CapeFamily, string> = {
   fire: "M12 2c1 3.5 5 5.6 5 10.2A5 5 0 0 1 12 17a5 5 0 0 1-5-4.8c0-2 1-3.4 2.2-4.4-.1 1.6.6 2.8 1.8 3.2C10.4 8.4 11.2 5 12 2Zm0 10.5c.8 1.2 2 1.9 2 3.3a2 2 0 0 1-4 0c0-1 .7-1.8 2-3.3ZM5 20h14v2H5z",
   ice: "M11 2h2v4.2l2.6-1.5 1 1.7L13 8.6v2.7l2.3-1.3 3.6-2.1 1 1.7-3.6 2.1L18.6 13l-1 1.7-2.3-1.3-2.3 1.3V17.4l3.6 2.1-1 1.7L13 19.6V22h-2v-2.4l-2.6 1.6-1-1.7 3.6-2.1v-2.7l-2.3 1.3-2.3 1.3-1-1.7L7.7 13l-3.6-2.1 1-1.7 3.6 2.1L11 11.3V8.6L7.4 6.4l1-1.7L11 6.2Z",
   storm: "M13.5 2 5 13.5h5.2L8.8 22 19 9.8h-5.6L15.8 2Z",
