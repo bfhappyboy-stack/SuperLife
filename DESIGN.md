@@ -206,6 +206,24 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - **Roommates (increment 3):** spare rooms by tier; equal rent split on a lease, a room's rent in an owned home; they cost Cover (eyes on the double life) and bring trait perks, monthly closeness and small events; a nosy one can find the suit (kept if close, told if not). Family estates are never for sale.
 - **Businesses (increment 2):** six data-driven kinds (truck → newspaper), max three. Books each month = revenue (city × staff factor × upgrades × reputation × market demand × 6-month ramp) − supplies − wages − premises − upkeep. Staff factor has diminishing returns; sale ≈ 2 years of profit (floor: half invested). Legend companies (Wayne Enterprises, Stark Industries) are board-run: no staff, a chair's draw tied to the share price, locked until 18 / 21, not for sale.
 
+## 19. Life Flow: how time passes (owner's call, 2026-11-10 night)
+
+**The problem.** "3 moves, then Next month" made every month a chore: about 720 taps of Next month for a 60-year life, with moves that felt arbitrary and were wasted if you didn't spend them. Childhood dragged; adulthood (money, homes, businesses) needed monthly attention.
+
+**Options weighed.**
+1. *Energy / stamina budget with varied action costs* — more to learn, every action needs a new cost, and it changes fight, training and economy balance everywhere. Rejected: not simpler.
+2. *Weekly or seasonal planner* (a schedule of routines plus a few free actions) — clear, and it removes busywork, but on its own it's still one tap per period.
+3. *Continuous flow* (Play / fast-forward auto-runs your routine and pauses on events) — the most addictive feel ("one more season"), but a real-time timer on a phone fights with reading and choices.
+4. *Age-scaled time step* (a year as a kid, a season as a teen, a month as an adult, plus a jump to the next interesting thing) — fixes the slow childhood directly.
+
+**Chosen: 2 + 3 + 4 together, turn-based.** One **Play** button. One tap moves life one step: **a year as a kid (to 13), a season from 13** (Auto pace), or Month / Season / Year if you pin one in **Time ▸ Play pace**. During the step your **Routine** (up to three everyday things you pin, in order, on Life ▸ Today; empty = your habits) fills every block of free time you didn't spend yourself, the economy ticks every month (rent, wages, roommates, businesses, markets), and Play **stops the moment the life needs you**: the power reveal, a story beat (legend canon too), a case, a fight, any choice event, a new chapter, the mentor at 15, low health or a relationship in crisis. A season that would cross a birthday stops at the birthday.
+- **Why this one:** simplest to explain ("set your routine, press Play, the game stops for what matters"), the "one more season" loop is addictive, childhood flies (birth to 15 in about 13–20 taps instead of 180 months), and a decade of adult life is about 50 taps including every stop, against about 120 Next month taps before (sims: mystery, Spider-Man, Batman to 60).
+- **The 3 blocks stay underneath** as "free time": three blocks a month you can spend on anything special *now* (a fight, a date, a stunt, moving house, opening a business, hanging out with a roommate). That keeps every tuned number (fight win rates, training, economy) exactly as it was, and unused time is no longer wasted.
+- **Balance rule (unchanged from fast-forward):** an auto-played block is never better than playing it yourself: routine minis land a little under your own average, and fights, stunts, crime, tryouts and big choices are never auto-played. A Play season is the fast-forward season (same months, same dice; tested).
+- **Money, homes and businesses** fit naturally: trading, upgrades, hiring and letting are instant and free; moving day, opening day, working a shift and hanging out take a block of free time; the ledger runs monthly inside every step and shows on the recap.
+- **Recaps:** a plain season or year ends on a recap card (months passed, what your routine did, stat changes, rank-ups, money, notes). Big stops (mentor, chapter, low health, relationship crisis, death) keep the full fast-forward summary. Skip to 15 and Skip to birthday stay in the Time sheet.
+- **Ship switch:** `FLOW_ON` in `src/game/flow.ts` (on). Off restores Next month + Skip exactly.
+
 ## Existing extras (built, not in the original design)
 
 - **Extra cities:** Metro City, Harbor Bay, Neon Spire, Dustreach, Crownbridge.

@@ -2,6 +2,8 @@
 
 ## From the 2026-11-10 night pass (living economy)
 
+- **Done (increment 4):** Life Flow (Play + Routine + age-scaled pace; DESIGN §19). Next: routine slots for "Work a shift at <business>" and "Time with <person>"; a "year in review" highlight pick for kid recaps; optional auto-Play (hold to keep playing until the next stop).
+
 - **Done (increment 1):** living markets (district house prices, 9 stocks, 6 goods, base rate, data-driven news, fights move markets) and housing (rent / buy / mortgage / sell / let / upgrades / perks / eviction) in one Work ▸ Money hub. 247 game tests.
 - **Done (increment 2):** businesses (six kinds, staff with diminishing returns, upgrades, reputation, market-linked demand, sell) and legend family companies (Wayne Enterprises from 18, Stark Industries from 21). 254 game tests.
 - **Business next:** named staff with traits (a manager who runs it when you move city), random events (inspection, robbery during a villain fight, viral review), franchising a second site; hero tie-ins (your security firm gets League contracts as your rank rises; the newspaper prints your fights).

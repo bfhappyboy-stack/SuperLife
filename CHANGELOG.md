@@ -1,8 +1,16 @@
 # Changelog
 
-## 2026-11-10 (night): a living economy — Money & Life hub, moving markets, rent / buy / sell homes (`devbot/2026-11-10-night`)
+## 2026-11-10 (night): a living economy (Money & Life hub, markets, homes, businesses, roommates) and Life Flow (`devbot/2026-11-10-night`)
 
 Built on `origin/main` (8d5ade2). Typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push. Old saves migrate (`ensureEconomy` in `migrate`).
+
+### Increment 4: Life Flow — one Play button, a routine, age-scaled time (owner's call C)
+
+- **Why:** "rethink the 3 moves per month mechanic and figure out a better way to pass time." Reasoning and the options weighed are in DESIGN §19.
+- **What:** the **Next month** button is now **Play**: one tap moves life **a year as a kid (to 13), a season from 13** (Auto), or a pinned Month / Season / Year (**Time ▸ Play pace**). Your **Routine** (Life ▸ Today, up to 3 pinned everyday actions in order; empty = your habits) fills all the free time you don't use; Play stops for anything that needs you (reveal, story and legend canon beats, cases, fights, choice events, chapters, the mentor at 15, low health, relationship crises) and crosses no birthday without stopping. Plain steps end on a recap card; big stops keep the full summary. The 3 blocks a month stay as "free time" for special things (fights, dates, moving, opening a business, hanging out). Skip to 15 and Skip to birthday live in the Time sheet.
+- **Engine:** `src/game/flow.ts` (`playStep`, `stepOf`, `stepMonths`, `stepLabel`, `routineOptions`, `setRoutine`, `setPace`, `FLOW_ON`); `monthPlan` puts your routine first; `fastForward` takes `{ settle }` so childhood steps settle small moments like Skip to 15. No fight, training or economy numbers changed. Old saves play on Auto with their habits (`routine` / `pace` optional).
+- **Taps** (engine sims to 60, auto-answering choices): ages 0–12 **13 taps**, 13–17 23–29, 18–29 61–71, 30–44 80–100, 45–59 75–90 (stops included). Before: 12 Next month taps a year plus every choice.
+- **Tests:** +8 (`flow.test.ts`: pace by age and pinned; routine order and cleaning; month pace fills free time; season recap or stop; a Play season equals the fast-forward season (same stats, same RNG); birth to 15 in ≤40 taps with the reveal and the mentor; Spider-Man's canon beats on Play only; old saves). 265 game tests pass.
 
 ### Increment 3: roommates; family estates can't be sold (owner's calls, 00:40)
 
