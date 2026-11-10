@@ -413,8 +413,11 @@ export interface Game {
   routine?: string[];
   /** Life Flow: how far one Play tap goes. "auto" = a year as a kid, a season as a teen, a year from 18. */
   pace?: Pace;
-  /** Life Flow (2026-11-10 eve): Play settles fights you're unlikely to lose and puts them in the recap. Default on. */
+  /** Life Flow: Play settles street fights you're about even with or better and lists them in the recap.
+   *  Opt-in (owner's call, 2026-11-10 late): off unless the player turned it on themselves. */
   autoFights?: boolean;
+  /** The player has flipped the Auto fights switch by hand (so a save migration never overrides their choice). */
+  autoFightsSet?: boolean;
   flags: Record<string, number>;
   card: Card;
   pending: Pending | null;

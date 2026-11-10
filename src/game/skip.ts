@@ -307,12 +307,43 @@ const ARCH_FLAG = "flow:archStop";
 
 const at = (g: Game) => g.age * 12 + (g.month ?? 0);
 
-/** A street fight Play can settle: an outclassed foe always, any non-boss street fight with Auto fights on. */
+/** Is Auto fights on? Only when the player switched it on themselves (opt-in, owner's call 2026-11-10 late). */
+export function autoFightsOn(g: Pick<Game, "autoFights" | "autoFightsSet">): boolean {
+  return g.autoFights === true && g.autoFightsSet === true;
+}
+
+/**
+ * A street fight Play can settle, only with Auto fights on: an outclassed foe ("sure") or one you're about even
+ * with ("auto"). Bosses and tougher foes always stop. With Auto fights off every fight stops for you.
+ */
 function routineFight(g: Game, mini: Game["minigame"]): "sure" | "auto" | null {
+  if (!autoFightsOn(g)) return null;
   if (!mini || mini.kind !== "duel" || mini.tag !== "duel" || !mini.duel || mini.duel.boss) return null;
   const gap = g.stats.powerLevel - (mini.duel.foeLevel ?? 99);
   if (gap >= OUTCLASS_GAP) return "sure";
-  return g.autoFights !== false && gap >= -0.5 ? "auto" : null;
+  return gap >= -0.5 ? "auto" : null;
+}
+
+/** The score Auto-resolve settles a fight at: a little under your usual, but a foe you outclass is a clean win. */
+export function autoResolveRatio(g: Game): number {
+  const d = g.minigame?.duel;
+  const gap = d ? g.stats.powerLevel - (d.foeLevel ?? 99) : -99;
+  return !d?.boss && gap >= OUTCLASS_GAP ? Math.max(autoRatio(g), 0.7) : autoRatio(g);
+}
+
+/** What Auto-resolve would likely give, for the fight card ("Likely a win"). Edges from gear and home can lift it. */
+export function autoResolveOdds(g: Game): "win" | "scrape" | "loss" {
+  const r = autoResolveRatio(g);
+  return r >= 0.66 ? "win" : r >= 0.33 ? "scrape" : "loss";
+}
+
+/** Fight card ▸ Auto-resolve: settle the fight now at the auto score. Doesn't count toward your fighting habit. */
+export function autoResolveFight(g: Game): Game {
+  if (g.phase !== "mini" || g.minigame?.kind !== "duel") return g;
+  const foe = g.minigame.duel?.foeName ?? g.minigame.title;
+  const n = resolveMini(g, autoResolveRatio(g));
+  if (n !== g && n.card) n.card = { ...n.card, body: `Auto-resolved: ${foe}. ${n.card.body}` };
+  return n;
 }
 
 export function settleAdult(g: Game): { g: Game; line: string; fight?: boolean } | null {

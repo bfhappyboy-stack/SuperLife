@@ -86,9 +86,9 @@ export function setPace(g: Game, pace: Pace): Game {
   return { ...g, pace };
 }
 
-/** Auto fights (2026-11-10 eve): off = Play stops for every street fight you aren't sure to win. */
+/** Auto fights (opt-in, 2026-11-10 late): off = Play stops for every street fight and you pick Fight it out or Auto-resolve. */
 export function setAutoFights(g: Game, on: boolean): Game {
-  return { ...g, autoFights: on };
+  return { ...g, autoFights: on, autoFightsSet: true };
 }
 
 function recapCard(start: Game, end: Game, report: SkipReport): Game["card"] {

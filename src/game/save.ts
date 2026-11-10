@@ -63,6 +63,18 @@ function validGame(value: unknown): value is Game {
   return (g.version === 1 || g.version === 2) && typeof g.age === "number" && typeof g.name === "string" && !!g.stats && !!g.card;
 }
 
+/**
+ * Auto fights went opt-in (2026-11-10 late). The eve build only stored the switch when the player flipped it, so
+ * `true` on an old save means they turned it off and on again by hand: keep it. Anything else is off.
+ */
+export function migrateAutoFights(g: Game): Game {
+  if (g.autoFightsSet === true) return g;
+  if (g.autoFights === true) g.autoFightsSet = true;
+  else if (g.autoFights === false) g.autoFightsSet = true;
+  else g.autoFights = false;
+  return g;
+}
+
 function migrate(game: Game): Game {
   const next = game;
   next.version = 2;
@@ -108,6 +120,7 @@ function migrate(game: Game): Game {
     if (next.mastery[id] == null) next.mastery[id] = 0;
   }
   migrateChapters(next);
+  migrateAutoFights(next);
   ensureMarket(next);
   ensureEconomy(next);
   next.difficulty = asDifficulty(next.difficulty ?? DEFAULT_DIFFICULTY);
