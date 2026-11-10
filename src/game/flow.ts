@@ -10,8 +10,8 @@
  * routine minis land a little under your average and fights, stunts and big choices always stop and wait for you.
  */
 import { actionsFor, ageUp, isChatter } from "./engine";
-import { periodReport } from "./economy";
-import { MONTHS } from "./format";
+import { bizById, econOf, periodReport } from "./economy";
+import { firstName, MONTHS } from "./format";
 import { MIX_AGE } from "./mentors";
 import { fastForward, playMonth, ROUTINE, stopFor } from "./skip";
 import type { Game, Pace, SkipReport } from "./types";
@@ -49,16 +49,33 @@ export function stepLabel(g: Game): { title: string; sub: string } {
   return { title: `Play ${from}–${to}`, sub: `${months} months` };
 }
 
-/** Everyday actions you can pin to your routine right now. */
-export function routineOptions(g: Game): { id: string; label: string }[] {
-  return actionsFor(g)
-    .filter((a) => (ROUTINE as readonly string[]).includes(a.id))
-    .map((a) => ({ id: a.id, label: a.label }));
+/** Routine id for working a shift at one of your businesses (2026-11-10 am). */
+export const SHIFT_ROUTINE = "econ|biz|shift|";
+const PEOPLE_ROLES = new Set(["parent", "partner", "child", "friend", "teammate"]);
+
+/** Everyday actions you can pin to your routine right now: habits, a shift at your business, time with someone. */
+export function routineOptions(g: Game): { id: string; label: string; kind?: "work" | "people" }[] {
+  const acts = actionsFor(g);
+  const base = acts.filter((a) => (ROUTINE as readonly string[]).includes(a.id)).map((a) => ({ id: a.id, label: a.label }));
+  const shifts = (econOf(g)?.biz ?? [])
+    .filter((b) => !bizById(b.kind)?.empire && b.cityId === g.cityId)
+    .map((b) => ({ id: `${SHIFT_ROUTINE}${b.uid}`, label: `Shift at ${b.name}`, kind: "work" as const }));
+  const people = acts
+    .filter((a) => a.id.startsWith("time:"))
+    .map((a) => g.relationships.find((r) => `time:${r.id}` === a.id))
+    .filter((p): p is NonNullable<typeof p> => !!p && p.alive && PEOPLE_ROLES.has(p.role))
+    .sort((a, b) => (a.role === "partner" ? -1 : 0) - (b.role === "partner" ? -1 : 0) || b.closeness - a.closeness)
+    .slice(0, 4);
+  // Two people called Wes? Say which.
+  const twice = (name: string) => people.filter((p) => firstName(p.name) === name).length > 1;
+  const rows = people.map((p) => ({ id: `time:${p.id}`, label: `Time with ${firstName(p.name)}${twice(firstName(p.name)) ? ` (${p.role})` : ""}`, kind: "people" as const }));
+  return [...base, ...shifts, ...rows];
 }
 
+const pinnable = (id: string) => (ROUTINE as readonly string[]).includes(id) || id.startsWith("time:") || id.startsWith(SHIFT_ROUTINE);
+
 export function setRoutine(g: Game, ids: string[]): Game {
-  const allowed = new Set<string>(ROUTINE);
-  const clean = [...new Set(ids)].filter((id) => allowed.has(id)).slice(0, ROUTINE_MAX);
+  const clean = [...new Set(ids)].filter(pinnable).slice(0, ROUTINE_MAX);
   return { ...g, routine: clean };
 }
 

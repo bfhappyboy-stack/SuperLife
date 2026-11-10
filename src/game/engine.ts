@@ -1,5 +1,5 @@
 import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
-import { ECON_FLAGS, econAct, econRelocate, economyMonth, ensureEconomy, homeEdge, noteFight } from "./economy";
+import { bizFightEdge, ECON_FLAGS, econAct, econRelocate, economyMonth, ensureEconomy, homeEdge, noteFight, spendBizEdge } from "./economy";
 import { library, notePage } from "./library";
 import {
   CITIES,
@@ -2581,6 +2581,15 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   const edge = marketEdge(d, spec.kind);
   const homeBonus = homeEdge(d, edgeFamily(spec.kind));
   if (homeBonus > 0) edge.bonus = Math.min(0.3, edge.bonus + homeBonus);
+  const villainFight = spec.kind === "duel" && spec.duel?.foeSide === "villain";
+  if (villainFight) {
+    const biz = bizFightEdge(d);
+    if (biz.bonus > 0) {
+      edge.bonus = Math.min(0.3, edge.bonus + biz.bonus);
+      edge.notes.push(...biz.notes);
+      spendBizEdge(d);
+    }
+  }
   const score = clamp(ratio + edge.bonus, 0, 1);
   const win = score >= 0.66;
   const partial = !win && score >= 0.33;

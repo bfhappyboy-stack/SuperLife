@@ -9,6 +9,7 @@
  */
 import { act, actionsFor, ageUp, choose, focusId, isChatter, resolveMini } from "./engine";
 import { getPower } from "./combo";
+import { econOf } from "./economy";
 import { masteryLevel, powerRank } from "./mastery";
 import { firstName } from "./format";
 import { MIX_AGE } from "./mentors";
@@ -116,8 +117,15 @@ export function monthPlan(g: Game, used: Record<string, number> = {}): { id: str
       const score = base > 0 ? base + (h.acts[a.id] ?? 0) * 0.7 - (used[a.id] ?? 0) * SKIP_REPEAT_COST : 0;
       return { id: a.id, label, score: base > 0 ? Math.max(0.01, score) : 0 };
     })
-    .filter((row) => row.score > 0)
-    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+    .filter((row) => row.score > 0);
+  // A pinned shift at your own business (Life Flow routine slot; not an everyday action in the list).
+  (g.routine ?? []).forEach((id, pinned) => {
+    if (!id.startsWith("econ|biz|shift|")) return;
+    const biz = econOf(g)?.biz?.find((b) => b.uid === id.split("|")[3] && b.cityId === g.cityId);
+    if (!biz || g.majorsLeft <= 0) return;
+    rows.push({ id, label: `Shift at ${biz.name}`, score: Math.max(0.01, 12 - pinned * 2.5 - (used[id] ?? 0) * SKIP_REPEAT_COST) });
+  });
+  rows.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
   return rows.map(({ id, label }) => ({ id, label }));
 }
 
@@ -135,6 +143,8 @@ function subDefault(g: Game, pid: string): string {
 function tryAction(g: Game, id: string, ratio?: number): Game | null {
   let n = act(g, id);
   if (n === g) return null;
+  // Money actions answer "not now" with a banner instead of refusing; only a spent block counts.
+  if (id.startsWith("econ|") && n.majorsLeft >= g.majorsLeft) return null;
   for (let i = 0; i < 3 && n.phase === "choice" && n.pending && n.pending.id in SUBCHOICE_DEFAULT; i++) {
     const pid = n.pending.id;
     const want = habitsOf(g).picks[pid];

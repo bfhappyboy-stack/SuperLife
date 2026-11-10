@@ -1428,6 +1428,8 @@ export interface BizDef {
   upgrades: BizUpgrade[];
   /** A legend's family company: run by a board, pays the owner a draw. */
   empire?: { stock: string; draw: number };
+  /** Hero tie-in shown on the card (2026-11-10 am). */
+  perk?: string;
 }
 
 export const BIZ: BizDef[] = [
@@ -1459,7 +1461,7 @@ export const BIZ: BizDef[] = [
     ],
   },
   {
-    id: "security", name: "Security firm", blurb: "Guards, cameras and a hotline for when the hero is late.", cost: 420000, minAge: 21, rev: 75000, cogs: 0.25, staff: 8, wage: 4300, premises: 8000,
+    id: "security", name: "Security firm", blurb: "Guards, cameras and a hotline for when the hero is late.", perk: "at 50+ reputation it passes you villain leads (+4% in your next villain fight).", cost: 420000, minAge: 21, rev: 75000, cogs: 0.25, staff: 8, wage: 4300, premises: 8000,
     demand: { key: "s:CAPE", sens: 0.5 },
     upgrades: [
       { id: "drones", name: "Patrol drones", blurb: "Eyes on every roof.", cost: 120000, rev: 0.2, rep: 6 },
@@ -1468,7 +1470,7 @@ export const BIZ: BizDef[] = [
     ],
   },
   {
-    id: "startup", name: "Tech start-up", blurb: "Six engineers, one whiteboard, a pitch about \"hero logistics\".", cost: 800000, minAge: 22, rev: 118000, cogs: 0.1, staff: 10, wage: 7200, premises: 12000,
+    id: "startup", name: "Tech start-up", blurb: "Six engineers, one whiteboard, a pitch about \"hero logistics\".", perk: "at 50+ reputation R&D sends prototypes (+3% in a villain fight, hold 2).", cost: 800000, minAge: 22, rev: 118000, cogs: 0.1, staff: 10, wage: 7200, premises: 12000,
     demand: { key: "g:chips", sens: -0.3 },
     upgrades: [
       { id: "ai", name: "AI lab", blurb: "It predicts villain attacks. Mostly.", cost: 300000, rev: 0.3, staff: 3 },
@@ -1647,6 +1649,8 @@ export function bizMonth(g: Game, e: EconState, add: (label: string, amount: num
     if (b.pl.length > BIZ_HIST) b.pl.splice(0, b.pl.length - BIZ_HIST);
     b.red = books.profit < 0 ? (b.red ?? 0) + 1 : 0;
     if (b.red === 3) banners.push(`${b.name} has lost money three months running. Trim staff, upgrade, or sell: Work ▸ Money ▸ Business.`);
+    const tie = bizTieIn(g, e, b, now);
+    if (tie) banners.push(tie);
   }
   return banners;
 }
@@ -1706,8 +1710,9 @@ export function bizAct(g: Game, e: EconState, verb: string, a: string, b: string
       if (!biz || !def || def.empire) return { ok: false, line: "Not possible." };
       if (biz.cityId !== g.cityId) return { ok: false, line: "That business is in another city." };
       if (movesLeft <= 0) return { ok: false, line: "No free time left this month." };
-      biz.rep = Math.min(100, biz.rep + 6);
-      return { ok: true, spend: true, line: `You work a shift at ${biz.name}. Customers notice the owner behind the counter (+6 reputation).` };
+      const gain = shiftGain(biz.rep);
+      biz.rep = Math.min(100, biz.rep + gain);
+      return { ok: true, spend: true, line: `You work a shift at ${biz.name}. Customers notice the owner behind the counter (+${gain} reputation).` };
     }
     case "sell": {
       if (!biz || !def || def.empire) return { ok: false, line: def?.empire ? "The family company isn't for sale." : "Not possible." };
@@ -2055,4 +2060,60 @@ export function periodReport(g: Game, sinceAt: number): PeriodReport | null {
   const before = worthHist.length > n ? worthHist[worthHist.length - 1 - n]! : worthHist[0] ?? worth;
   if (!groups.length && !movers.length && !headlines.length) return null;
   return { months: n, net, groups, movers, headlines, worth, worthDelta: Math.round(worth - before) };
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Hero tie-ins (2026-11-10 am): your businesses help the double life.
+// ---------------------------------------------------------------------------------------------------------
+
+/** Reputation from working a shift yourself: +6 at a new place, less the better it's known (min +1). */
+export function shiftGain(rep: number): number {
+  return Math.max(1, Math.min(6, Math.round((6 * (100 - rep)) / 60)));
+}
+
+/** Monthly chance a well-run security firm passes you a lead, or a tech start-up's R&D sends a prototype. */
+export const LEAD_CHANCE = 0.22;
+export const GADGET_CHANCE = 0.15;
+export const LEAD_EDGE = 0.04;
+export const GADGET_EDGE = 0.03;
+export const TIE_IN_REP = 50;
+const GADGETS = ["a grapple-line prototype", "a smart-lens HUD", "kinetic dampers", "a sonic flare", "a spotter drone", "a jammer the size of a coin"];
+
+function bizTieIn(g: Game, e: EconState, b: Biz, now: number): string | null {
+  if (b.cityId !== g.cityId || b.rep < TIE_IN_REP || g.age < 16) return null;
+  if (b.kind === "security" && !g.flags.lead && hash(e.seed, now, b.uid, "lead") < LEAD_CHANCE) {
+    const foes = g.relationships.filter((r) => r.role === "villain" && r.alive);
+    const foe = foes[Math.floor(hash(e.seed, now, "leadfoe") * foes.length)];
+    const dist = pickDistrict(e, marketCity(g.cityId), `lead${now}`);
+    g.flags.lead = 1;
+    return `${b.name} passes you a lead: ${foe ? foe.note || foe.name : "a crew"} was seen in ${dist.name}. Your next villain fight starts +${Math.round(LEAD_EDGE * 100)}%.`;
+  }
+  if (b.kind === "startup" && (g.flags.gadget ?? 0) < 2 && hash(e.seed, now, b.uid, "gadget") < GADGET_CHANCE) {
+    g.flags.gadget = (g.flags.gadget ?? 0) + 1;
+    const gadget = GADGETS[Math.floor(hash(e.seed, now, "gadgetname") * GADGETS.length)] ?? GADGETS[0]!;
+    return `${b.name}'s R&D sends over ${gadget}. +${Math.round(GADGET_EDGE * 100)}% in a villain fight (${g.flags.gadget}/2 ready).`;
+  }
+  return null;
+}
+
+/** Fight edge from your firm's lead and your start-up's gadgets. Read before a villain fight resolves. */
+export function bizFightEdge(g: Game): { bonus: number; notes: string[] } {
+  const notes: string[] = [];
+  let bonus = 0;
+  if (g.flags.lead) {
+    bonus += LEAD_EDGE;
+    notes.push("Your firm's lead paid off.");
+  }
+  if ((g.flags.gadget ?? 0) > 0) {
+    bonus += GADGET_EDGE;
+    notes.push("A prototype from your start-up came in handy.");
+  }
+  return { bonus, notes };
+}
+
+/** The lead and one gadget are used up by the fight. */
+export function spendBizEdge(g: Game): void {
+  delete g.flags.lead;
+  if ((g.flags.gadget ?? 0) > 1) g.flags.gadget = (g.flags.gadget ?? 0) - 1;
+  else delete g.flags.gadget;
 }
