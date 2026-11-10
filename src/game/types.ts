@@ -403,6 +403,10 @@ export interface Game {
   focusPower: string | null;
   story: StoryState;
   majorsLeft: number;
+  /** Life Flow: up to 3 everyday actions that fill the free time you don't spend yourself (in order). */
+  routine?: string[];
+  /** Life Flow: how far one Play tap goes. "auto" = a year as a kid, a season from 13. */
+  pace?: Pace;
   flags: Record<string, number>;
   card: Card;
   pending: Pending | null;
@@ -455,6 +459,8 @@ export interface Habits {
 }
 
 export type SkipSpan = "season" | "year" | "fifteen";
+
+export type Pace = "auto" | "month" | "season" | "year";
 
 export type SkipStopKind = "reveal" | "story" | "chapter" | "case" | "event" | "fight" | "health" | "bond" | "death" | "mentor";
 

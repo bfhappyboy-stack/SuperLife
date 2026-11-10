@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import { act, ageUp, applyHeroTalk, choose, createGame, dismissReveal, freshen, heirFrom, resolveMini, type NewLifeOpts } from "./engine";
 import { dismissSkip, fastForward, noteAct, noteMini, notePick } from "./skip";
+import { playStep, setPace, setRoutine } from "./flow";
 import { presetById } from "./presets";
 import { deleteSlot, firstEmptySlot, listSlots, loadScores, loadSlot, migrateLegacySave, pushScore, readIndex, saveScores, saveSlot, setActiveSlot, type ScoreRow, type SlotSummary } from "./save";
 import { payPurse, type PurseInput, type PurseQuote } from "./arena.purse";
 import { applyChapterText, type ChapterText } from "./chapters";
-import type { Game, GameMode, SkipSpan } from "./types";
+import type { Game, GameMode, Pace, SkipSpan } from "./types";
 
 type Screen = "title" | "lives" | "mode" | "god" | "create" | "play" | "arena";
 
@@ -40,6 +41,10 @@ interface Store {
   age: () => void;
   /** Fast-forward a season or to your next birthday; stops if something needs you. */
   skip: (span: SkipSpan) => void;
+  /** Life Flow: one Play step (routine fills free time; stops for what needs you). */
+  play: () => void;
+  setPace: (pace: Pace) => void;
+  setRoutine: (ids: string[]) => void;
   closeSkip: () => void;
   dismissChapter: () => void;
   showChapter: (index: number) => void;
@@ -173,6 +178,21 @@ export const useGame = create<Store>((set, get) => ({
     const game = get().game;
     if (!game) return;
     commit(set, get, fastForward(freshen(game), span));
+  },
+  play: () => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get, playStep(freshen(game)));
+  },
+  setPace: (pace) => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get, setPace(game, pace));
+  },
+  setRoutine: (ids) => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get, setRoutine(game, ids));
   },
   closeSkip: () => {
     const game = get().game;

@@ -23,7 +23,7 @@ export const SKIP_MINI_TAX = 0.08;
 export const SKIP_MINI_RANGE = [0.3, 0.72] as const;
 
 /** Everyday actions fast-forward is allowed to play. Fights, stunts, crime, tryouts and moves stay yours. */
-const ROUTINE = ["train", "omen", "class", "shift", "books", "gym", "hobby", "volunteer", "confide", "befriend", "city-walk"] as const;
+export const ROUTINE = ["train", "omen", "class", "shift", "books", "gym", "hobby", "volunteer", "confide", "befriend", "city-walk"] as const;
 const SUBCHOICE_DEFAULT: Record<string, string> = { gym: "lift", books: "library", hobby: "music", volunteer: "tutor", out: "quiet" };
 const SAFE_ROLES = new Set<Person["role"]>(["parent", "partner", "child", "friend", "teammate"]);
 const CRISIS_ROLES = new Set<Person["role"]>(["parent", "partner", "child"]);
@@ -107,7 +107,11 @@ export function monthPlan(g: Game, used: Record<string, number> = {}): { id: str
   const rows = actionsFor(g)
     .filter((a) => !a.disabled && ((ROUTINE as readonly string[]).includes(a.id) || a.id.startsWith("time:")))
     .map((a) => {
-      const base = a.id.startsWith("time:") ? timeWeight(g, a.id) : defaultWeight(g, a.id);
+      const pinned = (g.routine ?? []).indexOf(a.id);
+      const natural = a.id.startsWith("time:") ? timeWeight(g, a.id) : defaultWeight(g, a.id);
+      // Your routine comes first, in your order; everything else is a quiet fallback.
+      // (Training still waits when you're worn down.)
+      const base = pinned >= 0 ? (a.id === "train" && g.stats.health < SKIP_TRAIN_FLOOR ? 0 : 12 - pinned * 2.5) : (g.routine?.length ? natural * 0.35 : natural);
       const label = a.id.startsWith("time:") ? `Time with ${firstName(g.relationships.find((r) => `time:${r.id}` === a.id)?.name ?? "family")}` : a.label;
       const score = base > 0 ? base + (h.acts[a.id] ?? 0) * 0.7 - (used[a.id] ?? 0) * SKIP_REPEAT_COST : 0;
       return { id: a.id, label, score: base > 0 ? Math.max(0.01, score) : 0 };
@@ -275,7 +279,7 @@ export function settleSmall(g: Game): { g: Game; line: string } | null {
   return { g: best.g, line: `${short} → ${best.label}` };
 }
 
-export function fastForward(game: Game, span: SkipSpan): Game {
+export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean } = {}): Game {
   if (game.phase !== "live" || game.reveal) return game;
   const start = structuredClone(game);
   start.skipReport = null;
@@ -292,7 +296,8 @@ export function fastForward(game: Game, span: SkipSpan): Game {
   let g = start;
   let stop: SkipReport["stop"] = null;
   let passed = 0;
-  const fifteen = span === "fifteen";
+  // Skip to 15 (and childhood Play steps) settle small everyday moments for you.
+  const fifteen = span === "fifteen" || !!opts.settle;
   let handled = 0;
   // Skip to 15 settles small everyday moments for you; anything bigger still stops the skip.
   const settle = (cur: Game, why: SkipReport["stop"]): Game | null => {
