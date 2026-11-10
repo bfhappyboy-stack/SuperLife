@@ -3,6 +3,7 @@ import { getPower, legacyComboId } from "./combo";
 import { ensureWardrobe } from "./costume";
 import { migrateChapters } from "./chapters";
 import { ensureMarket } from "./market";
+import { ensureEconomy } from "./economy";
 import { clamp } from "./format";
 import { mergeHeroes } from "./heroes";
 import { resolveLook } from "./look";
@@ -108,6 +109,7 @@ function migrate(game: Game): Game {
   }
   migrateChapters(next);
   ensureMarket(next);
+  ensureEconomy(next);
   next.difficulty = asDifficulty(next.difficulty ?? DEFAULT_DIFFICULTY);
   const rg = next.regroup as unknown;
   if (rg !== undefined && rg !== null && !(typeof rg === "object" && typeof (rg as { name?: unknown }).name === "string" && typeof (rg as { until?: unknown }).until === "number")) next.regroup = null;

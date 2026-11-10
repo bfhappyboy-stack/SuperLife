@@ -1,4 +1,5 @@
 import type { MarketState } from "./market";
+import type { EconState } from "./economy";
 import type { MiniKind, MiniVerb, SkillKind } from "./minis";
 import type { Chapter, ChapterNotice } from "./chapters";
 export type PowerId =
@@ -418,6 +419,8 @@ export interface Game {
   chapterNotice?: ChapterNotice | null;
   /** What you own and what the market remembers. Optional for old saves. */
   market?: MarketState;
+  /** Living economy: moving markets, housing, portfolio (economy.ts). Optional for old saves (ensureEconomy). */
+  economy?: EconState;
   /** After a boss loss: that boss can't be rematched until this month index (age × 12 + month). Optional for old saves. */
   regroup?: { name: string; until: number } | null;
   /** "mystery" (the default for new lives) or "god". Missing on classic saves. */
