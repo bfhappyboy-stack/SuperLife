@@ -203,6 +203,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - **Diminishing returns everywhere:** trading fees + slippage, rent renewals capped ±8%/yr, lending capped by income, upkeep scales with value, one fight shock a month.
 - **Wages are monthly** when the hub is on. Legend starts: Wayne Manor and Stark Mansion are estates (no upkeep), their company shares sit in trust (no sale, no dividends) until 18 / 21.
 - The old Market keeps engine items (tests, saves); the UI calls it Shop and its property tab Bases.
+- **Roommates (increment 3):** spare rooms by tier; equal rent split on a lease, a room's rent in an owned home; they cost Cover (eyes on the double life) and bring trait perks, monthly closeness and small events; a nosy one can find the suit (kept if close, told if not). Family estates are never for sale.
 - **Businesses (increment 2):** six data-driven kinds (truck → newspaper), max three. Books each month = revenue (city × staff factor × upgrades × reputation × market demand × 6-month ramp) − supplies − wages − premises − upkeep. Staff factor has diminishing returns; sale ≈ 2 years of profit (floor: half invested). Legend companies (Wayne Enterprises, Stark Industries) are board-run: no staff, a chair's draw tied to the share price, locked until 18 / 21, not for sale.
 
 ## Existing extras (built, not in the original design)

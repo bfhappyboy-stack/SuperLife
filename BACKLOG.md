@@ -7,7 +7,7 @@
 - **Business next:** named staff with traits (a manager who runs it when you move city), random events (inspection, robbery during a villain fight, viral review), franchising a second site; hero tie-ins (your security firm gets League contracts as your rank rises; the newspaper prints your fights).
 - **Rent burden in NYC is heavy** for a low-wage adult (even a Queens tiny flat is ~$1k/mo at market rent). Intended pressure, but watch playtests; a roommate option or a housing allowance from the League are candidates.
 - **The old Market's homes** (studio, brownstone, rental, penthouse) are hidden from the Shop for new purchases; owned ones keep working. Candidate: migrate them into real homes in the hub.
-- **Selling Wayne Manor is allowed** (for $13M+). Candidate: lock legend estates or make it a story beat.
+- **Done (increment 3):** ~~Selling Wayne Manor is allowed~~ — family estates are locked (owner's call). Roommates shipped (owner's call). Next for roommates: a roommate romance path, roommate-specific story chains (Rosa's cape exposé), and a "roommate wanted" ad that picks traits.
 - **Markets lack a "since you bought" alert** and a watchlist; candidate push banner when a holding moves ±15% in a month.
 
 ## From the 2026-11-09 night pass (in progress)
