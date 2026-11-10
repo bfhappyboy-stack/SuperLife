@@ -4,6 +4,19 @@
 
 Built on `origin/devbot/2026-11-10-am` (334053c). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 2: managers, crew morale, things that happen at your business, fights that reach it
+
+- **Why (playtest + owner's spec):** a café sat at reputation 40 for 17 years with nothing happening to it, and kept selling at full speed after you moved city. The spec asks for managers, staff morale / skills, rivals and scandals, expansion to other cities and hero tie-ins.
+- **Managers (`MANAGERS`, `mgrCandidates`, `mgrWage`):** Business ▸ a card ▸ **Hire** shows three people (the list changes each season), each with one clear trait: **Steady** (crew morale +15), **Hustler** (sales +8%, morale −5), **Penny-wise** (supplies −15%), **Fixer** (bad news hits half as hard). A manager costs ~7% of the place's base sales a month (min $1,200; café $2,280 in Metro), keeps reputation up (+8 toward its target) and **runs it while you're away**. Let go any time (−5 morale).
+- **Expansion to other cities:** businesses stay where you opened them. Moving city with an unmanaged one says so ("Reyes's café stays behind with nobody in charge (sales −20%). Hire a manager…"): away and unmanaged it sells 20% less and reputation and morale slide; with a manager it holds. Opening the same kind again in your new city was already allowed (three max).
+- **Crew morale (one bar, "CREW"):** 70 is neutral (old tuning unchanged); it drifts toward a target set by staffing (short-staffed drags it down up to −30), the manager's trait, a proud name (rep 70+) and whether anyone is in charge, and the card says the main reason ("Grumbling · falling: short-staffed"). Sales move ±0.4% a point (Ready to walk ~−16%, Fired up ~+8%). Working a shift yourself lifts it +3.
+- **Things happen (`bizEvent`, ~0.85 a year per business, deterministic, never the engine dice):** a viral moment (+6 rep and a little cash, per kind: "a latte-art video goes viral", "a kid trained at your gym wins the Golden Gloves"), a big order (precinct coffee, a gala hires every guard), an inspection (fine, or a clean pass at rep 70+), **a rival opens two blocks away** (sales −12% for 6 months, −6% if you're well known; each shift you work wins a month back), a **scandal** (−8 rep, morale dips), and **staff walking out** when morale is low. At most one every four months, never the same twice running. The latest shows on the card, coloured.
+- **Fights reach your businesses (`noteFight`):** a villain win brings foot traffic (+2 rep at your businesses in the city); a loss can mean looters at one of them (~8% of a month's sales), unless **your own security firm** (rep 50+) has guards on the block.
+- **Polish:** an upgrade you buy pops in gold ("Upgraded!", with a haptic buzz); a brand-new business shows where it's heading ("+$1,643 once it finds its feet") instead of a red half-empty first month.
+- **Balance:** events net ~+4% of profit on average (café $2.5k/mo profit, +$100/mo from events over 60 business-years); legend companies and fight sims are untouched.
+- **Saves:** old businesses load with morale 70, an empty log and no manager.
+- **Tests:** +6 (`life.test.ts`: managers and their wage, moving city with and without one, morale from short staff and back, the event pool over 40 business-years, fights reaching businesses and the security-firm guard, old saves). 280 game tests pass.
+
 ### Increment 1: playtest; per-life markets; the squeeze hint
 
 - **Playtest** (PLAYTEST.md): Play-only sims of three money lives to 30–40 and phone screens of the hub.

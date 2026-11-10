@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-10 pm pass
+
+- **Done:** per-life markets and the squeeze hint (increment 1); managers, crew morale, business events, fights reaching your businesses, upgrade fanfare (increment 2).
+- **Decided:** $700 living cost stays (cheap-city low wages stay positive; New York shop work is a squeeze, now explained with a way out). Play stop rules stay (~1.5 extra stops a year as an adult).
+- **Next for businesses:** a second site of the same business (franchise) as an upgrade; named staff beyond the manager; the newspaper printing your fights.
+
 ## From the 2026-11-10 am pass
 
 - **Done:** cost of living + shift trim (increment 1), money report on every Play step + cash ticker (2), routine slots for shifts and people + security / start-up tie-ins (3).
