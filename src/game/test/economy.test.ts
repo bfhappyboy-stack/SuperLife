@@ -3,9 +3,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { act, ageUp, createGame, resolveMini } from "../engine.ts";
 import {
+  livingCosts,
+  roomsHere,
+  LIVING_BASE,
   allSeries, annualWage, ARREARS_LIMIT, CITY_PROP, DISTRICTS, econOf, economyMonth, ensureEconomy, GOODS, HOME_MODS, homePrice, HOMES, homeEdge,
   homeValue, livingOf, marketRent, maxBuy, maxLoan, mortgagePayment, NEWS, netWorth, noteFight, quoteHome, quoteRent, quoteTrade, SELL_FEE,
-  stockById, stockPrice, STOCKS, tradeFee, goodById,
+  stockById, stockPrice, STOCKS, tradeFee, goodById, districtsOf,
 } from "../economy.ts";
 import { CITIES } from "../data.ts";
 import type { Game } from "../types.ts";
@@ -185,8 +188,9 @@ test("renting: deposit + first month up front, rent every month, three months in
   assert.equal(g.stats.money, 5_000 - q.cash);
   assert.equal(livingOf(g).kind, "lease");
   const m0 = g.stats.money;
+  const living = Math.min(livingCosts(g), m0);
   g = month(g);
-  assert.equal(g.stats.money, m0 - q.rent, "no wage: rent comes straight out");
+  assert.equal(g.stats.money, m0 - q.rent - living, "no wage: rent and living costs come straight out");
   g.stats.money = -100;
   for (let i = 0; i < ARREARS_LIMIT - 1; i++) {
     g = month(g);
@@ -204,8 +208,10 @@ test("wages arrive monthly and the birthday no longer pays the job twice", () =>
   g.stats.happiness = 70;
   const wage = annualWage(g);
   assert.equal(wage, 42_000);
+  g.stats.money = 10_000;
+  const living = livingCosts(g);
   g = month(g);
-  assert.equal(g.stats.money, 3_500);
+  assert.equal(g.stats.money, 10_000 + 3_500 - living);
   // A full year through the engine: about one year's wage, not two.
   let h = adult(25, 0);
   h.jobId = "office";
@@ -216,7 +222,7 @@ test("wages arrive monthly and the birthday no longer pays the job twice", () =>
     if (h.phase === "choice") h = { ...h, phase: "live", pending: null };
     if (h.phase === "mini") h = resolveMini(h, 0.7);
   }
-  assert.ok(h.stats.money < wage * 1.6 && h.stats.money > wage * 0.5, `year money ${h.stats.money}`);
+  assert.ok(h.stats.money < wage * 1.6 && h.stats.money > wage * 0.3, `year money ${h.stats.money}`);
 });
 
 test("letting: tenants pay most months; you can't let the home you live in", () => {
@@ -334,6 +340,12 @@ test("Wayne Manor and Stark Mansion are family estates: never for sale", () => {
   const after = act(bruce, `econ|sell|${manor.uid}`);
   assert.match(after.card.banner[0]!, /family estate/);
   assert.equal(econOf(after)!.homes.length, 1);
+  {
+    const bruce = createGame({ ...BASE, mode: "god", preset: "batman" } as never);
+    bruce.age = 25;
+    ensureEconomy(bruce);
+    assert.equal(roomsHere(bruce), 0, "estates take no roommates");
+  }
 });
 
 test("roommates: split the rent, live in People, change how home feels, and stay behind when you move", async () => {
@@ -407,4 +419,47 @@ test("roommates: nosy ones may find the suit — a close one keeps it, a strange
   }
   assert.ok(kept, "a close roommate keeps the secret");
   assert.ok(told, "a stranger panics and moves out");
+});
+
+test("cost of living: from 18, priced by city and income, half at home, kids add, never below $0 on its own (2026-11-10 am)", () => {
+  const kid = adult(16, 5_000);
+  assert.equal(livingCosts(kid), 0, "kids don't pay");
+  const metro = adult(25, 5_000, { cityId: "metro" } as never);
+  const nyc = adult(25, 5_000, { cityId: "nyc" } as never);
+  const dust = adult(25, 5_000, { cityId: "dust" } as never);
+  for (const g of [metro, nyc, dust]) g.relationships = g.relationships.filter((r) => r.role !== "parent");
+  assert.ok(livingCosts(nyc) > livingCosts(metro) && livingCosts(metro) > livingCosts(dust), "city prices");
+  assert.ok(livingCosts(dust) >= LIVING_BASE * 0.7, `dust ${livingCosts(dust)}`);
+  const paid = structuredClone(metro);
+  paid.jobId = "office";
+  assert.ok(livingCosts(paid) > livingCosts(metro), "lifestyle creeps up with pay");
+  assert.ok(livingCosts(paid) - livingCosts(metro) < annualWage(paid) / 12 / 2, "but never eats most of the raise");
+  const home = adult(25, 5_000, { cityId: "metro" } as never);
+  assert.ok(home.relationships.some((r) => r.role === "parent" && r.alive));
+  assert.ok(Math.abs(livingCosts(home) - livingCosts(metro) / 2) <= 10, "half at the family home");
+  const parent = structuredClone(metro);
+  parent.relationships.push({ ...structuredClone(parent.relationships[0] ?? home.relationships[0]!), id: "kid1", role: "child", age: 4, alive: true } as never);
+  assert.ok(livingCosts(parent) > livingCosts(metro), "children cost");
+  let broke = structuredClone(metro);
+  broke.stats.money = 300;
+  broke = month(broke);
+  assert.equal(broke.stats.money, 0, "you scrape by: living costs stop at $0");
+  const line = econOf(broke)!.last!.lines.find((l) => l.label === "Living costs");
+  assert.equal(line?.amount, -300);
+});
+
+test("a desk job with a heavy shift every month saves, but doesn't bank a fortune (2026-11-10 am)", () => {
+  let g = adult(22, 6_000, { cityId: "metro" } as never);
+  g.relationships = g.relationships.filter((r) => r.role !== "parent");
+  g.jobId = "office";
+  g = act(g, "econ|rent|flat|" + districtsOf("metro")[1]!.id);
+  const start = g.stats.money;
+  for (let i = 0; i < 120; i++) {
+    g.majorsLeft = 3;
+    g.flags.shifted = 0;
+    g = act(g, "shift");
+    g = month(g);
+  }
+  const perYear = (g.stats.money - start) / 10;
+  assert.ok(perYear > 5_000 && perYear < 30_000, `saves ${Math.round(perYear)} a year`);
 });

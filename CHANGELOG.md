@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-10 (am): playtest fixes, money reports, Life Flow polish (`devbot/2026-11-10-am`)
+
+Built on `origin/devbot/2026-11-10-night` (aae1d85). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: cost of living, a fairer heavy shift, your six stays yours, estates take no lodgers
+
+- **Why (playtest):** a Metro office worker on Play only banked **$759k by 28 and $1.8M by 40**. There was no cost of living at all, and Life Flow ran "Work a heavy shift" (8% of a year's pay, once a month) every month, nearly doubling pay. Money stopped meaning anything.
+- **Cost of living (`livingCosts`, economy.ts):** a monthly **Living costs** line from 18: $700 × city price level, plus 25% of a monthly wage (lifestyle creep), plus $350 per child under 18; half at the family home or a family estate. It never pushes you below $0 by itself (you scrape by; rent and mortgages can still sink you).
+- **Heavy shift:** 8% → **3%** of the yearly wage (`SHIFT_SHARE`, engine.ts). Same joy cost.
+- **Result (same sim, seed 3/4):** cash at 28 $759k → **$324k**; a desk job plus a heavy shift every month in a tiny flat now saves ~$15–25k a year (tested band $5–30k).
+- **Six-move bug:** dropping your only guard on purpose was undone by the next action's style top-up. A six you arranged by hand (`handSix`) is now left alone; the balancer still fixes auto-filled sixes and pruned slots. (Found because the loadout fixture life changed.)
+- **Manor roommates (open question, decided):** family estates (Wayne Manor, Stark Mansion) take **no roommates**: the secret under the house and the staff who keep it. Rented and bought homes keep them.
+- **Tests:** +2 (cost of living by city, income, home, children and the $0 floor; a desk job's savings band) and an estate check. 267 game tests pass.
+
 ## 2026-11-10 (night): a living economy (Money & Life hub, markets, homes, businesses, roommates) and Life Flow (`devbot/2026-11-10-night`)
 
 Built on `origin/main` (8d5ade2). Typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push. Old saves migrate (`ensureEconomy` in `migrate`).

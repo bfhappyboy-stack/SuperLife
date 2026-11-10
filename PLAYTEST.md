@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-10 am): Money hub and Life Flow as a first-time player
+
+**Played:** engine sims on Play only (seeds 3 and 4: a Metro mystery hero, office job at 18, tiny flat at 19, Oscorp shares at 22, a café or truck at 23, to 40), a 9-year-old on Play, Bruce Wayne at 25, and old saves (night-adult24, night-kid12, night-spidey16, nn-cold: all load, get an economy and Play on). Phone screens at 390×844: `/workspace/shots-2026-11-10-am/`.
+
+**Findings (before fixes):**
+- **Money runs away (fixed, increment 1):** $759k cash at 28 and $1.8M at 40 on a $42k desk job. No cost of living existed, and the routine worked a heavy shift (8% of a year's pay) every month. Now $324k at 28; ~$15–25k saved a year.
+- **Recaps read as noise:** a Play season's card leads with rival-hero ticker lines ("Afterimage: sponsoring a cereal that hates them") in bold, and the money line sits at the end of a truncated body. The kid's year card "Meanwhile" is all ticker lines.
+- **Adult Play stops a lot:** 173–180 taps from 0 to 40 on seed 3/4; most adult steps stop after 1–2 months for an event. Fine (events need you), but each stop card should still say what the months did to your money.
+- **Six-move reshuffle (fixed):** dropping your only guard by hand got undone by the next action's top-up.
+- **Money hub on a phone:** the net-worth card, ticker and tabs fit; the Business tab content starts below the fold; Bruce's sparkline is red-jagged even while net worth climbs (it scales to the last 24 months).
+
 ## Night pass (2026-11-10 night): living economy — engine sims and phone check
 
 - **Metro office worker** (mystery, rents a tiny flat at 21, buys one at 28–30 with 20% down, puts 40% of spare cash into Oscorp at 26): nets ~+$1.6k a month at 31 with a $1.6k mortgage, no arrears to 80; portfolio swings ±$30k a month in volatile years, which reads well in the "on paper" line.
