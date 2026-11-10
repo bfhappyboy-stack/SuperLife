@@ -4,6 +4,12 @@
 
 Built on `origin/devbot/2026-11-10-am` (334053c). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 4: business news rides on every Play card
+
+- **Why:** a Play season that stopped for a choice dropped the banners from the months before it, so 3 in 12 business events (a viral video, an inspection fine) never reached the player.
+- **What:** the money report (`periodReport` → `biz`) now carries what happened at your businesses during the step, newest first (up to two), in a tinted row with a shop icon, above the city headlines; the same line isn't repeated in the card's banner. In a 60-tap sim every business event reached a Play card (12 / 12, was 9 / 12).
+- **Tests:** +1 (the newest business news is always in the period's report, and nothing when nothing happened). 281 game tests pass.
+
 ### Increment 3: the Money hub fits a phone, and every result shows where you are
 
 - **Why (playtest):** at 390×844 the hub's tab content started below the Play bar: the month card, the desk's one-line description, the net-worth card and the news ticker all sat above the tabs; and an action's result line appeared above the tabs, off screen when you'd scrolled down to a business card.
