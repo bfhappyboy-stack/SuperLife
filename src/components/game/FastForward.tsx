@@ -302,10 +302,12 @@ const PACES: { id: Pace; label: string; sub: string }[] = [
   { id: "year", label: "Year", sub: "To birthday" },
 ];
 
-/** How far one Play tap goes. Auto: a year as a kid, a season from 13. */
+/** How far one Play tap goes. Auto: a year as a kid, a season as a teen, a year from 18. Plus Auto fights. */
 function PacePicker({ game, onPick }: { game: Game; onPick: (pace: Pace) => void }) {
   const cur = game.pace ?? "auto";
-  const auto = game.age < KID_UNTIL ? "a year per tap until 13" : "a season per tap";
+  const auto = game.age < KID_UNTIL ? "a year per tap until 13" : game.age < 18 ? "a season per tap until 18" : "a year per tap";
+  const setAutoFights = useGame((s) => s.setAutoFights);
+  const autoFights = game.autoFights !== false;
   return (
     <div className="mt-3">
       <p className="t-label text-[10px] text-muted">Play pace</p>
@@ -313,11 +315,22 @@ function PacePicker({ game, onPick }: { game: Game; onPick: (pace: Pace) => void
         {PACES.map((p) => (
           <button key={p.id} type="button" role="radio" aria-checked={cur === p.id} onClick={() => onPick(p.id)} className="seg flex min-w-0 flex-col !gap-0 !px-1 !py-1.5 text-[13px]">
             {p.label}
-            <span className="text-[9px] font-bold opacity-70">{p.id === "auto" ? (stepOf({ age: game.age }) === "year" ? "Year now" : "Season") : p.sub}</span>
+            <span className="text-[9px] font-bold opacity-70">{p.id === "auto" ? (stepOf({ age: game.age }) === "year" ? "Year now" : "Season now") : p.sub}</span>
           </button>
         ))}
       </div>
       <p className="mt-1.5 text-xs text-muted">{cur === "auto" ? `Auto: ${auto}. Pick Month when you want every beat.` : cur === "month" ? "Every month, with the full month card." : cur === "season" ? "Three months a tap, with a recap." : "To your next birthday, with a recap."}</p>
+      {game.age >= 16 && (
+        <button type="button" role="switch" aria-checked={autoFights} onClick={() => setAutoFights(!autoFights)} className="mt-2.5 flex min-h-11 w-full items-center gap-3 rounded-xl bg-black/25 px-3 py-2 text-left">
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-fg">Auto fights</span>
+            <span className="block text-[11px] text-muted">{autoFights ? "Play settles street fights you're even with and lists them in the recap. Bosses, your arch-enemy and tougher foes still stop." : "Play stops for every street fight you aren't sure to win."}</span>
+          </span>
+          <span className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${autoFights ? "bg-good" : "bg-white/15"}`} aria-hidden>
+            <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-all ${autoFights ? "left-[18px]" : "left-0.5"}`} />
+          </span>
+        </button>
+      )}
     </div>
   );
 }

@@ -193,6 +193,8 @@ export interface DuelBoard {
   personId?: string;
   /** Percent of incoming damage shrugged off by the suit. */
   guard?: number;
+  /** The foe's effective power level (2026-11-10 eve: lets Play judge a routine fight). */
+  foeLevel?: number;
   /** Legacy power id of the foe, for its look and element. */
   foePower?: string;
   /** Seed for the foe's generated look. */
@@ -409,8 +411,10 @@ export interface Game {
   majorsLeft: number;
   /** Life Flow: up to 3 everyday actions that fill the free time you don't spend yourself (in order). */
   routine?: string[];
-  /** Life Flow: how far one Play tap goes. "auto" = a year as a kid, a season from 13. */
+  /** Life Flow: how far one Play tap goes. "auto" = a year as a kid, a season as a teen, a year from 18. */
   pace?: Pace;
+  /** Life Flow (2026-11-10 eve): Play settles fights you're unlikely to lose and puts them in the recap. Default on. */
+  autoFights?: boolean;
   flags: Record<string, number>;
   card: Card;
   pending: Pending | null;
