@@ -289,7 +289,78 @@ export function settleSmall(g: Game): { g: Game; line: string } | null {
   return { g: best.g, line: `${short} → ${best.label}` };
 }
 
-export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean } = {}): Game {
+/**
+ * Adult Life Flow (owner's call, 2026-11-10 eve: "make it interrupt less"). Play keeps stopping for what truly
+ * needs you (canon beats, cases and story arcs, power moments, big life offers, a boss, your arch-enemy once a
+ * year, a fight you could lose) and settles the rest the way you'd likely play it, listed on the recap.
+ */
+/** Adult events that always stop: offers that change a life, and moments with people. */
+export const BIG_EVENTS = new Set([
+  "lab-offer", "villain-offer", "villain-gala", "sidekick-pitch", "shoulder-tap", "rival-school", "interview", "mentor-fight", "trainer-lesson",
+  "trainer-roof", "oath-roof", "nemesis-text", "year-power", "relic-run", "relic-crater", "relic-subway", "kid-spark", "spark-menu", "meteor",
+]);
+/** Power gap at which a street fight is a sure thing (the recap says you handled it). */
+export const OUTCLASS_GAP = 1.5;
+/** Your arch-enemy's monthly call stops Play at most once a year; the other months you leave them on read. */
+export const ARCH_STOP_EVERY = 12;
+const ARCH_FLAG = "flow:archStop";
+
+const at = (g: Game) => g.age * 12 + (g.month ?? 0);
+
+/** A street fight Play can settle: an outclassed foe always, any non-boss street fight with Auto fights on. */
+function routineFight(g: Game, mini: Game["minigame"]): "sure" | "auto" | null {
+  if (!mini || mini.kind !== "duel" || mini.tag !== "duel" || !mini.duel || mini.duel.boss) return null;
+  const gap = g.stats.powerLevel - (mini.duel.foeLevel ?? 99);
+  if (gap >= OUTCLASS_GAP) return "sure";
+  return g.autoFights !== false && gap >= -0.5 ? "auto" : null;
+}
+
+export function settleAdult(g: Game): { g: Game; line: string; fight?: boolean } | null {
+  if (g.phase !== "choice" || !g.pending) return null;
+  const id = g.pending.id;
+  if (id.startsWith("canon|") || /case|arc(?!h)/.test(id) || BIG_EVENTS.has(id) || id.startsWith("grief-") || id.startsWith("slip-")) return null;
+  // Your arch-enemy: a real fight once a year; the other calls go unanswered.
+  if (id === "arch-month") {
+    const last = g.flags[ARCH_FLAG];
+    if (last === undefined || at(g) - last >= ARCH_STOP_EVERY) {
+      g.flags[ARCH_FLAG] = at(g);
+      return null;
+    }
+    const n = choose(g, "skip");
+    return n === g || n.phase !== "live" ? null : { g: n, line: `${g.pending.prompt.split(/[.!?]/)[0]!.slice(0, 50)} → left on read` };
+  }
+  const prompt = g.pending.prompt.replace(/\s+/g, " ").trim();
+  const short = prompt.length > 60 ? `${prompt.slice(0, 57).trimEnd()}…` : prompt;
+  // Street villains: fight it out in the recap when it's routine, else stop for you.
+  if (id.startsWith("villain-p")) {
+    const fought = choose(g, "fight");
+    const how = fought.phase === "mini" ? routineFight(g, fought.minigame) : null;
+    if (!how) return null;
+    const ratio = how === "sure" ? Math.max(autoRatio(g), 0.7) : autoRatio(g);
+    const n = resolveMini(fought, ratio);
+    if (n.phase !== "live") return null;
+    const res = ratio >= 0.66 ? "won" : ratio >= 0.33 ? "a draw" : "lost";
+    return { g: n, line: `Street fight: ${fought.minigame!.duel!.foeName} (${res})`, fight: true };
+  }
+  const chatter = /^hero-/.test(id) || id === "arch-billboard";
+  if (!chatter && /arch|enc|villain|hero/.test(id)) return null;
+  let best: { g: Game; label: string; score: number } | null = null;
+  for (const choice of g.pending.choices) {
+    let n = choose(g, choice.id);
+    if (n === g) continue;
+    if (n.phase === "mini" && n.minigame) {
+      if (n.minigame.kind === "duel" || n.minigame.tag) continue;
+      n = resolveMini(n, autoRatio(g));
+    }
+    if (n.phase === "dead" || n.phase === "choice" || n.phase === "mini") continue;
+    const score = tasteOf(g, n);
+    if (!best || score > best.score) best = { g: n, label: choice.label, score };
+  }
+  if (!best) return null;
+  return { g: best.g, line: `${short} → ${best.label}` };
+}
+
+export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean | "adult" } = {}): Game {
   if (game.phase !== "live" || game.reveal) return game;
   const start = structuredClone(game);
   start.skipReport = null;
@@ -309,15 +380,19 @@ export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean
   let stop: SkipReport["stop"] = null;
   let passed = 0;
   // Skip to 15 (and childhood Play steps) settle small everyday moments for you.
-  const fifteen = span === "fifteen" || !!opts.settle;
+  const fifteen = span === "fifteen" || opts.settle === true;
+  const adult = opts.settle === "adult";
   let handled = 0;
+  let fights = 0;
   // Skip to 15 settles small everyday moments for you; anything bigger still stops the skip.
   const settle = (cur: Game, why: SkipReport["stop"]): Game | null => {
-    if (!fifteen || !why || (why.kind !== "event" && why.kind !== "case")) return null;
-    const done = settleSmall(cur);
+    if ((!fifteen && !adult) || !why || (why.kind !== "event" && why.kind !== "case" && why.kind !== "story")) return null;
+    if (fifteen && why.kind === "story") return null;
+    const done = adult ? settleAdult(cur) : settleSmall(cur);
     if (!done) return null;
-    handled += 1;
-    if (handled <= 3) note(done.line);
+    if ("fight" in done && done.fight) fights += 1;
+    else handled += 1;
+    if (handled + fights <= 4) note(done.line);
     return done.g;
   };
   outer: for (let m = 0; m < months; m++) {
@@ -325,7 +400,7 @@ export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean
       const played = playMonth(g, did);
       g = played.g;
       if (!played.stop) break;
-      const next = tries < 4 ? settle(g, played.stop) : null;
+      const next = tries < (adult ? 8 : 4) ? settle(g, played.stop) : null;
       if (!next || !liveish(next)) {
         stop = played.stop;
         break outer;
@@ -350,6 +425,7 @@ export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean
     }
   }
   if (handled) did.set("auto-moments", { label: "Small moments handled", count: handled });
+  if (fights) did.set("auto-fights", { label: "Street fights settled", count: fights });
   g.skipReport = buildReport(start, g, span, passed, months, did, [...notes, ...chatter.slice(0, notes.length >= 3 ? 0 : 1)], stop);
   return g;
 }

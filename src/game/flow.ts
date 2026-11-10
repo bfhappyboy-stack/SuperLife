@@ -21,13 +21,16 @@ export const FLOW_ON = true;
 export const ROUTINE_MAX = 3;
 /** Kids move a year per tap, teens and adults a season. */
 export const KID_UNTIL = 13;
+/** From 18, Play settles everyday moments and routine fights into the recap (2026-11-10 eve). */
+export const ADULT_FROM = 18;
 
 export type Step = "month" | "season" | "year";
 
 export function stepOf(g: Pick<Game, "age" | "pace">): Step {
   const pace = g.pace ?? "auto";
   if (pace !== "auto") return pace;
-  return g.age < KID_UNTIL ? "year" : "season";
+  // 2026-11-10 eve ("make it interrupt less"): grown-ups move a year a tap too; teens keep the season.
+  return g.age < KID_UNTIL || g.age >= ADULT_FROM ? "year" : "season";
 }
 
 /** Months one Play tap covers from here (a year step runs to the next birthday). */
@@ -83,13 +86,22 @@ export function setPace(g: Game, pace: Pace): Game {
   return { ...g, pace };
 }
 
+/** Auto fights (2026-11-10 eve): off = Play stops for every street fight you aren't sure to win. */
+export function setAutoFights(g: Game, on: boolean): Game {
+  return { ...g, autoFights: on };
+}
+
 function recapCard(start: Game, end: Game, report: SkipReport): Game["card"] {
-  const did = report.did.filter((r) => r.id !== "auto-moments").slice(0, 4).map((r) => `${r.label} ×${r.count}`);
+  const did = report.did.filter((r) => r.id !== "auto-moments" && r.id !== "auto-fights").slice(0, 4).map((r) => `${r.label} ×${r.count}`);
+  const fights = report.did.find((r) => r.id === "auto-fights")?.count ?? 0;
+  const moments = report.did.find((r) => r.id === "auto-moments")?.count ?? 0;
+  const settled = [fights ? `${fights} street fight${fights === 1 ? "" : "s"}` : "", moments ? `${moments} small moment${moments === 1 ? "" : "s"}` : ""].filter(Boolean).join(" and ");
   const span = report.months === 1 ? "A month" : `${report.months} months`;
   const money = end.stats.money - start.stats.money;
   const body = [
     `${span} ${report.months === 1 ? "goes" : "go"} by${report.to.age > report.from.age ? `, and you turn ${report.to.age}` : ""}.`,
     did.length ? `You kept to your routine: ${did.join(", ")}.` : "",
+    settled && start.age >= ADULT_FROM ? `Handled on the way: ${settled}.` : "",
     Math.abs(money) >= 50 ? `Money ${money > 0 ? "up" : "down"} $${Math.abs(Math.round(money)).toLocaleString("en-US")}.` : "",
   ].filter(Boolean).join(" ");
   const ranks = report.ranks.map((r) => `${r.name}: rank ${r.from} → ${r.to}.`);
@@ -143,14 +155,20 @@ export function playStep(game: Game): Game {
   const span = step === "season" && game.month + 3 < 12 ? "season" : "year";
   // Childhood moves fast: small everyday moments are settled for you (listed on the card), as in Skip to 15.
   // A season that would cross a birthday stops at the birthday, so every birthday card is seen.
-  const ff = fastForward(game, span, { settle: game.age < KID_UNTIL });
+  // Adults (2026-11-10 eve): everyday moments and routine fights land in the recap; big ones still stop.
+  const ff = fastForward(game, span, { settle: game.age < KID_UNTIL ? true : game.age >= ADULT_FROM ? "adult" : false });
   const report = ff.skipReport;
   if (!report) return ff;
   const out: Game = { ...ff, skipReport: null };
   if (report.stop) {
     // The life needs you: show what's waiting, with a line for the time that passed on the way.
     if (report.months > 0 && out.card) out.card = { ...out.card, banner: [`▸▸ ${report.months} month${report.months === 1 ? " passes" : "s pass"} on your routine.`, ...(out.card.banner ?? [])].slice(0, 4) };
-    if (report.stop.kind === "mentor" || report.stop.kind === "chapter" || report.stop.kind === "death" || report.stop.kind === "health" || report.stop.kind === "bond") out.skipReport = report;
+    // A new chapter already has its own page: the recap rides on the card under it (one tap, not two).
+    if (report.stop.kind === "chapter") {
+      out.card = recapCard(game, out, report);
+      return withMoney(game, out);
+    }
+    if (report.stop.kind === "mentor" || report.stop.kind === "death" || report.stop.kind === "health" || report.stop.kind === "bond") out.skipReport = report;
     return withMoney(game, out);
   }
   out.card = recapCard(game, out, report);

@@ -35,15 +35,19 @@ function settle(g: Game, seen: string[] = []): Game {
   return g;
 }
 
-test("pace: a year per tap as a kid, a season from 13; you can pin month, season or year", () => {
+test("pace: a year per tap as a kid, a season as a teen, a year again from 18; you can pin month, season or year", () => {
   assert.equal(stepOf({ age: 8 }), "year");
   assert.equal(stepOf({ age: 12 }), "year");
   assert.equal(stepOf({ age: 13 }), "season");
-  assert.equal(stepOf({ age: 40 }), "season");
+  assert.equal(stepOf({ age: 17 }), "season");
+  assert.equal(stepOf({ age: 18 }), "year");
+  assert.equal(stepOf({ age: 40 }), "year");
+  assert.equal(stepOf({ age: 40, pace: "season" }), "season");
   assert.equal(stepOf({ age: 40, pace: "month" }), "month");
   assert.equal(stepOf({ age: 8, pace: "season" }), "season");
   assert.equal(stepMonths({ age: 9, month: 4 }), 8, "a kid's year runs to the birthday");
-  assert.equal(stepMonths({ age: 30, month: 4 }), 3);
+  assert.equal(stepMonths({ age: 16, month: 4 }), 3);
+  assert.equal(stepMonths({ age: 30, month: 4 }), 8);
   const g = at(30, 10);
   assert.match(stepLabel(g).title, /age 31/, "a season that crosses a birthday stops at it");
   assert.equal(setPace(g, "month").pace, "month");
@@ -95,8 +99,7 @@ test("season pace: three months per tap with a recap card, or it stops for what 
 });
 
 test("a Play season is the fast-forward season: same months, same dice (no balance change)", () => {
-  const g = at(30, 2, { jobId: "office" });
-  g.jobId = "office";
+  const g = at(16, 2);
   const a = playStep(structuredClone(g));
   const b = fastForward(structuredClone(g), "season");
   assert.equal(a.age * 12 + a.month, b.age * 12 + b.month);
@@ -144,7 +147,7 @@ test("old saves without routine or pace play on Auto with habits", () => {
   const g = at(20, 5);
   delete (g as { routine?: unknown }).routine;
   delete (g as { pace?: unknown }).pace;
-  assert.equal(stepOf(g), "season");
+  assert.equal(stepOf(g), "year");
   const n = playStep(g);
   assert.ok(n.age * 12 + n.month > g.age * 12 + g.month || n.phase !== "live");
   // The old Next month still works underneath.
@@ -190,4 +193,98 @@ test("money report: a Play step's card adds up the ledger, shows what moved and 
 test("money report: a child's year carries none", () => {
   const kid = playStep(at(9, 0));
   assert.equal(kid.card.money ?? null, null);
+});
+
+// ---------------------------------------------------------------------------------------------------------
+// Interrupt less (owner's call, 2026-11-10 eve)
+// ---------------------------------------------------------------------------------------------------------
+
+function pend(g: Game, id: string, choices: Record<string, import("../types.ts").Outcome>, prompt = "Something happens on the block."): Game {
+  g.phase = "choice";
+  g.pending = { id, prompt, choices: Object.keys(choices).map((c) => ({ id: c, label: c })), outcomes: choices };
+  return g;
+}
+
+test("adult Play settles everyday moments, never canon, cases, big offers or power moments", async () => {
+  const { settleAdult, BIG_EVENTS } = await import("../skip.ts");
+  const easy = { a: { text: "fine", effects: { happiness: 2 } }, b: { text: "meh", effects: { happiness: -2 } } };
+  const done = settleAdult(pend(at(30), "hobby", easy));
+  assert.ok(done && done.g.phase === "live");
+  assert.match(done!.line, /→ a$/, "picks the better answer and says so");
+  for (const id of ["canon|joker", "case-docks", "arc-ock-2", "grief-p2", ...BIG_EVENTS]) assert.equal(settleAdult(pend(at(30), id, easy)), null, id);
+});
+
+test("arch-enemy: one real stop a year, the other calls are left on read", async () => {
+  const { settleAdult } = await import("../skip.ts");
+  const calls = { fight: { text: "go" }, talk: { text: "talk", effects: { happiness: 1 } }, skip: { text: "no" } };
+  const g = at(30, 1);
+  assert.equal(settleAdult(pend(g, "arch-month", calls)), null, "the first call stops");
+  g.phase = "live";
+  g.month = 5;
+  const later = settleAdult(pend(g, "arch-month", calls));
+  assert.ok(later, "five months on, settled");
+  assert.match(later!.line, /left on read/);
+  const year = later!.g;
+  year.age = 31;
+  year.month = 2;
+  assert.equal(settleAdult(pend(year, "arch-month", calls)), null, "a year on, it stops again");
+});
+
+test("street fights: an outclassed foe is a recap line; an even one too with Auto fights; a hard one or a boss always stops", async () => {
+  const { settleAdult, OUTCLASS_GAP } = await import("../skip.ts");
+  const duel = (lvl: number, boss = false) => ({
+    fight: {
+      text: "go",
+      minigame: {
+        kind: "duel", title: "Rook", subtitle: "", difficulty: 1, tag: "duel", winText: "w", partialText: "p", loseText: "l",
+        winEffects: { fame: 3 }, partialEffects: { fame: 1 }, loseEffects: { health: -9 },
+        duel: { foeName: "Rook", foeTitle: "Rook", foeSide: "villain", playerHp: 40, foeHp: 30, playerMoves: [], foeMoves: [], foeLevel: lvl, boss },
+      },
+    },
+    talk: { text: "talk" },
+    run: { text: "run" },
+  }) as never;
+  const g = at(30);
+  g.stats.powerLevel = 6;
+  const easy = settleAdult(pend(structuredClone(g), "villain-p1", duel(6 - OUTCLASS_GAP)));
+  assert.ok(easy?.fight && /won/.test(easy.line), easy?.line);
+  assert.ok(easy!.g.stats.fame > g.stats.fame);
+  assert.ok(settleAdult(pend(structuredClone(g), "villain-p1", duel(6.2))), "even fight settles with Auto fights on (default)");
+  assert.equal(settleAdult(pend({ ...structuredClone(g), autoFights: false }, "villain-p1", duel(6.2))), null, "Auto fights off: you fight it");
+  assert.ok(settleAdult(pend({ ...structuredClone(g), autoFights: false }, "villain-p1", duel(3))), "a sure thing still settles");
+  assert.equal(settleAdult(pend(structuredClone(g), "villain-p1", duel(8))), null, "a foe stronger than you stops");
+  assert.equal(settleAdult(pend(structuredClone(g), "villain-p1", duel(1, true))), null, "a boss stops");
+});
+
+test("adult Play taps: 18 to 40 in about half the taps it took, story beats intact", () => {
+  const seen: string[] = [];
+  let g = createGame({ ...BASE, cityId: "nyc", mode: "god", preset: "spider-man", seed: 4 } as never);
+  g = settle(g, seen);
+  while (g.age < 18 && g.phase !== "dead") g = settle(playStep(g), seen);
+  let taps = 0;
+  const before = seen.length;
+  while (g.age < 40 && g.phase !== "dead" && taps < 600) {
+    g.stats.health = Math.max(g.stats.health, 50);
+    taps += 1;
+    g = settle(playStep(g), seen);
+  }
+  const stops = seen.length - before;
+  assert.ok(g.age >= 40);
+  // Before this pass: ~250 taps (Play + answers) for Spider-Man 18-40 in the same sim.
+  assert.ok(taps + stops <= 140, `adult taps ${taps} + stops ${stops}`);
+  assert.ok(seen.some((id) => id.startsWith("canon|")), "canon beats still stop");
+});
+
+test("a new chapter is one tap: the recap rides on the card under the chapter page", () => {
+  let g = at(29, 6);
+  let found = false;
+  for (let i = 0; i < 8 && !found; i += 1) {
+    const n = playStep(g);
+    if (n.chapterNotice && !g.chapterNotice) {
+      found = true;
+      assert.equal(n.skipReport ?? null, null);
+    }
+    g = settle(n);
+  }
+  assert.ok(found, "the chapter turned");
 });

@@ -1662,6 +1662,7 @@ function makeDuel(
       foeMoves: signatureMoves(foe.name, pl) ?? movesFrom(foe.powerId, pl),
       personId: foe.personId,
       guard: suit.guard,
+      foeLevel: Math.round(pl * 100) / 100,
       foePower: foe.powerId,
       ...foeLook(d, foe),
       boss: foe.boss || undefined,
