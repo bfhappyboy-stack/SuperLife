@@ -4,6 +4,7 @@ import { ensureWardrobe } from "./costume";
 import { migrateChapters } from "./chapters";
 import { ensureMarket } from "./market";
 import { ensureEconomy } from "./economy";
+import { ensureTies } from "./ties";
 import { clamp } from "./format";
 import { mergeHeroes } from "./heroes";
 import { resolveLook } from "./look";
@@ -121,6 +122,7 @@ function migrate(game: Game): Game {
   }
   migrateChapters(next);
   migrateAutoFights(next);
+  ensureTies(next);
   ensureMarket(next);
   ensureEconomy(next);
   next.difficulty = asDifficulty(next.difficulty ?? DEFAULT_DIFFICULTY);

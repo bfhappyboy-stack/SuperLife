@@ -351,6 +351,34 @@ export interface Person {
   sex?: Sex;
   latentPower?: PowerId | null;
   arch?: boolean;
+  /** Ties: how far they trust you with money and promises (0-100, missing = 50). */
+  trust?: number;
+  /** Ties: the last few things that happened between you (money, favours). */
+  history?: { at: number; line: string }[];
+}
+
+/** Money between you and someone in your life (ties.ts). */
+export interface Loan {
+  id: string;
+  personId: string;
+  /** "lent": they owe you. "borrowed": you owe them. */
+  dir: "lent" | "borrowed";
+  amount: number;
+  left: number;
+  monthly: number;
+  /** Month index it started (age * 12 + month). Payments begin the month after. */
+  since: number;
+  /** Missed payments in a row. */
+  misses: number;
+  status: "open" | "paid" | "forgiven" | "unpaid";
+}
+
+/** Someone close asking you for help with money. Waits on their People card for up to a year. */
+export interface TieAsk {
+  personId: string;
+  amount: number;
+  reason: string;
+  until: number;
 }
 
 export interface DeathReport {
@@ -418,6 +446,10 @@ export interface Game {
   autoFights?: boolean;
   /** The player has flipped the Auto fights switch by hand (so a save migration never overrides their choice). */
   autoFightsSet?: boolean;
+  /** Ties: money lent and borrowed with people in your life. */
+  loans?: Loan[];
+  /** Ties: someone asking you for help right now. */
+  tieAsk?: TieAsk | null;
   flags: Record<string, number>;
   card: Card;
   pending: Pending | null;
