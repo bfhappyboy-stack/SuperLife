@@ -331,6 +331,8 @@ export interface EconState {
   biz?: Biz[];
   /** People who live with you. */
   mates?: Mate[];
+  /** Chain-wide upgrades by brand id (2026-11-10 eve). */
+  brands?: Record<string, { ups: string[] }>;
   /** The last 12 months' ledgers, oldest first (the season / year money report). */
   months?: MonthSummary[];
   /** Months in a row spending more than comes in while paying for a home (the squeeze hint, 2026-11-10 pm). */
@@ -1596,6 +1598,10 @@ export interface Biz {
   log?: BizNote[];
   /** The last event's kind (no repeats back to back). */
   lastEv?: string;
+  /** Chain (2026-11-10 eve): the uid of the brand's first site. Missing = this site is its own brand. */
+  brand?: string;
+  /** Months to find its feet (branches take longer than the first site). */
+  ramp?: number;
 }
 
 export interface BizNote {
@@ -1628,6 +1634,17 @@ export const MANAGERS: MgrDef[] = [
   { id: "omar", name: "Omar Haddad", trait: "hustler", line: "Opens early, closes late, upsells the mayor." },
   { id: "lena", name: "Lena Novak", trait: "frugal", line: "Switched suppliers twice before her first coffee." },
   { id: "cyrus", name: "Cyrus Grant", trait: "fixer", line: "Ex-city hall. Bad news reaches him first and leaves quietly." },
+  // 2026-11-10 eve: enough people to run a chain in every city.
+  { id: "rita", name: "Rita Moreno-Hall", trait: "steady", line: "Thirty years in hospitality. Hugs the new hires, terrifies suppliers." },
+  { id: "kofi", name: "Kofi Mensah", trait: "hustler", line: "Turned a dead mall kiosk into the busiest stall in town." },
+  { id: "ines", name: "Inés Calderón", trait: "frugal", line: "Has never paid list price for anything, including rent." },
+  { id: "wes", name: "Wes Holloway", trait: "fixer", line: "Former union rep. Every landlord in the city owes him a favor." },
+  { id: "mei", name: "Mei Tanaka", trait: "steady", line: "Calm in a kitchen fire. Literally; there was one." },
+  { id: "luca", name: "Luca Bianchi", trait: "hustler", line: "Talks to every customer like they're his best friend. They are now." },
+  { id: "amara", name: "Amara Obi", trait: "frugal", line: "Spreadsheets for her spreadsheets. Margins up a point a year." },
+  { id: "hank", name: "Hank Doyle", trait: "fixer", line: "Ex-cop. Problems tend to resolve when Hank makes a phone call." },
+  { id: "sofia", name: "Sofia Lindgren", trait: "steady", line: "Ran ten stores for a chain that went bust. Not her fault." },
+  { id: "raj", name: "Raj Malhotra", trait: "hustler", line: "Sold a franchise at 22. Wants to do it again, with you." },
 ];
 export const mgrById = (id: string | undefined) => MANAGERS.find((m) => m.id === id);
 export const MGR_TRAIT: Record<MgrTrait, { label: string; short: string }> = {
@@ -1697,6 +1714,11 @@ export function moraleTarget(g: Game, b: Biz): { target: number; why: string } {
   if (away) {
     target -= 10;
     reasons.push([-10, "nobody in charge"]);
+  }
+  const econ = econOf(g);
+  if (econ && chainOf(econ, b).ups.includes("academy")) {
+    target += BRAND_UPS_BY.academy!.morale ?? 0;
+    reasons.push([BRAND_UPS_BY.academy!.morale ?? 0, "the training academy"]);
   }
   reasons.sort((x, y) => Math.abs(y[0]) - Math.abs(x[0]));
   return { target: clamp(target, 10, 95), why: reasons[0]?.[1] ?? "" };
@@ -1815,6 +1837,15 @@ export function ensureBusiness(g: Game, e: EconState): void {
     if (typeof b.morale !== "number") b.morale = MORALE_START;
     if (b.mgr && !mgrById(b.mgr.id)) delete b.mgr;
     if (!Array.isArray(b.log)) b.log = [];
+    if (b.brand !== undefined && typeof b.brand !== "string") delete b.brand;
+  }
+  // A branch whose brand is gone (old or broken saves) heads its own brand.
+  for (const b of e.biz) if (b.brand && !e.biz.some((x) => x.uid === b.brand) && !e.biz.some((x) => x !== b && x.brand === b.brand)) delete b.brand;
+  const roots = new Set(e.biz.map((b) => brandId(b)));
+  if (!e.brands || typeof e.brands !== "object") e.brands = {};
+  for (const [id, row] of Object.entries(e.brands)) {
+    if (!roots.has(id) || !row || !Array.isArray(row.ups)) delete e.brands[id];
+    else row.ups = row.ups.filter((u) => BRAND_UPS_BY[u]);
   }
 }
 
@@ -1858,7 +1889,11 @@ export function bizBooks(e: EconState, b: Biz, now: number, noise = true, away =
     const draw = Math.round(stockPrice(e, def.empire.stock) * def.empire.draw * bonus);
     return { revenue: draw, goods: 0, wages: 0, premises: 0, upkeep: 0, profit: draw };
   }
-  const ramp = Math.min(1, 0.5 + (0.5 * Math.max(0, now - b.since)) / BIZ_RAMP);
+  const ramp = Math.min(1, 0.5 + (0.5 * Math.max(0, now - b.since)) / (b.ramp ?? BIZ_RAMP));
+  // 2026-11-10 eve: the city's own market (homes rising = people spending) and the chain behind the sign.
+  const chain = chainOf(e, b);
+  const local = cityDemand(e, b.cityId);
+  const brandLiftNow = brandLift(chain.n) + (chain.ups.includes("identity") ? (BRAND_UPS_BY.identity!.rev ?? 0) : 0);
   const rep = 0.7 + (0.6 * clamp(b.rep, 0, 100)) / 100;
   const wobble = noise ? 1 + (hash(e.seed, now, b.uid, "biz") - 0.5) * 0.16 : 1;
   // 2026-11-10 pm: crew morale (neutral at 70), the manager's trait, a rival nearby, an owner who's away.
@@ -1867,9 +1902,9 @@ export function bizBooks(e: EconState, b: Biz, now: number, noise = true, away =
   const hustle = trait === "hustler" ? 1.08 : 1;
   const rival = b.rival && now < b.rival ? (b.rep >= 75 ? 0.94 : 0.88) : 1;
   const absent = away && !b.mgr ? AWAY_MUL : 1;
-  const revenue = Math.round(def.rev * cityMul(b.cityId) * staffFactor(b.staff, bizNeed(b)) * bonus * rep * demandOf(e, def) * ramp * wobble * crew * hustle * rival * absent);
+  const revenue = Math.round(def.rev * cityMul(b.cityId) * staffFactor(b.staff, bizNeed(b)) * bonus * rep * demandOf(e, def) * ramp * wobble * crew * hustle * rival * absent * local * (1 + brandLiftNow));
   const wages = Math.round(b.staff * def.wage * cityMul(b.cityId)) + (b.mgr ? mgrWage(def, b.cityId) : 0);
-  const goods = Math.round(revenue * (def.cogs ?? 0) * (trait === "frugal" ? 0.85 : 1));
+  const goods = Math.round(revenue * (def.cogs ?? 0) * (trait === "frugal" ? 0.85 : 1) * (chain.ups.includes("buying") ? 1 - (BRAND_UPS_BY.buying!.goods ?? 0) : 1));
   const premises = Math.round(def.premises * cityMul(b.cityId) * (1 + 0.25 * b.ups.length));
   const upkeep = Math.round(b.invested * 0.004);
   return { revenue, goods, wages, premises, upkeep, profit: revenue - goods - wages - premises - upkeep };
@@ -1894,7 +1929,7 @@ export function bizGate(g: Game, def: BizDef): string | null {
   if (g.age < def.minAge) return `Opens at ${def.minAge}.`;
   const e = econOf(g);
   if (e && (e.biz ?? []).some((b) => b.kind === def.id && b.cityId === g.cityId)) return "You already run one here.";
-  if ((e?.biz ?? []).filter((b) => !bizById(b.kind)?.empire).length >= 3) return "Three businesses is plenty.";
+  if (e && brandsOf(e).length >= MAX_BRANDS) return "Three businesses is plenty. Grow one into a chain instead.";
   if (g.stats.money < def.cost) return `You need ${fmt(def.cost - Math.max(0, g.stats.money))} more.`;
   return null;
 }
@@ -1919,7 +1954,9 @@ export function bizMonth(g: Game, e: EconState, add: (label: string, amount: num
       BIZ_START_REP +
       b.ups.reduce((s, id) => s + (def.upgrades.find((u) => u.id === id)?.rep ?? 0), 0) +
       (need ? clamp((b.staff / need - 1) * 20, -25, 8) : 10) +
-      (def.empire ? 0 : b.mgr ? 8 : away ? -12 : 0);
+      (def.empire ? 0 : b.mgr ? 8 : away ? -12 : 0) +
+      (chainOf(e, b).ups.includes("loyalty") ? (BRAND_UPS_BY.loyalty!.rep ?? 0) : 0) +
+      brandRepBonus(chainOf(e, b).n);
     b.rep = Math.round(clamp(b.rep + clamp((target - b.rep) * 0.15, -4, 4), 0, 100));
     if (!def.empire) {
       const m = moraleOf(b);
@@ -1938,6 +1975,12 @@ export function bizMonth(g: Game, e: EconState, add: (label: string, amount: num
     if (b.red === 3) banners.push(`${b.name} has lost money three months running. Trim staff, upgrade, or sell: Work ▸ Money ▸ Business.`);
     const tie = bizTieIn(g, e, b, now);
     if (tie) banners.push(tie);
+  }
+  // Head office: a chain costs more to coordinate with every city it adds.
+  for (const brand of brandsOf(e)) {
+    const def = bizById(brand.sites[0]!.kind);
+    const cost = def ? chainOverhead(def, brand.sites.length) : 0;
+    if (cost > 0) add(`Head office · ${brand.name}`, -cost);
   }
   return banners;
 }
@@ -2019,6 +2062,36 @@ export function bizAct(g: Game, e: EconState, verb: string, a: string, b: string
       delete biz.mgr;
       biz.morale = Math.max(0, moraleOf(biz) - 5);
       return { ok: true, line: `${name} clears out the office at ${biz.name}. You're in charge again.` };
+    }
+    case "expand": {
+      // econ|biz|expand|<any site of the brand>|<cityId>
+      if (!biz || !def || def.empire) return { ok: false, line: "Not possible." };
+      if (movesLeft <= 0) return { ok: false, line: "Opening a branch takes a block of free time, and none is left this month." };
+      const q = quoteExpand(g, biz, b);
+      if (!q.ok) return { ok: false, line: q.why ?? "Not possible." };
+      const brand = brandId(biz);
+      const n = chainOf(e, biz).n;
+      g.stats.money -= q.cost;
+      const base = brandName(e, brand);
+      e.biz!.push({
+        uid: `b${e.nextUid++}`, kind: def.id, name: `${base} · ${cityById(b).name}`, cityId: b, staff: def.staff, ups: [], rep: q.rep, since: at(g), invested: q.cost, pl: [],
+        brand, ramp: BRANCH_RAMP, morale: MORALE_START, log: [],
+      });
+      return { ok: true, spend: true, line: `${base} opens in ${cityById(b).name}: site ${n + 1} of the chain. It needs ~${BRANCH_RAMP} months and a manager to find its feet; aim for about ${fmt(q.profit)} a month.` };
+    }
+    case "brandup": {
+      // econ|biz|brandup|<any site>|<upgrade id>
+      const up = BRAND_UPS_BY[b];
+      if (!biz || !def || def.empire || !up) return { ok: false, line: "Not possible." };
+      const chain = chainOf(e, biz);
+      if (chain.n < 2) return { ok: false, line: "Chain upgrades open with your second city." };
+      if (chain.ups.includes(up.id)) return { ok: false, line: "Already done." };
+      const cost = brandUpCost(def, up);
+      if (g.stats.money < cost) return { ok: false, line: `You need ${fmt(cost - Math.max(0, g.stats.money))} more.` };
+      g.stats.money -= cost;
+      const brands = e.brands ?? (e.brands = {});
+      (brands[brandId(biz)] ??= { ups: [] }).ups.push(up.id);
+      return { ok: true, line: `${up.name} across all ${chain.n} sites of ${brandName(e, brandId(biz))}. ${up.blurb}` };
     }
     case "sell": {
       if (!biz || !def || def.empire) return { ok: false, line: def?.empire ? "The family company isn't for sale." : "Not possible." };
@@ -2431,4 +2504,156 @@ export function spendBizEdge(g: Game): void {
   delete g.flags.lead;
   if ((g.flags.gadget ?? 0) > 1) g.flags.gadget = (g.flags.gadget ?? 0) - 1;
   else delete g.flags.gadget;
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Chains (2026-11-10 eve, owner's call: "be able to expand your business to every city"). Any business can open
+// one site per city. Each site keeps its own staff, manager, morale, upgrades and events, and sells to its own
+// city's market. The brand grows a little with every city, chain upgrades cover every site, and a head office
+// costs more with each city added, so a full chain is a goal across decades, not a quick fortune.
+// ---------------------------------------------------------------------------------------------------------
+
+export const MAX_BRANDS = 3;
+export const BRANCH_RAMP = 9;
+/** Each extra city makes the next site dearer: +45% of the base price per site you already run. */
+export const EXPAND_STEP = 0.45;
+/** A chain grows one city at a time: the newest site must be a year old before the next opens. */
+export const EXPAND_GAP = 12;
+
+export interface BrandUp {
+  id: string;
+  name: string;
+  blurb: string;
+  /** Price as a share of the business's base cost. */
+  costMul: number;
+  rev?: number;
+  goods?: number;
+  morale?: number;
+  rep?: number;
+  short: string;
+}
+
+export const BRAND_UPS: BrandUp[] = [
+  { id: "identity", name: "Brand identity", blurb: "One look, one sign, one jingle in every city.", costMul: 0.6, rev: 0.05, short: "+5% sales everywhere" },
+  { id: "buying", name: "Central buying", blurb: "One supplier contract for the whole chain.", costMul: 0.5, goods: 0.1, short: "Supplies −10% everywhere" },
+  { id: "academy", name: "Training academy", blurb: "Every new hire learns the house way.", costMul: 0.4, morale: 8, short: "Crew morale +8 everywhere" },
+  { id: "loyalty", name: "Loyalty app", blurb: "Stamp cards that work in every city.", costMul: 0.35, rep: 6, short: "Reputation +6 everywhere" },
+];
+export const BRAND_UPS_BY: Record<string, BrandUp> = Object.fromEntries(BRAND_UPS.map((u) => [u.id, u]));
+
+export const brandId = (b: Biz) => b.brand ?? b.uid;
+
+export function chainOf(e: EconState, b: Biz): { n: number; ups: string[]; sites: Biz[] } {
+  const id = brandId(b);
+  const sites = (e.biz ?? []).filter((x) => brandId(x) === id);
+  return { n: Math.max(1, sites.length), ups: e.brands?.[id]?.ups ?? [], sites };
+}
+
+/** The brand's name: the first site's, without any " · City". */
+export function brandName(e: EconState, id: string): string {
+  const site = (e.biz ?? []).find((x) => x.uid === id) ?? (e.biz ?? []).find((x) => brandId(x) === id);
+  return (site?.name ?? "Your business").split(" · ")[0]!;
+}
+
+export interface BrandView {
+  id: string;
+  name: string;
+  kind: string;
+  sites: Biz[];
+  ups: string[];
+}
+
+/** Your brands (not family companies), sites in founding order. */
+export function brandsOf(e: EconState): BrandView[] {
+  const out = new Map<string, BrandView>();
+  for (const b of e.biz ?? []) {
+    if (bizById(b.kind)?.empire) continue;
+    const id = brandId(b);
+    const row = out.get(id) ?? { id, name: brandName(e, id), kind: b.kind, sites: [], ups: e.brands?.[id]?.ups ?? [] };
+    row.sites.push(b);
+    out.set(id, row);
+  }
+  return [...out.values()];
+}
+
+/** A known name sells: up to +12% with diminishing returns (2 sites ≈ +3%, 4 ≈ +7%, 8 ≈ +10%). */
+export function brandLift(n: number): number {
+  return n <= 1 ? 0 : 0.12 * (1 - Math.exp(-(n - 1) / 3.5));
+}
+
+/** Reputation every site drifts toward from the brand's size (+2 a city after the first, max +10). */
+export function brandRepBonus(n: number): number {
+  return Math.min(10, Math.max(0, (n - 1) * 2));
+}
+
+/** Head office a month: grows faster than the chain (coordination costs). */
+export function chainOverhead(def: BizDef, n: number): number {
+  if (n <= 1) return 0;
+  return Math.round((def.rev * 0.025 * Math.pow(n - 1, 1.35)) / 10) * 10;
+}
+
+/** The city's own market: homes rising there means people spending (±15%). */
+export function cityDemand(e: EconState, cityId: string): number {
+  const keys = (DISTRICTS[cityId] ?? []).map((d) => `p:${cityId}:${d.id}`);
+  if (!keys.length) return 1;
+  let now = 0;
+  let avg = 0;
+  for (const k of keys) {
+    const h = e.h[k] ?? [];
+    const lv = e.lv[k] ?? 1;
+    now += lv;
+    const last = h.slice(-12);
+    avg += last.length ? last.reduce((s, x) => s + x, 0) / last.length : lv;
+  }
+  return clamp(1 + 0.35 * (now / Math.max(0.01, avg) - 1), 0.85, 1.15);
+}
+
+export function brandUpCost(def: BizDef, up: BrandUp): number {
+  return nice(def.cost * up.costMul);
+}
+
+export interface ExpandQuote {
+  ok: boolean;
+  why?: string;
+  cost: number;
+  /** Steady monthly profit of the new site with a manager, after the extra head-office cost. */
+  profit: number;
+  rep: number;
+}
+
+export function expandCost(def: BizDef, cityId: string, sites: number): number {
+  return nice(def.cost * cityMul(cityId) * (1 + EXPAND_STEP * sites));
+}
+
+export function quoteExpand(g: Game, site: Biz, cityId: string): ExpandQuote {
+  const e = ensureEconomy(g);
+  const def = bizById(site.kind);
+  if (!def || def.empire) return { ok: false, why: "Not possible.", cost: 0, profit: 0, rep: 0 };
+  if (!CITY_PROP[cityId]) return { ok: false, why: "Unknown city.", cost: 0, profit: 0, rep: 0 };
+  const chain = chainOf(e, site);
+  const cost = expandCost(def, cityId, chain.n);
+  // New sites borrow some of the brand's name: halfway from a stranger's 40 to the chain's average.
+  const avgRep = chain.sites.reduce((s, x) => s + x.rep, 0) / Math.max(1, chain.sites.length);
+  const rep = Math.round(BIZ_START_REP + Math.max(0, avgRep - BIZ_START_REP) * 0.5);
+  const probe: Biz = { uid: "probe", kind: def.id, name: def.name, cityId, staff: def.staff, ups: [], rep, since: -999, invested: cost, pl: [], brand: brandId(site), mgr: { id: "probe", since: 0 } };
+  // The probe joins the chain for its own estimate (one more site's lift), then pays the bigger head office.
+  const books = bizBooks({ ...e, biz: [...(e.biz ?? []), probe] }, probe, at(g), false, cityId !== g.cityId);
+  const extraOverhead = chainOverhead(def, chain.n + 1) - chainOverhead(def, chain.n);
+  const profit = books.profit - extraOverhead;
+  let why: string | undefined;
+  if (chain.sites.some((x) => x.cityId === cityId)) why = "Already open here.";
+  else if (g.age < def.minAge) why = `Opens at ${def.minAge}.`;
+  else if (at(g) - Math.max(...chain.sites.map((x) => x.since)) < EXPAND_GAP) why = `Your newest site needs ${EXPAND_GAP - (at(g) - Math.max(...chain.sites.map((x) => x.since)))} more months first.`;
+  else if (g.stats.money < cost) why = `You need ${fmt(cost - Math.max(0, g.stats.money))} more.`;
+  return { ok: !why, why, cost, profit, rep };
+}
+
+/** Every city the brand isn't in yet, best expected profit first. */
+export function expandOptions(g: Game, site: Biz): (ExpandQuote & { cityId: string })[] {
+  const e = ensureEconomy(g);
+  const have = new Set(chainOf(e, site).sites.map((x) => x.cityId));
+  return Object.keys(CITY_PROP)
+    .filter((c) => !have.has(c))
+    .map((cityId) => ({ cityId, ...quoteExpand(g, site, cityId) }))
+    .sort((a, b) => b.profit - a.profit);
 }

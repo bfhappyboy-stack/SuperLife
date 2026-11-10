@@ -17,6 +17,7 @@ import {
   BIZ, bizBooks, bizById, bizNeed, bizValue, quoteBiz, BIZ_RAMP, CITY_PROP, type Biz,
   mateCandidates, matesHere, mateShare, mateShareIfJoined, roomsHere, TIE_IN_REP,
   AWAY_MUL, MGR_TRAIT, mgrById, mgrCandidates, mgrWage, moraleTarget, moraleWord, MORALE_START,
+  BRAND_UPS, brandLift, brandsOf, brandUpCost, chainOverhead, expandOptions, BRANCH_RAMP, type BrandView,
 } from "@/game/economy";
 import { cityById } from "@/game/data";
 import type { Game } from "@/game/types";
@@ -870,9 +871,19 @@ function BusinessTab({ game, e, run }: { game: Game; e: EconState; run: (id: str
             <Briefcase className="size-3.5" aria-hidden /> Your businesses
             {owned.some((b) => b.pl.length) && <span className={`ml-auto t-num ${total >= 0 ? "text-good" : "text-bad"}`}>{total >= 0 ? "+" : "−"}{fmt(Math.abs(total))}/mo</span>}
           </p>
-          {owned.map((b) => (
+          {owned.filter((b) => bizById(b.kind)?.empire).map((b) => (
             <BizCard key={b.uid} game={game} e={e} b={b} run={run} confirm={confirm} setConfirm={setConfirm} open={open === b.uid} setOpen={(v) => setOpen(v ? b.uid : null)} />
           ))}
+          {brandsOf(e).map((brand) =>
+            brand.sites.length === 1 ? (
+              <div key={brand.id} className="flex flex-col gap-2">
+                <BizCard game={game} e={e} b={brand.sites[0]!} run={run} confirm={confirm} setConfirm={setConfirm} open={open === brand.sites[0]!.uid} setOpen={(v) => setOpen(v ? brand.sites[0]!.uid : null)} />
+                <ExpandPicker game={game} site={brand.sites[0]!} run={run} />
+              </div>
+            ) : (
+              <ChainCard key={brand.id} game={game} e={e} brand={brand} run={run} confirm={confirm} setConfirm={setConfirm} open={open} setOpen={setOpen} />
+            ),
+          )}
         </>
       ) : (
         <article className="card px-4 py-3">
@@ -1229,5 +1240,133 @@ function Roommates({ game, run }: { game: Game; run: (id: string) => void }) {
         </>
       )}
     </article>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Chains (2026-11-10 eve): one row per city, chain upgrades, and Expand to…
+// ---------------------------------------------------------------------------------------------------------
+
+function ChainCard({ game, e, brand, run, confirm, setConfirm, open, setOpen }: { game: Game; e: EconState; brand: BrandView; run: (id: string) => void; confirm: string | null; setConfirm: (id: string | null) => void; open: string | null; setOpen: (id: string | null) => void }) {
+  const def = bizById(brand.kind)!;
+  const Icon = BIZ_ICON[brand.kind] ?? Store;
+  const n = brand.sites.length;
+  const overhead = chainOverhead(def, n);
+  const total = brand.sites.reduce((s, b) => s + (b.pl.at(-1) ?? 0), 0) - overhead;
+  const site = brand.sites.find((b) => b.uid === open);
+  return (
+    <article className="card overflow-hidden px-3 py-3 !border-gold/40">
+      <div className="flex items-center gap-3">
+        <IconTile color={BIZ_COLOR[brand.kind] ?? "#8b95ad"} size="size-12">
+          <Icon className="size-6" />
+        </IconTile>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-bold leading-tight text-fg">{brand.name}</p>
+          <p className="truncate text-[11px] font-semibold text-muted">
+            {def.name} chain · {n} cities · brand +{Math.round(brandLift(n) * 100)}% sales
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className={`t-num text-base ${total >= 0 ? "text-good" : "text-bad"}`}>{total >= 0 ? "+" : "−"}{fmt(Math.abs(total))}</p>
+          <p className="text-[10px] font-bold text-muted">a month</p>
+        </div>
+      </div>
+      <ul className="mt-2.5 flex flex-col divide-y divide-white/5 rounded-xl bg-black/25">
+        {brand.sites.map((b) => {
+          const mgr = mgrById(b.mgr?.id);
+          const away = b.cityId !== game.cityId;
+          const morale = b.morale ?? MORALE_START;
+          const last = b.pl.at(-1);
+          const on = open === b.uid;
+          return (
+            <li key={b.uid}>
+              <button type="button" aria-expanded={on} onClick={() => setOpen(on ? null : b.uid)} className="flex min-h-12 w-full items-center gap-2 px-2.5 py-2 text-left">
+                <span className={`inline-block size-2 shrink-0 rounded-full ${morale >= 60 ? "bg-good" : morale >= 40 ? "bg-gold" : "bg-bad"}`} aria-label={`Morale ${morale}, ${moraleWord(morale)}`} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-bold text-fg">
+                    {cityById(b.cityId).name}
+                    {!away && <span className="ml-1 text-[10px] font-extrabold tracking-wider text-gold">YOU&apos;RE HERE</span>}
+                  </span>
+                  <span className={`block truncate text-[11px] font-semibold ${mgr ? "text-muted" : away ? "text-bad" : "text-muted"}`}>
+                    {mgr ? `${mgr.name} · ${MGR_TRAIT[mgr.trait].label}` : away ? `No manager · sales −${Math.round((1 - AWAY_MUL) * 100)}%` : "You run it"} · {moraleWord(morale)}
+                  </span>
+                </span>
+                <span className={`t-num shrink-0 text-sm ${(last ?? 0) >= 0 ? "text-good" : "text-bad"}`}>{last == null ? "new" : `${last >= 0 ? "+" : "−"}${fmt(Math.abs(last))}`}</span>
+                <ChevronDown className={`size-4 shrink-0 text-muted transition-transform ${on ? "rotate-180" : ""}`} aria-hidden />
+              </button>
+            </li>
+          );
+        })}
+        {overhead > 0 && (
+          <li className="flex items-center justify-between px-2.5 py-1.5 text-[11px]">
+            <span className="font-semibold text-muted">Head office (grows with every city)</span>
+            <span className="t-num text-bad">−{fmt(overhead)}</span>
+          </li>
+        )}
+      </ul>
+      {site && (
+        <div className="anim-rise mt-2.5">
+          <BizCard game={game} e={e} b={site} run={run} confirm={confirm} setConfirm={setConfirm} open={false} setOpen={() => {}} />
+        </div>
+      )}
+      <p className="t-label mt-3 text-[10px] text-muted">Chain upgrades · every site</p>
+      <div className="mt-1.5 flex flex-col gap-2">
+        {BRAND_UPS.map((u) => {
+          const has = brand.ups.includes(u.id);
+          const cost = brandUpCost(def, u);
+          return (
+            <div key={u.id} className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-fg">{u.name} <span className="font-semibold text-gold">{u.short}</span></p>
+                <p className="truncate text-[11px] text-muted">{u.blurb}</p>
+              </div>
+              {has ? (
+                <span className="chip shrink-0 !text-[10px] text-good"><Check className="size-3" aria-hidden /> Done</span>
+              ) : (
+                <button type="button" disabled={game.stats.money < cost} onClick={() => run(`econ|biz|brandup|${brand.sites[0]!.uid}|${u.id}`)} className="btn btn-gold !min-h-11 shrink-0 !px-3 text-xs">
+                  {fmt(cost)}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-3">
+        <ExpandPicker game={game} site={brand.sites[0]!} run={run} />
+      </div>
+    </article>
+  );
+}
+
+function ExpandPicker({ game, site, run }: { game: Game; site: Biz; run: (id: string) => void }) {
+  const [openList, setOpenList] = useState(false);
+  const options = expandOptions(game, site);
+  if (!options.length) return <p className="text-center text-xs font-bold text-gold">In every city. The whole map knows the name.</p>;
+  return (
+    <div>
+      <button type="button" aria-expanded={openList} onClick={() => setOpenList(!openList)} className="btn btn-ghost !min-h-11 w-full text-sm">
+        <Building2 className="size-4" aria-hidden /> Expand to… <span className="text-[11px] font-semibold text-muted">({options.length} cities left)</span>
+        <ChevronDown className={`size-4 transition-transform ${openList ? "rotate-180" : ""}`} aria-hidden />
+      </button>
+      {openList && (
+        <ul className="anim-rise mt-2 flex flex-col gap-1.5">
+          {options.map((o) => (
+            <li key={o.cityId} className="flex items-center gap-2 rounded-xl bg-black/25 px-2.5 py-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-fg">{cityById(o.cityId).name}</p>
+                <p className="text-[11px] text-muted">
+                  {fmt(o.cost)} · aims for <span className={o.profit >= 0 ? "text-good" : "text-bad"}>{o.profit >= 0 ? "+" : "−"}{fmt(Math.abs(o.profit))}/mo</span> with a manager
+                </p>
+                {!o.ok && o.why && <p className="text-[11px] font-semibold text-gold">{o.why}</p>}
+              </div>
+              <button type="button" disabled={!o.ok || game.majorsLeft <= 0} onClick={() => { run(`econ|biz|expand|${site.uid}|${o.cityId}`); setOpenList(false); }} className="btn btn-gold !min-h-11 shrink-0 !px-3 text-xs">
+                {o.ok ? (game.majorsLeft > 0 ? "Open" : "No time") : o.why?.startsWith("You need") ? "Short" : "Wait"}
+              </button>
+            </li>
+          ))}
+          <li className="text-[11px] text-muted">Each city costs more than the last and adds to head office. New branches take ~{BRANCH_RAMP} months and need a manager while you&apos;re away.</li>
+        </ul>
+      )}
+    </div>
   );
 }
