@@ -96,6 +96,8 @@ Seed 1 only (the am table's life): Iron Man Normal 0.59 / 0.38, Spider-Man 0.96 
 - **Power mixing at 15 re-verified.** Skip to 15 from 13 takes 3–8 skips (it stops for cases), lands on Jan at 15 with "A mentor finds you" on the summary; the mixing lock lifts and the mentor card shows in Powers. Fire + Speed God Mode: the mentor steers to Light Speed first and the braid works; ice + speed braids Absolute Zero Dash. The Neon mystery (Regeneration only at 15) has nothing to braid yet and the mentor points at a recipe instead, which is right.
 - **Move-select re-verified** on the Iron Man 26 save: tapping Stand Firm plays it (Ward pill, combo pip, log line), no console errors, no horizontal overflow at 390×844.
 
+**Arena with saved lives (increment 4):** before, Ava Reyes (28, mystery fire hero) and Bruce Wayne (25) were drawn as the paper doll on the draft card, roster and battle slot, and the kicker read "YOUR LIFE · YOUR LIFE". Now Ava gets a vector hero poster with her fire emblem, and Bruce uses Batman's painted art. Shots: `/workspace/shots-2026-11-10-am/arena-after/` (ava2-card.png, bruce-draft.png).
+
 ## Morning pass (2026-11-09 am): playtest first — Spider-Man, Iron Man, Hood mystery, Flash
 
 **Builds (new this pass):** **Spider-Man** and **Iron Man** God Mode presets, a Hood / foster mystery (wakes at 15), and Flash again for the life-sim check. Aged to 50, seed 1, Normal and Hard; 263 villain boards per difficulty. Same tell-reading policy as the pm pass (`/workspace/playtest/am1109/`). Phone screens at 390×844: Iron Man 30 vs Whiplash (Hard boss), Spider-Man 33 vs Venom (Hard boss), Hood 18 vs Afterimage (Normal).
