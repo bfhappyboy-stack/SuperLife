@@ -206,6 +206,10 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - **Roommates (increment 3):** spare rooms by tier; equal rent split on a lease, a room's rent in an owned home; they cost Cover (eyes on the double life) and bring trait perks, monthly closeness and small events; a nosy one can find the suit (kept if close, told if not). Family estates are never for sale.
 - **Businesses (increment 2):** six data-driven kinds (truck → newspaper), max three. Books each month = revenue (city × staff factor × upgrades × reputation × market demand × 6-month ramp) − supplies − wages − premises − upkeep. Staff factor has diminishing returns; sale ≈ 2 years of profit (floor: half invested). Legend companies (Wayne Enterprises, Stark Industries) are board-run: no staff, a chair's draw tied to the share price, locked until 18 / 21, not for sale.
 
+- **Cost of living (2026-11-10 am):** from 18, monthly: $700 × city price level + 25% of a monthly wage + $350 per child; half at the family home or an estate; never pushes cash below $0 by itself. A heavy shift pays 3% of the yearly wage.
+- **Money report (2026-11-10 am):** every Play step that passes time carries `card.money` (ledger by group + off-ledger cash = the real cash change, net worth change, moves in what you own, top headlines). The economy keeps 12 monthly ledgers.
+- **Hero tie-ins (2026-11-10 am):** security firm (rep 50+) → villain leads (+4% next villain fight); tech start-up (rep 50+) → prototypes (+3%, hold 2). Fights move markets (wins lift a district and a local stock, losses dent them). Estates take no roommates.
+
 ## 19. Life Flow: how time passes (owner's call, 2026-11-10 night)
 
 **The problem.** "3 moves, then Next month" made every month a chore: about 720 taps of Next month for a 60-year life, with moves that felt arbitrary and were wasted if you didn't spend them. Childhood dragged; adulthood (money, homes, businesses) needed monthly attention.
@@ -223,6 +227,8 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - **Money, homes and businesses** fit naturally: trading, upgrades, hiring and letting are instant and free; moving day, opening day, working a shift and hanging out take a block of free time; the ledger runs monthly inside every step and shows on the recap.
 - **Recaps:** a plain season or year ends on a recap card (months passed, what your routine did, stat changes, rank-ups, money, notes). Big stops (mentor, chapter, low health, relationship crisis, death) keep the full fast-forward summary. Skip to 15 and Skip to birthday stay in the Time sheet.
 - **Ship switch:** `FLOW_ON` in `src/game/flow.ts` (on). Off restores Next month + Skip exactly.
+- **Pace (decided 2026-11-10 am):** adults stay on a **season** per tap by default; Month stays one tap away in Time ▸ Play pace for players who want to manage money monthly. Sims: a season keeps a decade of adult life to ~50 taps, and the money report makes a season's money legible, so monthly taps aren't needed to follow it.
+- **Routine slots (2026-11-10 am):** habits, **Shift at <your business>** and **Time with <person>** can all be pinned (up to 3).
 
 ## Existing extras (built, not in the original design)
 

@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-10 am pass
+
+- **Done:** cost of living + shift trim (increment 1), money report on every Play step + cash ticker (2), routine slots for shifts and people + security / start-up tie-ins (3).
+- **Decided:** adult pace stays Season (Month one tap away); estates take no roommates.
+- **Next:** a newspaper that prints your fights (fame), named staff and a manager, a "since you bought" alert, a year-in-review highlight pick for kid recaps, hold-to-keep-playing.
+
 ## From the 2026-11-10 night pass (living economy)
 
 - **Done (increment 4):** Life Flow (Play + Routine + age-scaled pace; DESIGN §19). Next: routine slots for "Work a shift at <business>" and "Time with <person>"; a "year in review" highlight pick for kid recaps; optional auto-Play (hold to keep playing until the next stop).

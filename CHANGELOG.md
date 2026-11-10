@@ -4,6 +4,15 @@
 
 Built on `origin/devbot/2026-11-10-night` (aae1d85). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 3: routine slots for business shifts and people; hero tie-ins for your businesses
+
+- **Why:** open follow-ups from last night (routine slots for business shifts and people) and the owner's ask for the world to tie into the hero life (security firm leads, tech-firm gadgets).
+- **Routine slots (`routineOptions`, `SHIFT_ROUTINE`, flow.ts; `monthPlan`, skip.ts):** the Routine picker now offers **Shift at <your business>** (each business you run in this city; takes a block of free time, like doing it by hand) and **Time with <person>** (partner first, then closest; up to four; "Wes (parent)" / "Wes (friend)" when two share a name), beside the everyday habits. Pinned shifts run in your order; Play only counts a shift that actually used a block.
+- **Shifts have diminishing returns (`shiftGain`):** +6 reputation at a new place, less the better known it is (+3 at 70, +1 from ~92). Before, three pinned shifts a month would have pinned every business at 100.
+- **Hero tie-ins (`bizTieIn`, `bizFightEdge`, economy.ts):** a **security firm** at 50+ reputation passes you a lead now and then (~22% a month): "Moreno's security firm passes you a lead: Moth King was seen in Riverside", worth **+4% in your next villain fight**. A **tech start-up** at 50+ reputation sends R&D prototypes (~15% a month, hold up to 2): **+3% in a villain fight**, one per fight. Both show as notes in the fight result, and as a **Hero perk** line on the business cards (greyed with "reputation 38/50" until earned). Fights moving markets (wins lift the district and a local stock; losses dent them) were already in; the money report now surfaces those headlines first.
+- **Balance:** the edges only apply to owners of a $420k / $800k business and sit under the existing 30% edge cap; the 60% legend / mystery fight sims own no businesses, so street / boss rates are unchanged.
+- **Tests:** +2 (`business.test.ts`: shift gains shrink, a shift can be pinned and Play works it; leads and gadgets appear for a well-run firm, one per fight, never for a struggling one). 271 game tests pass.
+
 ### Increment 2: the money report on every Play step, a ticking cash counter, recaps lead with your life
 
 - **Why (playtest):** a Play season's card led with rival-cape ticker lines in bold ("Afterimage: sponsoring a cereal that hates them") and buried the money in a truncated sentence; with markets, rent and businesses all moving, a player couldn't tell what the season did to them.
