@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ageUp, choose, createGame, dismissReveal, resolveMini } from "../engine.ts";
-import { playStep, routineOptions, setPace, setRoutine, stepLabel, stepMonths, stepOf } from "../flow.ts";
+import { playStep, routineOptions, setAutoFights, setPace, setRoutine, stepLabel, stepMonths, stepOf } from "../flow.ts";
 import { fastForward, monthPlan, dismissSkip } from "../skip.ts";
 import type { Game } from "../types.ts";
 
@@ -230,7 +230,7 @@ test("arch-enemy: one real stop a year, the other calls are left on read", async
   assert.equal(settleAdult(pend(year, "arch-month", calls)), null, "a year on, it stops again");
 });
 
-test("street fights: an outclassed foe is a recap line; an even one too with Auto fights; a hard one or a boss always stops", async () => {
+test("street fights: with Auto fights on, an outclassed or even foe is a recap line; off (the default), every fight stops", async () => {
   const { settleAdult, OUTCLASS_GAP } = await import("../skip.ts");
   const duel = (lvl: number, boss = false) => ({
     fight: {
@@ -244,22 +244,66 @@ test("street fights: an outclassed foe is a recap line; an even one too with Aut
     talk: { text: "talk" },
     run: { text: "run" },
   }) as never;
-  const g = at(30);
-  g.stats.powerLevel = 6;
+  const off = at(30);
+  off.stats.powerLevel = 6;
+  assert.equal(off.autoFights ?? false, false, "new lives start with Auto fights off");
+  assert.equal(settleAdult(pend(structuredClone(off), "villain-p1", duel(6 - OUTCLASS_GAP))), null, "off: even a sure win stops for you");
+  assert.equal(settleAdult(pend(structuredClone(off), "villain-p1", duel(6.2))), null, "off: an even fight stops");
+  assert.equal(settleAdult(pend({ ...structuredClone(off), autoFights: true }, "villain-p1", duel(6.2))), null, "a stray true without the player's flip stays off");
+  const g = setAutoFights(off, true);
   const easy = settleAdult(pend(structuredClone(g), "villain-p1", duel(6 - OUTCLASS_GAP)));
   assert.ok(easy?.fight && /won/.test(easy.line), easy?.line);
   assert.ok(easy!.g.stats.fame > g.stats.fame);
-  assert.ok(settleAdult(pend(structuredClone(g), "villain-p1", duel(6.2))), "even fight settles with Auto fights on (default)");
-  assert.equal(settleAdult(pend({ ...structuredClone(g), autoFights: false }, "villain-p1", duel(6.2))), null, "Auto fights off: you fight it");
-  assert.ok(settleAdult(pend({ ...structuredClone(g), autoFights: false }, "villain-p1", duel(3))), "a sure thing still settles");
+  assert.ok(settleAdult(pend(structuredClone(g), "villain-p1", duel(6.2))), "on: an even fight settles");
   assert.equal(settleAdult(pend(structuredClone(g), "villain-p1", duel(8))), null, "a foe stronger than you stops");
   assert.equal(settleAdult(pend(structuredClone(g), "villain-p1", duel(1, true))), null, "a boss stops");
+  assert.equal(settleAdult(pend(setAutoFights(g, false), "villain-p1", duel(3))), null, "switched back off: it stops again");
 });
 
-test("adult Play taps: 18 to 40 in about half the taps it took, story beats intact", () => {
+test("fight card: Auto-resolve settles the fight now, a little under your usual; a foe you outclass is a clean win", async () => {
+  const { autoResolveFight, autoResolveOdds, autoResolveRatio, autoRatio } = await import("../skip.ts");
+  const g = at(30);
+  g.stats.powerLevel = 6;
+  const spec = (lvl: number, boss = false) => ({
+    kind: "duel", title: "Rook", subtitle: "", difficulty: 1, tag: "duel", winText: "w", partialText: "p", loseText: "l",
+    winEffects: { fame: 3 }, partialEffects: { fame: 1 }, loseEffects: { health: -9 },
+    duel: { foeName: "Rook", foeTitle: "Rook", foeSide: "hero", playerHp: 40, foeHp: 30, playerMoves: [], foeMoves: [], foeLevel: lvl, boss },
+  }) as never;
+  const even = { ...structuredClone(g), phase: "mini", minigame: spec(6) } as Game;
+  assert.equal(autoResolveRatio(even), autoRatio(even));
+  assert.ok(autoResolveRatio(even) < 0.66, "an even fight on auto is not a sure win for a 60% player");
+  const done = autoResolveFight(even);
+  assert.equal(done.phase === "mini", false, "the fight is over");
+  assert.equal(done.minigame, null);
+  assert.match(done.card.body, /^Auto-resolved: Rook\./);
+  const easy = { ...structuredClone(g), phase: "mini", minigame: spec(4) } as Game;
+  assert.equal(autoResolveOdds(easy), "win");
+  const boss = { ...structuredClone(g), phase: "mini", minigame: spec(4, true) } as Game;
+  assert.notEqual(autoResolveOdds(boss), "win", "a boss never auto-resolves to a sure win");
+  assert.equal(autoResolveFight(g), g, "nothing to resolve outside a fight");
+});
+
+test("Auto fights migration: untouched saves go off, a hand-flipped choice is kept", async () => {
+  const { migrateAutoFights } = await import("../save.ts");
+  const { autoFightsOn } = await import("../skip.ts");
+  const untouched = at(30);
+  delete untouched.autoFights;
+  delete untouched.autoFightsSet;
+  assert.equal(autoFightsOn(migrateAutoFights(untouched)), false, "eve save that never touched it: off");
+  const flipped = { ...at(30), autoFights: true } as Game;
+  delete flipped.autoFightsSet;
+  assert.equal(autoFightsOn(migrateAutoFights(flipped)), true, "eve stored true only after a hand flip: kept on");
+  const chose = setAutoFights(at(30), true);
+  assert.equal(autoFightsOn(migrateAutoFights(structuredClone(chose))), true);
+  const offed = setAutoFights(at(30), false);
+  assert.equal(autoFightsOn(migrateAutoFights(structuredClone(offed))), false);
+});
+
+test("adult Play taps: 18 to 40 in about half the taps it took with Auto fights on; off stops for fights but small moments still settle", () => {
+  for (const on of [true, false]) {
   const seen: string[] = [];
   let g = createGame({ ...BASE, cityId: "nyc", mode: "god", preset: "spider-man", seed: 4 } as never);
-  g = settle(g, seen);
+  g = setAutoFights(settle(g, seen), on);
   while (g.age < 18 && g.phase !== "dead") g = settle(playStep(g), seen);
   let taps = 0;
   const before = seen.length;
@@ -270,9 +314,11 @@ test("adult Play taps: 18 to 40 in about half the taps it took, story beats inta
   }
   const stops = seen.length - before;
   assert.ok(g.age >= 40);
-  // Before this pass: ~250 taps (Play + answers) for Spider-Man 18-40 in the same sim.
-  assert.ok(taps + stops <= 140, `adult taps ${taps} + stops ${stops}`);
+  // Before eve: ~250 taps (Play + answers) for Spider-Man 18-40 in the same sim.
+  console.log(`auto fights ${on ? "on" : "off"}: adult taps ${taps} + stops ${stops}`);
+  assert.ok(taps + stops <= (on ? 140 : 175), `auto ${on}: adult taps ${taps} + stops ${stops}`);
   assert.ok(seen.some((id) => id.startsWith("canon|")), "canon beats still stop");
+  }
 });
 
 test("a new chapter is one tap: the recap rides on the card under the chapter page", () => {

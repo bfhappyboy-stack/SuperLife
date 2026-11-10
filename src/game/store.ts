@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { act, ageUp, applyHeroTalk, choose, createGame, dismissReveal, freshen, heirFrom, resolveMini, type NewLifeOpts } from "./engine";
-import { dismissSkip, fastForward, noteAct, noteMini, notePick } from "./skip";
+import { autoResolveFight, dismissSkip, fastForward, noteAct, noteMini, notePick } from "./skip";
 import { playStep, setAutoFights, setPace, setRoutine } from "./flow";
 import { presetById } from "./presets";
 import { deleteSlot, firstEmptySlot, listSlots, loadScores, loadSlot, migrateLegacySave, pushScore, readIndex, saveScores, saveSlot, setActiveSlot, type ScoreRow, type SlotSummary } from "./save";
@@ -53,6 +53,8 @@ interface Store {
   pick: (id: string) => void;
   do: (id: string) => void;
   finishMini: (ratio: number, used?: string[]) => void;
+  /** Fight card ▸ Auto-resolve: settle the fight at the auto score instead of playing it. */
+  autoResolve: () => void;
   noteTalk: (heroId: string, line: string, reply: string) => void;
   toTitle: () => void;
   playHeir: () => void;
@@ -237,6 +239,11 @@ export const useGame = create<Store>((set, get) => ({
     const game = get().game;
     if (!game) return;
     commit(set, get, noteMini(resolveMini(game, ratio, used), ratio));
+  },
+  autoResolve: () => {
+    const game = get().game;
+    if (!game) return;
+    commit(set, get, autoResolveFight(game));
   },
   noteTalk: (heroId, line, reply) => {
     const game = get().game;

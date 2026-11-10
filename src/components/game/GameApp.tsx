@@ -14,6 +14,7 @@ import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
 import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
 import { RoutineCard } from "@/components/game/Routine";
 import { FLOW_ON, stepLabel } from "@/game/flow";
+import { autoResolveOdds } from "@/game/skip";
 import { CityScene, TitleArt } from "@/components/game/Scene";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
@@ -174,6 +175,27 @@ function PlayScreen() {
   );
 }
 
+const ODDS_LINE = { win: "Likely a win", scrape: "Likely a scrape", loss: "Likely a loss" } as const;
+
+/** The fight card's choice (owner's call, 2026-11-10 late): play the fight, or let it resolve at a little under your usual. */
+function FightChoice({ game }: { game: Game }) {
+  const autoResolve = useGame((s) => s.autoResolve);
+  const [open, setOpen] = useState(true);
+  if (!open) return null;
+  const odds = autoResolveOdds(game);
+  return (
+    <div className="relative z-20 mx-3 mt-2 flex shrink-0 gap-2" role="group" aria-label="How do you want this fight?">
+      <button type="button" onClick={() => setOpen(false)} className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-gold px-3 text-sm font-extrabold text-paper-ink shadow-[0_2px_0_rgba(0,0,0,.35)]">
+        <Swords className="size-4" aria-hidden /> Fight it out
+      </button>
+      <button type="button" onClick={autoResolve} className="flex min-h-11 flex-1 flex-col items-center justify-center rounded-xl border border-white/15 bg-black/35 px-3 leading-tight text-fg">
+        <span className="flex items-center gap-1 text-sm font-bold"><FastForward className="size-4" aria-hidden /> Auto-resolve</span>
+        <span className={`text-[10px] font-bold ${odds === "win" ? "text-good" : odds === "loss" ? "text-bad" : "text-muted"}`}>{ODDS_LINE[odds]}</span>
+      </button>
+    </div>
+  );
+}
+
 function Life({ game }: { game: Game }) {
   const age = useGame((s) => s.age);
   const play = useGame((s) => s.play);
@@ -320,6 +342,7 @@ function Life({ game }: { game: Game }) {
 
       {game.phase === "mini" && game.minigame ? (
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          {game.minigame.kind === "duel" && game.minigame.duel && <FightChoice key={`fc-${game.minigame.title}-${game.age}-${game.month ?? 0}-${game.missions}`} game={game} />}
           <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ legend: (() => { const l = presetById(game.preset); return l && hasArt(l.art) ? { art: l.art, color: l.color, name: l.hero } : undefined; })(), seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })() }} />
         </div>
       ) : (

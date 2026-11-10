@@ -2,7 +2,7 @@ import { AlertTriangle, BookOpen, CalendarRange, FastForward as FfIcon, Graduati
 import { STAT_COLOR, STAT_ICON } from "@/components/game/icons";
 import { MONTHS, money } from "@/game/format";
 import { MIX_AGE } from "@/game/mentors";
-import { canSkipToFifteen, skipMonths } from "@/game/skip";
+import { autoFightsOn, canSkipToFifteen, skipMonths } from "@/game/skip";
 import { FLOW_ON, KID_UNTIL, stepOf } from "@/game/flow";
 import { useGame } from "@/game/store";
 import type { Game, Pace, SkipReport, SkipSpan, SkipStopKind } from "@/game/types";
@@ -307,7 +307,7 @@ function PacePicker({ game, onPick }: { game: Game; onPick: (pace: Pace) => void
   const cur = game.pace ?? "auto";
   const auto = game.age < KID_UNTIL ? "a year per tap until 13" : game.age < 18 ? "a season per tap until 18" : "a year per tap";
   const setAutoFights = useGame((s) => s.setAutoFights);
-  const autoFights = game.autoFights !== false;
+  const autoFights = autoFightsOn(game);
   return (
     <div className="mt-3">
       <p className="t-label text-[10px] text-muted">Play pace</p>
@@ -323,8 +323,11 @@ function PacePicker({ game, onPick }: { game: Game; onPick: (pace: Pace) => void
       {game.age >= 16 && (
         <button type="button" role="switch" aria-checked={autoFights} onClick={() => setAutoFights(!autoFights)} className="mt-2.5 flex min-h-11 w-full items-center gap-3 rounded-xl bg-black/25 px-3 py-2 text-left">
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-fg">Auto fights</span>
-            <span className="block text-[11px] text-muted">{autoFights ? "Play settles street fights you're even with and lists them in the recap. Bosses, your arch-enemy and tougher foes still stop." : "Play stops for every street fight you aren't sure to win."}</span>
+            <span className="flex items-center gap-2 text-sm font-bold text-fg">
+              Auto fights
+              <span className={`rounded-full px-1.5 py-px text-[10px] font-extrabold ${autoFights ? "bg-good text-paper-ink" : "bg-white/15 text-fg"}`}>{autoFights ? "ON" : "OFF"}</span>
+            </span>
+            <span className="block text-[11px] text-muted">{autoFights ? "Play settles street fights you're even with or better and lists them in the recap. Bosses, your arch-enemy and tougher foes still stop." : "Play stops for every fight. You pick Fight it out or Auto-resolve. Small everyday moments still go in the recap."}</span>
           </span>
           <span className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${autoFights ? "bg-good" : "bg-white/15"}`} aria-hidden>
             <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-all ${autoFights ? "left-[18px]" : "left-0.5"}`} />
