@@ -1,8 +1,23 @@
 # Changelog
 
-## 2026-11-10 (late): fights are your call (`devbot/2026-11-10-late`)
+## 2026-11-10 (late): fights are your call; money between you and your people (`devbot/2026-11-10-late`)
 
 Built on `origin/devbot/2026-11-10-eve` (bae21f9). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 2: money between you and your people (Priority 0a, first slice)
+
+- **Why:** the owner wants family and friends that matter, with lending and borrowing, repayment schedules, people who don't pay, family asking for help and trust effects. This is the smallest piece that does all of that on the People screen; dating, invites and events come next.
+- **Personality (`temperOf`):** everyone you can talk money with (parents, partner, friends, teammates, grown kids) has one of five tempers, fixed for life and shown on their card: **Steady** (pays back on the dot), **Proud** (hates owing anyone), **Warm** (means well, sometimes late), **Scattered** (forgets, not on purpose), **Slippery** (always has a story). Parents lean Steady or Warm.
+- **Trust (`Person.trust`, starts at 50):** a second meter next to closeness, shown as "Trust N" (red under 40, green from 70). Paying back raises it, missing payments lowers it. Under 40 they won't lend you money.
+- **History (`Person.history`):** the card shows the last thing that happened between you ("Last: You lent $1,000, age 26.").
+- **Lend money:** $200 / $1,000 / $5,000 (what you can afford), paid back monthly over 3 / 6 / 12 months, closeness +3. Each month's payment arrives or doesn't by their temper and how close you are (Steady at closeness 50 pays ~94% of months, Slippery ~34%). Three misses in a row and they **stop paying** (trust −15, closeness −6, the rest is gone). On the card: "Theo owes you $833 of $1,000 · $167/mo · 5 to go", with **Ask for it back** (once a month: they may pay the rest, closeness −3) and **Let it go** (closeness +5, trust +4).
+- **Ask to borrow:** from 16, from someone at closeness 50+ who trusts you (40+): parents up to $5,000, a partner $2,000, friends $1,000. It comes out of your cash monthly; a month you can't pay costs trust −6, and three of those mean they bring it up at dinner (closeness −10). **Pay it all now** clears it (trust +8).
+- **Family asking for help:** now and then (about one ask every few years with a few close people, only when you have $400+), a parent or friend asks to borrow $300–1,500 for something real (a car repair, rent, a vet bill). It waits on their card for up to a year with **Lend $600** / **Not this time** (closeness −4). It never stops Play.
+- **Play cards:** an ask, a loan paid off or a friend who stopped paying shows at the top of the next Play card, once (`tieNews`).
+- **Rules:** deterministic (a hash of the loan and the month), so it never moves the engine's dice and old sims are unchanged; one open loan per person; when someone dies their debt is dropped. Flag `TIES_ON` in `src/game/ties.ts`.
+- **Saves:** old saves load with no loans, no ask and trust 50 for everyone.
+- **Sims (4 Mystery seeds given $20k at 18, Play to 40, saying yes to every ask):** 1–3 asks each; 7 loans, 6 paid back, 1 stopped paying ($600 lost). Tie news on 14 of 149 adult Play cards.
+- **Tests:** +8 (`ties.test.ts`: tempers and trust, a steady payer repays, slippery people default far more often (≥50% vs ≤15%) and it costs trust, forgive and chase, borrowing blocks / monthly payments / missed payments / pay off, asks and answers over 20 years, the engine month and the `tie|` action, Play card news shown once). 306 game tests pass.
 
 ### Increment 1: Auto fights is opt-in, and every fight card asks (owner's call, 20:23)
 

@@ -2,7 +2,8 @@
 
 ## From the 2026-11-10 late pass
 
-- **Done:** Auto fights opt-in with a fight-card Fight it out / Auto-resolve choice (increment 1).
+- **Done:** Auto fights opt-in with a fight-card Fight it out / Auto-resolve choice (increment 1); People cards with temper, trust, history, lend / borrow with schedules, non-payers and family asking for help (increment 2).
+- **Next for Priority 0a (people):** events with family and friends (birthdays, a wedding, a falling-out), flirting into dating with a relationship meter per stage, invites through Life Flow (a routine slot "Dinner with Mom"), trust affecting more than money (secrets, secret identity), siblings, and a lender who chases you hard. Person cards are getting tall: consider folding Spend time / Give a gift into a row of small buttons.
 - **Ask the owner:** with Auto fights off, should sure wins (1.5+ power levels clear) still settle into the recap? Now they stop too (about 1 extra stop per adult life in sims).
 - **Watch (yearly growth):** ripening is most of the growth of your non-focus powers; if that feels like free power, ripen only powers you used that year.
 
