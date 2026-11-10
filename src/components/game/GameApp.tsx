@@ -10,6 +10,7 @@ import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends"
 import { Closet } from "@/components/game/Closet";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
+import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
 import { CityScene, TitleArt } from "@/components/game/Scene";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
@@ -369,8 +370,18 @@ function Life({ game }: { game: Game }) {
             </article>
             {!choosing && desk === "life" && <ChapterStrip game={game} />}
             {!choosing && desk === "life" && <NextGoal game={game} onGo={goTo} />}
+            {!choosing && desk === "life" && game.phase === "live" && (
+              <NewsTicker
+                game={game}
+                onOpen={() => {
+                  setDesk("work");
+                  setShelf("Money");
+                  setAck("Money — pressed.");
+                }}
+              />
+            )}
             {!choosing && <p className="desk-accent t-label mt-4">{DESK_LINE[desk]}</p>}
-            {!choosing && desk === "work" && activeShelf !== "Market" && (
+            {!choosing && desk === "work" && activeShelf !== "Shop" && activeShelf !== "Money" && (
               <p className="mt-2 text-sm text-muted">
                 {school ? school.name : "No hero school"}
                 {" · "}
@@ -379,7 +390,8 @@ function Life({ game }: { game: Game }) {
                 {team ? team.name : "No team"}
               </p>
             )}
-            {!choosing && desk === "work" && activeShelf === "Market" && <Market game={game} onAct={act} />}
+            {!choosing && desk === "work" && activeShelf === "Money" && <MoneyHub game={game} onAct={act} />}
+            {!choosing && desk === "work" && activeShelf === "Shop" && <Market game={game} onAct={act} />}
             {!choosing && desk === "people" && activeShelf === "Crew" && game.crew && (
               <p className="mt-2 text-sm text-muted">
                 {game.crew.name}
@@ -424,7 +436,7 @@ function Life({ game }: { game: Game }) {
             {!choosing && desk === "people" && activeShelf === "Circle" && (
               <PeopleStack game={game} actions={visible} onPress={(action) => { setAck(`${action.label} — pressed.`); act(action.id); }} />
             )}
-            {!choosing && !(desk === "cases" && activeShelf === "Board") && !(desk === "work" && activeShelf === "Market") && !(desk === "people" && activeShelf === "Circle") && (
+            {!choosing && !(desk === "cases" && activeShelf === "Board") && !(desk === "work" && (activeShelf === "Shop" || activeShelf === "Money")) && !(desk === "people" && activeShelf === "Circle") && (
               <div className="mt-3 flex flex-col gap-4">
                 {sections.map((section) => (
                   <section key={section.title}>
@@ -746,7 +758,7 @@ function DeltaChip({ delta }: { delta: Delta }) {
 
 type Desk = "life" | "gift" | "cases" | "people" | "work";
 
-/** Five primary tabs. The old Board tab lives under Cases; the Market lives under Work. */
+/** Five primary tabs. The old Board tab lives under Cases; Money (home, markets) and the Shop live under Work. */
 const DESKS: { id: Desk; label: string }[] = [
   { id: "life", label: "Life" },
   { id: "gift", label: "Powers" },
@@ -759,7 +771,7 @@ const ALWAYS_SHELF: Partial<Record<Desk, string[]>> = {
   gift: ["Book", "Moves", "Teachers"],
   cases: ["Files", "Board"],
   people: ["Circle"],
-  work: ["Market"],
+  work: ["Money", "Shop"],
 };
 
 const SHELF_ORDER: Record<Desk, string[]> = {
@@ -767,7 +779,7 @@ const SHELF_ORDER: Record<Desk, string[]> = {
   gift: ["Book", "Moves", "Drill", "Fight", "Teachers"],
   cases: ["Files", "League", "Street", "Board"],
   people: ["Circle", "Meet", "Family", "Crew"],
-  work: ["Market", "School", "Job"],
+  work: ["Money", "Shop", "School", "Job"],
 };
 
 const DESK_LINE: Record<Desk, string> = {
@@ -775,7 +787,7 @@ const DESK_LINE: Record<Desk, string> = {
   gift: "The book, the six moves, the drill, the teachers.",
   cases: "Open files, League calls, the street, and who is loose.",
   people: "The names that know yours.",
-  work: "The market, a seat in class, or a paycheck.",
+  work: "Your money, your home, the markets, the shop, class and the paycheck.",
 };
 
 const EMPTY: Record<Desk, string> = {

@@ -678,3 +678,11 @@
 @keyframes battle-word { 0% { opacity: 0; transform: scale(2.2) rotate(-8deg); } 30% { opacity: 1; transform: scale(.94) rotate(-5deg); } 80% { opacity: 1; transform: scale(1) rotate(-5deg); } 100% { opacity: 0; transform: scale(1.06) rotate(-5deg); } }
 .battle-word { animation: battle-word 900ms cubic-bezier(.2,.9,.3,1.2) both; }
 @media (prefers-reduced-motion: reduce) { .battle-slash, .battle-word { animation-duration: 1ms !important; } }
+
+/* ---------- Money hub: live news ticker ---------- */
+.ticker-mask { mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent); }
+.ticker-run { animation: ticker 38s linear infinite; will-change: transform; }
+@keyframes ticker { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .ticker-run { animation: none; }
+}
