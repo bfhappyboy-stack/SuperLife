@@ -1,6 +1,6 @@
 import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
 import { bizFightEdge, ECON_FLAGS, econAct, econRelocate, economyMonth, ensureEconomy, homeEdge, noteFight, spendBizEdge } from "./economy";
-import { library, notePage } from "./library";
+import { AWAKEN_LESSONS, BRAID_LESSONS, HERO_AWAKEN_BOND, MENTOR_AWAKEN_BOND, SOLO_RATE, awakenBlock, braidBlock, library, notePage, notePower, pageBlock } from "./library";
 import {
   CITIES,
   FEMALE_NAMES,
@@ -28,7 +28,7 @@ import { pickEvent, type EventDef, type MiniTemplate } from "./events";
 import { clamp, firstName, money, whenLabel } from "./format";
 import { basePowers, type CatalogPower, getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { kinOrder, kinPool, legendFits } from "./kin";
-import { MIX_AGE, mentorBondGain, mentorBoost, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, mixOpen } from "./mentors";
+import { MIX_AGE, mentorAwaken, mentorBondGain, mentorBoost, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, mixOpen } from "./mentors";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
 import { ELEMENTS, elementOfLegacy, elementOfPower } from "./elements";
@@ -702,6 +702,11 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
       : " Something offers you a gift. You turn it down. You were always going to do this the human way.";
   }
   if (special.kind === "combine") {
+    // A second gift is an awakening like any other (2026-11-10 eve).
+    if (d.powerId && awakenBlock(d)) {
+      const focus = focusId(d);
+      return ` The light reaches for you and finds no room yet. Powers don't come that easily. It sharpens the one you have.${focus ? grantMastery(d, focus, 12) : ""}`;
+    }
     return grantSecondGift(d, deltas);
   }
   if (special.kind === "grant") {
@@ -712,8 +717,16 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     if (!special.comboId) d.flags.lastGrantAge = d.age;
     const id = special.comboId ?? strayBase(d)?.id ?? null;
     const blocked = id && !(d.unlockedPowers ?? []).includes(id) ? library(d).block : null;
+    const rare = id && !(d.unlockedPowers ?? []).includes(id) ? pageBlock(d, id) : null;
     const name = unlockCombo(d, id);
-    if (!name) return blocked ? " The spark settles in your palm, then fades. Your book has no room for it yet." : " The spark fizzles. You already hold that page.";
+    if (!name) {
+      // Powers are rare (2026-11-10 eve): a brush with one deepens what you already hold instead.
+      const focus = focusId(d);
+      const drilled = focus ? grantMastery(d, focus, 10) : "";
+      const what = getPower(id)?.name ?? "a power";
+      if (id) discoverPower(d, id);
+      return blocked || rare ? ` You feel the edge of ${what} for one breath, then it's gone. Powers don't come that easily. It sharpens the one you have.${drilled}` : " The spark fizzles. You already hold that page.";
+    }
     const legacy = id ? legacyFromCombo(id) : null;
     if (!d.powerId && legacy) {
       d.powerId = legacy;
@@ -743,10 +756,16 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     const before = hero.level;
     raiseBond(d, hero, special.bond);
     settleHeroLevel(hero);
-    const taught = special.teach ? unlockCombo(d, special.teach) : "";
-    const drilled = special.masteryId && special.masteryExp ? grantMastery(d, special.masteryId, special.masteryExp) : "";
+    let taught = "";
+    if (special.teach && !d.flags.powerLesson) {
+      const step = trainSession(d, special.teach, hero.alias, 1);
+      if (step.progressed) d.flags.powerLesson = 1;
+      taught = step.line;
+    }
+    const masteryId = special.masteryId && (d.unlockedPowers ?? []).includes(special.masteryId) ? special.masteryId : special.masteryId ? focusId(d) : undefined;
+    const drilled = masteryId && special.masteryExp ? grantMastery(d, masteryId, special.masteryExp) : "";
     const grew = hero.level > before ? ` ${hero.alias} hits level ${hero.level}. Slowly.` : "";
-    return `${taught ? ` They put ${taught} in your hands.` : ""}${drilled}${grew}`;
+    return `${taught}${drilled}${grew}`;
   }
   if (special.kind === "foundCrew") {
     return foundCrew(d, special.style);
@@ -1127,7 +1146,7 @@ function monthlyBody(d: Game, banners: string[]) {
 
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "omened" || key === "mentored" || key === "tutored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (key === "rested" || key === "omened" || key === "mentored" || key === "tutored" || key === "powerLesson" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
   }
 }
 
@@ -1306,21 +1325,22 @@ function strayBase(d: Game) {
   return pool.length ? pool[rollInt(d, pool.length)] ?? null : null;
 }
 
+/** A birthday awakening: rare, and only for a life that has earned it (2026-11-10 eve). */
+export const YEAR_POWER_CHANCE = 0.05;
+
 function offerYearPower(d: Game, banners: string[]): boolean {
-  if (d.age < 13 || d.hiddenGift) return false;
-  const owned = (d.unlockedPowers ?? []).length;
-  const chance = (d.age < 18 ? 0.34 : d.age < 30 ? 0.28 : 0.2) * (owned >= 10 ? 0.5 : 1);
-  if (roll(d) >= chance) return false;
+  if (d.age < 15 || d.hiddenGift || !d.powerId || awakenBlock(d)) return false;
+  if (roll(d) >= YEAR_POWER_CHANCE) return false;
   const kinRoll = roll(d);
-  const offer = offerPower(d.unlockedPowers ?? [], d.age, roll(d), (list) => kinPool(d.preset, list, kinRoll));
-  if (!offer) return false;
+  const offer = offerPower(d.unlockedPowers ?? [], 0, roll(d), (list) => kinPool(d.preset, list, kinRoll));
+  if (!offer || pageBlock(d, offer.id)) return false;
   discoverPower(d, offer.id);
   const rank = offer.tierName.toLowerCase();
   showChoice(
     d,
     {
       id: "year-power",
-      prompt: `You turn ${d.age}. A power you did not own yesterday is willing: ${offer.name}. It is ${rank}. Basics stay smaller than mixed powers. Take it, or let the year keep it.`,
+      prompt: `You turn ${d.age}. Something has been waking in you for years, and tonight it has a name: ${offer.name}. It is ${rank}. This happens to almost no one. Take it, or let it sleep.`,
       choices: [
         { id: "take", label: `Take ${offer.name}` },
         { id: "leave", label: "Let it pass" },
@@ -1332,7 +1352,7 @@ function offerYearPower(d: Game, banners: string[]): boolean {
           effects: { happiness: 2 },
         },
         leave: {
-          text: `You let ${offer.name} go. The name stays in the book. The year does not offer it twice.`,
+          text: `You let ${offer.name} sleep. The name stays in your book. It may never knock again.`,
           effects: { happiness: 1 },
         },
       },
@@ -1499,6 +1519,8 @@ export function createGame(input: NewLifeOpts): Game {
     d.omenLog = [];
   } else if (chosen) {
     for (const id of picks) unlockCombo(d, id, true);
+    // God Mode trios start with a fuller book; the room for later pages sits on top (2026-11-10 eve).
+    d.flags.startPages = picks.length;
   }
   if (chosen) {
     unlockCombo(d, chosen, true);
@@ -1969,16 +1991,49 @@ function tutorLesson(game: Game, d: Game, kind: string): Game {
   if (!state || !mentor || mixLock(d) || d.flags.tutored || noTime(d, true) || d.phase !== "live") return game;
   const boost = mentorBoost(state.bond);
   if (kind === "braid") {
+    // 2026-11-10 eve: a guided braid is a months-long project, not one evening.
     const pick = mentorBraid(d);
-    if (!pick || library(d).block) return game;
+    if (!pick || braidBlock(d, pick.left.id, pick.right.id, pick.result.id) || d.flags.powerLesson) return game;
     spend(d);
     d.flags.tutored = 1;
+    d.flags.powerLesson = 1;
     state.lessons += 1;
     state.bond = clamp(state.bond + mentorBondGain(state.bond), 0, 100);
-    const name = braidInto(d, pick.left.id, pick.result, ` ${mentor.name} talks you through it: ${pick.left.name} into ${pick.right.name}.`);
-    // A guided braid lands a little drilled: the mentor's head start.
-    const drilled = name ? grantMastery(d, pick.result.id, Math.round(10 * boost)) : "";
-    if (drilled && d.card) d.card = { ...d.card, body: `${d.card.body}${drilled}` };
+    const step = trainSession(d, pick.result.id, mentor.name, boost);
+    if (step.done) {
+      braidInto(d, pick.left.id, pick.result, ` ${mentor.name} talked you through every one of those lessons: ${pick.left.name} into ${pick.right.name}.`);
+      const drilled = grantMastery(d, pick.result.id, Math.round(10 * boost));
+      if (drilled && d.card) d.card = { ...d.card, body: `${d.card.body}${drilled}` };
+      return d;
+    }
+    const deltas: Delta[] = [];
+    applyEffects(d, { powerLevel: 0.02, smarts: 1 }, deltas);
+    setStory(d, `${mentor.name} has you hold ${pick.left.name} against ${pick.right.name} until your hands shake.${step.line}`, deltas, [`Braid lesson: ${pick.result.name}`]);
+    peaks(d);
+    return d;
+  }
+  if (kind === "awaken") {
+    // A new base power, woken slowly by someone who knows you (bond, a drilled power, years apart).
+    const target = mentorAwaken(d);
+    if (!target || state.bond < MENTOR_AWAKEN_BOND || awakenBlock(d, target.id) || d.flags.powerLesson) return game;
+    spend(d);
+    d.flags.tutored = 1;
+    d.flags.powerLesson = 1;
+    state.lessons += 1;
+    state.bond = clamp(state.bond + mentorBondGain(state.bond), 0, 100);
+    const step = trainSession(d, target.id, mentor.name, boost);
+    const deltas: Delta[] = [];
+    applyEffects(d, { powerLevel: step.done ? 0.05 : 0.02, happiness: step.done ? 3 : 0, health: -2 }, deltas);
+    setStory(
+      d,
+      step.done
+        ? `Months of ${mentor.name}'s strangest lessons, and tonight something answers.${step.line} It starts at rank D, like anything worth having.`
+        : `${mentor.name} pushes you somewhere your power has never been, looking for ${target.name}.${step.line}`,
+      deltas,
+      [step.done ? `Awakened: ${target.name}` : `Awakening: ${target.name}`],
+      step.done ? "major" : undefined,
+    );
+    peaks(d);
     return d;
   }
   if (kind === "drill") {
@@ -2023,6 +2078,44 @@ function tutorLesson(game: Game, d: Game, kind: string): Game {
   return game;
 }
 
+/**
+ * One session on a long power project (2026-11-10 eve): waking a base power or braiding two you hold.
+ * One power lesson a month; a base takes AWAKEN_LESSONS, a braid 6 (Gen 1) or 10 (Gen 2), solo braids at half pace.
+ * Switching target starts the new one from zero.
+ */
+export function trainSession(d: Game, targetId: string, by: string, rate: number): { line: string; done: string; progressed: boolean } {
+  const power = getPower(targetId);
+  if (!power || (d.unlockedPowers ?? []).includes(targetId)) return { line: "", done: "", progressed: false };
+  const [a, b] = power.ingredients;
+  const block = power.generation === 0 ? awakenBlock(d, targetId) : a && b ? braidBlock(d, a, b, targetId) : "That one can't be trained.";
+  if (block) return { line: ` ${block}`, done: "", progressed: false };
+  const need = power.generation === 0 ? AWAKEN_LESSONS : BRAID_LESSONS[power.generation === 1 ? 1 : 2];
+  const cur = d.training && d.training.id === targetId ? d.training : { id: targetId, kind: power.generation === 0 ? ("awaken" as const) : ("braid" as const), progress: 0, need, since: d.age };
+  cur.progress = Math.round((cur.progress + rate) * 100) / 100;
+  cur.need = need;
+  cur.by = by;
+  d.training = cur;
+  discoverPower(d, targetId);
+  if (cur.progress < need) {
+    const left = Math.max(1, Math.ceil((need - cur.progress) / Math.max(0.01, rate)));
+    return { line: ` ${power.generation === 0 ? "Waking" : "Braiding"} ${power.name}: ${Math.floor(cur.progress)}/${need}. About ${left} more lesson${left === 1 ? "" : "s"}.`, done: "", progressed: true };
+  }
+  d.training = null;
+  const name = unlockCombo(d, targetId);
+  return { line: name ? ` ${name} wakes in you. ${power.generation === 0 ? "A new power, after all that work." : "The braid holds."}` : "", done: name, progressed: true };
+}
+
+/** Mastery every power you hold gains on a birthday: powers ripen with use. */
+export const RIPEN_EXP = 7;
+
+/** Years between searches for a sparring partner. */
+export const SEEK_GAP = 3;
+/** Years until you can look for another powered trainer (0 = now). */
+export function seekWait(g: Pick<Game, "age" | "flags">): number {
+  const at = g.flags.seekAge;
+  return at === undefined ? 0 : Math.max(0, SEEK_GAP - (g.age - at));
+}
+
 function discoverPower(d: Game, id: string | null | undefined) {
   if (!id || !getPower(id)) return;
   if (!Array.isArray(d.discovered)) d.discovered = [];
@@ -2044,9 +2137,11 @@ function unlockCombo(d: Game, id: string | null | undefined, force = false): str
   if (!Array.isArray(d.unlockedPowers)) d.unlockedPowers = [];
   if (d.unlockedPowers.includes(id)) return "";
   if (!force) {
-    if (library(d).block) return "";
+    // 2026-11-10 eve: every non-story power passes the rarity rules (library.ts pageBlock).
+    if (pageBlock(d, id)) return "";
     notePage(d);
   }
+  notePower(d, power.generation);
   d.unlockedPowers.push(id);
   if (!d.mastery) d.mastery = {};
   if (d.mastery[id] == null) d.mastery[id] = 0;
@@ -2238,10 +2333,11 @@ function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): b
   }
   const heat = d.stats.fame;
   const knownCity = heat >= 4 || !!d.powerId || d.leagueRank > 0;
-  if (d.age >= 10 && knownCity && roll(d) < (forced ? 0.64 : (0.16 + heat / 380) * calm)) {
+  // Powered people are rare (2026-11-10 eve): a cape seeks you out about half as often as before.
+  if (d.age >= 10 && knownCity && roll(d) < (forced ? 0.64 : (0.08 + heat / 700) * calm)) {
     if (roll(d) < 0.48) {
       const known = d.relationships.filter((r) => r.role === "hero" && r.alive);
-      const person = known.length && (known.length >= 4 || roll(d) < 0.7) ? known[rollInt(d, known.length)]! : introduceCape(d, "hero");
+      const person = known.length && (known.length >= 2 || roll(d) < 0.85) ? known[rollInt(d, known.length)]! : introduceCape(d, "hero");
       showChoice(
         d,
         {
@@ -2250,13 +2346,13 @@ function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): b
           choices: [
             { id: "train", label: "Train together" },
             { id: "coffee", label: "Just coffee" },
-            { id: "lesson", label: "Ask for a power" },
+            { id: "lesson", label: "Ask them to drill you" },
             { id: "no", label: "Not today" },
           ],
           outcomes: {
             train: { text: `You and ${person.note} bruise the same hour. It helps.`, effects: { powerLevel: 0.12, happiness: 2, fame: 1, closeness: 8, personId: person.id, karma: 1 } },
             coffee: { text: `${person.note} drinks something awful and tells you who on the board is lying.`, effects: { happiness: 3, smarts: 1, closeness: 6, personId: person.id } },
-            lesson: { text: `${person.note} puts a spark in your hand and tells you not to name it until it behaves.`, special: { kind: "grant" }, effects: { closeness: 5, personId: person.id, powerLevel: 0.06 } },
+            lesson: { text: `You ask ${person.note} for a power. They laugh, then drill the one you have until it's less embarrassing. Powers aren't handed out.`, special: { kind: "mastery", powerId: focusId(d), exp: 8 }, effects: { closeness: 5, personId: person.id, powerLevel: 0.04, health: -2 } },
             no: { text: "You duck them. They put a polite question mark in your texts.", effects: { happiness: -1, closeness: -4, personId: person.id } },
           },
         },
@@ -2307,7 +2403,8 @@ function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): b
     return true;
   }
   // Legends get their gifts from canon, not from a stranger guarding a humming door.
-  if (d.powerId && !d.preset && d.age >= 12 && roll(d) < (forced ? 0.28 : (d.secondaryId ? 0.06 : 0.14) * calm)) {
+  // A relic that hands out a second gift: a rare story moment for a life that has earned one (2026-11-10 eve).
+  if (d.powerId && !d.preset && d.age >= 15 && !awakenBlock(d) && roll(d) < (forced ? 0.28 : (d.secondaryId ? 0.015 : 0.035) * calm)) {
     const site = RELIC_SITES[rollInt(d, RELIC_SITES.length)] ?? RELIC_SITES[0]!;
     const guard = makeCape(d, "rogue");
     showChoice(
@@ -2450,6 +2547,8 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
     peaks(d);
     return d;
   }
+  // Powers you hold deepen just by living with them (2026-11-10 eve): a little mastery every birthday.
+  if (birthday && !giftsSealed(d)) for (const id of d.unlockedPowers ?? []) grantMastery(d, id, RIPEN_EXP);
   if (birthday && d.hiddenGift && !d.preset && d.age >= 3) banners.push(`Strange: ${noteOmen(d)}`);
   if (maybeEncounter(d, banners, false, opts.quiet ? SKIP_ENCOUNTER_CALM : 1)) {
     peaks(d);
@@ -3585,16 +3684,28 @@ export function act(game: Game, id: string): Game {
     if (!left || !right || noTime(d, true) || mixLock(d)) return game;
     const attempt = mix(left, right, d.unlockedPowers ?? []);
     if (!attempt.ok) return game;
-    if (!(d.unlockedPowers ?? []).includes(attempt.power.id) && library(d).block) return game;
+    // 2026-11-10 eve: braiding alone is a long project at half a mentor's pace, one power lesson a month.
+    if (braidBlock(d, left, right, attempt.power.id) || d.flags.powerLesson) return game;
     spend(d);
-    braidInto(d, left, attempt.power, "");
+    d.flags.powerLesson = 1;
+    const step = trainSession(d, attempt.power.id, "you", SOLO_RATE);
+    if (step.done) {
+      braidInto(d, left, attempt.power, " You worked it out alone, lesson after lesson.");
+      return d;
+    }
+    const deltas: Delta[] = [];
+    applyEffects(d, { powerLevel: 0.01, health: -1 }, deltas);
+    setStory(d, `You try to hold ${getPower(left)?.name ?? "one"} and ${getPower(right)?.name ?? "the other"} at once. They slip, then hold a little longer.${step.line}`, deltas, [`Braid practice`]);
+    peaks(d);
     return d;
   }
 
   if (id.startsWith("tutor|")) return tutorLesson(game, d, id.slice(6));
 
   if (id === "seek-hero") {
-    if (d.age < 10 || noTime(d, true)) return game;
+    // Powered people are rare and don't come when called: one search every few years (2026-11-10 eve).
+    if (d.age < 10 || noTime(d, true) || seekWait(d) > 0) return game;
+    d.flags.seekAge = d.age;
     const unlocked = d.unlockedPowers ?? [];
     const home = new Set(dossier(d.cityId).heroes);
     const unmet = (d.heroes ?? [])
@@ -3944,7 +4055,8 @@ export function act(game: Game, id: string): Game {
     const drill = trainExp({ level: focusLevel, generation: focusGen, age: d.age, withHero, story: false, bond: hero.relationship });
     const knownBraid = taught ? (d.discovered ?? []).includes(taught.result.id) : false;
     const choices = [{ id: "braid", label: taught ? (knownBraid ? `Braid ${taught.result.name}` : "Braid a pair they know") : "Drill what you have" }];
-    if (base) choices.push({ id: "learn", label: `Learn ${base.name}` });
+    const canWake = !!base && hero.relationship >= HERO_AWAKEN_BOND && !awakenBlock(d, base.id) && !d.flags.powerLesson;
+    if (base && canWake) choices.push({ id: "learn", label: `Work on waking ${base.name}` });
     choices.push({ id: "spar", label: "Hard spar" });
     const outcomes: Record<string, Outcome> = {
       braid: {
@@ -3974,9 +4086,9 @@ export function act(game: Game, id: string): Game {
         },
       },
     };
-    if (base) {
+    if (base && canWake) {
       outcomes.learn = {
-        text: `${hero.alias} spends the hour installing ${base.name} instead of a speech. It arrives at mastery 1, not mastered.`,
+        text: `${hero.alias} spends the hour looking for ${base.name} in you. Powers aren't installed; they're coaxed.`,
         effects: { happiness: 1, smarts: 1 },
         special: { kind: "heroProgress", heroId: hero.id, exp: 10, bond: 3, teach: base.id, masteryId: base.id, masteryExp: 8 },
       };
@@ -3997,17 +4109,24 @@ export function act(game: Game, id: string): Game {
     const [, heroId, powerId] = id.split("|");
     const hero = d.heroes.find((item) => item.id === heroId && item.met);
     const power = getPower(powerId);
-    if (!hero || !power || power.generation !== 0 || hero.relationship < 28 || d.hiddenGift || noTime(d, true)) return game;
+    if (!hero || !power || power.generation !== 0 || hero.relationship < HERO_AWAKEN_BOND || d.hiddenGift || noTime(d, true)) return game;
     if (!hero.unlocked.includes(power.id) || (d.unlockedPowers ?? []).includes(power.id)) return game;
-    if (library(d).block) return game;
+    if (awakenBlock(d, power.id) || d.flags.powerLesson) return game;
     spend(d);
-    const name = unlockCombo(d, power.id);
-    raiseBond(d, hero, 5);
-    hero.exp += 18;
+    d.flags.powerLesson = 1;
+    const step = trainSession(d, power.id, hero.alias, 1);
+    raiseBond(d, hero, 3);
+    hero.exp += 12;
     const before = hero.level;
     settleHeroLevel(hero);
     const grew = hero.level > before ? ` They hit level ${hero.level}.` : "";
-    setStory(d, `${hero.alias} teaches you ${name || power.name}. It is yours now, which means it can braid.${grew}`, [], [`Learned ${power.name}`], "major");
+    setStory(
+      d,
+      step.done ? `${hero.alias} has been at this with you for months.${step.line} It can braid now.${grew}` : `${hero.alias} shows you where ${power.name} lives in them, and waits to see if it answers in you.${step.line}${grew}`,
+      [],
+      [step.done ? `Awakened: ${power.name}` : `Lesson: ${power.name}`],
+      step.done ? "major" : undefined,
+    );
     peaks(d);
     return d;
   }
@@ -4482,7 +4601,7 @@ export function actionsFor(g: Game): ActionItem[] {
   if (g.age >= 10 && (g.heroes ?? []).some((hero) => !hero.met)) {
     const heroRoster = mergeHeroes(g.heroes);
     const unmet = heroRoster.filter((hero) => !hero.met).length;
-    items.push(item({ id: "seek-hero", group: power, section: "Trainers", label: "Look for a sparring partner", detail: unmet ? `${unmet} still out there. Each one teaches powers you can braid.` : "You already know the circuit.", disabled: noTime(g, true) ?? (unmet ? undefined : "No one left to find."), accent: unmet > 0 }));
+    items.push(item({ id: "seek-hero", group: power, section: "Trainers", label: "Look for a sparring partner", detail: unmet ? seekWait(g) ? `Powered people are rare. Try again in ${seekWait(g)} year${seekWait(g) === 1 ? "" : "s"}.` : `${unmet} still out there, and they don't go looking for students.` : "You already know the circuit.", disabled: noTime(g, true) ?? (unmet ? (seekWait(g) ? `Wait ${seekWait(g)} more year${seekWait(g) === 1 ? "" : "s"}.` : undefined) : "No one left to find."), accent: unmet > 0 && !seekWait(g) }));
   }
 
   if (g.schoolId) {
