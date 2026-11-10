@@ -10,7 +10,7 @@
  */
 import { cityById, jobById, STIPEND } from "./data";
 import { clamp } from "./format";
-import type { Game } from "./types";
+import type { Person, Game } from "./types";
 
 /** Feature flags. `business` stays off until Stage (c) ships complete. */
 export const ECON_FLAGS = { hub: true, business: true };
@@ -112,7 +112,7 @@ export interface HomeDef {
 
 export const HOMES: HomeDef[] = [
   { id: "room", name: "Shared room", blurb: "A door that locks and three roommates who don't.", base: 70_000, minAge: 16, comfort: 0, recover: 0, cover: 1, train: 0, slots: 0, rent: true, buy: false },
-  { id: "flat", name: "Tiny flat", blurb: "One room, one window, all yours.", base: 150_000, minAge: 18, comfort: 1, recover: 1, cover: 1, train: 0, slots: 0, rent: true, buy: true },
+  { id: "flat", name: "Tiny flat", blurb: "A bedroom, a box room, one window.", base: 150_000, minAge: 18, comfort: 1, recover: 1, cover: 1, train: 0, slots: 0, rent: true, buy: true },
   { id: "apartment", name: "City apartment", blurb: "Two bedrooms, a balcony, a landlord who texts back.", base: 300_000, minAge: 18, comfort: 2, recover: 1, cover: 2, train: 0, slots: 1, rent: true, buy: true },
   { id: "loft", name: "Warehouse loft", blurb: "Open floor, freight lift, nobody hears you train.", base: 450_000, minAge: 20, comfort: 1, recover: 1, cover: 3, train: 2, slots: 3, rent: true, buy: true },
   { id: "townhouse", name: "Townhouse", blurb: "Three floors, a garden, neighbors who wave.", base: 650_000, minAge: 21, comfort: 2, recover: 2, cover: 2, train: 1, slots: 2, rent: true, buy: true },
@@ -329,6 +329,8 @@ export interface EconState {
   nextUid: number;
   /** Businesses you run (and a legend's family company). */
   biz?: Biz[];
+  /** People who live with you. */
+  mates?: Mate[];
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -507,6 +509,7 @@ export function ensureEconomy(g: Game): EconState {
       if (!Array.isArray(prior.h[key])) prior.h[key] = [prior.lv[key]!];
     }
     ensureBusiness(g, prior);
+    prior.mates = Array.isArray(prior.mates) ? prior.mates.filter((m) => m && mateById(m.mateId) && g.relationships.some((p) => p.id === m.pid)) : [];
     return prior;
   }
   const seed = Math.floor(hash(g.portrait, g.name, g.cityId, g.upbringing) * 1_000_000_000);
@@ -723,14 +726,16 @@ export function livingOf(g: Game): Living {
   if (e?.living === "lease" && e.lease) {
     const def = homeById(e.lease.homeId);
     const dist = districtOf(e.lease.cityId, e.lease.districtId);
-    return { kind: "lease", name: e.lease.name ?? def?.name ?? "Rented place", place: `${dist?.name ?? ""}, ${cityById(e.lease.cityId).name}`, homeId: e.lease.homeId, comfort: def?.comfort ?? 0, recover: def?.recover ?? 0, cover: def?.cover ?? 0, train: def?.train ?? 0, monthly: e.lease.rent, note: e.lease.control ? "Rent-controlled" : undefined };
+    const mp = matePerks(g);
+    return { kind: "lease", name: e.lease.name ?? def?.name ?? "Rented place", place: `${dist?.name ?? ""}, ${cityById(e.lease.cityId).name}`, homeId: e.lease.homeId, comfort: (def?.comfort ?? 0) + mp.comfort, recover: Math.max(0, (def?.recover ?? 0) + mp.recover), cover: Math.max(0, (def?.cover ?? 0) + mp.cover), train: (def?.train ?? 0) + mp.train, monthly: e.lease.rent, note: e.lease.control ? "Rent-controlled" : undefined };
   }
   const own = e?.homes.find((h) => h.uid === e.living);
   if (e && own) {
     const def = homeById(own.homeId);
     const mods = own.mods.map(modById);
     const sum = (k: "comfort" | "recover" | "cover" | "train") => (def?.[k] ?? 0) + mods.reduce((s, m) => s + (m?.[k] ?? 0), 0);
-    return { kind: "own", name: own.name ?? def?.name ?? "Your place", place: `${districtOf(own.cityId, own.districtId)?.name ?? ""}, ${cityById(own.cityId).name}`, homeId: own.homeId, comfort: Math.min(4, sum("comfort")), recover: Math.min(4, sum("recover")), cover: Math.min(5, sum("cover")), train: Math.min(4, sum("train")), monthly: (own.mortgage?.pay ?? 0) + homeUpkeep(e, own), home: own, note: own.note };
+    const mp = matePerks(g);
+    return { kind: "own", name: own.name ?? def?.name ?? "Your place", place: `${districtOf(own.cityId, own.districtId)?.name ?? ""}, ${cityById(own.cityId).name}`, homeId: own.homeId, comfort: Math.min(4, sum("comfort") + mp.comfort), recover: Math.max(0, Math.min(4, sum("recover") + mp.recover)), cover: Math.max(0, Math.min(5, sum("cover") + mp.cover)), train: Math.min(4, sum("train") + mp.train), monthly: (own.mortgage?.pay ?? 0) + homeUpkeep(e, own), home: own, note: own.note };
   }
   if (g.age < HOUSING_AGE || hasFamily(g)) {
     const restless = g.age >= 30;
@@ -929,6 +934,7 @@ export function economyMonth(g: Game): MonthOut {
   for (const [id, lot] of Object.entries(e.stocks)) if (!lot.lockUntil || g.age >= lot.lockUntil) divs += (lot.n * stockPrice(e, id) * (stockById(id)?.div ?? 0)) / 12;
   if (divs >= 1) add("Dividends", divs);
   if (ECON_FLAGS.business) out.banners.push(...bizMonth(g, e, add));
+  out.banners.push(...mateMonth(g, e, add));
 
   // Perks from where you live accumulate gently, in fractions.
   const live = livingOf(g);
@@ -1149,9 +1155,20 @@ const homeName = (h: OwnedHome) => h.name ?? `the ${homeById(h.homeId)?.name.toL
 
 /** Player actions: "econ|<verb>|...". Mutates g (a draft). Moving home spends one of the month's moves. */
 export function econAct(g: Game, id: string, movesLeft: number): EconResult {
+  const res = econActInner(g, id, movesLeft);
+  const e = econOf(g);
+  if (res.ok && e) {
+    const note = matesLeave(g, e);
+    if (note) res.line = `${res.line} ${note}`;
+  }
+  return res;
+}
+
+function econActInner(g: Game, id: string, movesLeft: number): EconResult {
   const e = ensureEconomy(g);
   const [, verb, a = "", b = "", c = ""] = id.split("|");
   const noMove = movesLeft <= 0 ? { ok: false, line: "Moving day takes a move, and none are left this month." } : null;
+  if (verb === "mate") return mateAct(g, e, a, b, movesLeft);
   if (verb === "biz") return ECON_FLAGS.business ? bizAct(g, e, a, b, c, movesLeft) : { ok: false, line: "Not open yet." };
   switch (verb) {
     case "trade": {
@@ -1210,6 +1227,7 @@ export function econAct(g: Game, id: string, movesLeft: number): EconResult {
     case "sell": {
       const home = e.homes.find((h) => h.uid === a);
       if (!home) return { ok: false, line: "You don't own that." };
+      if (home.estate) return { ok: false, line: `${home.name ?? "The estate"} is the family estate. It isn't for sale.` };
       const value = homeValue(e, home);
       const net = Math.round(value * (1 - SELL_FEE) - (home.mortgage?.bal ?? 0));
       if (net < 0 && g.stats.money < -net) return { ok: false, line: `Underwater: you'd need ${fmt(-net)} to clear the mortgage.` };
@@ -1283,6 +1301,8 @@ export function econRelocate(g: Game): string | null {
     e.living = null;
     parts.push(`${own.name ?? homeById(own.homeId)?.name} stays behind; let it out from Work ▸ Money.`);
   }
+  const mates = matesLeave(g, e);
+  if (mates) parts.push(mates);
   return parts.length ? parts.join(" ") : null;
 }
 
@@ -1667,6 +1687,230 @@ export function bizAct(g: Game, e: EconState, verb: string, a: string, b: string
       g.stats.money += value;
       e.biz = e.biz!.filter((x) => x.uid !== a);
       return { ok: true, line: `You sell ${biz.name} for ${fmt(value)}.` };
+    }
+    default:
+      return { ok: false, line: "Not possible." };
+  }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Roommates (2026-11-10 owner's call): split the rent with named people who live with you. They become
+// friends in People, they change how home feels, they have their own months, and they might see the suit.
+// ---------------------------------------------------------------------------------------------------------
+
+export interface MateDef {
+  id: string;
+  name: string;
+  sex: "male" | "female";
+  age: number;
+  job: string;
+  blurb: string;
+  /** Home perks they bring (negative = they cost you). */
+  comfort?: number;
+  recover?: number;
+  train?: number;
+  /** How likely they are to notice the double life (0–1). */
+  nosy: number;
+  /** Chance a month's share is late. */
+  flaky: number;
+}
+
+export const MATES: MateDef[] = [
+  { id: "maya", name: "Maya Okafor", sex: "female", age: 23, job: "Nursing student", blurb: "Patches you up without asking how. Asks later.", recover: 1, nosy: 0.35, flaky: 0.05 },
+  { id: "dev", name: "Dev Patel", sex: "male", age: 26, job: "Line cook", blurb: "Leftovers from the restaurant, every night.", comfort: 1, nosy: 0.2, flaky: 0.1 },
+  { id: "jules", name: "Jules Moreau", sex: "female", age: 24, job: "Club DJ", blurb: "Great parties. Your sleep schedule files a complaint.", comfort: 1, recover: -1, nosy: 0.1, flaky: 0.2 },
+  { id: "sam", name: "Sam Kowalski", sex: "male", age: 31, job: "Night-shift paramedic", blurb: "Never home. Perfect.", nosy: 0.05, flaky: 0.03 },
+  { id: "rosa", name: "Rosa Delgado", sex: "female", age: 25, job: "Cub reporter", blurb: "Warm, funny, and always chasing the cape story.", comfort: 1, nosy: 0.7, flaky: 0.05 },
+  { id: "theo", name: "Theo Lindqvist", sex: "male", age: 22, job: "Game programmer", blurb: "Headphones on, door shut, rent on time.", nosy: 0.12, flaky: 0.06 },
+  { id: "priya", name: "Priya Shah", sex: "female", age: 24, job: "Law student", blurb: "Tidy, sharp, notices everything.", comfort: 1, nosy: 0.45, flaky: 0.04 },
+  { id: "ben", name: "Ben Adeyemi", sex: "male", age: 27, job: "Actor (between roles)", blurb: "Big heart, small savings.", comfort: 1, nosy: 0.2, flaky: 0.28 },
+  { id: "ivy", name: "Ivy Chen", sex: "female", age: 29, job: "Tattoo artist", blurb: "Unbothered by blood. Very bothered by dishes.", nosy: 0.15, flaky: 0.1 },
+  { id: "marco", name: "Marco Russo", sex: "male", age: 34, job: "Retired boxer", blurb: "Spars with you in the hallway. Snores like a truck.", train: 1, recover: -1, nosy: 0.25, flaky: 0.08 },
+];
+
+export const mateById = (id: string) => MATES.find((m) => m.id === id);
+
+/** Spare bedrooms by home tier. A shared room is already shared; a lair is nobody's business. */
+export const ROOMS: Record<string, number> = { room: 0, flat: 1, apartment: 2, loft: 2, townhouse: 3, penthouse: 2, lair: 0, mansion: 3 };
+
+export interface Mate {
+  /** Person id in g.relationships. */
+  pid: string;
+  mateId: string;
+  /** Where they live with you (livingKey); they don't follow you when you move. */
+  at: string;
+  since: number;
+  knows?: boolean;
+}
+
+export function livingKey(e: EconState): string {
+  if (e.living === "lease" && e.lease) return `lease:${e.lease.cityId}:${e.lease.districtId}:${e.lease.homeId}`;
+  return e.living ?? "";
+}
+
+export function roomsHere(g: Game): number {
+  const live = livingOf(g);
+  if (live.kind !== "lease" && live.kind !== "own") return 0;
+  return ROOMS[live.homeId ?? ""] ?? 0;
+}
+
+export function matesHere(g: Game): { mate: Mate; def: MateDef; person: Person | undefined }[] {
+  const e = econOf(g);
+  if (!e) return [];
+  const key = livingKey(e);
+  return (e.mates ?? []).filter((m) => m.at === key).map((mate) => ({ mate, def: mateById(mate.mateId)!, person: g.relationships.find((p) => p.id === mate.pid) })).filter((row) => row.def);
+}
+
+/** What one roommate pays you a month: an equal share of the rent, or a room's rent in a home you own. */
+export function mateShare(g: Game): number {
+  const e = econOf(g);
+  if (!e) return 0;
+  const n = matesHere(g).length;
+  if (e.living === "lease" && e.lease) return Math.round(e.lease.rent / (Math.max(1, n) + 1) / 10) * 10;
+  const own = e.homes.find((h) => h.uid === e.living);
+  if (own) return Math.round((marketRent(e, own.homeId, own.cityId, own.districtId) * 0.3) / 10) * 10;
+  return 0;
+}
+
+/** Share if one more moved in (what the Find list shows). */
+export function mateShareIfJoined(g: Game): number {
+  const e = econOf(g);
+  if (!e) return 0;
+  const n = matesHere(g).length + 1;
+  if (e.living === "lease" && e.lease) return Math.round(e.lease.rent / (n + 1) / 10) * 10;
+  return mateShare(g);
+}
+
+/** Three people looking for a room this month. */
+export function mateCandidates(g: Game): MateDef[] {
+  const e = econOf(g);
+  if (!e) return [];
+  const taken = new Set((e.mates ?? []).map((m) => m.mateId));
+  const pool = MATES.filter((m) => !taken.has(m.id));
+  const t = at(g);
+  return pool
+    .map((m) => ({ m, k: hash(e.seed, t, m.id, "mate") }))
+    .sort((a, b) => a.k - b.k)
+    .slice(0, 3)
+    .map((row) => row.m);
+}
+
+/** Roommates leave when you move. Returns a note. */
+export function matesLeave(g: Game, e: EconState): string | null {
+  const key = livingKey(e);
+  const gone = (e.mates ?? []).filter((m) => m.at !== key);
+  if (!gone.length) return null;
+  e.mates = (e.mates ?? []).filter((m) => m.at === key);
+  const names = gone.map((m) => g.relationships.find((p) => p.id === m.pid)?.name.split(" ")[0] ?? "Your roommate");
+  return `${names.join(" and ")} ${gone.length > 1 ? "stay" : "stays"} behind, still a phone call away.`;
+}
+
+/** Perk changes from the people you live with (applied inside livingOf). */
+export function matePerks(g: Game): { comfort: number; recover: number; cover: number; train: number } {
+  const rows = matesHere(g);
+  if (!rows.length) return { comfort: 0, recover: 0, cover: 0, train: 0 };
+  const sum = (k: "comfort" | "recover" | "train") => rows.reduce((s, r) => s + (r.def[k] ?? 0), 0);
+  return {
+    // A good roommate lifts a home; a crowded one wears on you.
+    comfort: clamp(sum("comfort"), -1, 1) - (rows.length >= 2 ? 1 : 0),
+    recover: clamp(sum("recover"), -1, 1),
+    // Every extra pair of eyes is less cover for the double life.
+    cover: -rows.length,
+    train: clamp(sum("train"), 0, 1),
+  };
+}
+
+const hasSecret = (g: Game) => (g.unlockedPowers?.length ?? 0) > 0 || !!g.powerId;
+
+interface MateEvent {
+  id: string;
+  text: string;
+  bond: number;
+  joy?: number;
+  hp?: number;
+}
+
+const MATE_EVENTS: MateEvent[] = [
+  { id: "dinner", text: "{n} cooks for the whole place. Seconds, thirds.", bond: 3, hp: 1 },
+  { id: "party", text: "{n} throws a party. Your ears ring till Tuesday.", bond: 2, joy: 2, hp: -1 },
+  { id: "dishes", text: "You and {n} fight about the dishes. Again.", bond: -5, joy: -1 },
+  { id: "cover", text: "{n} covers for you when your family calls at 3am.", bond: 4 },
+  { id: "movie", text: "Bad-movie night with {n}. You laugh until it hurts.", bond: 4, joy: 2 },
+  { id: "borrow", text: "{n} borrows your good jacket and returns it… mostly.", bond: -2 },
+];
+
+/** Monthly roommate pass from economyMonth: rent shares, their small events, and the secret. */
+export function mateMonth(g: Game, e: EconState, add: (label: string, amount: number) => void): string[] {
+  const banners: string[] = [];
+  const left = matesLeave(g, e);
+  if (left) banners.push(left);
+  const rows = matesHere(g);
+  if (!rows.length) return banners;
+  const t = at(g);
+  const share = mateShare(g);
+  for (const { mate, def, person } of rows) {
+    const first = (person?.name ?? def.name).split(" ")[0]!;
+    if (hash(e.seed, t, mate.pid, "late") < def.flaky) {
+      if (person) person.closeness = clamp(person.closeness - 2, 0, 100);
+      if (hash(e.seed, t, mate.pid, "late-say") < 0.5) banners.push(`${first} is short on rent this month. "Next month, I swear."`);
+    } else add(`Roommate · ${first}`, share);
+    if (person) person.closeness = clamp(person.closeness + 1, 0, 100);
+    if (hash(e.seed, t, mate.pid, "event") < 0.12) {
+      const ev = MATE_EVENTS[Math.floor(hash(e.seed, t, mate.pid, "which") * MATE_EVENTS.length)]!;
+      if (person) person.closeness = clamp(person.closeness + ev.bond, 0, 100);
+      e.acc.joy += ev.joy ?? 0;
+      e.acc.hp += ev.hp ?? 0;
+      banners.push(ev.text.replace("{n}", first));
+    }
+    // The double life: a nosy roommate may see what they shouldn't.
+    if (hasSecret(g) && !mate.knows && hash(e.seed, t, mate.pid, "secret") < def.nosy * 0.03 * (g.traits.includes("secret") ? 1.5 : 1)) {
+      if ((person?.closeness ?? 0) >= 60) {
+        mate.knows = true;
+        if (person) person.closeness = clamp(person.closeness + 8, 0, 100);
+        banners.unshift(`${first} walks in on you patching a wound. A long look, then: "I'll get the ice." Your secret is safe with ${def.sex === "female" ? "her" : "him"}.`);
+      } else {
+        g.stats.happiness = clamp(g.stats.happiness - 4, 0, 100);
+        g.stats.fame = clamp((g.stats.fame ?? 0) + 2, 0, 100);
+        g.flags.heat = ((g.flags.heat as number | undefined) ?? 0) + 2;
+        if (person) person.closeness = clamp(person.closeness - 20, 0, 100);
+        e.mates = (e.mates ?? []).filter((m) => m !== mate);
+        banners.unshift(`${first} saw the suit, panicked and moved out. Now ${def.sex === "female" ? "she" : "he"}'s telling people. Keep your head down.`);
+      }
+    }
+  }
+  return banners;
+}
+
+/** econ|mate|<verb>|... — find (no move), hang (a move), out (no move). */
+export function mateAct(g: Game, e: EconState, verb: string, a: string, movesLeft: number): EconResult {
+  const live = livingOf(g);
+  switch (verb) {
+    case "find": {
+      const def = mateById(a);
+      if (!def) return { ok: false, line: "Not possible." };
+      if (live.kind !== "lease" && live.kind !== "own") return { ok: false, line: "Rent or buy a place first." };
+      if (matesHere(g).length >= roomsHere(g)) return { ok: false, line: roomsHere(g) ? "Every spare room is taken." : "No spare room here." };
+      if (!mateCandidates(g).some((m) => m.id === def.id)) return { ok: false, line: "They found somewhere else." };
+      const person: Person = { id: `p${g.nextId++}`, name: def.name, role: "friend", closeness: 35, age: def.age, alive: true, metAt: g.age, note: `Roommate · ${def.job}`, portrait: Math.floor(hash(e.seed, def.id, "face") * 1_000_000_000) + 1, sex: def.sex };
+      g.relationships.push(person);
+      e.mates = [...(e.mates ?? []), { pid: person.id, mateId: def.id, at: livingKey(e), since: at(g) }];
+      return { ok: true, line: `${def.name.split(" ")[0]} moves in with two boxes and a plant. About ${fmt(mateShare(g))} a month off your bills.` };
+    }
+    case "hang": {
+      const row = matesHere(g).find((r) => r.mate.pid === a);
+      if (!row?.person) return { ok: false, line: "Not possible." };
+      if (movesLeft <= 0) return { ok: false, line: "No free time left this month." };
+      row.person.closeness = clamp(row.person.closeness + 8, 0, 100);
+      g.stats.happiness = clamp(g.stats.happiness + 2, 0, 100);
+      return { ok: true, spend: true, line: `An evening with ${row.def.name.split(" ")[0]}: takeout, gossip, a long talk on the fire escape.` };
+    }
+    case "out": {
+      const row = (e.mates ?? []).find((m) => m.pid === a);
+      if (!row) return { ok: false, line: "Not possible." };
+      e.mates = (e.mates ?? []).filter((m) => m !== row);
+      const person = g.relationships.find((p) => p.id === a);
+      if (person) person.closeness = clamp(person.closeness - 10, 0, 100);
+      return { ok: true, line: `${person?.name.split(" ")[0] ?? "Your roommate"} packs up. It's quieter. A little too quiet.` };
     }
     default:
       return { ok: false, line: "Not possible." };

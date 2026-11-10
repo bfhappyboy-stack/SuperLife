@@ -15,6 +15,7 @@ import {
   homeGate, homeUpkeep, homeValue, HOUSING_AGE, letIncome, livingOf, marketCity, marketRent, maxBuy, MIN_DEPOSIT, netWorth, portfolioValue, quoteHome,
   quoteRent, quoteTrade, SELL_FEE, stockById, stockViews, TRADE_AGE, type EconState, type News, type OwnedHome, type SeriesView,
   BIZ, bizBooks, bizById, bizNeed, bizValue, quoteBiz, BIZ_RAMP, CITY_PROP, type Biz,
+  mateCandidates, matesHere, mateShare, mateShareIfJoined, roomsHere,
 } from "@/game/economy";
 import { cityById } from "@/game/data";
 import type { Game } from "@/game/types";
@@ -366,6 +367,8 @@ function HomeTab({ game, e, run }: { game: Game; e: EconState; run: (id: string)
         )}
       </article>
 
+      {(live.kind === "lease" || live.kind === "own") && <Roommates game={game} run={run} />}
+
       {/* Last month */}
       {last && (last.lines.length > 0 || last.perks.length > 0) && (
         <article className="card px-4 py-3">
@@ -615,7 +618,11 @@ function OwnedCard({ game, e, h, run, confirm, setConfirm, mods, setMods }: { ga
             Pay off {fmt(owed)}
           </button>
         )}
-        {confirm === `sell:${h.uid}` ? (
+        {h.estate ? (
+          <span className="chip !min-h-11 !px-3 text-xs text-gold">
+            <Lock className="size-3.5" aria-hidden /> Family estate · not for sale
+          </span>
+        ) : confirm === `sell:${h.uid}` ? (
           <button type="button" onClick={() => { run(`econ|sell|${h.uid}`); setConfirm(null); }} className="btn btn-primary !min-h-11 !px-3 text-xs">
             Sell · {net >= 0 ? `get ${fmt(net)}` : `pay ${fmt(-net)}`}
           </button>
@@ -1011,6 +1018,94 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
             </button>
           )}
         </div>
+      )}
+    </article>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Roommates
+// ---------------------------------------------------------------------------------------------------------
+
+function Roommates({ game, run }: { game: Game; run: (id: string) => void }) {
+  const [finding, setFinding] = useState(false);
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const rooms = roomsHere(game);
+  const here = matesHere(game);
+  if (rooms === 0 && here.length === 0) return null;
+  const share = mateShare(game);
+  const free = rooms - here.length;
+  const next = mateShareIfJoined(game);
+  return (
+    <article className="card px-4 py-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="t-label flex items-center gap-1.5 text-muted">
+          <Users className="size-3.5" aria-hidden /> Roommates
+        </p>
+        <span className="text-[11px] font-bold text-muted">
+          {here.length}/{rooms} rooms
+        </span>
+      </div>
+      {here.length === 0 && <p className="mt-1 text-xs text-muted">Split the bills with someone. Good company lifts a home; every extra pair of eyes is less cover for the double life.</p>}
+      <ul className="mt-2 flex flex-col gap-2.5">
+        {here.map(({ mate, def, person }) => (
+          <li key={mate.pid} className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2.5">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/8 text-sm font-black text-fg">{def.name[0]}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-fg">
+                  {person?.name ?? def.name}
+                  {mate.knows && <span className="ml-1.5 align-middle text-[10px] font-extrabold tracking-wider text-good">KNOWS · KEEPS IT</span>}
+                </p>
+                <p className="truncate text-[11px] text-muted">{def.job} · {def.blurb}</p>
+              </div>
+              <span className="t-num shrink-0 text-sm text-good">+{fmt(share)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="stat-bar !h-1.5 flex-1" aria-label={`Closeness ${person?.closeness ?? 0}`}>
+                <div className="stat-fill" style={{ width: `${person?.closeness ?? 0}%`, "--fill": "#ff8fd0" } as CSSProperties} />
+              </div>
+              <button type="button" disabled={game.majorsLeft <= 0} onClick={() => run(`econ|mate|hang|${mate.pid}`)} className="btn btn-ghost !min-h-11 !px-3 text-xs">
+                Hang out
+              </button>
+              {confirm === mate.pid ? (
+                <button type="button" onClick={() => { run(`econ|mate|out|${mate.pid}`); setConfirm(null); }} className="btn btn-primary !min-h-11 !px-3 text-xs">
+                  Ask to leave
+                </button>
+              ) : (
+                <button type="button" aria-label={`Ask ${def.name} to move out`} onClick={() => setConfirm(mate.pid)} className="btn btn-ghost !min-h-11 !min-w-11 !px-0">
+                  <Minus className="size-4" aria-hidden />
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {free > 0 && (
+        <>
+          <button type="button" aria-expanded={finding} onClick={() => setFinding(!finding)} className="btn btn-gold mt-3 !min-h-11 w-full text-sm">
+            <Plus className="size-4" aria-hidden /> Find a roommate · ~{fmt(next)}/mo
+          </button>
+          {finding && (
+            <ul className="anim-rise mt-2 flex flex-col gap-2">
+              {mateCandidates(game).map((m) => (
+                <li key={m.id} className="flex items-center gap-2.5 rounded-xl bg-black/25 px-2.5 py-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-fg">{m.name} <span className="text-[11px] font-semibold text-muted">· {m.age}</span></p>
+                    <p className="text-[11px] text-muted">{m.job}. {m.blurb}</p>
+                    <p className="mt-0.5 text-[10px] font-bold text-muted">
+                      {[m.comfort ? `${m.comfort > 0 ? "+" : ""}${m.comfort} Comfort` : "", m.recover ? `${m.recover > 0 ? "+" : ""}${m.recover} Recovery` : "", m.train ? "+1 Training" : "", m.nosy >= 0.4 ? "Nosy" : m.nosy <= 0.1 ? "Minds own business" : "", m.flaky >= 0.2 ? "Rent sometimes late" : ""].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => { run(`econ|mate|find|${m.id}`); setFinding(false); }} className="btn btn-gold !min-h-11 shrink-0 !px-3 text-xs">
+                    Move in
+                  </button>
+                </li>
+              ))}
+              <li className="text-[11px] text-muted">New faces each month.</li>
+            </ul>
+          )}
+        </>
       )}
     </article>
   );

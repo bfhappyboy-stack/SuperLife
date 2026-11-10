@@ -4,6 +4,17 @@
 
 Built on `origin/main` (8d5ade2). Typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push. Old saves migrate (`ensureEconomy` in `migrate`).
 
+### Increment 3: roommates; family estates can't be sold (owner's calls, 00:40)
+
+- **Roommates (A):** any rented or owned home with spare rooms (tiny flat 1, apartment 2, loft 2, townhouse 3, penthouse 2, mansion 3; shared rooms and lairs none) can take roommates. **Money ▸ Home ▸ Roommates ▸ Find a roommate** shows three people looking this month (10 data-driven characters: nursing student, line cook, club DJ, night-shift paramedic, cub reporter, programmer, law student, actor, tattoo artist, retired boxer).
+  - **Money:** on a lease each pays an equal share of the rent (Peter's $720 Queens walk-up → $360 each); in a home you own they pay a room's rent. Flaky ones are sometimes late.
+  - **Trade-offs:** each roommate costs 1 Cover (heat fades slower); two or more cost 1 Comfort; their own perks add or subtract (the cook +Comfort, the nurse +Recovery, the DJ −Recovery, the boxer +Training).
+  - **Relationships:** they join People as friends (closeness grows monthly; **Hang out** takes a move: +8 closeness, +2 Joy); 12% a month they bring a small event (dinner, a party, a fight about dishes…).
+  - **Secret identity:** if you have powers, a nosy roommate may see the suit (2–3% a month for the reporter). Close (60+) and they keep it ("KNOWS · KEEPS IT"); a stranger panics, moves out and talks: −4 Joy, +2 Fame, +2 Heat.
+  - They don't follow you when you move; they stay in People.
+- **Family estates (B):** Wayne Manor and Stark Mansion can't be sold ("Family estate · not for sale" on the card; the engine refuses too).
+- **Tests:** +3 (estate lock; roommate split, People, perks, ledger, hang out, moving; the secret both ways). 257 game tests pass.
+
 ### Increment 2: businesses — open, staff, upgrade, sell; Tony and Bruce chair their family companies
 
 - **Why:** the owner asked to "make and run businesses and make upgrades and have staff". Stage (c) of the economy plan.

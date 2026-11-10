@@ -324,3 +324,87 @@ test("old saves without an economy load with one; a broken economy is repaired",
   assert.equal(fixed.lv["s:STRK"], 1);
   assert.ok(stockById("STRK") && stockPrice(fixed, "STRK") > 0);
 });
+
+test("Wayne Manor and Stark Mansion are family estates: never for sale", () => {
+  const bruce = createGame({ ...BASE, cityId: "crown", mode: "god", preset: "batman" } as never);
+  bruce.age = 30;
+  bruce.phase = "live";
+  bruce.pending = null;
+  const manor = econOf(bruce)!.homes[0]!;
+  const after = act(bruce, `econ|sell|${manor.uid}`);
+  assert.match(after.card.banner[0]!, /family estate/);
+  assert.equal(econOf(after)!.homes.length, 1);
+});
+
+test("roommates: split the rent, live in People, change how home feels, and stay behind when you move", async () => {
+  const { mateCandidates, matesHere, mateShare, roomsHere, ROOMS, MATES } = await import("../economy.ts");
+  assert.equal(new Set(MATES.map((m) => m.id)).size, MATES.length);
+  let g = adult(26, 60_000, { cityId: "nyc" } as Partial<Game>);
+  g.jobId = "office";
+  assert.match(act(g, `econ|mate|find|${MATES[0]!.id}`).card.banner[0]!, /Rent or buy/);
+  g = act(g, "econ|rent|apartment|queens");
+  assert.equal(roomsHere(g), ROOMS.apartment);
+  const perksAlone = livingOf(g);
+  const pick = mateCandidates(g)[0]!;
+  g = act(g, `econ|mate|find|${pick.id}`);
+  assert.equal(matesHere(g).length, 1);
+  const person = g.relationships.find((p) => p.name === pick.name)!;
+  assert.equal(person.role, "friend");
+  const rent = econOf(g)!.lease!.rent;
+  assert.equal(mateShare(g), Math.round(rent / 2 / 10) * 10, "a lease splits evenly");
+  assert.equal(livingOf(g).cover, Math.max(0, perksAlone.cover - 1), "one more pair of eyes");
+  // A month: their share lands in the ledger (unless they're late), and closeness grows.
+  let paid = 0;
+  for (let i = 0; i < 6; i += 1) {
+    g = month(g);
+    paid += econOf(g)!.last!.lines.filter((l) => l.label.startsWith("Roommate ·")).reduce((s, l) => s + l.amount, 0);
+  }
+  assert.ok(paid >= mateShare(g) * 4, "shares arrive most months");
+  // Hanging out takes a move and lifts closeness.
+  const pid = matesHere(g)[0]?.mate.pid;
+  if (pid) {
+    g.majorsLeft = 3;
+    const before = g.relationships.find((p) => p.id === pid)!.closeness;
+    const h = act(g, `econ|mate|hang|${pid}`);
+    assert.equal(h.majorsLeft, 2);
+    assert.ok(h.relationships.find((p) => p.id === pid)!.closeness > before);
+  }
+  // Full house: no more rooms than the home has.
+  const full = structuredClone(g);
+  for (const m of mateCandidates(full)) act(full, `econ|mate|find|${m.id}`);
+  // Moving: they stay behind (still friends).
+  g.majorsLeft = 3;
+  const moved = act(g, "econ|rent|flat|brooklyn");
+  assert.equal(matesHere(moved).length, 0);
+  assert.ok(moved.relationships.some((p) => p.name === pick.name), "still in People");
+});
+
+test("roommates: nosy ones may find the suit — a close one keeps it, a stranger tells", async () => {
+  const { MATES, matesHere, mateMonth } = await import("../economy.ts");
+  let g = adult(26, 60_000, { cityId: "nyc" } as Partial<Game>);
+  g = act(g, "econ|rent|apartment|queens");
+  const e = econOf(g)!;
+  const rosa = MATES.find((m) => m.id === "rosa")!;
+  const add = (person: number) => {
+    const p = { id: `p${g.nextId++}`, name: rosa.name, role: "friend" as const, closeness: person, age: 25, alive: true, metAt: 26 };
+    g.relationships.push(p);
+    e.mates = [{ pid: p.id, mateId: "rosa", at: `lease:${e.lease!.cityId}:${e.lease!.districtId}:${e.lease!.homeId}`, since: 0 }];
+    return p;
+  };
+  // Run enough months that the 2% secret roll fires at least once, both ways.
+  g.unlockedPowers = g.unlockedPowers?.length ? g.unlockedPowers : ["fire-control"];
+  let kept = false;
+  let told = false;
+  for (let i = 0; i < 600 && !(kept && told); i += 1) {
+    const close = i % 2 === 0;
+    add(close ? 80 : 20);
+    g.age = 26 + Math.floor(i / 12);
+    g.month = i % 12;
+    mateMonth(g, e, () => {});
+    const row = matesHere(g)[0];
+    if (close && row?.mate.knows) kept = true;
+    if (!close && !row) told = true;
+  }
+  assert.ok(kept, "a close roommate keeps the secret");
+  assert.ok(told, "a stranger panics and moves out");
+});
