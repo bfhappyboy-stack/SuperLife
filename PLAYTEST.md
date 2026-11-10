@@ -1,5 +1,14 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-10 night): living economy — engine sims and phone check
+
+- **Metro office worker** (mystery, rents a tiny flat at 21, buys one at 28–30 with 20% down, puts 40% of spare cash into Oscorp at 26): nets ~+$1.6k a month at 31 with a $1.6k mortgage, no arrears to 80; portfolio swings ±$30k a month in volatile years, which reads well in the "on paper" line.
+- **No-job adult** is evicted after three red months (intended).
+- **Bruce / Tony:** net worth above $10M from the estate from childhood; trust shares can't be sold or pay out until 18 / 21, so kid Bruce no longer piles up dividend cash. Mansion upkeep (would be ~$11k/mo) is waived for estates.
+- **Peter:** family home until 18, then a rent-controlled Queens walk-up at ~$720/mo; +$2.8k a month at 23.
+- **Stocks** were running 4–5× in 35 years; anchors and drift were cut so growth is gentle and bounded (80-year bounds test); district ordering holds (Midtown > Brooklyn > Queens).
+- **Phone (390×844):** hub top card, ticker, Home and Markets tabs, district cards, trade panel all fit; four-option boards fit one row. No console errors.
+
 ## Night pass (2026-11-09 night): playtest first — Harbor street kid, Dustreach alien God Mode, Wonder Woman, Hulk, Black Panther, Wolverine
 
 **Builds (new this pass):** a Harbor Bay / *Street kid* mystery (Nell Okafor) and a Dustreach / *Alien planet* **God Mode** life with **Telekinesis + Lightning Control** (Kai Moreno), with **Wonder Woman, Hulk, Black Panther and Wolverine** (the four legends still on generic moves) and Cap, Spider-Man, Batman for reference. Three seeds to 50, all four difficulties, 1,664 villain boards per difficulty, same tell-reading policy (`/workspace/playtest/n1109/`). Phone screens at 390×844: Harbor 20 vs The Auditor, Wonder Woman 24 vs Cheetah, Black Panther 22 vs Klaw (all Normal).

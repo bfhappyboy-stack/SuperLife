@@ -1,5 +1,14 @@
 # SuperLife — Backlog
 
+## From the 2026-11-10 night pass (living economy)
+
+- **Done (increment 1):** living markets (district house prices, 9 stocks, 6 goods, base rate, data-driven news, fights move markets) and housing (rent / buy / mortgage / sell / let / upgrades / perks / eviction) in one Work ▸ Money hub. 247 game tests.
+- **Next: Businesses (stage c)** behind `ECON_FLAGS.business`: found or buy a business (café, gym, tech start-up, security firm, newspaper), hire staff, upgrades, monthly P&L; Tony starts owning Stark Industries, Bruce Wayne Enterprises (today they hold trust shares).
+- **Rent burden in NYC is heavy** for a low-wage adult (even a Queens tiny flat is ~$1k/mo at market rent). Intended pressure, but watch playtests; a roommate option or a housing allowance from the League are candidates.
+- **The old Market's homes** (studio, brownstone, rental, penthouse) are hidden from the Shop for new purchases; owned ones keep working. Candidate: migrate them into real homes in the hub.
+- **Selling Wayne Manor is allowed** (for $13M+). Candidate: lock legend estates or make it a story beat.
+- **Markets lack a "since you bought" alert** and a watchlist; candidate push banner when a holding moves ±15% in a month.
+
 ## From the 2026-11-09 night pass (in progress)
 
 - **Done (increment 2):** Wonder Woman's **Amazon Arms** (13 pieces from 10, Lasso of Truth at 14, Godkiller Ultimate at 30), replacing her strength / flight / aegis moves. Normal 60% 0.88 / 0.78 → 0.82 / 0.59, Hard 0.82 / 0.64 → 0.66 / 0.49, Legendary 0.62 / 0.41 → 0.53 / 0.29. Teen dip (0.50 street at 15–24 vs Cheetah) and late high (0.94 at 40+) logged.

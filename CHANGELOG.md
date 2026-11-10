@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-10 (night): a living economy — Money & Life hub, moving markets, rent / buy / sell homes (`devbot/2026-11-10-night`)
+
+Built on `origin/main` (8d5ade2). Typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push. Old saves migrate (`ensureEconomy` in `migrate`).
+
+### Increment 1: living markets + housing, one Money hub
+
+- **Why:** the owner wants the world to feel like it's really moving, and a life-sim spine: rent, buy and sell homes, moving markets for different things. The old Market priced property once a birthday and nothing else moved.
+- **Markets (`src/game/economy.ts`, data-driven):** 24 district house-price series (3 districts × 8 cities), 9 stocks (Stark, Wayne, Oscorp, LexCorp, Roxxon, Daily Bugle Media, Helix Bio, Mesa Freight, Cape Capital), 6 goods (gold, crude, steel, chips, coffee, isotopes) and the base rate. Each moves **monthly**: regime drift (flips ~every 18 months) + noise + pull back to a slow anchor, so trends feel real but nothing runs away (80-year bounds tested). 24 data-driven headlines (0–2 a month) shock their series, and **your fights move markets**: a villain win lifts the district and local stock, a loss dents them and lifts Cape Capital and steel (once a month, no farming). Fully deterministic from the life seed; never touches the engine RNG, so fight balance and old tests are unchanged.
+- **Trading:** from 16 (isotopes 21+). 1% fee (min $5) on stocks, 2.5% spread on goods, extra slippage on huge orders (diminishing returns). Dividends paid monthly.
+- **Housing:** 8 home tiers (shared room → mansion) to **rent or buy in any district**. Leases: deposit + first month, renewals drift toward market by at most ±8% a year. Mortgages: 10% minimum deposit, 2% closing, 25 years, rate = base + 0.75–1.5 by deposit, fixed at purchase; lend up to 4.5× income + half your assets. **Sell** (5% fees), **let it out** (90% of market rent, vacancies), **upgrades** (garden, home gym, panic room, med bay, comms room, workshop; slots by tier, half their cost adds to value), **pay off** early. Upkeep 1.1% a year. Moving spends one of the month's moves.
+- **Real benefits:** where you live gives monthly Comfort (joy), Recovery (HP), Cover (heat fades) and **Training** (+2–8% in fights and stunts). Couch-surfing or still in the family home past 30 costs joy. Three months in the red on housing bills → eviction / foreclosure (85% sale).
+- **Monthly money:** wages, League stipend, villain retainer and fame endorsements now arrive monthly in the hub's ledger (they used to land in one lump at the birthday).
+- **God Mode starts:** Bruce lives in **Wayne Manor** (estate, the trust pays upkeep) with Wayne Enterprises shares in trust until 18; Tony in **Stark Mansion** with Stark Industries shares in trust until 21; Peter rents a rent-controlled **Queens walk-up** from 18.
+- **UI:** Work ▸ **Money** (new first shelf): net-worth card with sparkline, cash / last month / assets, where you live, live news ticker, **Home** tab (where you live, last month's ledger, your homes, find a place with district trend cards) and **Markets** tab (Stocks / Goods / Homes / Rates boards, sparklines, 2-year charts, ×1/×10/×100/Max with fee preview). A live ticker on Life ▸ Today opens it. The old Market is now **Shop**; its property tab is **Bases** (hideouts, warehouse base, HQ, safehouses; homes you already own there still show). A **Business** tab is behind `ECON_FLAGS.business` (off).
+- **Net worth** in chapter snapshots now counts home equity, portfolio and deposits.
+- **Tests:** +14 (`economy.test.ts`: data integrity, determinism / no RNG, 80-year bounds, mortgage maths and payoff at term, lending caps, selling, trade round trip, renting and eviction, monthly wages, letting, perks, upgrades, couch, fight shocks, God Mode starts, save migration / repair). 247 game tests pass.
+
 ## 2026-11-09 (night): kits for Wonder Woman, Hulk, Black Panther and Wolverine; painted rogues (`devbot/2026-11-09-night`)
 
 Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.

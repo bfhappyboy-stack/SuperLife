@@ -194,6 +194,16 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - A secret identity halves fame gains. Mentoring has per-year diminishing returns.
 - Chapter goals are only offered when they are still reachable, and money goals count cash plus property ("worth").
 
+## 18. Money & Life: a living economy (2026-11-10 night)
+
+- **One hub:** Work ▸ Money, tabs Home / Markets (/ Business behind `ECON_FLAGS.business`). Top card: net worth, cash, last month's net, assets, where you live. Life ▸ Today shows a live headline ticker that opens it.
+- **Everything moves monthly**, deterministic from the seed (`hash(seed, month, key)`), never touching the engine RNG. Series: house prices per district (3 per city), 9 stocks, 6 goods, base rate. log-level += regime drift + noise − reversion × (level − anchor). Anchors grow slowly (homes ~1.2%/yr, stocks ~2.2%/yr) so 80-year lives stay readable.
+- **Headlines are data** (`NEWS` in `economy.ts`) and **fights are news**: a villain win/loss moves the district, the local stock, Cape Capital and steel, once a month.
+- **Housing is the life-sim spine:** rent or buy any tier in any district; mortgage, sell, let, upgrade, pay off; arrears → eviction / foreclosure. Homes give real perks (Comfort, Recovery, Cover, Training edge ≤8%).
+- **Diminishing returns everywhere:** trading fees + slippage, rent renewals capped ±8%/yr, lending capped by income, upkeep scales with value, one fight shock a month.
+- **Wages are monthly** when the hub is on. Legend starts: Wayne Manor and Stark Mansion are estates (no upkeep), their company shares sit in trust (no sale, no dividends) until 18 / 21.
+- The old Market keeps engine items (tests, saves); the UI calls it Shop and its property tab Bases.
+
 ## Existing extras (built, not in the original design)
 
 - **Extra cities:** Metro City, Harbor Bay, Neon Spire, Dustreach, Crownbridge.
