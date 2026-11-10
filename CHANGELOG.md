@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-10 (eve): chains in every city, fewer stops, rarer powers (`devbot/2026-11-10-eve`)
+
+Built on `origin/devbot/2026-11-10-pm` (8cdff73). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: grow a business into a chain across every city (owner's call, 15:22)
+
+- **Why:** "be able to hire a manager and be able to expand your business to every city." Managers (pm) stay as they were, including the 20% sales drop for an unmanaged site while you live elsewhere.
+- **Expand to… (`econ|biz|expand|<site>|<city>`, `expandOptions`, `quoteExpand`):** any business except the family companies can open one site in each of the game's 8 cities. The picker lists every city still open with its cost and what the site should make a month with a manager. Opening one takes a block of free time.
+- **Each site is its own place:** its own staff, upgrades, reputation, crew morale and manager. Sales follow the city's own housing market (`cityDemand`, ±15%: homes rising there means people spending). A site in a city you don't live in with no manager takes the −20% and its reputation slides.
+- **Opening cost and ramp:** each new city costs the base price × the city's price level × (1 + 45% per site you already run). A branch takes 9 months to find its feet (the first site takes 6). The newest site must be a year old before the next one opens.
+- **Brand:** more sites mean a bigger name. Sales get up to +12% (`brandLift`, flattening: +3% at 2, +7% at 4, +10% at 8), reputation drifts up +2 a city (max +10), and four **chain upgrades** cover every site at once from the second city on: Brand identity (+5% sales), Central buying (supplies −10%), Training academy (morale +8), Loyalty app (reputation +6).
+- **Diminishing returns:** head office costs grow faster than the chain (2.5% of base sales × (sites − 1)^1.35 a month, shown as its own ledger line), each city costs more than the last, and the brand lift flattens. In sims a café opened at 30 and grown as fast as cash allows reaches all 8 cities at about 48 (~$30k a month at peak, ~$4.6M net worth at 50); a food truck tops out at 7 cities. A chain takes decades, not a summer.
+- **Three businesses max now counts brands:** a chain in 8 cities is one of your three.
+- **UI (Work ▸ Money ▸ Business):** one business shows its card with **Expand to…** under it. A chain shows one card: brand name, cities, brand lift and the chain's monthly total, then one row per city (morale dot, manager or "No manager · sales −20%" in red, last month's profit). Tap a row to open that site's full card. Then the head-office line, the four chain upgrades, and Expand to… with its city picker. If you can't open a city yet, the picker says why.
+- **Saves:** sites without a brand are their own brand. A branch whose brand is gone becomes its own brand, and broken or unknown chain upgrades are dropped. 10 more managers to pick from, enough to staff a full chain.
+- **Tests:** +7 (`chain.test.ts`: every city reachable, each dearer and one at a time; brand lift and head-office curves; each site follows its own city's market; branches with their own manager, the away penalty, chain upgrades across sites, head office in the ledger, selling one branch; a full chain takes 12+ years and profit stays human-scale; three brands max; old and broken saves). 288 game tests pass.
+
 ## 2026-11-10 (pm): a business you can feel, a clearer money life (`devbot/2026-11-10-pm`)
 
 Built on `origin/devbot/2026-11-10-am` (334053c). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
