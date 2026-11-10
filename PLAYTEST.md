@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-10 pm): the money life as a first-time player
+
+**Played:** engine sims on Play only (an office worker in Metro who rents a tiny flat at 19 and opens a café at 23, seeds 3 and 4, to 40; a shop worker in New York and a café barista in the Hood, to 30), plus the morning's saves (Metro adult at 28 with a café, Bruce Wayne at 25) on the phone at 390×844 (`/workspace/shots-2026-11-10-pm/`).
+
+**Findings:**
+- **Every life with the same name and look had the same markets (fixed, increment 1).** Seeds 3 and 4 printed identical café books, ledgers and cash to the dollar from 25 to 40: the economy's seed hashed name / face / city / upbringing only. New lives now mix in the life's dice; old saves keep theirs.
+- **The $700 squeeze is fair, but silent (fixed, increment 1).** Shop worker in a New York tiny flat ($22k, $970 rent): −$550 to −$860 a month from 20 and nothing tells you; savings drift down for a decade. Barista in the Hood (cheap city): +$250 a month. Office worker in Metro: ~+$2.7k a month at 19, $450k by 30 on promotions. So the floor isn't too high, the problem is that nobody says why money is leaking. Now a one-time hint after three red months points at a roommate (with the amount) or a cheaper place.
+- **Interrupts on Play are about right.** Adult taps 18–30: 65–68 for 12 years (season pace's floor is 48), so ~1.5 extra stops a year; the top stoppers are hero and villain pings and the relic tip (mostly a sim artefact: the bot keeps selling the tip, so it keeps coming back). Decision: keep the current stop rules.
+- **Businesses are thin once open.** The café sat at reputation 40 for 17 years with nothing happening to it: no events, no staff mood, no manager, and if you move city it keeps running at full speed with nobody there. Nothing to react to between upgrades. (Increment 2.)
+- **Money hub on a phone:** tab content starts at ~830 px, below the Play bar: the hub repeats the event card and a long subtitle above a tall net-worth card. (Increment 3.)
+
 ## Morning pass (2026-11-10 am): Money hub and Life Flow as a first-time player
 
 **Played:** engine sims on Play only (seeds 3 and 4: a Metro mystery hero, office job at 18, tiny flat at 19, Oscorp shares at 22, a café or truck at 23, to 40), a 9-year-old on Play, Bruce Wayne at 25, and old saves (night-adult24, night-kid12, night-spidey16, nn-cold: all load, get an economy and Play on). Phone screens at 390×844: `/workspace/shots-2026-11-10-am/`.

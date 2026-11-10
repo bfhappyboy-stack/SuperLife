@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-10 (pm): a business you can feel, a clearer money life (`devbot/2026-11-10-pm`)
+
+Built on `origin/devbot/2026-11-10-am` (334053c). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: playtest; per-life markets; the squeeze hint
+
+- **Playtest** (PLAYTEST.md): Play-only sims of three money lives to 30–40 and phone screens of the hub.
+- **Per-life markets (bug):** the economy's seed came from the name, face, city and upbringing only, so two lives that shared them lived through identical markets (seeds 3 and 4 matched to the dollar). New lives mix in the life's dice; old saves keep their stored seed.
+- **Squeeze hint:** after three months in a row of more going out than coming in while you pay for a home, the month says so once, with the fix that fits: "You're spending about $327 a month more than comes in. A roommate would pay about $420: Work ▸ Money ▸ Home ▸ Roommates." (or a cheaper place / better job if there's no spare room). Resets when you're back in the black.
+- **$700 living cost (open question, decided):** kept. Low-wage lives in cheap cities stay positive; a shop job in New York is a squeeze, which is now explained with a way out.
+- **Tests:** +2 (`life.test.ts`: different seeds, different markets; the squeeze hint fires once and resets). 274 game tests pass.
+
 ## 2026-11-10 (am): playtest fixes, money reports, Life Flow polish (`devbot/2026-11-10-am`)
 
 Built on `origin/devbot/2026-11-10-night` (aae1d85). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.

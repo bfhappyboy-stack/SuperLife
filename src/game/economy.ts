@@ -333,6 +333,8 @@ export interface EconState {
   mates?: Mate[];
   /** The last 12 months' ledgers, oldest first (the season / year money report). */
   months?: MonthSummary[];
+  /** Months in a row spending more than comes in while paying for a home (the squeeze hint, 2026-11-10 pm). */
+  short?: number;
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -514,7 +516,9 @@ export function ensureEconomy(g: Game): EconState {
     prior.mates = Array.isArray(prior.mates) ? prior.mates.filter((m) => m && mateById(m.mateId) && g.relationships.some((p) => p.id === m.pid)) : [];
     return prior;
   }
-  const seed = Math.floor(hash(g.portrait, g.name, g.cityId, g.upbringing) * 1_000_000_000);
+  // The life's dice seed is mixed in (2026-11-10 pm): before, two lives with the same name, face, city and
+  // upbringing lived through identical markets. Old saves keep the seed they stored.
+  const seed = Math.floor(hash(g.portrait, g.name, g.cityId, g.upbringing, g.rng ?? 0) * 1_000_000_000);
   const e = blank(seed);
   for (const key of allSeries()) {
     e.lv[key] = key === "rate" ? round4(4.5 + hash(seed, key, "start") * 2.5) : round4(Math.exp(anchor(key, 0, seed) + (hash(seed, key, "start") - 0.5) * (key.startsWith("p:") ? 0.08 : 0.25)));
@@ -996,6 +1000,14 @@ export function economyMonth(g: Game): MonthOut {
     else out.banners.unshift(`Behind on housing bills (${e.arrears}/${ARREARS_LIMIT}). Get back above $0, or downsize: Work ▸ Money.`);
   } else e.arrears = 0;
 
+  // The squeeze hint (2026-11-10 pm): three months in a row of more going out than coming in while paying
+  // for a home, say so once, with the fix that fits (a roommate if there's a spare room, else a cheaper place).
+  const net = lines.reduce((s, l) => s + l.amount, 0);
+  if (housing > 0 && net < 0) {
+    e.short = (e.short ?? 0) + 1;
+    if (e.short === 3) out.banners.splice(e.arrears > 0 ? 1 : 0, 0, squeezeLine(g, -net));
+  } else e.short = 0;
+
   g.stats.money = clamp(g.stats.money, -20000, 100_000_000);
   const swing = portfolioValue(e) + homesEquity(e) - before;
   e.last = { at: now, lines, net: lines.reduce((s, l) => s + l.amount, 0), swing: Math.round(swing), perks };
@@ -1011,6 +1023,15 @@ export function economyMonth(g: Game): MonthOut {
   if (mine) out.banners.push(`${mine.tone > 0 ? "▲" : "▼"} ${mine.text}`);
   out.banners = out.banners.slice(0, 2);
   return out;
+}
+
+/** What to do when the month costs more than it pays (shown once per streak). */
+export function squeezeLine(g: Game, short: number): string {
+  const spare = roomsHere(g) - matesHere(g).length;
+  const share = spare > 0 ? mateShareIfJoined(g) : 0;
+  const head = `You're spending about ${fmt(short)} a month more than comes in.`;
+  if (share > 0) return `${head} A roommate would pay about ${fmt(share)}: Work ▸ Money ▸ Home ▸ Roommates.`;
+  return `${head} A cheaper place, a better job or a side business would fix it: Work ▸ Money.`;
 }
 
 function evict(g: Game, e: EconState): string {
