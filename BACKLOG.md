@@ -2,7 +2,8 @@
 
 ## From the 2026-11-10 eve pass
 
-- **Done:** chains in every city with brand upgrades, head office and a chain view (increment 1); adult Play interrupts less, with a year per tap from 18, settled moments and Auto fights (increment 2).
+- **Done:** chains in every city with brand upgrades, head office and a chain view (increment 1); adult Play interrupts less, with a year per tap from 18, settled moments and Auto fights (increment 2); rare powers with long training and deeper techniques (increment 3).
+- **Watch (rare powers):** kits now hit harder on average (deeper moves), so normal fights may feel a touch easier; check Hard/Legendary win rates in playtest. A rare story moment (a near-death awakening, a relic) that opens a power outside the gaps is a candidate. Show the gate reason earlier (e.g. "Next power possible at 27") on the Powers tab header.
 - **Watch (interrupt less):** whether a year a tap feels too fast for business-heavy lives (Season is one tap away); maybe a "pause on business news" option.
 - **Next for chains:** selling the whole chain in one go; a franchise option (someone else pays to open, you take a cut); a rival chain that follows you into cities; promoting a manager to run the whole chain.
 
