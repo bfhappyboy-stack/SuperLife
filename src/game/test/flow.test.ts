@@ -150,3 +150,44 @@ test("old saves without routine or pace play on Auto with habits", () => {
   // The old Next month still works underneath.
   assert.equal(ageUp(at(20, 5)).month, 6);
 });
+
+test("money report: a Play step's card adds up the ledger, shows what moved and leads with your life, not rival chatter (2026-11-10 am)", async () => {
+  const { econOf, periodReport } = await import("../economy.ts");
+  const { act, isChatter } = await import("../engine.ts");
+  let g = at(30, 2, { jobId: "office" });
+  g.jobId = "office";
+  g.stats.money = 60_000;
+  g = act(g, "econ|rent|flat|uptown");
+  g = act(g, "econ|trade|buy|s:OSCP|50");
+  let checked = 0;
+  for (let i = 0; i < 16 && checked < 4; i += 1) {
+    const start = g.age * 12 + g.month;
+    const next = playStep(g);
+    const months = next.age * 12 + next.month - start;
+    if (months > 0) {
+      const rep = next.card.money;
+      assert.ok(rep, "a step that passes time carries a money report");
+      assert.equal(rep.months, months);
+      const ledger = econOf(next)!.months!.filter((m) => m.at > start).reduce((s, m) => s + m.net, 0);
+      assert.equal(rep.groups.filter((row) => row.key !== "other").reduce((s, row) => s + row.amount, 0), ledger, "the report is the ledger");
+      assert.equal(rep.net, rep.groups.reduce((s, row) => s + row.amount, 0));
+      assert.equal(rep.net, Math.round(next.stats.money - g.stats.money), "and it adds up to the cash you gained");
+      assert.ok(rep.groups.find((row) => row.key === "pay")!.amount > 0, "pay");
+      assert.ok(rep.groups.find((row) => row.key === "home")!.amount < 0, "rent");
+      assert.ok(rep.groups.find((row) => row.key === "living")!.amount < 0, "living costs");
+      assert.ok(rep.movers.every((m) => !m.mine || m.key === "s:OSCP" || m.key.startsWith("p:metro:uptown")), "yours means yours");
+      const lines = next.card.banner;
+      if (lines.some((l) => !isChatter(l))) assert.ok(!isChatter(lines[0]!), `leads with you: ${lines[0]}`);
+      checked += 1;
+    }
+    g = settle(next);
+  }
+  assert.ok(checked >= 2, `checked ${checked} steps`);
+  assert.equal(periodReport(g, g.age * 12 + g.month), null, "nothing since now");
+  assert.ok(isChatter("Kiln: benched after a quote.") && isChatter("Kiln leaves the board. Latch takes the square.") && !isChatter("You turn 31."));
+});
+
+test("money report: a child's year carries none", () => {
+  const kid = playStep(at(9, 0));
+  assert.equal(kid.card.money ?? null, null);
+});

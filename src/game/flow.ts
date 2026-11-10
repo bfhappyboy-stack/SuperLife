@@ -9,7 +9,8 @@
  * Balance rule (inherited from fast-forward): an auto-played block is never better than one you play yourself —
  * routine minis land a little under your average and fights, stunts and big choices always stop and wait for you.
  */
-import { actionsFor, ageUp } from "./engine";
+import { actionsFor, ageUp, isChatter } from "./engine";
+import { periodReport } from "./economy";
 import { MONTHS } from "./format";
 import { MIX_AGE } from "./mentors";
 import { fastForward, playMonth, ROUTINE, stopFor } from "./skip";
@@ -87,6 +88,27 @@ function recapCard(start: Game, end: Game, report: SkipReport): Game["card"] {
  * One Play tap. Month pace = your routine fills this month's free time, then the month turns (the full month
  * card). Season / year pace = the same, month after month, with a recap card; stops for anything that needs you.
  */
+/** Month index (age × 12 + month), the economy's clock. */
+const clock = (g: Pick<Game, "age" | "month">) => g.age * 12 + (g.month ?? 0);
+
+/** Pin the step's money report to the card, and keep rival-cape ticker lines from leading it. */
+function withMoney(start: Game, out: Game): Game {
+  const money = start.age >= 16 || out.age >= 16 ? periodReport(out, clock(start)) : null;
+  if (money) {
+    // Shifts, gigs, shopping and event payouts move cash outside the ledger: one line, so the card adds up.
+    const extra = Math.round(out.stats.money - start.stats.money - money.net);
+    const other = money.groups.find((row) => row.key === "other");
+    if (other) Object.assign(other, { label: "Everything else", amount: other.amount + extra });
+    else if (extra !== 0) money.groups.push({ key: "other", label: "Everything else", amount: extra });
+    money.groups = money.groups.filter((row) => row.amount !== 0);
+    money.net += extra;
+  }
+  const banner = out.card.banner ?? [];
+  const mine = banner.filter((line) => !isChatter(line));
+  const card = { ...out.card, banner: mine.length || money ? mine : banner.slice(0, 1), money };
+  return { ...out, card };
+}
+
 export function playStep(game: Game): Game {
   if (game.phase !== "live" || game.reveal) return game;
   const step = stepOf(game);
@@ -97,7 +119,7 @@ export function playStep(game: Game): Game {
     const after = ageUp(before);
     // A month that opens on something big (a canon beat, a mentor) is already on the card; nothing to add.
     void stopFor(before, after, true);
-    return after;
+    return withMoney(game, after);
   }
   const span = step === "season" && game.month + 3 < 12 ? "season" : "year";
   // Childhood moves fast: small everyday moments are settled for you (listed on the card), as in Skip to 15.
@@ -110,10 +132,10 @@ export function playStep(game: Game): Game {
     // The life needs you: show what's waiting, with a line for the time that passed on the way.
     if (report.months > 0 && out.card) out.card = { ...out.card, banner: [`▸▸ ${report.months} month${report.months === 1 ? " passes" : "s pass"} on your routine.`, ...(out.card.banner ?? [])].slice(0, 4) };
     if (report.stop.kind === "mentor" || report.stop.kind === "chapter" || report.stop.kind === "death" || report.stop.kind === "health" || report.stop.kind === "bond") out.skipReport = report;
-    return out;
+    return withMoney(game, out);
   }
   out.card = recapCard(game, out, report);
-  return out;
+  return withMoney(game, out);
 }
 
 /** Mixing opens at 15: Play still stops there (the mentor), so legends' and mystery lives' beats stay intact. */

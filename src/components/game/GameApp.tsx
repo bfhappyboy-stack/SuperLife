@@ -10,6 +10,7 @@ import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends"
 import { Closet } from "@/components/game/Closet";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
+import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
 import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
 import { RoutineCard } from "@/components/game/Routine";
 import { FLOW_ON, stepLabel } from "@/game/flow";
@@ -282,7 +283,7 @@ function Life({ game }: { game: Game }) {
               </div>
               <span className="chip shrink-0 text-fg" aria-label={`Money ${money(game.stats.money)}`}>
                 <Banknote className="size-3.5" style={{ color: STAT_COLOR.money }} />
-                <span className="t-num">{money(game.stats.money)}</span>
+                <CashTicker value={game.stats.money} format={money} />
               </span>
               <button type="button" aria-label="Menu" onClick={() => setSheet("menu")} className="btn btn-ghost !min-h-11 !w-11 !p-0">
                 <Menu className="size-5" />
@@ -370,7 +371,19 @@ function Life({ game }: { game: Game }) {
                   ))}
                 </div>
               )}
+              {choosing && game.card.money && <MoneyLine report={game.card.money} />}
             </article>
+            {!choosing && desk === "life" && game.card.money && (
+              <MoneyReport
+                key={`${game.age}-${game.month}`}
+                report={game.card.money}
+                onOpen={() => {
+                  setDesk("work");
+                  setShelf("Money");
+                  setAck("Money — pressed.");
+                }}
+              />
+            )}
             {!choosing && desk === "life" && <ChapterStrip game={game} />}
             {!choosing && desk === "life" && <NextGoal game={game} onGo={goTo} />}
             {FLOW_ON && !choosing && desk === "life" && game.phase === "live" && <RoutineCard game={game} />}
