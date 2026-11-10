@@ -48,7 +48,8 @@ function lives(): Record<string, Game> {
   cache ??= {
     mysteryPre: live(createGame({ ...base, mode: "mystery", seed: 7 } as never), 6),
     mysteryPost: live(createGame({ ...base, mode: "mystery", seed: 7 } as never), 16, (g) => !!g.giftId && !g.hiddenGift && g.age >= 8),
-    mysteryOld: live(createGame({ ...base, mode: "mystery", seed: 7 } as never), 30),
+    // 2026-11-10 eve: powers are rare, so a Mystery life at 30 holds one or two; the rich fixture is a God Mode trio.
+    mysteryOld: live(createGame({ ...base, mode: "god", giftIds: ["super-speed", "fire-control", "super-strength"], seed: 7 } as never), 30),
     spider: live(createGame({ ...base, preset: "spider-man", mode: "god", seed: 3 } as never), 18),
     buildOwn: live(createGame({ ...base, mode: "god", giftIds: ["super-speed", "fire-control", "super-strength"], seed: 5 } as never), 14),
   };

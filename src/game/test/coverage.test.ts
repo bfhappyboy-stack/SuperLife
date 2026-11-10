@@ -41,7 +41,7 @@ test("fillLoadout swaps a surplus style for a missing one once the six is full",
   fillLoadout(g);
   const counts = styleCounts(g.loadout.map((id) => moveById(id)?.style));
   assert.ok(counts.guard >= 1, `expected a guard after rebalance: ${JSON.stringify(counts)} ${g.loadout}`);
-  assert.ok(g.loadout.includes("super-durability::a"));
+  assert.ok(g.loadout.some((id) => moveById(id)?.style === "guard" && !["str-hands", "str-pound", "flight::a", "flight::b", "speed-cut", "energy-projection::a"].includes(id)), "a guard came off the bench");
 });
 
 test("battleMoves street-covers a missing style even when the six is full", () => {

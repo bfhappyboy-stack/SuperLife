@@ -277,6 +277,7 @@ test("adult Play taps: 18 to 40 in about half the taps it took, story beats inta
 
 test("a new chapter is one tap: the recap rides on the card under the chapter page", () => {
   let g = at(29, 6);
+  g.chapterNotice = null;
   let found = false;
   for (let i = 0; i < 8 && !found; i += 1) {
     const n = playStep(g);
