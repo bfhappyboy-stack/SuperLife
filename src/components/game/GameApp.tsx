@@ -1,4 +1,4 @@
-import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
+import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, Play, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
 import { actMatches, type GoalRoute } from "@/game/chapters";
@@ -11,6 +11,8 @@ import { Closet } from "@/components/game/Closet";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
 import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
+import { RoutineCard } from "@/components/game/Routine";
+import { FLOW_ON, stepLabel } from "@/game/flow";
 import { CityScene, TitleArt } from "@/components/game/Scene";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
@@ -173,6 +175,7 @@ function PlayScreen() {
 
 function Life({ game }: { game: Game }) {
   const age = useGame((s) => s.age);
+  const play = useGame((s) => s.play);
   const [ffOpen, setFfOpen] = useState(false);
   const pick = useGame((s) => s.pick);
   const act = useGame((s) => s.do);
@@ -370,6 +373,7 @@ function Life({ game }: { game: Game }) {
             </article>
             {!choosing && desk === "life" && <ChapterStrip game={game} />}
             {!choosing && desk === "life" && <NextGoal game={game} onGo={goTo} />}
+            {FLOW_ON && !choosing && desk === "life" && game.phase === "live" && <RoutineCard game={game} />}
             {!choosing && desk === "life" && game.phase === "live" && (
               <NewsTicker
                 game={game}
@@ -461,7 +465,7 @@ function Life({ game }: { game: Game }) {
                 )}
                 {sections.length === 0 && !(desk === "gift" && (activeShelf === "Book" || activeShelf === "Teachers" || activeShelf === "Moves")) && !(desk === "cases" && activeShelf === "Files") && (
                   <div className="card px-4 py-4">
-                    <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? "Out of moves this month. Tap Next month, or Skip to fast-forward a season or a year." : EMPTY[desk]}</p>
+                    <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? FLOW_ON ? "Free time's spent. Tap Play: your routine carries on." : "Out of moves this month. Tap Next month, or Skip to fast-forward a season or a year." : EMPTY[desk]}</p>
                     {elsewhere.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         <p className="t-label w-full text-fg">Things you can do right now</p>
@@ -483,6 +487,27 @@ function Life({ game }: { game: Game }) {
                 {ack}
               </p>
               <div className="flex items-stretch gap-2">
+                {FLOW_ON ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAck(`${stepLabel(game).title} — pressed.`);
+                      play();
+                    }}
+                    className="btn btn-primary min-h-14 flex-1 flex-col !gap-0 text-lg"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Play className="size-4 fill-current" aria-hidden />
+                      {stepLabel(game).title}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] font-extrabold tracking-[0.14em] opacity-85" aria-label={`${game.majorsLeft} blocks of free time left this month; your routine fills the rest`}>
+                      {[0, 1, 2].map((i) => (
+                        <span key={i} className={`inline-block size-1.5 rounded-full ${i < game.majorsLeft ? "bg-white" : "bg-white/25"}`} />
+                      ))}
+                      <span className="ml-1 uppercase">{game.majorsLeft > 0 ? `${game.majorsLeft} free · then routine` : `${stepLabel(game).sub} · your routine`}</span>
+                    </span>
+                  </button>
+                ) : (
                 <button
                   type="button"
                   onClick={() => {
@@ -499,6 +524,7 @@ function Life({ game }: { game: Game }) {
                     <span className="ml-1">{game.majorsLeft > 0 ? `${game.majorsLeft} MOVE${game.majorsLeft === 1 ? "" : "S"} LEFT` : "OUT OF MOVES"}</span>
                   </span>
                 </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -509,7 +535,7 @@ function Life({ game }: { game: Game }) {
                   className="btn btn-gold min-h-14 w-[6.25rem] flex-col !gap-0 !px-2 text-sm"
                 >
                   <FastForward className="size-5" />
-                  <span className="text-[11px] font-extrabold tracking-[0.1em] uppercase">Skip</span>
+                  <span className="text-[11px] font-extrabold tracking-[0.1em] uppercase">{FLOW_ON ? "Time" : "Skip"}</span>
                 </button>
               </div>
             </div>

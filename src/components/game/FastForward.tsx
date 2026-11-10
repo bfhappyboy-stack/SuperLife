@@ -3,8 +3,9 @@ import { STAT_COLOR, STAT_ICON } from "@/components/game/icons";
 import { MONTHS, money } from "@/game/format";
 import { MIX_AGE } from "@/game/mentors";
 import { canSkipToFifteen, skipMonths } from "@/game/skip";
+import { FLOW_ON, KID_UNTIL, stepOf } from "@/game/flow";
 import { useGame } from "@/game/store";
-import type { Game, SkipReport, SkipSpan, SkipStopKind } from "@/game/types";
+import type { Game, Pace, SkipReport, SkipSpan, SkipStopKind } from "@/game/types";
 import type { CSSProperties } from "react";
 
 const STOP: Record<SkipStopKind, { label: string; icon: typeof Zap; color: string }> = {
@@ -27,6 +28,7 @@ const when = (at: { age: number; month: number }) => `${MONTHS[at.month ?? 0]?.s
 /** Bottom sheet with the two fast-forward lengths. Explains what it does and when it stops. */
 export function SkipSheet({ game, onClose }: { game: Game; onClose: () => void }) {
   const skip = useGame((s) => s.skip);
+  const setPace = useGame((s) => s.setPace);
   const go = (span: SkipSpan) => {
     onClose();
     skip(span);
@@ -49,7 +51,8 @@ export function SkipSheet({ game, onClose }: { game: Game; onClose: () => void }
             <X className="size-5" />
           </button>
         </div>
-        <p className="mt-2 text-pretty text-sm text-fg/85">Plays your usual months for you, leaning on what you&apos;ve been doing lately. Fights, stunts and big choices stay yours.</p>
+        {FLOW_ON && <PacePicker game={game} onPick={setPace} />}
+        <p className="mt-2 text-pretty text-sm text-fg/85">{FLOW_ON ? "Or jump further. Same rules: your routine plays the months; fights, stunts and big choices stay yours." : "Plays your usual months for you, leaning on what you've been doing lately. Fights, stunts and big choices stay yours."}</p>
         {canSkipToFifteen(game) && <FifteenButton game={game} onGo={() => go("fifteen")} />}
         <div className="mt-3 grid grid-cols-2 gap-2">
           {options.map((row, i) => (
@@ -289,5 +292,32 @@ function FifteenButton({ game, onGo }: { game: Game; onGo: () => void }) {
         ))}
       </span>
     </button>
+  );
+}
+
+const PACES: { id: Pace; label: string; sub: string }[] = [
+  { id: "auto", label: "Auto", sub: "" },
+  { id: "month", label: "Month", sub: "Every month" },
+  { id: "season", label: "Season", sub: "3 months" },
+  { id: "year", label: "Year", sub: "To birthday" },
+];
+
+/** How far one Play tap goes. Auto: a year as a kid, a season from 13. */
+function PacePicker({ game, onPick }: { game: Game; onPick: (pace: Pace) => void }) {
+  const cur = game.pace ?? "auto";
+  const auto = game.age < KID_UNTIL ? "a year per tap until 13" : "a season per tap";
+  return (
+    <div className="mt-3">
+      <p className="t-label text-[10px] text-muted">Play pace</p>
+      <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Play pace">
+        {PACES.map((p) => (
+          <button key={p.id} type="button" role="radio" aria-checked={cur === p.id} onClick={() => onPick(p.id)} className="seg flex min-w-0 flex-col !gap-0 !px-1 !py-1.5 text-[13px]">
+            {p.label}
+            <span className="text-[9px] font-bold opacity-70">{p.id === "auto" ? (stepOf({ age: game.age }) === "year" ? "Year now" : "Season") : p.sub}</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-1.5 text-xs text-muted">{cur === "auto" ? `Auto: ${auto}. Pick Month when you want every beat.` : cur === "month" ? "Every month, with the full month card." : cur === "season" ? "Three months a tap, with a recap." : "To your next birthday, with a recap."}</p>
+    </div>
   );
 }
