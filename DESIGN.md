@@ -233,6 +233,12 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - **Pace (decided 2026-11-10 am):** adults stay on a **season** per tap by default; Month stays one tap away in Time ▸ Play pace for players who want to manage money monthly. Sims: a season keeps a decade of adult life to ~50 taps, and the money report makes a season's money legible, so monthly taps aren't needed to follow it.
 - **Routine slots (2026-11-10 am):** habits, **Shift at <your business>** and **Time with <person>** can all be pinned (up to 3).
 
+### Interrupt less (owner's call, 2026-11-10 eve)
+
+- Auto pace: a year per tap until 13, a season from 13 to 17, a year from 18. Month and Season stay one tap away.
+- Adult Play stops only for what needs you: canon and legend beats, cases and arcs, chapters, power moments, life-changing offers, grief and crises, bosses, fights you could lose, and your arch-enemy once a year. Everyday moments, friendly drop-ins and routine fights are settled (taste-scored, fights a little under your average) and listed on the recap. **Auto fights** (default on) settles even fights; off, Play only settles sure wins (1.5+ power levels clear).
+- Target: adult taps 18–40 about half of before (sims: −54% to −68%).
+
 ## Existing extras (built, not in the original design)
 
 - **Extra cities:** Metro City, Harbor Bay, Neon Spire, Dustreach, Crownbridge.

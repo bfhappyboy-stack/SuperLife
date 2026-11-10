@@ -4,6 +4,17 @@
 
 Built on `origin/devbot/2026-11-10-pm` (8cdff73). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 2: adult Play interrupts less (owner's call, 15:24)
+
+- **Why:** "Make it interrupt less." From 18 to 40, Play took ~190–250 taps (Play taps plus the stops you had to answer). Most stops were everyday moments, routine street fights and your arch-enemy's monthly taunt.
+- **A year a tap from 18:** Auto pace is now a year per tap as a kid, a season from 13 to 17 (the busy, formative years), and a year again from 18. Every birthday still gets its card. Month and Season are one tap away in the Time sheet. Your routine fills unused free time the same way at any pace, so balance doesn't change.
+- **What still stops Play:** canon and legend beats, cases and story arcs, chapter changes, power moments (a power waking, the mentor at 15, power offers and relic tips), offers that change a life (lab offer, villain offer, sidekick pitch, a trainer, a rival school, an interview), grief, low health and relationship crises, bosses, a street fight you could lose, and your arch-enemy **once a year**.
+- **What goes in the recap instead (`settleAdult`):** everyday moments are answered the way you'd likely answer them, and the card says which answer was picked ("Your landlord… → Pay it"). Friendly heroes stopping by and an arch-enemy's billboard are settled the same way. The arch-enemy's other calls that year are left on read. Street fights against a foe you outclass by 1.5+ power levels are won in the recap. With **Auto fights** (new switch in the Time sheet, on by default), fights against a foe you're about even with (no more than 0.5 above you) are settled too, a little under your average result, the same rule as fast-forward. The recap says "Handled on the way: 2 street fights and 3 small moments."
+- **A new chapter is one tap:** the chapter page shows, and the recap goes on the card under it (it used to be two dismissals).
+- **Before / after (sims, 4 seeds, 18 → 40, Play taps plus the stops you answer):** Mystery 216 → 99 (−54%), Spider-Man 250 → 95 (−62%), Batman 193 → 62 (−68%). Story beats still stop (canon beats seen in every legend run). Fight sims and the economy are untouched; power level and fame at 40 land a little higher than in the old sim's policy, because auto fights get won instead of talked down.
+- **Saves:** nothing to migrate. Old lives on Auto pace move to a year per tap at 18+, and Auto fights is on.
+- **Tests:** +5 (`flow.test.ts`: what settles and what never does, the arch-enemy once a year, the street-fight rules with Auto fights on and off and bosses, adult taps 18–40 ≤ 140 with canon intact, a chapter is one tap). Pace tests updated for a year per tap from 18. 293 game tests pass.
+
 ### Increment 1: grow a business into a chain across every city (owner's call, 15:22)
 
 - **Why:** "be able to hire a manager and be able to expand your business to every city." Managers (pm) stay as they were, including the 20% sales drop for an unmanaged site while you live elsewhere.
