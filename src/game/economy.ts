@@ -2284,6 +2284,8 @@ export interface PeriodReport {
   groups: PeriodGroup[];
   movers: PeriodMover[];
   headlines: { text: string; tone: 1 | -1 | 0; tag: News["tag"] }[];
+  /** What happened at your businesses this period, newest first (2026-11-10 pm). */
+  biz?: { text: string; tone: 1 | -1 | 0 }[];
   /** Net worth now, and its change over the period (markets and equity included). */
   worth: number;
   worthDelta: number;
@@ -2364,8 +2366,15 @@ export function periodReport(g: Game, sinceAt: number): PeriodReport | null {
   const worthHist = e.worth;
   const worth = netWorth(g);
   const before = worthHist.length > n ? worthHist[worthHist.length - 1 - n]! : worthHist[0] ?? worth;
-  if (!groups.length && !movers.length && !headlines.length) return null;
-  return { months: n, net, groups, movers, headlines, worth, worthDelta: Math.round(worth - before) };
+  const bizSeen = new Set<string>();
+  const biz = (e.biz ?? [])
+    .flatMap((b) => b.log ?? [])
+    .filter((item) => item.at > sinceAt && !bizSeen.has(item.text) && bizSeen.add(item.text))
+    .sort((a, b) => b.at - a.at)
+    .slice(0, 2)
+    .map((item) => ({ text: item.text, tone: item.tone }));
+  if (!groups.length && !movers.length && !headlines.length && !biz.length) return null;
+  return { months: n, net, groups, movers, headlines, biz, worth, worthDelta: Math.round(worth - before) };
 }
 
 // ---------------------------------------------------------------------------------------------------------

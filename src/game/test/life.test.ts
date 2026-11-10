@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { act, createGame } from "../engine.ts";
 import { AWAY_MUL, bizBooks, districtsOf, econOf, economyMonth, mateShareIfJoined, mgrCandidates, mgrWage, bizById, moraleTarget, noteFight, MANAGERS, type Biz } from "../economy.ts";
-import { econRelocate } from "../economy.ts";
+import { econRelocate, periodReport } from "../economy.ts";
 import type { Game } from "../types.ts";
 
 const BASE = { name: "Ava Reyes", cityId: "nyc", upbringing: "normal", portrait: 11, sex: "female", face: "loud", drive: "protector", giftId: "fire-control", seed: 7 } as const;
@@ -209,4 +209,22 @@ test("old saves: a business from before managers and morale loads with a neutral
   assert.equal(cafe.morale, 70);
   assert.deepEqual(cafe.log, []);
   assert.equal(cafe.mgr, undefined, "an unknown manager id is dropped");
+});
+
+test("the Play money report carries what happened at your businesses, even when the step stopped for something else", () => {
+  let { g } = withCafe(600_000);
+  let carried = 0;
+  for (let i = 0; i < 120; i++) {
+    const since = g.age * 12 + g.month;
+    g = month(g).g;
+    g.majorsLeft = 3;
+    const cafe = bizOf(g, "cafe");
+    const fresh = (cafe.log ?? []).filter((n) => n.at > since);
+    const report = periodReport(g, since);
+    if (fresh.length) {
+      assert.ok(report?.biz?.some((b) => b.text === fresh.at(-1)!.text), "the newest business news is on the card");
+      carried += 1;
+    } else assert.equal(report?.biz?.length ?? 0, 0);
+  }
+  assert.ok(carried >= 4, `carried ${carried}`);
 });

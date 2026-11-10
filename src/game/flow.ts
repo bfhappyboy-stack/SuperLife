@@ -121,7 +121,9 @@ function withMoney(start: Game, out: Game): Game {
     money.net += extra;
   }
   const banner = out.card.banner ?? [];
-  const mine = banner.filter((line) => !isChatter(line));
+  // Business news shows once, in the money report (2026-11-10 pm).
+  const inReport = new Set((money?.biz ?? []).map((b) => b.text));
+  const mine = banner.filter((line) => !isChatter(line) && !inReport.has(line));
   const card = { ...out.card, banner: mine.length || money ? mine : banner.slice(0, 1), money };
   return { ...out, card };
 }

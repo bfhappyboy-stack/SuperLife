@@ -1,6 +1,6 @@
 // The money report (2026-11-10 am): what a Play step did to your money, under the story card.
 import { useEffect, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, ChevronRight, Newspaper, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronRight, Newspaper, Store, Wallet } from "lucide-react";
 import { fmt, type PeriodReport } from "@/game/economy";
 
 const reduced = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -95,6 +95,16 @@ export function MoneyReport({ report, onOpen }: { report: PeriodReport; onOpen: 
             );
           })}
         </div>
+      )}
+      {(report.biz ?? []).length > 0 && (
+        <ul className="mt-2 flex flex-col gap-1">
+          {(report.biz ?? []).map((h) => (
+            <li key={h.text} className={`flex items-start gap-1.5 rounded-lg px-2 py-1 text-[13px] leading-snug ${h.tone > 0 ? "bg-good/10" : h.tone < 0 ? "bg-bad/10" : "bg-white/5"} text-fg`}>
+              <Store className={`mt-0.5 size-3.5 shrink-0 ${h.tone > 0 ? "text-good" : h.tone < 0 ? "text-bad" : "text-muted"}`} aria-hidden />
+              <span>{h.text}</span>
+            </li>
+          ))}
+        </ul>
       )}
       {report.headlines.length > 0 && (
         <ul className="mt-2 flex flex-col gap-1">
