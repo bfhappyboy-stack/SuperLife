@@ -37,31 +37,44 @@ test("mixing is locked before 15, even with the recipe in hand", () => {
   assert.ok(!(tried.unlockedPowers ?? []).includes("light-speed"), "no Light Speed at 12");
 });
 
-test("at 15 a mentor arrives, the lock lifts, and the required chain still works", () => {
+test("at 15 a mentor arrives, the lock lifts, and the required chain is still reachable through training", () => {
   const teen = toAge(godKid(5), MIX_AGE);
   assert.equal(teen.age, MIX_AGE);
   assert.equal(mixLock(teen), null);
   assert.equal(teen.mentor?.id, UPBRINGING_MENTORS.program!.id);
-  let g = act({ ...teen, majorsLeft: 3, phase: "live" }, "mix|fire-control|super-speed");
+  // 2026-11-10 eve: a braid is a months-long project with both halves drilled, not one tap.
+  let g: Game = { ...teen, majorsLeft: 3, phase: "live", mastery: { ...teen.mastery, "fire-control": 60, "super-speed": 60, "super-strength": 60 } };
+  const once = act(g, "mix|fire-control|super-speed");
+  assert.ok(!once.unlockedPowers?.includes("light-speed"), "not instant");
+  assert.ok((once.training?.progress ?? 0) > 0, "the braid is under way");
+  const month = (x: Game): Game => ({ ...x, majorsLeft: 3, phase: "live", pending: null, minigame: null, flags: { ...x.flags, powerLesson: 0 } });
+  for (let i = 0; i < 24 && !g.unlockedPowers?.includes("light-speed"); i++) g = act(month(g), "mix|fire-control|super-speed");
   assert.ok(g.unlockedPowers?.includes("light-speed"), "Fire Control + Super Speed = Light Speed");
-  g = act({ ...g, majorsLeft: 3, phase: "live" }, "mix|light-speed|super-strength");
+  // Two years on and Light Speed drilled to C: the second link of the chain.
+  g = { ...month(g), age: g.age + 2, mastery: { ...g.mastery, "light-speed": 120 } };
+  for (let i = 0; i < 40 && !g.unlockedPowers?.includes("lightning-strikes"); i++) g = act(month(g), "mix|light-speed|super-strength");
   assert.ok(g.unlockedPowers?.includes("lightning-strikes"), "Light Speed + Super Strength = Lightning Strikes");
 });
 
-test("a mentor's guided braid steers to the required chain and lands drilled; one lesson a month", () => {
+test("a mentor's guided braid steers to the required chain, takes months, and lands drilled; one lesson a month", () => {
   const teen = toAge(godKid(7), MIX_AGE);
-  const ready = { ...teen, majorsLeft: 3, phase: "live" as const };
+  const ready: Game = { ...teen, majorsLeft: 3, phase: "live" as const, mastery: { ...teen.mastery, "fire-control": 60, "super-speed": 60 } };
   assert.equal(mentorBraid(ready)?.result.id, "light-speed");
-  const g = act(ready, "tutor|braid");
-  assert.ok(g.unlockedPowers?.includes("light-speed"));
-  assert.ok((g.mastery?.["light-speed"] ?? 0) > 0, "guided braid lands with some drill");
+  let g = act(ready, "tutor|braid");
+  assert.ok(!g.unlockedPowers?.includes("light-speed"), "one lesson is a start, not a power");
   assert.equal(g.mentor?.lessons, 1);
   assert.ok((g.mentor?.bond ?? 0) > (teen.mentor?.bond ?? 0));
   const again = act(g, "tutor|drill");
   assert.equal(again, g, "only one lesson a month");
-  const nextMonth = ageUp(g, { quiet: true });
-  const drilled = act({ ...nextMonth, phase: "live", pending: null, minigame: null, majorsLeft: 3 }, "tutor|drill");
-  assert.equal(drilled.mentor?.lessons, 2);
+  let lessons = 1;
+  for (let i = 0; i < 12 && !g.unlockedPowers?.includes("light-speed"); i++) {
+    const next = ageUp(g, { quiet: true });
+    g = act({ ...next, phase: "live", pending: null, minigame: null, majorsLeft: 3 }, "tutor|braid");
+    lessons += 1;
+  }
+  assert.ok(g.unlockedPowers?.includes("light-speed"));
+  assert.ok(lessons >= 4 && lessons <= 6, `guided braid took ${lessons} lessons`);
+  assert.ok((g.mastery?.["light-speed"] ?? 0) > 0, "guided braid lands with some drill");
 });
 
 test("no tutor lessons before 15", () => {
