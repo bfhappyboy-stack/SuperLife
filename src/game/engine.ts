@@ -1,4 +1,5 @@
 import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
+import { ECON_FLAGS, econAct, econRelocate, economyMonth, ensureEconomy, homeEdge, noteFight } from "./economy";
 import { library, notePage } from "./library";
 import {
   CITIES,
@@ -31,7 +32,7 @@ import { MIX_AGE, mentorBondGain, mentorBoost, mentorBraid, mentorById, mentorFo
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
 import { ELEMENTS, elementOfLegacy, elementOfPower } from "./elements";
-import { isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
+import { edgeFamily, isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
 import { BOND_DRIFT_FLOOR, bondStep, judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { arcById, availableArcs, currentCase, type ArcStep } from "./arcs";
 import { pickPrompt, type PromptKey } from "./prompts";
@@ -1175,21 +1176,24 @@ function openYear(d: Game): string[] {
       d.jobRank = 0;
       d.jobYears = 0;
     } else if (job) {
-      const mult = [1, 1.25, 1.55, 1.95, 2.45][d.jobRank] ?? 1;
-      pay += Math.round(job.pay * mult * (d.age < 18 ? 0.5 : 1));
-      if (job.id === "influencer") pay += Math.round(d.stats.fame * 420);
+      // With the living economy on, wages arrive monthly (economy.ts annualWage); the year only settles the rest.
+      if (!ECON_FLAGS.hub) {
+        const mult = [1, 1.25, 1.55, 1.95, 2.45][d.jobRank] ?? 1;
+        pay += Math.round(job.pay * mult * (d.age < 18 ? 0.5 : 1));
+        if (job.id === "influencer") pay += Math.round(d.stats.fame * 420);
+      }
       d.stats.happiness = clamp(d.stats.happiness + job.stress, 0, 100);
       // Through applyEffects so the soft ceiling on fame/rep applies to salaried fame too.
       applyEffects(d, { fame: job.fame || undefined, reputation: job.rep || undefined }, []);
       d.jobYears += 1;
     }
   }
-  if (d.leagueRank > 0 && !d.flags.villainContract) pay += STIPEND[d.leagueRank] ?? 0;
+  if (d.leagueRank > 0 && !d.flags.villainContract && !ECON_FLAGS.hub) pay += STIPEND[d.leagueRank] ?? 0;
   if (d.flags.villainContract) {
-    pay += 14000;
+    if (!ECON_FLAGS.hub) pay += 14000;
     d.stats.reputation = clamp(d.stats.reputation - 2, -100, 100);
   }
-  if (d.stats.fame > 45 && d.leagueRank >= 1) pay += Math.round(d.stats.fame * 150);
+  if (d.stats.fame > 45 && d.leagueRank >= 1 && !ECON_FLAGS.hub) pay += Math.round(d.stats.fame * 150);
 
   if (d.schoolId) {
     const school = schoolById(d.schoolId);
@@ -1508,6 +1512,7 @@ export function createGame(input: NewLifeOpts): Game {
     d.powerId = null;
     d.focusPower = null;
   }
+  if (ECON_FLAGS.hub) ensureEconomy(d);
   const born = d.sex === "female" ? "a girl" : "a boy";
   const faceLine = traitById(asFace(opts.face))?.blurb ?? "";
   const driveLine = traitById(asDrive(opts.drive))?.blurb ?? "";
@@ -2360,6 +2365,19 @@ function beltBirthday(d: Game, banners: string[]) {
   if (d.age === kit.ultimateAge) banners.push(`${kit.name}: your strongest ${kit.piece} is now your Ultimate at full Momentum.`);
 }
 
+/** The living economy's month: markets move, wages and bills settle, the home gives its perks. */
+function econTick(d: Game, banners: string[]) {
+  const out = economyMonth(d);
+  if (out.joy) applyEffects(d, { happiness: out.joy }, []);
+  if (out.hp) d.stats.health = clamp(d.stats.health + out.hp, 0, 100);
+  if (out.heat && (d.flags.heat ?? 0) > 0) {
+    const heat = Math.max(0, (d.flags.heat ?? 0) - out.heat);
+    if (heat > 0) d.flags.heat = heat;
+    else delete d.flags.heat;
+  }
+  banners.push(...out.banners);
+}
+
 export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
@@ -2368,6 +2386,7 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   let banners: string[] = [];
   if (birthday) {
     banners = openYear(d);
+    econTick(d, banners);
     meetMentor(d, banners);
     beltBirthday(d, banners);
     if (turnChapter(d)) banners.push(`Chapter ${(d.chapters?.length ?? 1)} begins: ${d.chapters?.[d.chapters.length - 1]?.title ?? "a new decade"}.`);
@@ -2397,6 +2416,7 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
     d.majorsLeft = 3;
     clearMonthFlags(d);
     marketMonth(d);
+    econTick(d, banners);
     if (d.crew) {
       if ((d.crew.heat ?? 0) > 0) d.crew.heat = Math.max(0, (d.crew.heat ?? 0) - 3);
       if (d.crew.members.length) {
@@ -2554,6 +2574,8 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   if (!spec) return game;
   d.minigame = null;
   const edge = marketEdge(d, spec.kind);
+  const homeBonus = homeEdge(d, edgeFamily(spec.kind));
+  if (homeBonus > 0) edge.bonus = Math.min(0.3, edge.bonus + homeBonus);
   const score = clamp(ratio + edge.bonus, 0, 1);
   const win = score >= 0.66;
   const partial = !win && score >= 0.33;
@@ -2585,6 +2607,11 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   if (spec.kind === "duel") {
     const trained = grantMoveExp(d, used, win ? 8 : 5);
     if (trained.length) extra += ` ${trained.join(". ")}.`;
+  }
+  if (spec.kind === "duel" && spec.duel?.foeSide === "villain" && (win || !partial)) {
+    // The city's markets notice who won (once a month).
+    const moved = noteFight(d, win, spec.duel.foeName);
+    if (moved) extra += ` Markets: ${moved}`;
   }
   if (spec.tag === "tryout" && score >= 0.33) extra += joinLeague(d);
   if (spec.tag === "mission" && score >= 0.33) {
@@ -2627,7 +2654,8 @@ function relocate(d: Game, cityId: string): string {
   d.city = city.name;
   d.cityId = city.id;
   d.flags.moved = 1;
-  return "";
+  const left = econRelocate(d);
+  return left ? ` ${left}` : "";
 }
 
 /**
@@ -2783,6 +2811,21 @@ export function act(game: Game, id: string): Game {
       return !!def && (d.unlockedPowers ?? []).includes(def.powerId);
     }).slice(0, 6);
     fillLoadout(d);
+    return d;
+  }
+  if (id.startsWith("econ|")) {
+    const res = econAct(d, id, d.majorsLeft);
+    if (!res.ok) {
+      d.card = { ...d.card, banner: [res.line] };
+      return d;
+    }
+    if (res.spend) {
+      spend(d);
+      pushHistory(d, res.line);
+    }
+    d.stats.money = clamp(d.stats.money, -20000, 100_000_000);
+    d.card = { kicker: whenLabel(d.age, d.month), banner: [res.line], body: d.card.body, deltas: [] };
+    peaks(d);
     return d;
   }
   if (id.startsWith("buy|") || id.startsWith("sell|")) {

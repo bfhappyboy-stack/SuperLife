@@ -11,6 +11,7 @@
 import { availableArcs } from "./arcs";
 import { clamp } from "./format";
 import { holdings } from "./market";
+import { econHoldings } from "./economy";
 import { canonBetween, presetDecade } from "./presets";
 import type { Game } from "./types";
 
@@ -350,7 +351,7 @@ export function snapshot(g: Game): ChapterSnap {
     fame: g.stats.fame,
     rep: g.stats.reputation,
     money: Math.round(g.stats.money),
-    worth: Math.round(g.stats.money + holdings(g).value),
+    worth: Math.round(g.stats.money + holdings(g).value + econHoldings(g)),
     smarts: g.stats.smarts,
     power: g.stats.powerLevel,
     powers: (g.unlockedPowers ?? []).length,
