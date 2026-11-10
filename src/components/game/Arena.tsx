@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import "./arena.css";
 import { Figure, type Pose } from "@/components/game/Figure";
+import { LifeHeroArt } from "@/components/game/LifeHeroArt";
 import { ComboPips, StatusIcon, StatusPills, StrikeBanner } from "@/components/game/BattleHud";
 import { hasStatus, INTERRUPT_MIN, STATUSES, statusOfMove } from "@/game/battle";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
@@ -162,6 +163,8 @@ export function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%"
         <img src={art} alt="" className="anim-fade size-full object-cover" style={{ objectPosition: focus }} />
       ) : !f.custom && hasVillainArt(f.id) ? (
         <VillainArt id={f.id} color={f.color} crop={crop ?? (headCrop(focus) ? "head" : "card")} />
+      ) : f.life ? (
+        <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} accent={f.color} className={headCrop(focus) ? "life-head" : ""} />
       ) : (
         <>
           {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-40 saturate-50" />}
@@ -1077,6 +1080,8 @@ function DuelCard({ f, side, lunging, pose, hitKey }: { f: ArenaFighter; side: S
           <img src={art} alt="" className="absolute inset-0 size-full object-cover" style={{ objectPosition: "50% 14%" }} />
         ) : !f.custom && hasVillainArt(f.id) ? (
           <VillainArt id={f.id} color={f.color} />
+        ) : f.life ? (
+          <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} accent={f.color} />
         ) : (
           <>
             {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-55 saturate-[.7]" />}

@@ -4,6 +4,13 @@
 
 Built on `origin/devbot/2026-11-10-night` (aae1d85). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 4: saved lives get a hero poster in the Arena
+
+- Mystery heroes and saved lives no longer show the paper doll in the Arena. New `LifeHeroArt` (vector SVG): a backlit silhouette with cape, rim light, glowing lenses, the hero's power-family emblem and a seeded city skyline with slow light rays (off under reduced motion). Used on the draft card, roster tile and battle slot.
+- A saved legend life (e.g. your own Bruce Wayne) uses that legend's painted art, colour and world.
+- The draft kicker no longer reads "YOUR LIFE · YOUR LIFE"; the title is now "Age N · Hero".
+- New test `arena.art.test.ts` (saved-life fighters carry art/family data). Tests 272.
+
 ### Increment 3: routine slots for business shifts and people; hero tie-ins for your businesses
 
 - **Why:** open follow-ups from last night (routine slots for business shifts and people) and the owner's ask for the world to tie into the hero life (security firm leads, tech-firm gadgets).
