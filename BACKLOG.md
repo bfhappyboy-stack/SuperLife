@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-10 late pass
+
+- **Done:** Auto fights opt-in with a fight-card Fight it out / Auto-resolve choice (increment 1).
+- **Ask the owner:** with Auto fights off, should sure wins (1.5+ power levels clear) still settle into the recap? Now they stop too (about 1 extra stop per adult life in sims).
+- **Watch (yearly growth):** ripening is most of the growth of your non-focus powers; if that feels like free power, ripen only powers you used that year.
+
 ## From the 2026-11-10 eve pass
 
 - **Done:** chains in every city with brand upgrades, head office and a chain view (increment 1); adult Play interrupts less, with a year per tap from 18, settled moments and Auto fights (increment 2); rare powers with long training and deeper techniques (increment 3).

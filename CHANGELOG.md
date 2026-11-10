@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-10 (late): fights are your call (`devbot/2026-11-10-late`)
+
+Built on `origin/devbot/2026-11-10-eve` (bae21f9). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: Auto fights is opt-in, and every fight card asks (owner's call, 20:23)
+
+- **Why:** "Auto fights must be a choice." The eve pass turned Auto fights on for everyone, so Play quietly settled fights the player may have wanted to play.
+- **Off by default (`autoFightsOn`, `Game.autoFightsSet`):** new lives start with Auto fights off. It only counts as on when the player flipped the switch themselves. With it off, Play stops for every street fight (even a sure win); bosses, your arch-enemy and tougher foes stop either way. Small everyday moments (a landlord, a billboard, a friendly drop-in) still settle into the recap.
+- **Fight card (`FightChoice`, `autoResolveFight`):** every life-sim fight opens with two buttons above the arena: **Fight it out** (play it, the bar goes away) or **Auto-resolve**, which shows what to expect ("Likely a win / a scrape / a loss") and settles the fight now, a little under your usual result (a foe you outclass by 1.5+ power levels is a clean win). The result card starts "Auto-resolved: <foe>." Auto-resolved fights don't count toward your fighting habit, so they don't drag down later auto scores.
+- **Time sheet:** the switch now has an ON / OFF badge and says what each means ("Play stops for every fight. You pick Fight it out or Auto-resolve. Small everyday moments still go in the recap.").
+- **Saves (`migrateAutoFights`):** a save that never touched the switch goes off. The eve build stored the switch only when the player flipped it, so a saved `true` means they turned it on by hand: kept on. A saved `false` stays off.
+- **Cost in stops (sims, 6 Mystery seeds, Play only, 18 → 40):** Auto fights off 40 fight stops in total (~7 per life), on 33; Play taps plus stops per life about 60 either way. Spider-Man (God Mode, seed 4) 75 both ways.
+- **Yearly power growth kept (`RIPEN_EXP` 7, every held power on each birthday):** checked by sim that it's noticeable but not runaway and never grants a power (it only adds mastery to powers you already hold). Main power's mastery at 40: 407 on average with it, 313 without (training is ~77% of it). Power level at 40: 3.4–4.4 with, 3.5–4.8 without. Powers held at 40: 2–4 either way. What it changes: your second and third powers grow (C at 40) instead of sitting at D 0 unless you drill them by hand.
+- **Tests:** +2 (`flow.test.ts`: Auto-resolve and its odds; the migration keeps a hand-flipped choice), street-fight and adult-taps tests run both ways. 298 game tests pass.
+
 ## 2026-11-10 (eve): chains in every city, fewer stops, rarer powers (`devbot/2026-11-10-eve`)
 
 Built on `origin/devbot/2026-11-10-pm` (8cdff73). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.

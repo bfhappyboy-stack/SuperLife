@@ -1,5 +1,15 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Late pass (2026-11-10 late): fights are a choice, as a first-time player
+
+**Played:** engine sims on Play only (6 Mystery seeds, Metro, 0 → 40, Auto fights off and on, and with a train routine; plus the same with yearly growth set to 0 and 4 to measure it), Spider-Man God Mode 18 → 40; phone at 390×844 from injected saves (an eve-era adult at 26 that never touched the switch, a street fight at 31): `/workspace/shots-2026-11-10-late/`.
+
+**Findings:**
+- **An eve save loads with Auto fights OFF** (badge says so) and the Time sheet explains both modes in one line each.
+- **The fight card is clear on a phone:** Fight it out (gold) and Auto-resolve with its odds sit above the foe's name; the arena, the six moves and Breath all still fit at 390×844. Auto-resolve on an even street fight read "Likely a scrape" and gave a draw ("You both stay standing", −4 health, +1 fame), with "Auto-resolved: Mrs. Static." on the card.
+- **Off costs little:** ~1 more fight stop per adult life (6 seeds: 40 vs 33 fight stops). Most adult stops are still choices (83–93), not fights.
+- **Yearly growth is a gentle push, not a ladder:** main power at 40 averages rank A either way (407 vs 313 mastery). Without it, every second power sat at D 0 to 40 in Play-only lives; with it they reach C. No powers granted, power level unchanged within noise.
+
 ## Afternoon pass (2026-11-10 pm): the money life as a first-time player
 
 **Played:** engine sims on Play only (an office worker in Metro who rents a tiny flat at 19 and opens a café at 23, seeds 3 and 4, to 40; a shop worker in New York and a café barista in the Hood, to 30), plus the morning's saves (Metro adult at 28 with a café, Bruce Wayne at 25) on the phone at 390×844 (`/workspace/shots-2026-11-10-pm/`).
