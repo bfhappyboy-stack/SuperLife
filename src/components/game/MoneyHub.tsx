@@ -1,10 +1,10 @@
 /**
  * Money & Life hub (Work ▸ Money): net worth, the monthly summary, a live news ticker, and three tabs:
- * Home (where you live, what you own, find a place), Markets (stocks, goods, district prices, rates) and,
- * behind ECON_FLAGS.business, Business. Every number comes from src/game/economy.ts; every action is "econ|…".
+ * Home (where you live, what you own, find a place), Markets (stocks, goods, district prices, rates) and
+ * Business (found, staff, upgrade, sell; a legend's family company; ECON_FLAGS.business). Every number comes from src/game/economy.ts; every action is "econ|…".
  */
 import {
-  ArrowDownRight, ArrowUpRight, Atom, BedDouble, Building2, Castle, Check, ChevronDown, Coffee, Coins, Cpu, Crown, Dumbbell, EyeOff, Factory, Fuel, Gem,
+  ArrowDownRight, ArrowUpRight, Atom, Plus, Shield, Truck, Users, Rocket, Briefcase, BedDouble, Building2, Castle, Check, ChevronDown, Coffee, Coins, Cpu, Crown, Dumbbell, EyeOff, Factory, Fuel, Gem,
   Hammer, HeartPulse, Home, KeyRound, Landmark, LineChart, Lock, Minus, Newspaper, Percent, Smile, Sofa, Store, TrendingUp, Wallet, Warehouse, type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
@@ -14,6 +14,7 @@ import {
   annualWage, districtOf, districtsOf, districtViews, ECON_FLAGS, econOf, fmt, fmtPrice, goodById, goodViews, HOME_MODS, homeById, homePrice, HOMES,
   homeGate, homeUpkeep, homeValue, HOUSING_AGE, letIncome, livingOf, marketCity, marketRent, maxBuy, MIN_DEPOSIT, netWorth, portfolioValue, quoteHome,
   quoteRent, quoteTrade, SELL_FEE, stockById, stockViews, TRADE_AGE, type EconState, type News, type OwnedHome, type SeriesView,
+  BIZ, bizBooks, bizById, bizNeed, bizValue, quoteBiz, BIZ_RAMP, CITY_PROP, type Biz,
 } from "@/game/economy";
 import { cityById } from "@/game/data";
 import type { Game } from "@/game/types";
@@ -299,7 +300,7 @@ export function MoneyHub({ game, onAct }: { game: Game; onAct: (id: string) => v
 
       {tab === "home" && <HomeTab game={game} e={e} run={run} />}
       {tab === "markets" && <MarketsTab game={game} e={e} run={run} />}
-      {tab === "business" && ECON_FLAGS.business && <p className="card px-4 py-4 text-sm text-muted">Businesses are coming.</p>}
+      {tab === "business" && ECON_FLAGS.business && <BusinessTab game={game} e={e} run={run} />}
     </section>
   );
 }
@@ -824,5 +825,193 @@ function TradePanel({ game, kind, id, price, run }: { game: Game; kind: "s" | "g
         </button>
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Business tab
+// ---------------------------------------------------------------------------------------------------------
+
+const BIZ_ICON: Record<string, LucideIcon> = { truck: Truck, cafe: Coffee, gym: Dumbbell, security: Shield, startup: Rocket, paper: Newspaper, wayne: Landmark, stark: Factory };
+const BIZ_COLOR: Record<string, string> = { truck: "#ff9f5a", cafe: "#c98a5a", gym: "#ff5d6c", security: "#6aa8ff", startup: "#b98bff", paper: "#e8e2d0", wayne: "#ffd76a", stark: "#ff6a4d" };
+
+function BusinessTab({ game, e, run }: { game: Game; e: EconState; run: (id: string) => void }) {
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  const owned = e.biz ?? [];
+  const total = owned.reduce((s, b) => s + (b.pl.at(-1) ?? 0), 0);
+  const starts = BIZ.filter((d) => !d.empire);
+  return (
+    <div className="flex flex-col gap-3">
+      {owned.length > 0 ? (
+        <>
+          <p className="t-label flex items-center gap-1.5 text-muted">
+            <Briefcase className="size-3.5" aria-hidden /> Your businesses
+            {owned.some((b) => b.pl.length) && <span className={`ml-auto t-num ${total >= 0 ? "text-good" : "text-bad"}`}>{total >= 0 ? "+" : "−"}{fmt(Math.abs(total))}/mo</span>}
+          </p>
+          {owned.map((b) => (
+            <BizCard key={b.uid} game={game} e={e} b={b} run={run} confirm={confirm} setConfirm={setConfirm} open={open === b.uid} setOpen={(v) => setOpen(v ? b.uid : null)} />
+          ))}
+        </>
+      ) : (
+        <article className="card px-4 py-3">
+          <p className="font-bold text-fg">Be your own boss</p>
+          <p className="mt-1 text-xs text-muted">Open a business, hire staff, buy upgrades. Profit (or loss) lands every month. More staff helps, but each hire adds less than the last. Sell any time for about two years of profit.</p>
+        </article>
+      )}
+      <p className="t-label mt-1 flex items-center gap-1.5 text-muted">
+        <Store className="size-3.5" aria-hidden /> Start something in {cityById(game.cityId).name}
+      </p>
+      <div className="stagger flex flex-col gap-2">
+        {starts.map((def) => {
+          const q = quoteBiz(game, def.id);
+          const Icon = BIZ_ICON[def.id] ?? Store;
+          const locked = q.why?.startsWith("Opens") || q.why?.startsWith("You already") || q.why?.startsWith("Three");
+          return (
+            <article key={def.id} className={`card px-3 py-3 ${locked ? "opacity-60" : ""}`}>
+              <div className="flex gap-3">
+                <IconTile color={locked ? "#5b6478" : (BIZ_COLOR[def.id] ?? "#8b95ad")} size="size-12">
+                  {locked ? <Lock className="size-5" /> : <Icon className="size-6" />}
+                </IconTile>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-bold leading-tight text-fg">{def.name}</p>
+                    <p className="t-num shrink-0 text-base text-gold">{fmt(def.cost)}</p>
+                  </div>
+                  <p className="text-xs text-muted">{def.blurb}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-muted">
+                    <Users className="mr-1 inline size-3" aria-hidden />
+                    {def.staff} staff · aims for <span className={q.profit >= 0 ? "text-good" : "text-bad"}>{q.profit >= 0 ? "+" : "−"}{fmt(Math.abs(q.profit))}/mo</span> once it finds its feet
+                  </p>
+                </div>
+              </div>
+              <button type="button" disabled={!q.ok || game.majorsLeft <= 0} onClick={() => run(`econ|biz|found|${def.id}`)} className="btn btn-gold mt-2.5 !min-h-11 w-full text-sm">
+                {q.ok ? (game.majorsLeft > 0 ? `Open it · ${fmt(def.cost)}` : "No moves left this month") : q.why}
+              </button>
+            </article>
+          );
+        })}
+      </div>
+      <p className="text-xs text-muted">Opening takes one of the month's moves and about {BIZ_RAMP} months to ramp up. Demand follows the markets: coffee prices squeeze cafés, a nervous city hires security.</p>
+    </div>
+  );
+}
+
+function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game: Game; e: EconState; b: Biz; run: (id: string) => void; confirm: string | null; setConfirm: (id: string | null) => void; open: boolean; setOpen: (v: boolean) => void }) {
+  const def = bizById(b.kind)!;
+  const Icon = BIZ_ICON[b.kind] ?? Store;
+  const books = bizBooks(e, b, game.age * 12 + game.month, false);
+  const last = b.pl.at(-1);
+  const need = bizNeed(b);
+  const value = bizValue(e, b);
+  const locked = !!b.lockUntil && game.age < b.lockUntil;
+  return (
+    <article className={`card px-3 py-3 ${def.empire ? "!border-gold/50" : ""}`}>
+      <div className="flex gap-3">
+        <IconTile color={BIZ_COLOR[b.kind] ?? "#8b95ad"} size="size-12">
+          <Icon className="size-6" />
+        </IconTile>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate font-bold leading-tight text-fg">{b.name}</p>
+              <p className="truncate text-[11px] font-semibold text-muted">{def.empire ? "Family company · you chair the board" : `${def.name} · ${cityById(b.cityId).name}`}</p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className={`t-num text-base ${locked ? "text-muted" : (last ?? books.profit) >= 0 ? "text-good" : "text-bad"}`}>
+                {locked ? "In trust" : `${(last ?? books.profit) >= 0 ? "+" : "−"}${fmt(Math.abs(last ?? books.profit))}`}
+              </p>
+              {!locked && <p className="text-[10px] font-bold text-muted">{last != null ? "last month" : "expected"}</p>}
+            </div>
+          </div>
+          {b.pl.length > 1 && (
+            <div className="mt-1.5 flex items-center gap-2">
+              <Spark data={b.pl} w={120} h={20} />
+              {!def.empire && <span className="text-[11px] font-semibold text-muted">Worth ~{fmt(value)}</span>}
+            </div>
+          )}
+          {!def.empire && (
+            <div className="mt-1.5 flex items-center gap-2">
+              <span className="text-[10px] font-bold text-muted uppercase">Rep</span>
+              <div className="stat-bar !h-1.5 flex-1" aria-label={`Reputation ${b.rep}`}>
+                <div className="stat-fill" style={{ width: `${b.rep}%`, "--fill": "#ffd76a" } as CSSProperties} />
+              </div>
+              <span className="t-num text-[11px] text-fg">{b.rep}</span>
+            </div>
+          )}
+          {locked && <p className="mt-1 text-[11px] font-bold text-gold">The board runs it until you're {b.lockUntil}. Then the chair's draw (about {fmt(books.profit)}/mo, following the share price) is yours.</p>}
+          {def.empire && !locked && <p className="mt-1 text-[11px] text-muted">The chair's draw follows the share price. Fund projects to raise it.</p>}
+        </div>
+      </div>
+      {!def.empire && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/25 px-2.5 py-2">
+          <Users className="size-4 shrink-0 text-muted" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-fg">
+              {b.staff} staff <span className={`font-semibold ${b.staff < need ? "text-bad" : "text-muted"}`}>· {need} to run flat out</span>
+            </p>
+            <p className="text-[11px] text-muted">{fmt(Math.round(def.wage * Math.sqrt(CITY_PROP[b.cityId] ?? 1)))}/mo each · each hire adds less</p>
+          </div>
+          <button type="button" aria-label="Let one go" disabled={b.staff <= 0} onClick={() => run(`econ|biz|staff|${b.uid}|-1`)} className="btn btn-ghost !min-h-11 !min-w-11 !px-0">
+            <Minus className="size-4" aria-hidden />
+          </button>
+          <button type="button" aria-label="Hire one" disabled={b.staff >= need * 2 + 2} onClick={() => run(`econ|biz|staff|${b.uid}|1`)} className="btn btn-gold !min-h-11 !min-w-11 !px-0">
+            <Plus className="size-4" aria-hidden />
+          </button>
+        </div>
+      )}
+      {open && !def.empire && (
+        <div className="anim-rise mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 rounded-xl bg-black/25 px-3 py-2 text-[11px]">
+          <span className="text-muted">Revenue</span><span className="t-num text-right text-good">+{fmt(books.revenue)}</span>
+          <span className="text-muted">Stock & supplies</span><span className="t-num text-right text-bad">−{fmt(books.goods)}</span>
+          <span className="text-muted">Wages</span><span className="t-num text-right text-bad">−{fmt(books.wages)}</span>
+          <span className="text-muted">Premises</span><span className="t-num text-right text-bad">−{fmt(books.premises)}</span>
+          <span className="text-muted">Upkeep</span><span className="t-num text-right text-bad">−{fmt(books.upkeep)}</span>
+          <span className="font-bold text-fg">Steady month</span><span className={`t-num text-right font-bold ${books.profit >= 0 ? "text-good" : "text-bad"}`}>{books.profit >= 0 ? "+" : "−"}{fmt(Math.abs(books.profit))}</span>
+        </div>
+      )}
+      <div className="mt-2.5 flex flex-col gap-2">
+        {def.upgrades.map((u) => {
+          const has = b.ups.includes(u.id);
+          return (
+            <div key={u.id} className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-fg">
+                  {u.name} <span className="font-semibold text-gold">+{Math.round(u.rev * 100)}% {def.empire ? "draw" : "sales"}{u.staff ? ` · +${u.staff} staff` : ""}{u.rep && !def.empire ? " · rep" : ""}</span>
+                </p>
+                <p className="truncate text-[11px] text-muted">{u.blurb}</p>
+              </div>
+              {has ? (
+                <span className="chip shrink-0 !text-[10px] text-good"><Check className="size-3" aria-hidden /> Done</span>
+              ) : (
+                <button type="button" disabled={locked || game.stats.money < u.cost} onClick={() => run(`econ|biz|up|${b.uid}|${u.id}`)} className="btn btn-gold !min-h-11 shrink-0 !px-3 text-xs">
+                  {fmt(u.cost)}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {!def.empire && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" disabled={game.majorsLeft <= 0 || b.cityId !== game.cityId} onClick={() => run(`econ|biz|shift|${b.uid}`)} className="btn btn-ghost !min-h-11 !px-3 text-xs">
+            Work a shift
+          </button>
+          <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="btn btn-ghost !min-h-11 !px-3 text-xs">
+            Books
+            <ChevronDown className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+          </button>
+          {confirm === `biz:${b.uid}` ? (
+            <button type="button" onClick={() => { run(`econ|biz|sell|${b.uid}`); setConfirm(null); }} className="btn btn-primary !min-h-11 !px-3 text-xs">
+              Sell · get {fmt(value)}
+            </button>
+          ) : (
+            <button type="button" onClick={() => setConfirm(`biz:${b.uid}`)} className="btn btn-ghost !min-h-11 !px-3 text-xs">
+              Sell
+            </button>
+          )}
+        </div>
+      )}
+    </article>
   );
 }

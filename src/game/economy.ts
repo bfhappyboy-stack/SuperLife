@@ -13,7 +13,7 @@ import { clamp } from "./format";
 import type { Game } from "./types";
 
 /** Feature flags. `business` stays off until Stage (c) ships complete. */
-export const ECON_FLAGS = { hub: true, business: false };
+export const ECON_FLAGS = { hub: true, business: true };
 
 export const HIST = 24;
 export const TRADE_AGE = 16;
@@ -327,6 +327,8 @@ export interface EconState {
   /** God Mode start applied. */
   started?: boolean;
   nextUid: number;
+  /** Businesses you run (and a legend's family company). */
+  biz?: Biz[];
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -504,6 +506,7 @@ export function ensureEconomy(g: Game): EconState {
       if (typeof prior.lv[key] !== "number" || !Number.isFinite(prior.lv[key])) prior.lv[key] = key === "rate" ? 5.5 : 1;
       if (!Array.isArray(prior.h[key])) prior.h[key] = [prior.lv[key]!];
     }
+    ensureBusiness(g, prior);
     return prior;
   }
   const seed = Math.floor(hash(g.portrait, g.name, g.cityId, g.upbringing) * 1_000_000_000);
@@ -522,6 +525,7 @@ export function ensureEconomy(g: Game): EconState {
   e.news = e.news.slice(-4);
   g.economy = e;
   applyLegendStart(g, e);
+  ensureBusiness(g, e);
   e.worth = [netWorth(g)];
   return e;
 }
@@ -668,7 +672,7 @@ export function homesEquity(e: EconState): number {
 /** Everything the economy adds to net worth beyond cash: home equity, portfolio, lease deposit. */
 export function econHoldings(g: Game): number {
   const e = econOf(g);
-  return e ? homesEquity(e) + portfolioValue(e) + (e.lease?.deposit ?? 0) : 0;
+  return e ? homesEquity(e) + portfolioValue(e) + (e.lease?.deposit ?? 0) + bizHoldings(e) : 0;
 }
 
 /** Cash + home equity + portfolio + lease deposit. */
@@ -924,6 +928,7 @@ export function economyMonth(g: Game): MonthOut {
   // Shares held in a family trust reinvest their dividends until they unlock.
   for (const [id, lot] of Object.entries(e.stocks)) if (!lot.lockUntil || g.age >= lot.lockUntil) divs += (lot.n * stockPrice(e, id) * (stockById(id)?.div ?? 0)) / 12;
   if (divs >= 1) add("Dividends", divs);
+  if (ECON_FLAGS.business) out.banners.push(...bizMonth(g, e, add));
 
   // Perks from where you live accumulate gently, in fractions.
   const live = livingOf(g);
@@ -1147,6 +1152,7 @@ export function econAct(g: Game, id: string, movesLeft: number): EconResult {
   const e = ensureEconomy(g);
   const [, verb, a = "", b = "", c = ""] = id.split("|");
   const noMove = movesLeft <= 0 ? { ok: false, line: "Moving day takes a move, and none are left this month." } : null;
+  if (verb === "biz") return ECON_FLAGS.business ? bizAct(g, e, a, b, c, movesLeft) : { ok: false, line: "Not open yet." };
   switch (verb) {
     case "trade": {
       // econ|trade|buy|s:STRK|10
@@ -1334,4 +1340,335 @@ export function fmt(n: number): string {
 
 export function fmtPrice(n: number): string {
   return n >= 1000 ? `$${Math.round(n).toLocaleString("en-US")}` : `$${n.toFixed(2)}`;
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Businesses (stage c): found or inherit a business, staff it, upgrade it, sell it. Data-driven.
+// ---------------------------------------------------------------------------------------------------------
+
+export interface BizUpgrade {
+  id: string;
+  name: string;
+  blurb: string;
+  cost: number;
+  /** Revenue multiplier added (0.15 = +15%). */
+  rev: number;
+  /** Extra staff the upgrade needs to run at full speed. */
+  staff?: number;
+  /** Reputation it lifts toward each month. */
+  rep?: number;
+}
+
+export interface BizDef {
+  id: string;
+  name: string;
+  blurb: string;
+  cost: number;
+  minAge: number;
+  /** Monthly revenue at full staff, level city, base reputation. */
+  rev: number;
+  /** Staff needed to run at full speed. */
+  staff: number;
+  /** Monthly wage per staff member (×1 city). */
+  wage: number;
+  /** Share of revenue spent on stock, supplies and fees. */
+  cogs?: number;
+  /** Monthly premises rent at a ×1 city. */
+  premises: number;
+  /** The market series demand follows, and how hard (negative: it's a cost). */
+  demand: { key: string; sens: number };
+  upgrades: BizUpgrade[];
+  /** A legend's family company: run by a board, pays the owner a draw. */
+  empire?: { stock: string; draw: number };
+}
+
+export const BIZ: BizDef[] = [
+  {
+    id: "truck", name: "Food truck", blurb: "Tacos at 2am outside the precinct. Cops tip well.", cost: 30000, minAge: 16, rev: 12500, cogs: 0.4, staff: 2, wage: 2400, premises: 700,
+    demand: { key: "g:crude", sens: -0.25 },
+    upgrades: [
+      { id: "menu", name: "Night menu", blurb: "Open when the city fights.", cost: 6000, rev: 0.18, rep: 6 },
+      { id: "second", name: "Second truck", blurb: "Two corners, twice the line.", cost: 38000, rev: 0.7, staff: 2 },
+      { id: "app", name: "Order-ahead app", blurb: "The line is now a notification.", cost: 15000, rev: 0.15, rep: 4 },
+    ],
+  },
+  {
+    id: "cafe", name: "Corner café", blurb: "Good coffee, bad wifi, regulars who know your name.", cost: 95000, minAge: 18, rev: 31000, cogs: 0.38, staff: 4, wage: 2700, premises: 4200,
+    demand: { key: "g:coffee", sens: -0.35 },
+    upgrades: [
+      { id: "roaster", name: "In-house roaster", blurb: "Smells like money.", cost: 28000, rev: 0.12, rep: 8 },
+      { id: "patio", name: "Patio seating", blurb: "Summer doubles.", cost: 18000, rev: 0.14 },
+      { id: "bakery", name: "Bakery counter", blurb: "Croissants at 6am.", cost: 42000, rev: 0.25, staff: 2, rep: 5 },
+    ],
+  },
+  {
+    id: "gym", name: "Boxing gym", blurb: "Heavy bags, a ring, and a sign that says NO CAPES.", cost: 240000, minAge: 21, rev: 39000, cogs: 0.15, staff: 5, wage: 3100, premises: 9000,
+    demand: { key: "s:HELX", sens: 0.2 },
+    upgrades: [
+      { id: "ring", name: "Pro ring", blurb: "Fight nights sell out.", cost: 60000, rev: 0.18, rep: 8 },
+      { id: "kids", name: "Kids' program", blurb: "Keep them off the rooftops.", cost: 25000, rev: 0.1, staff: 1, rep: 10 },
+      { id: "recovery", name: "Recovery suite", blurb: "Ice baths and a very calm nurse.", cost: 90000, rev: 0.22, staff: 1 },
+    ],
+  },
+  {
+    id: "security", name: "Security firm", blurb: "Guards, cameras and a hotline for when the hero is late.", cost: 420000, minAge: 21, rev: 75000, cogs: 0.25, staff: 8, wage: 4300, premises: 8000,
+    demand: { key: "s:CAPE", sens: 0.5 },
+    upgrades: [
+      { id: "drones", name: "Patrol drones", blurb: "Eyes on every roof.", cost: 120000, rev: 0.2, rep: 6 },
+      { id: "contracts", name: "City contracts", blurb: "Boring, steady, huge.", cost: 160000, rev: 0.3, staff: 3 },
+      { id: "rapid", name: "Rapid response", blurb: "Seven minutes, anywhere.", cost: 90000, rev: 0.15, staff: 2, rep: 10 },
+    ],
+  },
+  {
+    id: "startup", name: "Tech start-up", blurb: "Six engineers, one whiteboard, a pitch about \"hero logistics\".", cost: 800000, minAge: 22, rev: 118000, cogs: 0.1, staff: 10, wage: 7200, premises: 12000,
+    demand: { key: "g:chips", sens: -0.3 },
+    upgrades: [
+      { id: "ai", name: "AI lab", blurb: "It predicts villain attacks. Mostly.", cost: 300000, rev: 0.3, staff: 3 },
+      { id: "series-a", name: "Series A", blurb: "Investors want a hockey stick.", cost: 150000, rev: 0.2, rep: 8 },
+      { id: "cloud", name: "Own servers", blurb: "Lower bills, louder basement.", cost: 220000, rev: 0.18 },
+    ],
+  },
+  {
+    id: "paper", name: "City newspaper", blurb: "Print is dead. Your headlines aren't.", cost: 1600000, minAge: 25, rev: 208000, cogs: 0.3, staff: 16, wage: 5600, premises: 16000,
+    demand: { key: "s:BUGL", sens: 0.5 },
+    upgrades: [
+      { id: "photo", name: "Photo desk", blurb: "Someone has to catch the hero mid-air.", cost: 140000, rev: 0.15, staff: 2, rep: 8 },
+      { id: "digital", name: "Digital edition", blurb: "Paywalls and push alerts.", cost: 260000, rev: 0.28, staff: 2 },
+      { id: "tv", name: "Evening broadcast", blurb: "Your face, at six.", cost: 500000, rev: 0.35, staff: 4, rep: 6 },
+    ],
+  },
+  {
+    id: "wayne", name: "Wayne Enterprises", blurb: "Shipping, aerospace, applied sciences. The board runs it; you chair it.", cost: 0, minAge: 0, rev: 0, staff: 0, wage: 0, premises: 0,
+    demand: { key: "s:WAYN", sens: 1 },
+    empire: { stock: "WAYN", draw: 80 },
+    upgrades: [
+      { id: "applied", name: "Applied Sciences", blurb: "A forgotten division with very interesting prototypes.", cost: 1500000, rev: 0.2 },
+      { id: "foundation", name: "Wayne Foundation", blurb: "Hospitals, orphanages, a city that owes you.", cost: 900000, rev: 0.1, rep: 10 },
+    ],
+  },
+  {
+    id: "stark", name: "Stark Industries", blurb: "Energy, defense, a reactor that fits in a chest. The board runs it; you chair it.", cost: 0, minAge: 0, rev: 0, staff: 0, wage: 0, premises: 0,
+    demand: { key: "s:STRK", sens: 1 },
+    empire: { stock: "STRK", draw: 70 },
+    upgrades: [
+      { id: "clean", name: "Clean energy", blurb: "Arc reactors for the grid, not the battlefield.", cost: 2000000, rev: 0.25, rep: 8 },
+      { id: "expo", name: "Stark Expo", blurb: "The future, with fireworks.", cost: 800000, rev: 0.12, rep: 6 },
+    ],
+  },
+];
+
+export const bizById = (id: string) => BIZ.find((b) => b.id === id);
+export const BIZ_START_REP = 40;
+export const BIZ_RAMP = 6;
+export const BIZ_HIST = 12;
+
+export interface Biz {
+  uid: string;
+  kind: string;
+  name: string;
+  cityId: string;
+  staff: number;
+  ups: string[];
+  rep: number;
+  since: number;
+  /** Everything put in (founding + upgrades): the floor of the sale price. */
+  invested: number;
+  /** Monthly profit, newest last. */
+  pl: number[];
+  /** Empire: the board holds it until this age. */
+  lockUntil?: number;
+  /** Months in a row in the red. */
+  red?: number;
+}
+
+const LEGEND_BIZ: Record<string, { kind: string; lockUntil: number }> = {
+  batman: { kind: "wayne", lockUntil: 18 },
+  "iron-man": { kind: "stark", lockUntil: 21 },
+};
+
+/** Called from ensureEconomy: adds the business book (and a legend's family company) to new and old saves. */
+export function ensureBusiness(g: Game, e: EconState): void {
+  if (!Array.isArray(e.biz)) {
+    e.biz = [];
+    const start = g.preset ? LEGEND_BIZ[g.preset] : undefined;
+    const def = start ? bizById(start.kind) : undefined;
+    if (start && def) e.biz.push({ uid: `b${e.nextUid++}`, kind: def.id, name: def.name, cityId: g.cityId, staff: 0, ups: [], rep: 70, since: at(g), invested: 0, pl: [], lockUntil: start.lockUntil });
+  }
+  e.biz = e.biz.filter((b) => b && bizById(b.kind));
+  for (const b of e.biz) {
+    if (!Array.isArray(b.ups)) b.ups = [];
+    if (!Array.isArray(b.pl)) b.pl = [];
+    if (typeof b.staff !== "number") b.staff = 0;
+    if (typeof b.rep !== "number") b.rep = BIZ_START_REP;
+  }
+}
+
+/** Output from staff: diminishing returns. Full staff = 1; double staff ≈ 1.27; half ≈ 0.67. */
+export function staffFactor(staff: number, need: number): number {
+  if (need <= 0) return 1;
+  const k = 1.4;
+  return (1 - Math.exp((-k * staff) / need)) / (1 - Math.exp(-k));
+}
+
+export function bizNeed(b: Biz): number {
+  const def = bizById(b.kind);
+  if (!def) return 0;
+  return def.staff + b.ups.reduce((s, id) => s + (def.upgrades.find((u) => u.id === id)?.staff ?? 0), 0);
+}
+
+const cityMul = (cityId: string) => Math.sqrt(CITY_PROP[cityId] ?? 1);
+
+function demandOf(e: EconState, def: BizDef): number {
+  const hist = e.h[def.demand.key] ?? [];
+  const now = e.lv[def.demand.key] ?? 1;
+  const avg = hist.length ? hist.slice(-12).reduce((s, n) => s + n, 0) / Math.min(12, hist.length) : now;
+  return clamp(1 + def.demand.sens * (now / Math.max(0.01, avg) - 1), 0.6, 1.4);
+}
+
+export interface BizMonth {
+  revenue: number;
+  goods: number;
+  wages: number;
+  premises: number;
+  upkeep: number;
+  profit: number;
+}
+
+/** One month's books. `noise` false gives the steady-state estimate the UI shows. */
+export function bizBooks(e: EconState, b: Biz, now: number, noise = true): BizMonth {
+  const def = bizById(b.kind)!;
+  const bonus = 1 + b.ups.reduce((s, id) => s + (def.upgrades.find((u) => u.id === id)?.rev ?? 0), 0);
+  if (def.empire) {
+    // A chair's draw that follows the share price.
+    const draw = Math.round(stockPrice(e, def.empire.stock) * def.empire.draw * bonus);
+    return { revenue: draw, goods: 0, wages: 0, premises: 0, upkeep: 0, profit: draw };
+  }
+  const ramp = Math.min(1, 0.5 + (0.5 * Math.max(0, now - b.since)) / BIZ_RAMP);
+  const rep = 0.7 + (0.6 * clamp(b.rep, 0, 100)) / 100;
+  const wobble = noise ? 1 + (hash(e.seed, now, b.uid, "biz") - 0.5) * 0.16 : 1;
+  const revenue = Math.round(def.rev * cityMul(b.cityId) * staffFactor(b.staff, bizNeed(b)) * bonus * rep * demandOf(e, def) * ramp * wobble);
+  const wages = Math.round(b.staff * def.wage * cityMul(b.cityId));
+  const goods = Math.round(revenue * (def.cogs ?? 0));
+  const premises = Math.round(def.premises * cityMul(b.cityId) * (1 + 0.25 * b.ups.length));
+  const upkeep = Math.round(b.invested * 0.004);
+  return { revenue, goods, wages, premises, upkeep, profit: revenue - goods - wages - premises - upkeep };
+}
+
+/** What a buyer pays: two years of recent profit, never less than half of what went in. */
+export function bizValue(e: EconState, b: Biz): number {
+  const def = bizById(b.kind);
+  if (!def) return 0;
+  if (def.empire) return 0;
+  const recent = b.pl.slice(-12);
+  const avg = recent.length ? recent.reduce((s, n) => s + n, 0) / recent.length : 0;
+  return nice(Math.max(b.invested * 0.5, avg * 24 * 0.9 + b.invested * 0.2));
+}
+
+export function bizHoldings(e: EconState): number {
+  return (e.biz ?? []).reduce((s, b) => s + bizValue(e, b), 0);
+}
+
+export function bizGate(g: Game, def: BizDef): string | null {
+  if (def.empire) return "Family only.";
+  if (g.age < def.minAge) return `Opens at ${def.minAge}.`;
+  const e = econOf(g);
+  if (e && (e.biz ?? []).some((b) => b.kind === def.id && b.cityId === g.cityId)) return "You already run one here.";
+  if ((e?.biz ?? []).filter((b) => !bizById(b.kind)?.empire).length >= 3) return "Three businesses is plenty.";
+  if (g.stats.money < def.cost) return `You need ${fmt(def.cost - Math.max(0, g.stats.money))} more.`;
+  return null;
+}
+
+/** The monthly business pass, called from economyMonth. Returns banners. */
+export function bizMonth(g: Game, e: EconState, add: (label: string, amount: number) => void): string[] {
+  const banners: string[] = [];
+  const now = at(g);
+  for (const b of e.biz ?? []) {
+    const def = bizById(b.kind);
+    if (!def) continue;
+    if (def.empire && b.lockUntil && g.age < b.lockUntil) {
+      if (g.age === b.lockUntil - 1 && g.month === 11) banners.push(`Next birthday you take the chair at ${b.name}. Work ▸ Money ▸ Business.`);
+      continue;
+    }
+    const books = bizBooks(e, b, now);
+    // Reputation drifts toward what the place deserves: upgrades lift it, short staff drags it.
+    const need = bizNeed(b);
+    const target = BIZ_START_REP + b.ups.reduce((s, id) => s + (def.upgrades.find((u) => u.id === id)?.rep ?? 0), 0) + (need ? clamp((b.staff / need - 1) * 20, -25, 8) : 10);
+    b.rep = Math.round(clamp(b.rep + clamp((target - b.rep) * 0.15, -4, 4), 0, 100));
+    add(`${def.empire ? "Chair's draw" : "Business"} · ${b.name}`, books.profit);
+    b.pl.push(books.profit);
+    if (b.pl.length > BIZ_HIST) b.pl.splice(0, b.pl.length - BIZ_HIST);
+    b.red = books.profit < 0 ? (b.red ?? 0) + 1 : 0;
+    if (b.red === 3) banners.push(`${b.name} has lost money three months running. Trim staff, upgrade, or sell: Work ▸ Money ▸ Business.`);
+  }
+  return banners;
+}
+
+export interface BizQuote {
+  ok: boolean;
+  why?: string;
+  cost: number;
+  /** Steady monthly profit at full staff once it ramps. */
+  profit: number;
+}
+
+export function quoteBiz(g: Game, kind: string): BizQuote {
+  const e = ensureEconomy(g);
+  const def = bizById(kind);
+  if (!def) return { ok: false, why: "Unknown.", cost: 0, profit: 0 };
+  const probe: Biz = { uid: "probe", kind, name: def.name, cityId: g.cityId, staff: def.staff, ups: [], rep: BIZ_START_REP, since: -999, invested: def.cost, pl: [] };
+  const why = bizGate(g, def);
+  return { ok: !why, why: why ?? undefined, cost: def.cost, profit: bizBooks(e, probe, at(g), false).profit };
+}
+
+/** econ|biz|<verb>|... */
+export function bizAct(g: Game, e: EconState, verb: string, a: string, b: string, movesLeft: number): EconResult {
+  const biz = (e.biz ?? []).find((x) => x.uid === a);
+  const def = biz ? bizById(biz.kind) : bizById(a);
+  switch (verb) {
+    case "found": {
+      if (!def) return { ok: false, line: "Not possible." };
+      if (movesLeft <= 0) return { ok: false, line: "Opening day takes a move, and none are left this month." };
+      const q = quoteBiz(g, def.id);
+      if (!q.ok) return { ok: false, line: q.why ?? "Not possible." };
+      g.stats.money -= def.cost;
+      const name = `${g.name.split(" ").slice(-1)[0]}'s ${def.name.replace(/^(Corner |City |Tech )/, "").toLowerCase()}`;
+      e.biz!.push({ uid: `b${e.nextUid++}`, kind: def.id, name, cityId: g.cityId, staff: def.staff, ups: [], rep: BIZ_START_REP, since: at(g), invested: def.cost, pl: [] });
+      return { ok: true, spend: true, line: `${name} opens its doors with ${def.staff} staff. It takes ~${BIZ_RAMP} months to find its feet; aim for about ${fmt(q.profit)} a month.` };
+    }
+    case "staff": {
+      if (!biz || !def || def.empire) return { ok: false, line: "Not possible." };
+      const next = clamp(biz.staff + (Number(b) || 0), 0, bizNeed(biz) * 2 + 2);
+      if (next === biz.staff) return { ok: false, line: next === 0 ? "Nobody left to let go." : "That's as many as the place can hold." };
+      const hired = next > biz.staff;
+      biz.staff = next;
+      return { ok: true, line: hired ? `You hire at ${biz.name}: ${next} staff now.` : `You let someone go at ${biz.name}: ${next} staff.` };
+    }
+    case "up": {
+      const up = def?.upgrades.find((u) => u.id === b);
+      if (!biz || !def || !up) return { ok: false, line: "Not possible." };
+      if (biz.lockUntil && g.age < biz.lockUntil) return { ok: false, line: `The board decides until you're ${biz.lockUntil}.` };
+      if (biz.ups.includes(up.id)) return { ok: false, line: "Already done." };
+      if (g.stats.money < up.cost) return { ok: false, line: `You need ${fmt(up.cost - Math.max(0, g.stats.money))} more.` };
+      g.stats.money -= up.cost;
+      biz.ups.push(up.id);
+      biz.invested += def.empire ? 0 : up.cost;
+      return { ok: true, line: `${up.name} at ${biz.name}. ${up.blurb}${up.staff ? ` It needs ${up.staff} more staff to run flat out.` : ""}` };
+    }
+    case "shift": {
+      if (!biz || !def || def.empire) return { ok: false, line: "Not possible." };
+      if (biz.cityId !== g.cityId) return { ok: false, line: "That business is in another city." };
+      if (movesLeft <= 0) return { ok: false, line: "No moves left this month." };
+      biz.rep = Math.min(100, biz.rep + 6);
+      return { ok: true, spend: true, line: `You work a shift at ${biz.name}. Customers notice the owner behind the counter (+6 reputation).` };
+    }
+    case "sell": {
+      if (!biz || !def || def.empire) return { ok: false, line: def?.empire ? "The family company isn't for sale." : "Not possible." };
+      const value = bizValue(e, biz);
+      g.stats.money += value;
+      e.biz = e.biz!.filter((x) => x.uid !== a);
+      return { ok: true, line: `You sell ${biz.name} for ${fmt(value)}.` };
+    }
+    default:
+      return { ok: false, line: "Not possible." };
+  }
 }
