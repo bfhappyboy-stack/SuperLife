@@ -1,5 +1,10 @@
 # SuperLife — Backlog
 
+## From the 2026-11-11 art pass
+
+- **Done:** painted Mystery heroes (family × sex) in the ring and the Arena (increment 1).
+- **Next for art:** painted street-villain cards by power family; painted people portraits (family, partners, mentors) to replace the vector faces; a teen card set (13–15); a second costume per family so two Mystery lives with the same power don't look identical.
+
 ## From the 2026-11-11 pm pass
 
 - **Done:** the mask at home (partner suspicion, jealousy, finding the suit, telling them; increment 1).
