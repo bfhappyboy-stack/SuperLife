@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-11 (art): painted characters for everyone who isn't a legend (`devbot/2026-11-11-art`)
+
+Built on `origin/devbot/2026-11-11-pm` (44df36a, the same content as main 3857fea). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: the Mystery hero is a painted character, in the ring and in the Arena
+
+- **Why (owner, 18:53):** "change all the crap characters so they all have better designs… especially if you aren't playing god mode." In a Mystery life the player fought as the paper doll while God Mode legends and named villains stood in the ring as paintings.
+- **18 painted Mystery heroes** (`src/assets/art/mystery-<family>-<m|f>.ts`, 540×960 webp, ~60 KB each, lazy chunks): one original suited hero per power family (fire, ice, storm, mind, might, swift, veil, life, arcane) and sex, painted in the same night-rooftop style as the legend and villain cards, so the whole cast matches.
+- **Battle stage:** from 16, your Mystery hero stands in the ring as their painted card (`Standee` in `components/game/heroArt.tsx`), picked by your main power's family and your sex, with the same pose cues as before (lunge on attack, shake on hit, guard ring, grey on KO). Hero-side NPC fighters (sparring partners, rival capes) wear the card for their power. Legends and named villains are unchanged; street villains still use the figure for now.
+- **Arena:** saved Mystery lives use the painting on their poster and in the ring instead of the silhouette or paper doll.
+- **Kept:** under 16, the powerless and the wardrobe/creator screens keep the paper doll (it shows the clothes you pick). `ART_HEROES` in `src/game/heroArt.ts` turns the layer off. No rules or saves change.
+- **Tests:** +3 (`art.test.ts`: every family has a painting for both sexes, kids and no-family keep the doll, NPC powers map to a family).
+
 ## 2026-11-11 (pm): the mask at home (`devbot/2026-11-11-pm`)
 
 Built on `origin/devbot/2026-11-11-am` (100f35c). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
