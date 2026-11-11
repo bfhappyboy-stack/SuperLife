@@ -1,5 +1,11 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Art pass (2026-11-11 art): where characters are drawn
+
+**Audit (390×844, `/workspace/shots-art/before/`):** the paper doll (`Figure.tsx`) stood in for the player in every Mystery fight (`duel-m.png`, `duel-f.png`), for street villains and hero NPCs on the battle stage, for Arena fighters from saved lives, and in the wardrobe and creator. `LifeHeroArt.tsx` drew a flat silhouette on Arena posters. `Portrait.tsx` draws vector faces on people cards and the header. Legends and the 49 named villains were already painted (`duel-bat.png`). Minigames use `MiniHead` icons.
+
+**After increment 1 (`/workspace/shots-art/after/`):** Mystery fights show the painted hero (`duel-m.png`, `duel-f.png`); Arena life posters use the same painting.
+
 ## Afternoon pass (2026-11-11 pm): the mask at home
 
 **Played:** engine sims (6 Mystery seeds, secret identity, a partner moved in at 25, Play only to 45, never answering), and the phone at 390×844 from the seed-4 Metro save at 29 switched to a secret identity (`/workspace/shots-2026-11-11-pm/`).
