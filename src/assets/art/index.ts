@@ -72,6 +72,25 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   "villain-captain-cold": () => import("./villain-captain-cold"),
   "villain-grodd": () => import("./villain-grodd"),
   "villain-mirror-master": () => import("./villain-mirror-master"),
+  // 2026-11-11 art pass: painted Mystery Life heroes, one per power family and sex (see components/game/heroArt.tsx).
+  "mystery-fire-m": () => import("./mystery-fire-m"),
+  "mystery-fire-f": () => import("./mystery-fire-f"),
+  "mystery-ice-m": () => import("./mystery-ice-m"),
+  "mystery-ice-f": () => import("./mystery-ice-f"),
+  "mystery-storm-m": () => import("./mystery-storm-m"),
+  "mystery-storm-f": () => import("./mystery-storm-f"),
+  "mystery-mind-m": () => import("./mystery-mind-m"),
+  "mystery-mind-f": () => import("./mystery-mind-f"),
+  "mystery-might-m": () => import("./mystery-might-m"),
+  "mystery-might-f": () => import("./mystery-might-f"),
+  "mystery-swift-m": () => import("./mystery-swift-m"),
+  "mystery-swift-f": () => import("./mystery-swift-f"),
+  "mystery-veil-m": () => import("./mystery-veil-m"),
+  "mystery-veil-f": () => import("./mystery-veil-f"),
+  "mystery-life-m": () => import("./mystery-life-m"),
+  "mystery-life-f": () => import("./mystery-life-f"),
+  "mystery-arcane-m": () => import("./mystery-arcane-m"),
+  "mystery-arcane-f": () => import("./mystery-arcane-f"),
 };
 
 const cache = new Map<string, string>();
