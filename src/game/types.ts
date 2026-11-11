@@ -68,7 +68,10 @@ export type Sex = "female" | "male";
 
 export type Phase = "live" | "choice" | "mini" | "dead";
 
-export type PersonRole = "parent" | "friend" | "partner" | "rival" | "teammate" | "child" | "ex" | "hero" | "villain";
+export type PersonRole = "parent" | "friend" | "partner" | "rival" | "teammate" | "child" | "ex" | "hero" | "villain" | "crush";
+
+/** Dating (2026-11-11): how far it has gone with a partner. */
+export type LoveStage = "dating" | "together" | "living" | "engaged" | "married";
 
 export interface Stats {
   health: number;
@@ -355,6 +358,8 @@ export interface Person {
   trust?: number;
   /** Ties: the last few things that happened between you (money, favours). */
   history?: { at: number; line: string }[];
+  /** Dating: a partner's stage (missing on older saves: Married if wed, else Dating). */
+  stage?: LoveStage;
 }
 
 /** Money between you and someone in your life (ties.ts). */
@@ -446,6 +451,9 @@ export interface Game {
   autoFights?: boolean;
   /** The player has flipped the Auto fights switch by hand (so a save migration never overrides their choice). */
   autoFightsSet?: boolean;
+  /** Powers you used since your last birthday (fights, training, lessons). Only these ripen on the birthday
+   *  (owner's call, 2026-11-11). Missing on older saves = not tracked yet: that first birthday ripens all. */
+  usedPowers?: string[];
   /** Ties: money lent and borrowed with people in your life. */
   loans?: Loan[];
   /** Ties: someone asking you for help right now. */

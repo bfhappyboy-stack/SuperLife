@@ -8,6 +8,7 @@
  * for player actions ("econ|..."). Everything the UI shows comes from the view helpers at the bottom.
  * Content is data: DISTRICTS, HOMES, HOME_MODS, STOCKS, GOODS, NEWS.
  */
+import { livesWithPartner, SHARED_LIVING } from "./dating";
 import { cityById, jobById, STIPEND } from "./data";
 import { clamp } from "./format";
 import type { Person, Game } from "./types";
@@ -687,6 +688,8 @@ export function livingCosts(g: Game): number {
   let cost = LIVING_BASE * prop + (annualWage(g) / 12) * LIVING_CREEP + kids * LIVING_PER_CHILD * prop;
   const live = livingOf(g);
   if (live.kind === "family" || live.home?.estate) cost *= 0.5;
+  // Living with a partner splits the bills (dating, 2026-11-11).
+  else if (livesWithPartner(g)) cost *= SHARED_LIVING;
   return Math.round(cost / 10) * 10;
 }
 
