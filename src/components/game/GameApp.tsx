@@ -1,5 +1,6 @@
 import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, Play, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
 import { DATING_ON, STAGE_LABEL, stageOf } from "@/game/dating";
+import { keepsMask, suspicionLabel } from "@/game/mask";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
 import { actMatches, type GoalRoute } from "@/game/chapters";
@@ -977,6 +978,7 @@ function PeopleStack({ game, actions, onPress, onTie }: { game: Game; actions: A
                 )}
               </div>
             </div>
+            {person?.role === "partner" && keepsMask(game) && <MaskLine game={game} person={person} />}
             {person && canTalkMoney(game, person) && <TieBlock game={game} person={person} onTie={onTie} />}
             <div className="relative mt-3 flex flex-col gap-2">
               {bucket.items.map((action) => (
@@ -988,6 +990,21 @@ function PeopleStack({ game, actions, onPress, onTie }: { game: Game; actions: A
       })}
     </div>
   );
+}
+
+/** The mask at home (2026-11-11 pm): does your partner know you're a hero, and how much do they wonder? */
+function MaskLine({ game, person }: { game: Game; person: Person }) {
+  const who = firstName(person.name);
+  if (person.knowsSecret) return <p className="mt-2 text-[11px] font-bold text-good">Knows you're a hero. Your secret is safe with {who}.</p>;
+  if (game.maskScene?.personId === person.id) {
+    return (
+      <div className="mt-2 rounded-xl border border-gold/50 bg-gold/10 px-3 py-2 text-xs font-bold text-fg">
+        {who} found the suit. They're waiting for you to explain.
+      </div>
+    );
+  }
+  const worry = suspicionLabel(person);
+  return <p className={`mt-2 text-[11px] font-bold ${worry ? "text-bad" : "text-muted"}`}>{worry ? `${worry}.` : `Doesn't know you're a hero.`}</p>;
 }
 
 /** Ties (2026-11-10 late): personality, trust, history and the money between you, on the person's card. */

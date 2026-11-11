@@ -15,6 +15,7 @@ import { firstName, MONTHS } from "./format";
 import { MIX_AGE } from "./mentors";
 import { fastForward, playMonth, ROUTINE, stopFor } from "./skip";
 import { tieNews } from "./ties";
+import { maskNews } from "./mask";
 import type { Game, Pace, SkipReport } from "./types";
 
 /** Ship switch: on once complete and tested. Off restores Next month + Skip. */
@@ -136,7 +137,7 @@ function withMoney(start: Game, out: Game): Game {
   const banner = out.card.banner ?? [];
   // Business news shows once, in the money report (2026-11-10 pm).
   const inReport = new Set((money?.biz ?? []).map((b) => b.text));
-  const ties = tieNews(start, out);
+  const ties = [...maskNews(start, out), ...tieNews(start, out)];
   const tieSet = new Set(ties);
   // Money with your people (2026-11-10 late) leads: an ask or a debt gone bad is yours to deal with.
   const mine = [...ties, ...banner.filter((line) => !isChatter(line) && !inReport.has(line) && !tieSet.has(line))];

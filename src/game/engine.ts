@@ -40,6 +40,7 @@ import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp, youthGain } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
 import { tieAct, tieMonth } from "./ties";
+import { hidingFrom, maskAct, maskMonth, oddsOfTell, tellBlock } from "./mask";
 import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainPhase3, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
@@ -2564,6 +2565,7 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   }
   banners.push(...tickRoster(d));
   if (d.phase === "live") tieMonth(d, banners);
+  if (d.phase === "live") maskMonth(d, banners);
   if (d.phase === "live") monthlyBody(d, banners);
   if (d.phase === "live" && d.stats.health <= 0) {
     collapse(d, "Your legs file a complaint and the floor accepts it.");
@@ -2969,6 +2971,30 @@ export function act(game: Game, id: string): Game {
     d.card = { kicker: whenLabel(d.age, d.month), banner: [res.line], body: d.card.body, deltas: [] };
     peaks(d);
     return res.ok ? d : { ...d };
+  }
+  if (id.startsWith("mask|")) {
+    if (id.startsWith("mask|tell|") && noTime(d, true)) return game;
+    const res = maskAct(d, id);
+    if (!res.ok) {
+      d.card = { ...d.card, banner: [res.line] };
+      return { ...d };
+    }
+    if (res.spend) spend(d);
+    const deltas: Delta[] = [];
+    if (res.leaves) {
+      const p = d.relationships.find((r) => r.role === "partner" && r.alive);
+      if (p) {
+        const wed = stageOf(d, p) === "married";
+        p.role = "ex";
+        p.stage = undefined;
+        d.flags.married = 0;
+        applyEffects(d, { happiness: wed ? -10 : -6 }, deltas);
+        pushHistory(d, `${p.name} left after learning the truth.`, "major");
+      }
+    }
+    setStory(d, res.line, deltas, [], res.leaves ? "major" : undefined);
+    peaks(d);
+    return d;
   }
   if (id.startsWith("econ|")) {
     const res = econAct(d, id, d.majorsLeft);
@@ -4763,6 +4789,14 @@ function loveItems(g: Game, p: Person): ActionItem[] {
   if (st === "engaged") {
     for (const [kind, w] of Object.entries(WEDDINGS)) {
       out.push(item({ id: `love|wed|${p.id}|${kind}`, group: "people", section, label: w.label, detail: `${money(w.cost)}${w.fame ? " · the whole city hears" : " · just the people who matter"}`, disabled: noTime(g, true) ?? (g.stats.money < w.cost ? "Too broke." : undefined), accent: kind === "small" }));
+    }
+  }
+  if (hidingFrom(g)?.id === p.id) {
+    if (g.maskScene?.personId === p.id) {
+      out.push(item({ id: "mask|truth", group: "people", section, label: "Tell them the truth", detail: `${who} found the suit · ${oddsOfTell(p, true)}`, accent: true }));
+      out.push(item({ id: "mask|deny", group: "people", section, label: "Deny it", detail: "A costume party. Trust takes the hit." }));
+    } else {
+      out.push(item({ id: `mask|tell|${p.id}`, group: "people", section, label: `Tell ${who} you're a hero`, detail: `No more cover stories · ${oddsOfTell(p)}`, disabled: noTime(g, true) ?? tellBlock(g, p) }));
     }
   }
   const cost = splitCost(g, p);

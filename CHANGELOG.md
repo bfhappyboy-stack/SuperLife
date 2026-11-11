@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-11 (pm): the mask at home (`devbot/2026-11-11-pm`)
+
+Built on `origin/devbot/2026-11-11-am` (100f35c). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: partners and the secret identity (Priority 0a, dating stage 2)
+
+- **Why:** dating stage 1 made partners real, but a secret-identity hero could live with someone for decades and never be asked about the bruises. The brief asks for jealousy and secret-identity risk with partners; this is both, as one readable thread on the partner's card.
+- **Suspicion (`maskMonth`):** a partner who doesn't know you're a hero wonders more each month, fastest once you share a home. At 40 they think you're seeing someone (one Play card line; jealousy then slowly costs closeness). From 55 they may find the suit.
+- **They found the suit:** a gold line on their card, and two rows: **Tell them the truth** (odds shown; finding it softens the shock a little) or **Deny it** (trust −15, the questions go quiet, not away). It waits up to a year and never stops Play; silence counts as a deny. The next find is at least 30 months off, and a deny that leaves trust at 10 or less ends the relationship.
+- **Tell them first:** **Tell <name> you're a hero** (a block of free time; odds from closeness, trust and their temper). Yes: they know and keep it ("Knows you're a hero. Your secret is safe with Silas."), closeness +8, trust +6. No: closeness −12, a year before trying again, and a partner already distant may walk out.
+- **Card line:** a partner's card now says where the secret stands: "Doesn't know you're a hero", "Wondering about the late nights", "Thinks you're hiding someone", or "Knows you're a hero". Rows use a mask icon (fixes crossed swords on "Tell Silas…", again from "Marchetti" matching "arc").
+- **Public heroes and powerless lives:** nothing changes. Flag `MASK_ON` in `src/game/mask.ts`.
+- **Saves:** new optional fields (`Person.knowsSecret`, `suspicion`, `toldAt`, `foundAt`, `Game.maskScene`); old saves start at 0 suspicion.
+- **Sims (6 Mystery seeds, secret identity, moved in at 25, Play only to 45, never answering):** jealous at 26–27, found the suit at 29, then again at ~32 and ~35, gone at ~36. A player who tells a close partner early mostly gets a yes (about 7 in 10 at closeness 70, trust 50).
+- **Tests (`mask.test.ts`, 6):** who keeps a mask; suspicion by stage, jealousy and a find; telling (a block, yes/no, the retry wait); truth/deny rows and the silent deny; a distant partner can walk out and Play card news shows once; three finds and they leave with the jealousy line once; old saves. 323 game tests pass.
+
 ## 2026-11-11 (am): easy wins stay quiet, growth follows use (`devbot/2026-11-11-am`)
 
 Built on `origin/devbot/2026-11-10-late` (86be4d7). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
