@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-11-11 (am): easy wins stay quiet, growth follows use (`devbot/2026-11-11-am`)
+
+Built on `origin/devbot/2026-11-10-late` (86be4d7). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 2: dating, first stage (Priority 0a)
+
+- **Why:** the owner picked dating next for people. Before, dating was one dice roll ("Go on a date": a partner or a bad-date line), then Propose, with nothing in between and no way to end it yourself.
+- **Meet (People ▸ Meet):** four places, one block of free time each: Someone at work, At the gym, A night out ($60, 18+), Try a dating app. A spark adds a **crush** (pink card, "Crush · Met at the gym") to your Circle; two at most; none while you have a partner.
+- **Flirt:** three choices on the crush's card, free, once a month per person: Make them laugh (Smarts), Be bold (Looks and nerve), Be sweet (Kindness). Everyone secretly prefers one; the odds label (Good odds / Fair odds / Long shot) is the hint. Hits raise interest, backfires lower it, and at 0 they stop answering. A neglected crush cools 10 a year and moves on quietly.
+- **Ask them out** at interest 50 ($50 dinner, a block, odds shown): yes = partner at Dating; no = −15 interest.
+- **Stages on the partner card** (the role line reads "Partner · Living together"): Make it official (55) → Move in together (65, needs your own place; cost of living ×0.8 while you live together) → Propose (72, $700, now makes you Engaged) → Small wedding $400 or Big wedding $6,000 → Married. Break up any time; Divorce takes 25% of cash. New history lines for each big step.
+- **Fix:** person cards picked action icons from the person's name ("Marchetti" matched "arc" and drew crossed swords on Give a gift). Icons on a person's card now come from the action only; dating rows use a heart (a cracked heart for Break up).
+- **Saves:** no migration needed; partners without a stage read as Married (if `flags.married`) or Dating. `DATING_ON` in `src/game/dating.ts` turns it all off and restores the old Go on a date.
+- **Tests (`dating.test.ts`, 8):** places and gates, a spark adds a crush, flirt odds follow stat and taste, both outcomes happen, a backfire at the bottom ends it, asking out needs interest and clears other crushes, the full ladder to married then divorce (with the lease gate), shared living costs, old-save stages, a neglected crush moves on. 316 game tests pass.
+
+### Increment 1: easy wins settle quietly; yearly growth only for powers you used
+
+- **Why:** owner's calls from 2026-11-11. With Auto fights off, Play still stopped for street fights you'd clearly win, which is exactly the busywork "interrupt less" was meant to remove. And yearly growth raised every power you held, even ones you never touched, so a power could climb ranks while you ignored it.
+- **Easy wins (`routineFight` in `skip.ts`):** a street foe you outclass (power level 1.5+ above theirs, not a boss) is now a clean win settled into the recap with Auto fights on or off; the recap line reads "Street fight: Rook (won, an easy win)". Even fights still stop unless Auto fights is on; bosses, your arch-enemy and tougher foes always stop. The Time sheet's Auto fights OFF line now says "Play stops for real fights… Easy wins and small everyday moments still go in the recap."
+- **Yearly growth follows use (`markUsed` / `ripenUsed` in `engine.ts`, `Game.usedPowers`):** a power counts as used this year when it gains mastery from training, a lesson, a case step or a drill, when a braid lesson works it (both halves), or when you throw one of its moves in a fight (an Auto-resolve counts your whole six). On the birthday only used powers ripen (+7 mastery), then the list clears. Still never grants a power.
+- **Old saves:** no `usedPowers` yet means "not tracked": that first birthday ripens every power once (as before), then tracking starts. No migration needed.
+- **Tests:** easy win settles with Auto fights off, an outclassed boss still stops, an even fight stops when switched back off; only used powers ripen, unheld ids are ignored, nothing used means no growth, old saves ripen once; a fight marks the power behind the move thrown. 308 game tests pass.
+- **Sims (Play only, 0 → 40):** see PLAYTEST. Street foes in a normal life are rarely outclassed, so this mostly quiets fights for strong lives and late careers; unused second powers now stay where you left them unless you drill them.
+
 ## 2026-11-10 (late): fights are your call; money between you and your people (`devbot/2026-11-10-late`)
 
 Built on `origin/devbot/2026-11-10-eve` (bae21f9). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.

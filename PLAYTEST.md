@@ -1,5 +1,17 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-11 am): easy wins, growth by use, then people
+
+**Played:** engine sims on Play only, 0 → 40, Auto fights off, a steady 60% player (6 Mystery seeds in Metro; Superman, Spider-Man, Hulk, Thor), before (86be4d7) and after increment 1; phone at 390×844 from a seed-4 Metro save at 29 (`/workspace/shots-2026-11-11-am/`).
+
+**Findings:**
+- **Adult fight stops are mostly your arch-enemy, not street fights.** Of 9–26 adult fight stops per life, about half are the arch-enemy's once-a-year call (by design), 2–10 are named street villains, the rest relic runs. Street villains sat 1–2 power levels *above* the player in almost every stop (roster villains roll level 1–8, players sit at 2.6–4.4 at 40), so a true "easy win" (1.5+ below you) is rare in a normal life: increment 1 settled none in these runs. It will matter for strong builds and late careers; normal lives keep their fights. Fight stops before/after: identical on 4 of 6 seeds, −3 and +2 on the others (noise from different dice later in life).
+- **Growth by use makes second powers a choice.** Before, every held power ripened yearly: second and third powers reached 100–160 mastery by 40 untouched. After, a Play-only life that never drills them ends with 28–133 (seed 8's Flight 28, Invisibility 7); Superman's Flight and Super Durability stayed at 0 to 40 because his routine trains Super Strength and his six moves are all strength moves. Main power ~5–10% lower (no longer gets the ripen on years with no training). Watch: a legend's iconic second power sitting at D for life may read oddly; drilling it is one routine slot away.
+- **Time sheet** at 390×844: the OFF line now reads "Play stops for real fights… Easy wins and small everyday moments still go in the recap." Fits, no overflow, no console errors.
+- **Dating today is one dice roll.** People ▸ Meet has "Go on a date": a single roll (looks + happiness) that either hands you a partner at closeness 44 or a bad-date line. No one to meet first, no flirting choices, no stages between dating and Propose, no moving in, no breakups you choose, and the partner never notices the double life. (Priority 0a dating, increment 2.)
+- **After increment 2 (phone, seed-4 save at 29):** Meet lists the four places, each with its line; with two crushes they lock with a clear reason. A crush card reads "Crush · Met on an app", a pink interest bar, three flirts with odds ("Good odds · Smarts", "Long shot · Looks and nerve") and "Ask Silas out — Not into you enough yet (49/50)". After dating → official, the partner card reads "Partner · Together" with Spend time, Give a gift, Move in together (locked: "Get your own place first (Work ▸ Money ▸ Home)"), Propose and Break up. Fits 390 px, no overflow, no console errors. Partner cards are long (temper/trust + money + 5 rows); folding Spend time / Gift into a small row is still on the backlog.
+- **Bug found and fixed:** action icons on person cards were matched against the person's name, so "Silas Marchetti" (contains "arc") showed crossed swords on Give a gift.
+
 ## Late pass (2026-11-10 late): fights are a choice, as a first-time player
 
 **Played:** engine sims on Play only (6 Mystery seeds, Metro, 0 → 40, Auto fights off and on, and with a train routine; plus the same with yearly growth set to 0 and 4 to measure it), Spider-Man God Mode 18 → 40; phone at 390×844 from injected saves (an eve-era adult at 26 that never touched the switch, a street fight at 31): `/workspace/shots-2026-11-10-late/`.
