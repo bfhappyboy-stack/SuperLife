@@ -1,5 +1,51 @@
 # SuperLife — Backlog
 
+## From the 2026-11-11 pm pass
+
+- **Done:** the mask at home (partner suspicion, jealousy, finding the suit, telling them; increment 1).
+- **Dating next:** a partner who knows can help (covers for you, patches you up: a small HP or Joy lift) or, if Slippery and you split, sell your story; a crush while partnered (getting caught); anniversaries and date nights as routine slots; kids as heirs for the will (Start a family exists; the will and play-as-heir are Priority 0d).
+- **Then:** family events and invites through Life Flow (birthdays, weddings, parties, galas, funerals with choices at the event).
+
+## From the 2026-11-10 late pass
+
+- **Done:** Auto fights opt-in with a fight-card Fight it out / Auto-resolve choice (increment 1); People cards with temper, trust, history, lend / borrow with schedules, non-payers and family asking for help (increment 2).
+- **Dating stage 1 shipped 2026-11-11 am** (meet, flirt, ask out, official, move in, engaged, wedding, break up/divorce). **Dating next:** jealousy (a crush while partnered, getting caught), secret identity as a relationship risk (a partner who finds the suit, telling them), dates as routine slots, anniversaries, a casino as a meeting place once the casino exists, kids as heirs for the will.
+- **Next for Priority 0a (people):** events with family and friends (birthdays, a wedding, a falling-out), flirting into dating with a relationship meter per stage, invites through Life Flow (a routine slot "Dinner with Mom"), trust affecting more than money (secrets, secret identity), siblings, and a lender who chases you hard. Person cards are getting tall: consider folding Spend time / Give a gift into a row of small buttons.
+- **Ask the owner:** with Auto fights off, should sure wins (1.5+ power levels clear) still settle into the recap? Now they stop too (about 1 extra stop per adult life in sims).
+- **Watch (yearly growth):** ripening is most of the growth of your non-focus powers; if that feels like free power, ripen only powers you used that year.
+
+## From the 2026-11-10 eve pass
+
+- **Done:** chains in every city with brand upgrades, head office and a chain view (increment 1); adult Play interrupts less, with a year per tap from 18, settled moments and Auto fights (increment 2); rare powers with long training and deeper techniques (increment 3).
+- **Watch (rare powers):** kits now hit harder on average (deeper moves), so normal fights may feel a touch easier; check Hard/Legendary win rates in playtest. A rare story moment (a near-death awakening, a relic) that opens a power outside the gaps is a candidate. Show the gate reason earlier (e.g. "Next power possible at 27") on the Powers tab header.
+- **Watch (interrupt less):** whether a year a tap feels too fast for business-heavy lives (Season is one tap away); maybe a "pause on business news" option.
+- **Next for chains:** selling the whole chain in one go; a franchise option (someone else pays to open, you take a cut); a rival chain that follows you into cities; promoting a manager to run the whole chain.
+
+## From the 2026-11-10 pm pass
+
+- **Done:** per-life markets and the squeeze hint (increment 1); managers, crew morale, business events, fights reaching your businesses, upgrade fanfare (increment 2); the Money hub fits a phone and results float above Play (increment 3); business news on every Play card (increment 4).
+- **Not done this pass:** painted posters for saved mystery heroes (no image tool in this run; the vector posters stay), onboarding / first-life tutorial, the Shop's clutter (it still repeats the desk line and month card above a second cash card).
+- **Decided:** $700 living cost stays (cheap-city low wages stay positive; New York shop work is a squeeze, now explained with a way out). Play stop rules stay (~1.5 extra stops a year as an adult).
+- **Next for businesses:** ~~a second site of the same business (franchise) as an upgrade~~ (chains shipped in eve); named staff beyond the manager; the newspaper printing your fights.
+
+## From the 2026-11-10 am pass
+
+- **Done:** cost of living + shift trim (increment 1), money report on every Play step + cash ticker (2), routine slots for shifts and people + security / start-up tie-ins (3).
+- **Decided:** adult pace stays Season (Month one tap away); estates take no roommates.
+- **Next:** a newspaper that prints your fights (fame), named staff and a manager, a "since you bought" alert, a year-in-review highlight pick for kid recaps, hold-to-keep-playing.
+
+## From the 2026-11-10 night pass (living economy)
+
+- **Done (increment 4):** Life Flow (Play + Routine + age-scaled pace; DESIGN §19). Next: routine slots for "Work a shift at <business>" and "Time with <person>"; a "year in review" highlight pick for kid recaps; optional auto-Play (hold to keep playing until the next stop).
+
+- **Done (increment 1):** living markets (district house prices, 9 stocks, 6 goods, base rate, data-driven news, fights move markets) and housing (rent / buy / mortgage / sell / let / upgrades / perks / eviction) in one Work ▸ Money hub. 247 game tests.
+- **Done (increment 2):** businesses (six kinds, staff with diminishing returns, upgrades, reputation, market-linked demand, sell) and legend family companies (Wayne Enterprises from 18, Stark Industries from 21). 254 game tests.
+- **Business next:** named staff with traits (a manager who runs it when you move city), random events (inspection, robbery during a villain fight, viral review), franchising a second site; hero tie-ins (your security firm gets League contracts as your rank rises; the newspaper prints your fights).
+- **Rent burden in NYC is heavy** for a low-wage adult (even a Queens tiny flat is ~$1k/mo at market rent). Intended pressure, but watch playtests; a roommate option or a housing allowance from the League are candidates.
+- **The old Market's homes** (studio, brownstone, rental, penthouse) are hidden from the Shop for new purchases; owned ones keep working. Candidate: migrate them into real homes in the hub.
+- **Done (increment 3):** ~~Selling Wayne Manor is allowed~~ — family estates are locked (owner's call). Roommates shipped (owner's call). Next for roommates: a roommate romance path, roommate-specific story chains (Rosa's cape exposé), and a "roommate wanted" ad that picks traits.
+- **Markets lack a "since you bought" alert** and a watchlist; candidate push banner when a holding moves ±15% in a month.
+
 ## From the 2026-11-09 night pass (in progress)
 
 - **Done (increment 2):** Wonder Woman's **Amazon Arms** (13 pieces from 10, Lasso of Truth at 14, Godkiller Ultimate at 30), replacing her strength / flight / aegis moves. Normal 60% 0.88 / 0.78 → 0.82 / 0.59, Hard 0.82 / 0.64 → 0.66 / 0.49, Legendary 0.62 / 0.41 → 0.53 / 0.29. Teen dip (0.50 street at 15–24 vs Cheetah) and late high (0.94 at 40+) logged.

@@ -7,6 +7,7 @@
 import type { ElementId } from "./elements";
 import { PRESETS, type PresetId } from "./presets";
 import type { DuelMove, Look, MoveStyle, Sex, Wardrobe } from "./types";
+import type { CapeFamily } from "./theme";
 
 type MoveKind = NonNullable<DuelMove["kind"]>;
 
@@ -55,6 +56,8 @@ export interface ArenaFighter {
   custom?: boolean;
   /** A saved life's own look, so the Arena draws the hero you built. */
   life?: { look: Look; wardrobe: Wardrobe; age: number; sex: Sex };
+  /** A saved mystery life's power family, for its poster art (emblem and rim-light colour). */
+  family?: CapeFamily | null;
   /** Unmasked villains get a fixed face so Doc Ock keeps his glasses and the Joker his green hair. */
   look?: Partial<Look>;
 }

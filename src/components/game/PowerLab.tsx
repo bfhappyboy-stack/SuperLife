@@ -6,7 +6,7 @@ import { ElementIcon } from "@/components/game/Vfx";
 import { arcsCleared, availableArcs, currentCase, plotFor, type ArcDef, type ArcStep } from "@/game/arcs";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { getPower, mix, possibleMixes, teachableBases, viewPowers } from "@/game/combo";
-import { MIX_AGE, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, type MentorDef } from "@/game/mentors";
+import { MIX_AGE, mentorAwaken, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, type MentorDef } from "@/game/mentors";
 import { canSkipToFifteen } from "@/game/skip";
 import { caseRegroup, focusId } from "@/game/engine";
 import { mergeHeroes, replyLocally } from "@/game/heroes";
@@ -14,7 +14,7 @@ import { askHero } from "@/game/hero-talk";
 import { masteryCap, masteryLevel, nextMasteryExp, powerRank } from "@/game/mastery";
 import { dossier, homeArc, talkBrief } from "@/game/origin";
 import { hasGift } from "@/game/theme";
-import { library, type LibraryState } from "@/game/library";
+import { AWAKEN_LESSONS, HERO_AWAKEN_BOND, MENTOR_AWAKEN_BOND, awakenBlock, braidBlock, library, type LibraryState } from "@/game/library";
 import { SealedGift } from "@/components/game/SealedGift";
 import { MovePicker, StreetSix } from "@/components/game/MovePicker";
 import { kitFor } from "@/game/kits";
@@ -142,7 +142,8 @@ export function PowerLab({
             }
             moves={moves}
             room={library(game)}
-            blocked={!!(preview?.ok && library(game).block && !unlocked.includes(preview.power.id))}
+            training={game.training ?? null}
+            blockText={preview?.ok && left && right && !unlocked.includes(preview.power.id) ? (braidBlock(game, left, right, preview.power.id) ?? (game.flags.powerLesson ? "One power lesson a month. Come back next month." : null)) : null}
             onPick={pick}
             onMix={() => left && right && attempt(left, right)}
           />
@@ -280,8 +281,9 @@ function TrainerCircle({
               {offers.length > 0 && (
                 <div className="mt-2 flex flex-col gap-2">
                   {offers.map((power) => {
-                    const block = library(game).block;
-                    const ready = moves && hero.relationship >= 28 && !block;
+                    const block = awakenBlock(game, power.id) ?? (game.flags.powerLesson ? "One power lesson a month." : null);
+                    const ready = moves && hero.relationship >= HERO_AWAKEN_BOND && !block;
+                    const going = game.training?.id === power.id ? game.training : null;
                     return (
                       <button
                         key={power.id}
@@ -296,18 +298,18 @@ function TrainerCircle({
                             onNote(block);
                             return;
                           }
-                          if (hero.relationship < 28) {
-                            onNote(`Bond ${hero.relationship}. ${power.name} wants 28.`);
+                          if (hero.relationship < HERO_AWAKEN_BOND) {
+                            onNote(`Bond ${hero.relationship}. Waking ${power.name} wants ${HERO_AWAKEN_BOND}.`);
                             return;
                           }
-                          onNote(`Asked ${hero.alias} to teach ${power.name}.`);
+                          onNote(`Lesson with ${hero.alias}: ${power.name}.`);
                           onAct(`learn|${hero.id}|${power.id}`);
                         }}
                         data-act={`learn|${hero.id}|${power.id}`}
                         className={`card min-h-11 px-3 py-2 text-left text-sm ${ready ? "!border-gold text-fg" : "text-muted"}`}
                       >
-                        <span className="font-semibold">Learn {power.name}</span>
-                        <span className="block text-muted">{hero.relationship < 28 ? "Bond 28 to take the lesson." : block ? "No room in your book yet." : "A base power. It can braid with what you hold."}</span>
+                        <span className="font-semibold">{going ? `Keep waking ${power.name} · ${Math.floor(going.progress)}/${going.need}` : `Wake ${power.name}`}</span>
+                        <span className="block text-muted">{hero.relationship < HERO_AWAKEN_BOND ? `Bond ${HERO_AWAKEN_BOND} first. Heroes don't share this lightly.` : block ? block : `A rare gift. About ${AWAKEN_LESSONS} monthly lessons before it answers.`}</span>
                       </button>
                     );
                   })}
@@ -345,7 +347,8 @@ function BraidBook({
   previewText,
   moves,
   room,
-  blocked,
+  training,
+  blockText,
   onPick,
   onMix,
 }: {
@@ -357,7 +360,8 @@ function BraidBook({
   previewText: string;
   moves: boolean;
   room: LibraryState;
-  blocked: boolean;
+  training: Game["training"];
+  blockText: string | null;
   onPick: (id: string) => void;
   onMix: () => void;
 }) {
@@ -375,7 +379,16 @@ function BraidBook({
         <div className="stat-fill" style={{ width: `${fill}%`, "--fill": "var(--color-gold)" } as React.CSSProperties} />
       </div>
       {room.block && <p className="mt-1.5 text-xs font-semibold text-gold/90">{room.block}</p>}
-      <p className="mt-1 text-sm text-muted">Two hands, then Mix. Tap a chosen power again to drop it. The name of a new braid stays hidden until it lands.</p>
+      <p className="mt-1 text-sm text-muted">Every page here is rare. A braid takes months: pick two powers drilled to rank C, then practise one lesson a month. Alone it goes at half a mentor's pace.</p>
+      {training && (
+        <div className="mt-2 rounded-xl border border-gold/40 bg-gold/[0.06] px-3 py-2" aria-label="Power in training">
+          <p className="t-label text-[10px] text-gold">{training.kind === "awaken" ? "WAKING A POWER" : "BRAID IN PROGRESS"}</p>
+          <p className="mt-0.5 text-sm font-semibold text-fg">{getPower(training.id)?.name ?? "Unknown"} · {Math.floor(training.progress)}/{training.need} lessons</p>
+          <div className="stat-bar mt-1" aria-hidden>
+            <div className="stat-fill" style={{ width: `${Math.min(100, Math.round((training.progress / Math.max(1, training.need)) * 100))}%`, "--fill": "var(--color-gold)" } as React.CSSProperties} />
+          </div>
+        </div>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Slot label="Hand 1" id={left} />
         <Slot label="Hand 2" id={right} />
@@ -399,9 +412,10 @@ function BraidBook({
           );
         })}
       </div>
-      <button type="button" disabled={!left || !right || !moves || !previewOk || blocked} onClick={onMix} data-act="mix|" className="btn btn-primary mt-3 min-h-12 w-full disabled:opacity-40">
-        {!moves ? "No moves left this month" : !left || !right ? "Choose two powers" : !previewOk ? "These two won't mix" : blocked ? "No room in the book yet" : "Mix these two"}
+      <button type="button" disabled={!left || !right || !moves || !previewOk || !!blockText} onClick={onMix} data-act="mix|" className="btn btn-primary mt-3 min-h-12 w-full disabled:opacity-40">
+        {!moves ? "No moves left this month" : !left || !right ? "Choose two powers" : !previewOk ? "These two won't mix" : blockText ? "Not ready to braid" : training?.id && training.kind === "braid" ? "Practise the braid" : "Start braiding these two"}
       </button>
+      {blockText && <p className="mt-1.5 text-xs text-muted">{blockText}</p>}
     </section>
   );
 }
@@ -777,7 +791,7 @@ function MixLocked({ game }: { game: Game }) {
           <h2 className="t-label text-[10px] text-[#7cf0c8]">BRAID BOOK · LOCKED</h2>
           <p className="t-display !text-[1.6rem] leading-none text-fg">Mixing unlocks at {MIX_AGE}</p>
           <p className="mt-1 text-sm text-fg/80">
-            {years} year{years === 1 ? "" : "s"} to go. Until then, drill what you have and learn from heroes.
+            {years} year{years === 1 ? "" : "s"} to go. Until then, drill what you have. Depth comes first.
           </p>
         </div>
       </div>
@@ -796,7 +810,7 @@ function MixLocked({ game }: { game: Game }) {
         </li>
         <li className="flex items-center gap-2">
           <BookOpen className="size-4 shrink-0 text-gold" aria-hidden />
-          {waiting ? `${waiting} recipe${waiting === 1 ? "" : "s"} already in your hands, waiting.` : "Learn more powers from heroes to have recipes ready."}
+          {waiting ? `${waiting} recipe${waiting === 1 ? "" : "s"} already in your hands, waiting.` : "New powers are rare. Drill the one you have until it's ready."}
         </li>
       </ul>
       {canSkipToFifteen(game) && (
@@ -818,6 +832,10 @@ function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct:
   const room = library(game);
   const focus = getPower(focusId(game));
   const recipe = mentorRecipe(game);
+  const wake = mentorAwaken(game);
+  const wakeBlock = wake ? awakenBlock(game, wake.id) : "No power left to wake";
+  const going = game.training ?? null;
+  const lessonUsed = game.flags.powerLesson ? "Power lesson done this month" : null;
   const done = !!game.flags.tutored;
   const why = done ? "Lesson done this month" : !moves ? "No moves left this month" : null;
   const lessons: { id: string; icon: LucideIcon; title: string; detail: string; off: string | null }[] = [
@@ -825,8 +843,15 @@ function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct:
       id: "tutor|braid",
       icon: Zap,
       title: braid ? `Guided braid` : "Guided braid",
-      detail: braid ? `${braid.left.name} + ${braid.right.name}. Lands a little drilled.` : "No recipe in your hands yet.",
-      off: why ?? (!braid ? "Nothing to braid" : room.block ? "No room in the book" : null),
+      detail: braid ? `${braid.left.name} + ${braid.right.name}.${going?.id === braid.result.id ? ` ${Math.floor(going.progress)}/${going.need} lessons.` : " Months of lessons."}` : "No recipe in your hands yet.",
+      off: why ?? lessonUsed ?? (!braid ? "Nothing to braid" : braidBlock(game, braid.left.id, braid.right.id, braid.result.id)),
+    },
+    {
+      id: "tutor|awaken",
+      icon: Star,
+      title: wake ? `Wake ${wake.name}` : "Wake a power",
+      detail: wake && going?.id === wake.id ? `${Math.floor(going.progress)}/${going.need} lessons. Keep going.` : "Rare. Slow. Many months of lessons.",
+      off: why ?? lessonUsed ?? (state.bond < MENTOR_AWAKEN_BOND ? `Bond ${MENTOR_AWAKEN_BOND} first` : wakeBlock),
     },
     { id: "tutor|drill", icon: Dumbbell, title: focus ? `Drill ${focus.name}` : "Drill", detail: "Better gains than drilling alone.", off: why ?? (game.stats.health < 12 ? "Too gassed" : null) },
     { id: "tutor|study", icon: BookOpen, title: "Study night", detail: recipe ? "Learn a new recipe for your book. +Mind." : "Theory and tea. +Mind.", off: why },
@@ -854,7 +879,7 @@ function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct:
         <div className="stat-fill" style={{ width: `${Math.min(100, state.bond)}%`, "--fill": mentor.color } as React.CSSProperties} />
       </div>
       <p className="relative mt-2 text-[13px] text-fg/85 italic">&ldquo;{mentor.craft}&rdquo;</p>
-      <div className="relative mt-2.5 grid grid-cols-3 gap-1.5">
+      <div className="relative mt-2.5 grid grid-cols-2 gap-1.5">
         {lessons.map((row) => {
           const Icon = row.icon;
           return (
@@ -869,7 +894,7 @@ function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct:
             >
               <Icon className="size-4" style={{ color: mentor.color }} aria-hidden />
               <span className="text-[13px] leading-tight font-extrabold text-fg">{row.title}</span>
-              <span className="line-clamp-3 text-[11px] leading-snug text-muted">{row.off ?? row.detail}</span>
+              <span className="line-clamp-4 text-[11px] leading-snug text-muted">{row.off ?? row.detail}</span>
             </button>
           );
         })}

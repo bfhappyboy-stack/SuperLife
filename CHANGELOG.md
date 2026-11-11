@@ -1,5 +1,239 @@
 # Changelog
 
+## 2026-11-11 (pm): the mask at home (`devbot/2026-11-11-pm`)
+
+Built on `origin/devbot/2026-11-11-am` (100f35c). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: partners and the secret identity (Priority 0a, dating stage 2)
+
+- **Why:** dating stage 1 made partners real, but a secret-identity hero could live with someone for decades and never be asked about the bruises. The brief asks for jealousy and secret-identity risk with partners; this is both, as one readable thread on the partner's card.
+- **Suspicion (`maskMonth`):** a partner who doesn't know you're a hero wonders more each month, fastest once you share a home. At 40 they think you're seeing someone (one Play card line; jealousy then slowly costs closeness). From 55 they may find the suit.
+- **They found the suit:** a gold line on their card, and two rows: **Tell them the truth** (odds shown; finding it softens the shock a little) or **Deny it** (trust −15, the questions go quiet, not away). It waits up to a year and never stops Play; silence counts as a deny. The next find is at least 30 months off, and a deny that leaves trust at 10 or less ends the relationship.
+- **Tell them first:** **Tell <name> you're a hero** (a block of free time; odds from closeness, trust and their temper). Yes: they know and keep it ("Knows you're a hero. Your secret is safe with Silas."), closeness +8, trust +6. No: closeness −12, a year before trying again, and a partner already distant may walk out.
+- **Card line:** a partner's card now says where the secret stands: "Doesn't know you're a hero", "Wondering about the late nights", "Thinks you're hiding someone", or "Knows you're a hero". Rows use a mask icon (fixes crossed swords on "Tell Silas…", again from "Marchetti" matching "arc").
+- **Public heroes and powerless lives:** nothing changes. Flag `MASK_ON` in `src/game/mask.ts`.
+- **Saves:** new optional fields (`Person.knowsSecret`, `suspicion`, `toldAt`, `foundAt`, `Game.maskScene`); old saves start at 0 suspicion.
+- **Sims (6 Mystery seeds, secret identity, moved in at 25, Play only to 45, never answering):** jealous at 26–27, found the suit at 29, then again at ~32 and ~35, gone at ~36. A player who tells a close partner early mostly gets a yes (about 7 in 10 at closeness 70, trust 50).
+- **Tests (`mask.test.ts`, 6):** who keeps a mask; suspicion by stage, jealousy and a find; telling (a block, yes/no, the retry wait); truth/deny rows and the silent deny; a distant partner can walk out and Play card news shows once; three finds and they leave with the jealousy line once; old saves. 323 game tests pass.
+
+## 2026-11-11 (am): easy wins stay quiet, growth follows use (`devbot/2026-11-11-am`)
+
+Built on `origin/devbot/2026-11-10-late` (86be4d7). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 2: dating, first stage (Priority 0a)
+
+- **Why:** the owner picked dating next for people. Before, dating was one dice roll ("Go on a date": a partner or a bad-date line), then Propose, with nothing in between and no way to end it yourself.
+- **Meet (People ▸ Meet):** four places, one block of free time each: Someone at work, At the gym, A night out ($60, 18+), Try a dating app. A spark adds a **crush** (pink card, "Crush · Met at the gym") to your Circle; two at most; none while you have a partner.
+- **Flirt:** three choices on the crush's card, free, once a month per person: Make them laugh (Smarts), Be bold (Looks and nerve), Be sweet (Kindness). Everyone secretly prefers one; the odds label (Good odds / Fair odds / Long shot) is the hint. Hits raise interest, backfires lower it, and at 0 they stop answering. A neglected crush cools 10 a year and moves on quietly.
+- **Ask them out** at interest 50 ($50 dinner, a block, odds shown): yes = partner at Dating; no = −15 interest.
+- **Stages on the partner card** (the role line reads "Partner · Living together"): Make it official (55) → Move in together (65, needs your own place; cost of living ×0.8 while you live together) → Propose (72, $700, now makes you Engaged) → Small wedding $400 or Big wedding $6,000 → Married. Break up any time; Divorce takes 25% of cash. New history lines for each big step.
+- **Fix:** person cards picked action icons from the person's name ("Marchetti" matched "arc" and drew crossed swords on Give a gift). Icons on a person's card now come from the action only; dating rows use a heart (a cracked heart for Break up).
+- **Saves:** no migration needed; partners without a stage read as Married (if `flags.married`) or Dating. `DATING_ON` in `src/game/dating.ts` turns it all off and restores the old Go on a date.
+- **Tests (`dating.test.ts`, 8):** places and gates, a spark adds a crush, flirt odds follow stat and taste, both outcomes happen, a backfire at the bottom ends it, asking out needs interest and clears other crushes, the full ladder to married then divorce (with the lease gate), shared living costs, old-save stages, a neglected crush moves on. 316 game tests pass.
+
+### Increment 1: easy wins settle quietly; yearly growth only for powers you used
+
+- **Why:** owner's calls from 2026-11-11. With Auto fights off, Play still stopped for street fights you'd clearly win, which is exactly the busywork "interrupt less" was meant to remove. And yearly growth raised every power you held, even ones you never touched, so a power could climb ranks while you ignored it.
+- **Easy wins (`routineFight` in `skip.ts`):** a street foe you outclass (power level 1.5+ above theirs, not a boss) is now a clean win settled into the recap with Auto fights on or off; the recap line reads "Street fight: Rook (won, an easy win)". Even fights still stop unless Auto fights is on; bosses, your arch-enemy and tougher foes always stop. The Time sheet's Auto fights OFF line now says "Play stops for real fights… Easy wins and small everyday moments still go in the recap."
+- **Yearly growth follows use (`markUsed` / `ripenUsed` in `engine.ts`, `Game.usedPowers`):** a power counts as used this year when it gains mastery from training, a lesson, a case step or a drill, when a braid lesson works it (both halves), or when you throw one of its moves in a fight (an Auto-resolve counts your whole six). On the birthday only used powers ripen (+7 mastery), then the list clears. Still never grants a power.
+- **Old saves:** no `usedPowers` yet means "not tracked": that first birthday ripens every power once (as before), then tracking starts. No migration needed.
+- **Tests:** easy win settles with Auto fights off, an outclassed boss still stops, an even fight stops when switched back off; only used powers ripen, unheld ids are ignored, nothing used means no growth, old saves ripen once; a fight marks the power behind the move thrown. 308 game tests pass.
+- **Sims (Play only, 0 → 40):** see PLAYTEST. Street foes in a normal life are rarely outclassed, so this mostly quiets fights for strong lives and late careers; unused second powers now stay where you left them unless you drill them.
+
+## 2026-11-10 (late): fights are your call; money between you and your people (`devbot/2026-11-10-late`)
+
+Built on `origin/devbot/2026-11-10-eve` (bae21f9). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 2: money between you and your people (Priority 0a, first slice)
+
+- **Why:** the owner wants family and friends that matter, with lending and borrowing, repayment schedules, people who don't pay, family asking for help and trust effects. This is the smallest piece that does all of that on the People screen; dating, invites and events come next.
+- **Personality (`temperOf`):** everyone you can talk money with (parents, partner, friends, teammates, grown kids) has one of five tempers, fixed for life and shown on their card: **Steady** (pays back on the dot), **Proud** (hates owing anyone), **Warm** (means well, sometimes late), **Scattered** (forgets, not on purpose), **Slippery** (always has a story). Parents lean Steady or Warm.
+- **Trust (`Person.trust`, starts at 50):** a second meter next to closeness, shown as "Trust N" (red under 40, green from 70). Paying back raises it, missing payments lowers it. Under 40 they won't lend you money.
+- **History (`Person.history`):** the card shows the last thing that happened between you ("Last: You lent $1,000, age 26.").
+- **Lend money:** $200 / $1,000 / $5,000 (what you can afford), paid back monthly over 3 / 6 / 12 months, closeness +3. Each month's payment arrives or doesn't by their temper and how close you are (Steady at closeness 50 pays ~94% of months, Slippery ~34%). Three misses in a row and they **stop paying** (trust −15, closeness −6, the rest is gone). On the card: "Theo owes you $833 of $1,000 · $167/mo · 5 to go", with **Ask for it back** (once a month: they may pay the rest, closeness −3) and **Let it go** (closeness +5, trust +4).
+- **Ask to borrow:** from 16, from someone at closeness 50+ who trusts you (40+): parents up to $5,000, a partner $2,000, friends $1,000. It comes out of your cash monthly; a month you can't pay costs trust −6, and three of those mean they bring it up at dinner (closeness −10). **Pay it all now** clears it (trust +8).
+- **Family asking for help:** now and then (about one ask every few years with a few close people, only when you have $400+), a parent or friend asks to borrow $300–1,500 for something real (a car repair, rent, a vet bill). It waits on their card for up to a year with **Lend $600** / **Not this time** (closeness −4). It never stops Play.
+- **Play cards:** an ask, a loan paid off or a friend who stopped paying shows at the top of the next Play card, once (`tieNews`).
+- **Rules:** deterministic (a hash of the loan and the month), so it never moves the engine's dice and old sims are unchanged; one open loan per person; when someone dies their debt is dropped. Flag `TIES_ON` in `src/game/ties.ts`.
+- **Saves:** old saves load with no loans, no ask and trust 50 for everyone.
+- **Sims (4 Mystery seeds given $20k at 18, Play to 40, saying yes to every ask):** 1–3 asks each; 7 loans, 6 paid back, 1 stopped paying ($600 lost). Tie news on 14 of 149 adult Play cards.
+- **Tests:** +8 (`ties.test.ts`: tempers and trust, a steady payer repays, slippery people default far more often (≥50% vs ≤15%) and it costs trust, forgive and chase, borrowing blocks / monthly payments / missed payments / pay off, asks and answers over 20 years, the engine month and the `tie|` action, Play card news shown once). 306 game tests pass.
+
+### Increment 1: Auto fights is opt-in, and every fight card asks (owner's call, 20:23)
+
+- **Why:** "Auto fights must be a choice." The eve pass turned Auto fights on for everyone, so Play quietly settled fights the player may have wanted to play.
+- **Off by default (`autoFightsOn`, `Game.autoFightsSet`):** new lives start with Auto fights off. It only counts as on when the player flipped the switch themselves. With it off, Play stops for every street fight (even a sure win); bosses, your arch-enemy and tougher foes stop either way. Small everyday moments (a landlord, a billboard, a friendly drop-in) still settle into the recap.
+- **Fight card (`FightChoice`, `autoResolveFight`):** every life-sim fight opens with two buttons above the arena: **Fight it out** (play it, the bar goes away) or **Auto-resolve**, which shows what to expect ("Likely a win / a scrape / a loss") and settles the fight now, a little under your usual result (a foe you outclass by 1.5+ power levels is a clean win). The result card starts "Auto-resolved: <foe>." Auto-resolved fights don't count toward your fighting habit, so they don't drag down later auto scores.
+- **Time sheet:** the switch now has an ON / OFF badge and says what each means ("Play stops for every fight. You pick Fight it out or Auto-resolve. Small everyday moments still go in the recap.").
+- **Saves (`migrateAutoFights`):** a save that never touched the switch goes off. The eve build stored the switch only when the player flipped it, so a saved `true` means they turned it on by hand: kept on. A saved `false` stays off.
+- **Cost in stops (sims, 6 Mystery seeds, Play only, 18 → 40):** Auto fights off 40 fight stops in total (~7 per life), on 33; Play taps plus stops per life about 60 either way. Spider-Man (God Mode, seed 4) 75 both ways.
+- **Yearly power growth kept (`RIPEN_EXP` 7, every held power on each birthday):** checked by sim that it's noticeable but not runaway and never grants a power (it only adds mastery to powers you already hold). Main power's mastery at 40: 407 on average with it, 313 without (training is ~77% of it). Power level at 40: 3.4–4.4 with, 3.5–4.8 without. Powers held at 40: 2–4 either way. What it changes: your second and third powers grow (C at 40) instead of sitting at D 0 unless you drill them by hand.
+- **Tests:** +2 (`flow.test.ts`: Auto-resolve and its odds; the migration keeps a hand-flipped choice), street-fight and adult-taps tests run both ways. 298 game tests pass.
+
+## 2026-11-10 (eve): chains in every city, fewer stops, rarer powers (`devbot/2026-11-10-eve`)
+
+Built on `origin/devbot/2026-11-10-pm` (8cdff73). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 3: powers are rare, trained and nurtured (owner's call, 15:26)
+
+- **Why:** "it should be pretty rare that you get a new power… Super powers are the most rare and powerful thing in this world and should be trained and nurtured." An audit (6 Mystery seeds, Play only) found ~18 powers by 60. Most came from hero visits ("Ask for a power", 42 of them), the yearly power offer (25) and trainer-lesson / lab / alley events.
+- **One gate for every source (`library.ts` `pageBlock`, `awakenBlock`, `braidBlock`):** no new power before 15 (your manifested gift is the only one). After a new page, 2 years must pass before the next one. A new *base* power also needs 5 years since the last one, a power you hold drilled to rank C (B for a third base, A for a fourth), and at most 4 bases (legends excepted). A braid needs both halves at rank C. The book cap is now 1 under 15, then 3 + 1 per 4 years (max 10). Story, canon and God Mode picks skip the gate. A life with no power can still find its first one from 10 (the old human route).
+- **Long training instead of instant grants (`trainSession`, `Game.training`):** waking a base power takes 8 monthly lessons; a braid takes 6 (Gen 1) or 10 (Gen 2). A mentor's bond boosts the pace (a guided braid lands in 4–6 lessons). Braiding alone goes at half speed. Only one power lesson a month across mentor, heroes and the book. The project and its progress show in the Braid Book and on the Mentor card.
+- **Mentor:** new **Wake a power** lesson (bond 35). It aims at the required chain first (Super Speed for Fire Control, Super Strength once you hold Light Speed), so Fire Control + Super Speed → Light Speed → Lightning Strikes is reachable by dedicated training (tested month by month).
+- **Heroes:** waking a power with a hero needs bond 50 (was 28 for an instant grant). The hero visit's "Ask for a power" is now "Ask them to drill you" (+mastery). Capes drop in about half as often (0.08 + heat/700, was 0.16 + heat/380), and meet-a-hero events are half as likely. Looking for a sparring partner works once every 3 years.
+- **Rare events:** the yearly power offer is 5% (base powers only, and only when an awakening is open). Relic runs need 15+. Power-granting events are dropped from the pool when you can't take a power, and a blocked grant sharpens your focus power instead (+10 mastery: "Powers don't come that easily").
+- **Depth instead of breadth:** each of the 20 base powers gets two new techniques (`moves.techniques.ts`): a rank-C move covering the style it lacked and a rank-A finisher (power 8). Every power you hold ripens on each birthday (+7 mastery). Legend kits: Flash's Rewind and Wonder Woman's Bullet Deflection now arrive at 31 so their six fills from their own kit.
+- **Before / after (sims, 6 Mystery seeds, powers owned at 15 / 20 / 30 / 40 / 60):** Play only 3.7 / 7.7 / 10.8 / 13.3 / 18.2 → **1.0 / 1.8 / 3.0 / 3.8 / 4.0**. Chasing powers every month 3.8 / 8.2 / 11.0 / 13.0 / 18.2 → **1.0 / 1.8 / 3.7 / 4.7 / 5.7** (braids 9.5 → 1.7 by 60).
+- **Fights:** the six is mostly real power moves again, and deeper. Average move power in the six (Play only) 20 / 30 / 40: 6.8 / 6.9 / 6.9 → 7.7 / 8.5 / 9.0; power level about 0.2 lower. Difficulty tests unchanged, so no foe rebalance this pass.
+- **Copy:** Braid Book, Mentor card, hero lessons, the seek line and the "new power" chapter goal now say powers are rare and slow ("A rare gift. About 8 monthly lessons before it answers.").
+- **Tests:** `library.test.ts` rewritten (the gate, a 12-session solo braid, the stray-spark consolation), `mentors.test.ts` (chain through monthly training, a guided braid in 4–6 lessons), `legend.test.ts`, `coverage.test.ts`, `loadout.test.ts` updated. 296 game tests pass.
+
+### Increment 2: adult Play interrupts less (owner's call, 15:24)
+
+- **Why:** "Make it interrupt less." From 18 to 40, Play took ~190–250 taps (Play taps plus the stops you had to answer). Most stops were everyday moments, routine street fights and your arch-enemy's monthly taunt.
+- **A year a tap from 18:** Auto pace is now a year per tap as a kid, a season from 13 to 17 (the busy, formative years), and a year again from 18. Every birthday still gets its card. Month and Season are one tap away in the Time sheet. Your routine fills unused free time the same way at any pace, so balance doesn't change.
+- **What still stops Play:** canon and legend beats, cases and story arcs, chapter changes, power moments (a power waking, the mentor at 15, power offers and relic tips), offers that change a life (lab offer, villain offer, sidekick pitch, a trainer, a rival school, an interview), grief, low health and relationship crises, bosses, a street fight you could lose, and your arch-enemy **once a year**.
+- **What goes in the recap instead (`settleAdult`):** everyday moments are answered the way you'd likely answer them, and the card says which answer was picked ("Your landlord… → Pay it"). Friendly heroes stopping by and an arch-enemy's billboard are settled the same way. The arch-enemy's other calls that year are left on read. Street fights against a foe you outclass by 1.5+ power levels are won in the recap. With **Auto fights** (new switch in the Time sheet, on by default), fights against a foe you're about even with (no more than 0.5 above you) are settled too, a little under your average result, the same rule as fast-forward. The recap says "Handled on the way: 2 street fights and 3 small moments."
+- **A new chapter is one tap:** the chapter page shows, and the recap goes on the card under it (it used to be two dismissals).
+- **Before / after (sims, 4 seeds, 18 → 40, Play taps plus the stops you answer):** Mystery 216 → 99 (−54%), Spider-Man 250 → 95 (−62%), Batman 193 → 62 (−68%). Story beats still stop (canon beats seen in every legend run). Fight sims and the economy are untouched; power level and fame at 40 land a little higher than in the old sim's policy, because auto fights get won instead of talked down.
+- **Saves:** nothing to migrate. Old lives on Auto pace move to a year per tap at 18+, and Auto fights is on.
+- **Tests:** +5 (`flow.test.ts`: what settles and what never does, the arch-enemy once a year, the street-fight rules with Auto fights on and off and bosses, adult taps 18–40 ≤ 140 with canon intact, a chapter is one tap). Pace tests updated for a year per tap from 18. 293 game tests pass.
+
+### Increment 1: grow a business into a chain across every city (owner's call, 15:22)
+
+- **Why:** "be able to hire a manager and be able to expand your business to every city." Managers (pm) stay as they were, including the 20% sales drop for an unmanaged site while you live elsewhere.
+- **Expand to… (`econ|biz|expand|<site>|<city>`, `expandOptions`, `quoteExpand`):** any business except the family companies can open one site in each of the game's 8 cities. The picker lists every city still open with its cost and what the site should make a month with a manager. Opening one takes a block of free time.
+- **Each site is its own place:** its own staff, upgrades, reputation, crew morale and manager. Sales follow the city's own housing market (`cityDemand`, ±15%: homes rising there means people spending). A site in a city you don't live in with no manager takes the −20% and its reputation slides.
+- **Opening cost and ramp:** each new city costs the base price × the city's price level × (1 + 45% per site you already run). A branch takes 9 months to find its feet (the first site takes 6). The newest site must be a year old before the next one opens.
+- **Brand:** more sites mean a bigger name. Sales get up to +12% (`brandLift`, flattening: +3% at 2, +7% at 4, +10% at 8), reputation drifts up +2 a city (max +10), and four **chain upgrades** cover every site at once from the second city on: Brand identity (+5% sales), Central buying (supplies −10%), Training academy (morale +8), Loyalty app (reputation +6).
+- **Diminishing returns:** head office costs grow faster than the chain (2.5% of base sales × (sites − 1)^1.35 a month, shown as its own ledger line), each city costs more than the last, and the brand lift flattens. In sims a café opened at 30 and grown as fast as cash allows reaches all 8 cities at about 48 (~$30k a month at peak, ~$4.6M net worth at 50); a food truck tops out at 7 cities. A chain takes decades, not a summer.
+- **Three businesses max now counts brands:** a chain in 8 cities is one of your three.
+- **UI (Work ▸ Money ▸ Business):** one business shows its card with **Expand to…** under it. A chain shows one card: brand name, cities, brand lift and the chain's monthly total, then one row per city (morale dot, manager or "No manager · sales −20%" in red, last month's profit). Tap a row to open that site's full card. Then the head-office line, the four chain upgrades, and Expand to… with its city picker. If you can't open a city yet, the picker says why.
+- **Saves:** sites without a brand are their own brand. A branch whose brand is gone becomes its own brand, and broken or unknown chain upgrades are dropped. 10 more managers to pick from, enough to staff a full chain.
+- **Tests:** +7 (`chain.test.ts`: every city reachable, each dearer and one at a time; brand lift and head-office curves; each site follows its own city's market; branches with their own manager, the away penalty, chain upgrades across sites, head office in the ledger, selling one branch; a full chain takes 12+ years and profit stays human-scale; three brands max; old and broken saves). 288 game tests pass.
+
+## 2026-11-10 (pm): a business you can feel, a clearer money life (`devbot/2026-11-10-pm`)
+
+Built on `origin/devbot/2026-11-10-am` (334053c). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 4: business news rides on every Play card
+
+- **Why:** a Play season that stopped for a choice dropped the banners from the months before it, so 3 in 12 business events (a viral video, an inspection fine) never reached the player.
+- **What:** the money report (`periodReport` → `biz`) now carries what happened at your businesses during the step, newest first (up to two), in a tinted row with a shop icon, above the city headlines; the same line isn't repeated in the card's banner. In a 60-tap sim every business event reached a Play card (12 / 12, was 9 / 12).
+- **Tests:** +1 (the newest business news is always in the period's report, and nothing when nothing happened). 281 game tests pass.
+
+### Increment 3: the Money hub fits a phone, and every result shows where you are
+
+- **Why (playtest):** at 390×844 the hub's tab content started below the Play bar: the month card, the desk's one-line description, the net-worth card and the news ticker all sat above the tabs; and an action's result line appeared above the tabs, off screen when you'd scrolled down to a business card.
+- **What:** on Work ▸ Money the month card and the desk description step aside (the hub is its own header; choices still show the card); the news ticker moves to the Markets tab, where the news is what you read (Life ▸ Today keeps its ticker); the net-worth card is a little tighter. Tabs now sit ~160 px higher, so the first business / home card is on screen without scrolling. Each action's result floats in a toast just above the Play bar for ~4 s (tap to dismiss) wherever you've scrolled.
+- **Tests:** UI only; 280 game tests pass.
+
+### Increment 2: managers, crew morale, things that happen at your business, fights that reach it
+
+- **Why (playtest + owner's spec):** a café sat at reputation 40 for 17 years with nothing happening to it, and kept selling at full speed after you moved city. The spec asks for managers, staff morale / skills, rivals and scandals, expansion to other cities and hero tie-ins.
+- **Managers (`MANAGERS`, `mgrCandidates`, `mgrWage`):** Business ▸ a card ▸ **Hire** shows three people (the list changes each season), each with one clear trait: **Steady** (crew morale +15), **Hustler** (sales +8%, morale −5), **Penny-wise** (supplies −15%), **Fixer** (bad news hits half as hard). A manager costs ~7% of the place's base sales a month (min $1,200; café $2,280 in Metro), keeps reputation up (+8 toward its target) and **runs it while you're away**. Let go any time (−5 morale).
+- **Expansion to other cities:** businesses stay where you opened them. Moving city with an unmanaged one says so ("Reyes's café stays behind with nobody in charge (sales −20%). Hire a manager…"): away and unmanaged it sells 20% less and reputation and morale slide; with a manager it holds. Opening the same kind again in your new city was already allowed (three max).
+- **Crew morale (one bar, "CREW"):** 70 is neutral (old tuning unchanged); it drifts toward a target set by staffing (short-staffed drags it down up to −30), the manager's trait, a proud name (rep 70+) and whether anyone is in charge, and the card says the main reason ("Grumbling · falling: short-staffed"). Sales move ±0.4% a point (Ready to walk ~−16%, Fired up ~+8%). Working a shift yourself lifts it +3.
+- **Things happen (`bizEvent`, ~0.85 a year per business, deterministic, never the engine dice):** a viral moment (+6 rep and a little cash, per kind: "a latte-art video goes viral", "a kid trained at your gym wins the Golden Gloves"), a big order (precinct coffee, a gala hires every guard), an inspection (fine, or a clean pass at rep 70+), **a rival opens two blocks away** (sales −12% for 6 months, −6% if you're well known; each shift you work wins a month back), a **scandal** (−8 rep, morale dips), and **staff walking out** when morale is low. At most one every four months, never the same twice running. The latest shows on the card, coloured.
+- **Fights reach your businesses (`noteFight`):** a villain win brings foot traffic (+2 rep at your businesses in the city); a loss can mean looters at one of them (~8% of a month's sales), unless **your own security firm** (rep 50+) has guards on the block.
+- **Polish:** an upgrade you buy pops in gold ("Upgraded!", with a haptic buzz); a brand-new business shows where it's heading ("+$1,643 once it finds its feet") instead of a red half-empty first month.
+- **Balance:** events net ~+4% of profit on average (café $2.5k/mo profit, +$100/mo from events over 60 business-years); legend companies and fight sims are untouched.
+- **Saves:** old businesses load with morale 70, an empty log and no manager.
+- **Tests:** +6 (`life.test.ts`: managers and their wage, moving city with and without one, morale from short staff and back, the event pool over 40 business-years, fights reaching businesses and the security-firm guard, old saves). 280 game tests pass.
+
+### Increment 1: playtest; per-life markets; the squeeze hint
+
+- **Playtest** (PLAYTEST.md): Play-only sims of three money lives to 30–40 and phone screens of the hub.
+- **Per-life markets (bug):** the economy's seed came from the name, face, city and upbringing only, so two lives that shared them lived through identical markets (seeds 3 and 4 matched to the dollar). New lives mix in the life's dice; old saves keep their stored seed.
+- **Squeeze hint:** after three months in a row of more going out than coming in while you pay for a home, the month says so once, with the fix that fits: "You're spending about $327 a month more than comes in. A roommate would pay about $420: Work ▸ Money ▸ Home ▸ Roommates." (or a cheaper place / better job if there's no spare room). Resets when you're back in the black.
+- **$700 living cost (open question, decided):** kept. Low-wage lives in cheap cities stay positive; a shop job in New York is a squeeze, which is now explained with a way out.
+- **Tests:** +2 (`life.test.ts`: different seeds, different markets; the squeeze hint fires once and resets). 274 game tests pass.
+
+## 2026-11-10 (am): playtest fixes, money reports, Life Flow polish (`devbot/2026-11-10-am`)
+
+Built on `origin/devbot/2026-11-10-night` (aae1d85). Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 4: saved lives get a hero poster in the Arena
+
+- Mystery heroes and saved lives no longer show the paper doll in the Arena. New `LifeHeroArt` (vector SVG): a backlit silhouette with cape, rim light, glowing lenses, the hero's power-family emblem and a seeded city skyline with slow light rays (off under reduced motion). Used on the draft card, roster tile and battle slot.
+- A saved legend life (e.g. your own Bruce Wayne) uses that legend's painted art, colour and world.
+- The draft kicker no longer reads "YOUR LIFE · YOUR LIFE"; the title is now "Age N · Hero".
+- New test `arena.art.test.ts` (saved-life fighters carry art/family data). Tests 272.
+
+### Increment 3: routine slots for business shifts and people; hero tie-ins for your businesses
+
+- **Why:** open follow-ups from last night (routine slots for business shifts and people) and the owner's ask for the world to tie into the hero life (security firm leads, tech-firm gadgets).
+- **Routine slots (`routineOptions`, `SHIFT_ROUTINE`, flow.ts; `monthPlan`, skip.ts):** the Routine picker now offers **Shift at <your business>** (each business you run in this city; takes a block of free time, like doing it by hand) and **Time with <person>** (partner first, then closest; up to four; "Wes (parent)" / "Wes (friend)" when two share a name), beside the everyday habits. Pinned shifts run in your order; Play only counts a shift that actually used a block.
+- **Shifts have diminishing returns (`shiftGain`):** +6 reputation at a new place, less the better known it is (+3 at 70, +1 from ~92). Before, three pinned shifts a month would have pinned every business at 100.
+- **Hero tie-ins (`bizTieIn`, `bizFightEdge`, economy.ts):** a **security firm** at 50+ reputation passes you a lead now and then (~22% a month): "Moreno's security firm passes you a lead: Moth King was seen in Riverside", worth **+4% in your next villain fight**. A **tech start-up** at 50+ reputation sends R&D prototypes (~15% a month, hold up to 2): **+3% in a villain fight**, one per fight. Both show as notes in the fight result, and as a **Hero perk** line on the business cards (greyed with "reputation 38/50" until earned). Fights moving markets (wins lift the district and a local stock; losses dent them) were already in; the money report now surfaces those headlines first.
+- **Balance:** the edges only apply to owners of a $420k / $800k business and sit under the existing 30% edge cap; the 60% legend / mystery fight sims own no businesses, so street / boss rates are unchanged.
+- **Tests:** +2 (`business.test.ts`: shift gains shrink, a shift can be pinned and Play works it; leads and gadgets appear for a well-run firm, one per fight, never for a struggling one). 271 game tests pass.
+
+### Increment 2: the money report on every Play step, a ticking cash counter, recaps lead with your life
+
+- **Why (playtest):** a Play season's card led with rival-cape ticker lines in bold ("Afterimage: sponsoring a cereal that hates them") and buried the money in a truncated sentence; with markets, rent and businesses all moving, a player couldn't tell what the season did to them.
+- **Money report (`periodReport`, economy.ts; `card.money`):** every Play step that passes time (month, season or year, including steps that stop for an event) carries a report: net cash for the period (ticks up), a bar per group (Pay, Business, Tenants & roommates, Dividends, Home, Living costs, Everything else: shifts, gigs and shopping, so it adds up to your real cash change), net worth and its change, up to two moves in what you own (shares, goods, your district's homes, marked YOURS) plus the biggest mover in your city, and the top two headlines (your fights first). A **Money ›** button opens the hub. While a choice is waiting, the card shows one slim line ("2 months: cash +$10,237 · home −$1,960"). The economy keeps its last 12 monthly ledgers for this (`EconState.months`, optional; old saves fill it as they play).
+- **Cash ticks:** the header money figure counts to its new value and floats the change (+$12,229 green / −$ red); instant under reduced motion.
+- **Recaps lead with you:** rival-cape ticker lines (`isChatter`) go last in fast-forward notes (at most one) and are dropped from a Play card that has a money report.
+- **Tests:** +2 (`flow.test.ts`: the report equals the ledger plus off-ledger cash and the real cash change, pay / rent / living groups, "yours" is yours, leads with you; children get none). 269 game tests pass.
+
+### Increment 1: cost of living, a fairer heavy shift, your six stays yours, estates take no lodgers
+
+- **Why (playtest):** a Metro office worker on Play only banked **$759k by 28 and $1.8M by 40**. There was no cost of living at all, and Life Flow ran "Work a heavy shift" (8% of a year's pay, once a month) every month, nearly doubling pay. Money stopped meaning anything.
+- **Cost of living (`livingCosts`, economy.ts):** a monthly **Living costs** line from 18: $700 × city price level, plus 25% of a monthly wage (lifestyle creep), plus $350 per child under 18; half at the family home or a family estate. It never pushes you below $0 by itself (you scrape by; rent and mortgages can still sink you).
+- **Heavy shift:** 8% → **3%** of the yearly wage (`SHIFT_SHARE`, engine.ts). Same joy cost.
+- **Result (same sim, seed 3/4):** cash at 28 $759k → **$324k**; a desk job plus a heavy shift every month in a tiny flat now saves ~$15–25k a year (tested band $5–30k).
+- **Six-move bug:** dropping your only guard on purpose was undone by the next action's style top-up. A six you arranged by hand (`handSix`) is now left alone; the balancer still fixes auto-filled sixes and pruned slots. (Found because the loadout fixture life changed.)
+- **Manor roommates (open question, decided):** family estates (Wayne Manor, Stark Mansion) take **no roommates**: the secret under the house and the staff who keep it. Rented and bought homes keep them.
+- **Tests:** +2 (cost of living by city, income, home, children and the $0 floor; a desk job's savings band) and an estate check. 267 game tests pass.
+
+## 2026-11-10 (night): a living economy (Money & Life hub, markets, homes, businesses, roommates) and Life Flow (`devbot/2026-11-10-night`)
+
+Built on `origin/main` (8d5ade2). Typechecked, linted (only the old `src/lib` no-empty error remains), `npm run test:game`, built and loaded at 390×844 before push. Old saves migrate (`ensureEconomy` in `migrate`).
+
+### Increment 4: Life Flow — one Play button, a routine, age-scaled time (owner's call C)
+
+- **Why:** "rethink the 3 moves per month mechanic and figure out a better way to pass time." Reasoning and the options weighed are in DESIGN §19.
+- **What:** the **Next month** button is now **Play**: one tap moves life **a year as a kid (to 13), a season from 13** (Auto), or a pinned Month / Season / Year (**Time ▸ Play pace**). Your **Routine** (Life ▸ Today, up to 3 pinned everyday actions in order; empty = your habits) fills all the free time you don't use; Play stops for anything that needs you (reveal, story and legend canon beats, cases, fights, choice events, chapters, the mentor at 15, low health, relationship crises) and crosses no birthday without stopping. Plain steps end on a recap card; big stops keep the full summary. The 3 blocks a month stay as "free time" for special things (fights, dates, moving, opening a business, hanging out). Skip to 15 and Skip to birthday live in the Time sheet.
+- **Engine:** `src/game/flow.ts` (`playStep`, `stepOf`, `stepMonths`, `stepLabel`, `routineOptions`, `setRoutine`, `setPace`, `FLOW_ON`); `monthPlan` puts your routine first; `fastForward` takes `{ settle }` so childhood steps settle small moments like Skip to 15. No fight, training or economy numbers changed. Old saves play on Auto with their habits (`routine` / `pace` optional).
+- **Taps** (engine sims to 60, auto-answering choices): ages 0–12 **13 taps**, 13–17 23–29, 18–29 61–71, 30–44 80–100, 45–59 75–90 (stops included). Before: 12 Next month taps a year plus every choice.
+- **Tests:** +8 (`flow.test.ts`: pace by age and pinned; routine order and cleaning; month pace fills free time; season recap or stop; a Play season equals the fast-forward season (same stats, same RNG); birth to 15 in ≤40 taps with the reveal and the mentor; Spider-Man's canon beats on Play only; old saves). 265 game tests pass.
+
+### Increment 3: roommates; family estates can't be sold (owner's calls, 00:40)
+
+- **Roommates (A):** any rented or owned home with spare rooms (tiny flat 1, apartment 2, loft 2, townhouse 3, penthouse 2, mansion 3; shared rooms and lairs none) can take roommates. **Money ▸ Home ▸ Roommates ▸ Find a roommate** shows three people looking this month (10 data-driven characters: nursing student, line cook, club DJ, night-shift paramedic, cub reporter, programmer, law student, actor, tattoo artist, retired boxer).
+  - **Money:** on a lease each pays an equal share of the rent (Peter's $720 Queens walk-up → $360 each); in a home you own they pay a room's rent. Flaky ones are sometimes late.
+  - **Trade-offs:** each roommate costs 1 Cover (heat fades slower); two or more cost 1 Comfort; their own perks add or subtract (the cook +Comfort, the nurse +Recovery, the DJ −Recovery, the boxer +Training).
+  - **Relationships:** they join People as friends (closeness grows monthly; **Hang out** takes a move: +8 closeness, +2 Joy); 12% a month they bring a small event (dinner, a party, a fight about dishes…).
+  - **Secret identity:** if you have powers, a nosy roommate may see the suit (2–3% a month for the reporter). Close (60+) and they keep it ("KNOWS · KEEPS IT"); a stranger panics, moves out and talks: −4 Joy, +2 Fame, +2 Heat.
+  - They don't follow you when you move; they stay in People.
+- **Family estates (B):** Wayne Manor and Stark Mansion can't be sold ("Family estate · not for sale" on the card; the engine refuses too).
+- **Tests:** +3 (estate lock; roommate split, People, perks, ledger, hang out, moving; the secret both ways). 257 game tests pass.
+
+### Increment 2: businesses — open, staff, upgrade, sell; Tony and Bruce chair their family companies
+
+- **Why:** the owner asked to "make and run businesses and make upgrades and have staff". Stage (c) of the economy plan.
+- **What (`economy.ts`, data-driven `BIZ`):** six businesses to open in your city — food truck (16+, $30k), corner café (18+, $95k), boxing gym (21+, $240k), security firm (21+, $420k), tech start-up (22+, $800k), city newspaper (25+, $1.6M) — each with three upgrades (more sales, more staff needed, reputation). Monthly books: revenue (city, staff, upgrades, reputation, demand that follows a market series — coffee prices squeeze cafés, a nervous Cape Capital hires security, Bugle shares lift newspapers) minus stock & supplies, wages, premises and upkeep. New businesses ramp over 6 months (expect early losses).
+- **Diminishing returns:** staff output is 1 − e^(−1.4·staff/need) (normalised), so the 5th hire adds less than the 1st and doubling staff gives only ~+27%; three businesses max; upgrades add premises cost and staff needs; sale price ≈ two years of recent profit, never below half of what you put in. Steady-state payback is 2–7 years (tested).
+- **Owner play:** hire / let go (+/−), buy upgrades, **Work a shift** (a move: +6 reputation), see the books, sell (confirm shows the price). Profit and loss land in the monthly ledger; three red months in a row warns you.
+- **God Mode:** **Bruce chairs Wayne Enterprises** (from 18) and **Tony chairs Stark Industries** (from 21): run by the board, they pay a chair's draw that follows the share price (~$17–42k/mo) and take two big projects each (Applied Sciences / Wayne Foundation; Clean energy / Stark Expo). Can't be sold. Peter has no company.
+- **UI:** Money ▸ **Business** tab (now on: `ECON_FLAGS.business = true`).
+- **Saves:** older economies get a business book on load (and a legend's family company).
+- **Tests:** +7 (`business.test.ts`: data, diminishing staff returns, payback bands, found → run → upgrade → sell through the ledger, understaffing hurts revenue and reputation, legend companies and their age locks, save repair). 254 game tests pass.
+
+### Increment 1: living markets + housing, one Money hub
+
+- **Why:** the owner wants the world to feel like it's really moving, and a life-sim spine: rent, buy and sell homes, moving markets for different things. The old Market priced property once a birthday and nothing else moved.
+- **Markets (`src/game/economy.ts`, data-driven):** 24 district house-price series (3 districts × 8 cities), 9 stocks (Stark, Wayne, Oscorp, LexCorp, Roxxon, Daily Bugle Media, Helix Bio, Mesa Freight, Cape Capital), 6 goods (gold, crude, steel, chips, coffee, isotopes) and the base rate. Each moves **monthly**: regime drift (flips ~every 18 months) + noise + pull back to a slow anchor, so trends feel real but nothing runs away (80-year bounds tested). 24 data-driven headlines (0–2 a month) shock their series, and **your fights move markets**: a villain win lifts the district and local stock, a loss dents them and lifts Cape Capital and steel (once a month, no farming). Fully deterministic from the life seed; never touches the engine RNG, so fight balance and old tests are unchanged.
+- **Trading:** from 16 (isotopes 21+). 1% fee (min $5) on stocks, 2.5% spread on goods, extra slippage on huge orders (diminishing returns). Dividends paid monthly.
+- **Housing:** 8 home tiers (shared room → mansion) to **rent or buy in any district**. Leases: deposit + first month, renewals drift toward market by at most ±8% a year. Mortgages: 10% minimum deposit, 2% closing, 25 years, rate = base + 0.75–1.5 by deposit, fixed at purchase; lend up to 4.5× income + half your assets. **Sell** (5% fees), **let it out** (90% of market rent, vacancies), **upgrades** (garden, home gym, panic room, med bay, comms room, workshop; slots by tier, half their cost adds to value), **pay off** early. Upkeep 1.1% a year. Moving spends one of the month's moves.
+- **Real benefits:** where you live gives monthly Comfort (joy), Recovery (HP), Cover (heat fades) and **Training** (+2–8% in fights and stunts). Couch-surfing or still in the family home past 30 costs joy. Three months in the red on housing bills → eviction / foreclosure (85% sale).
+- **Monthly money:** wages, League stipend, villain retainer and fame endorsements now arrive monthly in the hub's ledger (they used to land in one lump at the birthday).
+- **God Mode starts:** Bruce lives in **Wayne Manor** (estate, the trust pays upkeep) with Wayne Enterprises shares in trust until 18; Tony in **Stark Mansion** with Stark Industries shares in trust until 21; Peter rents a rent-controlled **Queens walk-up** from 18.
+- **UI:** Work ▸ **Money** (new first shelf): net-worth card with sparkline, cash / last month / assets, where you live, live news ticker, **Home** tab (where you live, last month's ledger, your homes, find a place with district trend cards) and **Markets** tab (Stocks / Goods / Homes / Rates boards, sparklines, 2-year charts, ×1/×10/×100/Max with fee preview). A live ticker on Life ▸ Today opens it. The old Market is now **Shop**; its property tab is **Bases** (hideouts, warehouse base, HQ, safehouses; homes you already own there still show). A **Business** tab was behind `ECON_FLAGS.business` (off) until increment 2.
+- **Net worth** in chapter snapshots now counts home equity, portfolio and deposits.
+- **Tests:** +14 (`economy.test.ts`: data integrity, determinism / no RNG, 80-year bounds, mortgage maths and payoff at term, lending caps, selling, trade round trip, renting and eviction, monthly wages, letting, perks, upgrades, couch, fight shocks, God Mode starts, save migration / repair). 247 game tests pass.
+
 ## 2026-11-09 (night): kits for Wonder Woman, Hulk, Black Panther and Wolverine; painted rogues (`devbot/2026-11-09-night`)
 
 Built on `origin/devbot/2026-11-09-pm` (84a214a). `main` is unchanged since 702d68d. Each increment is typechecked, linted (only the old `src/lib` no-empty error remains), tested, built and loaded at 390×844 before push.

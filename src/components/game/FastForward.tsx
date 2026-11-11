@@ -2,9 +2,10 @@ import { AlertTriangle, BookOpen, CalendarRange, FastForward as FfIcon, Graduati
 import { STAT_COLOR, STAT_ICON } from "@/components/game/icons";
 import { MONTHS, money } from "@/game/format";
 import { MIX_AGE } from "@/game/mentors";
-import { canSkipToFifteen, skipMonths } from "@/game/skip";
+import { autoFightsOn, canSkipToFifteen, skipMonths } from "@/game/skip";
+import { FLOW_ON, KID_UNTIL, stepOf } from "@/game/flow";
 import { useGame } from "@/game/store";
-import type { Game, SkipReport, SkipSpan, SkipStopKind } from "@/game/types";
+import type { Game, Pace, SkipReport, SkipSpan, SkipStopKind } from "@/game/types";
 import type { CSSProperties } from "react";
 
 const STOP: Record<SkipStopKind, { label: string; icon: typeof Zap; color: string }> = {
@@ -27,6 +28,7 @@ const when = (at: { age: number; month: number }) => `${MONTHS[at.month ?? 0]?.s
 /** Bottom sheet with the two fast-forward lengths. Explains what it does and when it stops. */
 export function SkipSheet({ game, onClose }: { game: Game; onClose: () => void }) {
   const skip = useGame((s) => s.skip);
+  const setPace = useGame((s) => s.setPace);
   const go = (span: SkipSpan) => {
     onClose();
     skip(span);
@@ -49,7 +51,8 @@ export function SkipSheet({ game, onClose }: { game: Game; onClose: () => void }
             <X className="size-5" />
           </button>
         </div>
-        <p className="mt-2 text-pretty text-sm text-fg/85">Plays your usual months for you, leaning on what you&apos;ve been doing lately. Fights, stunts and big choices stay yours.</p>
+        {FLOW_ON && <PacePicker game={game} onPick={setPace} />}
+        <p className="mt-2 text-pretty text-sm text-fg/85">{FLOW_ON ? "Or jump further. Same rules: your routine plays the months; fights, stunts and big choices stay yours." : "Plays your usual months for you, leaning on what you've been doing lately. Fights, stunts and big choices stay yours."}</p>
         {canSkipToFifteen(game) && <FifteenButton game={game} onGo={() => go("fifteen")} />}
         <div className="mt-3 grid grid-cols-2 gap-2">
           {options.map((row, i) => (
@@ -289,5 +292,48 @@ function FifteenButton({ game, onGo }: { game: Game; onGo: () => void }) {
         ))}
       </span>
     </button>
+  );
+}
+
+const PACES: { id: Pace; label: string; sub: string }[] = [
+  { id: "auto", label: "Auto", sub: "" },
+  { id: "month", label: "Month", sub: "Every month" },
+  { id: "season", label: "Season", sub: "3 months" },
+  { id: "year", label: "Year", sub: "To birthday" },
+];
+
+/** How far one Play tap goes. Auto: a year as a kid, a season as a teen, a year from 18. Plus Auto fights. */
+function PacePicker({ game, onPick }: { game: Game; onPick: (pace: Pace) => void }) {
+  const cur = game.pace ?? "auto";
+  const auto = game.age < KID_UNTIL ? "a year per tap until 13" : game.age < 18 ? "a season per tap until 18" : "a year per tap";
+  const setAutoFights = useGame((s) => s.setAutoFights);
+  const autoFights = autoFightsOn(game);
+  return (
+    <div className="mt-3">
+      <p className="t-label text-[10px] text-muted">Play pace</p>
+      <div className="mt-1.5 grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Play pace">
+        {PACES.map((p) => (
+          <button key={p.id} type="button" role="radio" aria-checked={cur === p.id} onClick={() => onPick(p.id)} className="seg flex min-w-0 flex-col !gap-0 !px-1 !py-1.5 text-[13px]">
+            {p.label}
+            <span className="text-[9px] font-bold opacity-70">{p.id === "auto" ? (stepOf({ age: game.age }) === "year" ? "Year now" : "Season now") : p.sub}</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-1.5 text-xs text-muted">{cur === "auto" ? `Auto: ${auto}. Pick Month when you want every beat.` : cur === "month" ? "Every month, with the full month card." : cur === "season" ? "Three months a tap, with a recap." : "To your next birthday, with a recap."}</p>
+      {game.age >= 16 && (
+        <button type="button" role="switch" aria-checked={autoFights} onClick={() => setAutoFights(!autoFights)} className="mt-2.5 flex min-h-11 w-full items-center gap-3 rounded-xl bg-black/25 px-3 py-2 text-left">
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2 text-sm font-bold text-fg">
+              Auto fights
+              <span className={`rounded-full px-1.5 py-px text-[10px] font-extrabold ${autoFights ? "bg-good text-paper-ink" : "bg-white/15 text-fg"}`}>{autoFights ? "ON" : "OFF"}</span>
+            </span>
+            <span className="block text-[11px] text-muted">{autoFights ? "Play settles street fights you're even with or better and lists them in the recap. Bosses, your arch-enemy and tougher foes still stop." : "Play stops for real fights. You pick Fight it out or Auto-resolve. Easy wins and small everyday moments still go in the recap."}</span>
+          </span>
+          <span className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${autoFights ? "bg-good" : "bg-white/15"}`} aria-hidden>
+            <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-all ${autoFights ? "left-[18px]" : "left-0.5"}`} />
+          </span>
+        </button>
+      )}
+    </div>
   );
 }

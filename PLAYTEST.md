@@ -1,5 +1,71 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-11 pm): the mask at home
+
+**Played:** engine sims (6 Mystery seeds, secret identity, a partner moved in at 25, Play only to 45, never answering), and the phone at 390×844 from the seed-4 Metro save at 29 switched to a secret identity (`/workspace/shots-2026-11-11-pm/`).
+
+**Findings:**
+- **Before:** a secret-identity hero's partner never noticed anything. Roommates could catch you (since 2026-11-10), the person you share a bed with couldn't.
+- **After:** jealousy at 26–27, found the suit at 29 in every seed; ignoring it costs trust 15 a time and the partner leaves at ~36 after three finds. 5–7 lines over 20 years, each once, none stop Play.
+- **Phone:** the partner card shows "Silas found the suit. They're waiting for you to explain." with Tell them the truth (Good odds) and Deny it under it; before a find, "Tell Silas you're a hero · Good odds". Rows had crossed swords from "Marchetti" (the am icon fix only covered love rows): now a mask icon. Fits 390 px, no overflow, no console errors.
+- **Still open:** partner cards are tall (temper, trust, money, up to 7 rows).
+
+## Morning pass (2026-11-11 am): easy wins, growth by use, then people
+
+**Played:** engine sims on Play only, 0 → 40, Auto fights off, a steady 60% player (6 Mystery seeds in Metro; Superman, Spider-Man, Hulk, Thor), before (86be4d7) and after increment 1; phone at 390×844 from a seed-4 Metro save at 29 (`/workspace/shots-2026-11-11-am/`).
+
+**Findings:**
+- **Adult fight stops are mostly your arch-enemy, not street fights.** Of 9–26 adult fight stops per life, about half are the arch-enemy's once-a-year call (by design), 2–10 are named street villains, the rest relic runs. Street villains sat 1–2 power levels *above* the player in almost every stop (roster villains roll level 1–8, players sit at 2.6–4.4 at 40), so a true "easy win" (1.5+ below you) is rare in a normal life: increment 1 settled none in these runs. It will matter for strong builds and late careers; normal lives keep their fights. Fight stops before/after: identical on 4 of 6 seeds, −3 and +2 on the others (noise from different dice later in life).
+- **Growth by use makes second powers a choice.** Before, every held power ripened yearly: second and third powers reached 100–160 mastery by 40 untouched. After, a Play-only life that never drills them ends with 28–133 (seed 8's Flight 28, Invisibility 7); Superman's Flight and Super Durability stayed at 0 to 40 because his routine trains Super Strength and his six moves are all strength moves. Main power ~5–10% lower (no longer gets the ripen on years with no training). Watch: a legend's iconic second power sitting at D for life may read oddly; drilling it is one routine slot away.
+- **Time sheet** at 390×844: the OFF line now reads "Play stops for real fights… Easy wins and small everyday moments still go in the recap." Fits, no overflow, no console errors.
+- **Dating today is one dice roll.** People ▸ Meet has "Go on a date": a single roll (looks + happiness) that either hands you a partner at closeness 44 or a bad-date line. No one to meet first, no flirting choices, no stages between dating and Propose, no moving in, no breakups you choose, and the partner never notices the double life. (Priority 0a dating, increment 2.)
+- **After increment 2 (phone, seed-4 save at 29):** Meet lists the four places, each with its line; with two crushes they lock with a clear reason. A crush card reads "Crush · Met on an app", a pink interest bar, three flirts with odds ("Good odds · Smarts", "Long shot · Looks and nerve") and "Ask Silas out — Not into you enough yet (49/50)". After dating → official, the partner card reads "Partner · Together" with Spend time, Give a gift, Move in together (locked: "Get your own place first (Work ▸ Money ▸ Home)"), Propose and Break up. Fits 390 px, no overflow, no console errors. Partner cards are long (temper/trust + money + 5 rows); folding Spend time / Gift into a small row is still on the backlog.
+- **Bug found and fixed:** action icons on person cards were matched against the person's name, so "Silas Marchetti" (contains "arc") showed crossed swords on Give a gift.
+
+## Late pass (2026-11-10 late): fights are a choice, as a first-time player
+
+**Played:** engine sims on Play only (6 Mystery seeds, Metro, 0 → 40, Auto fights off and on, and with a train routine; plus the same with yearly growth set to 0 and 4 to measure it), Spider-Man God Mode 18 → 40; phone at 390×844 from injected saves (an eve-era adult at 26 that never touched the switch, a street fight at 31): `/workspace/shots-2026-11-10-late/`.
+
+**Findings:**
+- **An eve save loads with Auto fights OFF** (badge says so) and the Time sheet explains both modes in one line each.
+- **The fight card is clear on a phone:** Fight it out (gold) and Auto-resolve with its odds sit above the foe's name; the arena, the six moves and Breath all still fit at 390×844. Auto-resolve on an even street fight read "Likely a scrape" and gave a draw ("You both stay standing", −4 health, +1 fame), with "Auto-resolved: Mrs. Static." on the card.
+- **Off costs little:** ~1 more fight stop per adult life (6 seeds: 40 vs 33 fight stops). Most adult stops are still choices (83–93), not fights.
+- **People screen (increment 2):** each card now reads top to bottom: name, closeness bar, temper and trust chips, the last thing between you, then money (an open loan with its schedule, or Lend money / Ask to borrow), then Spend time and Give a gift. The ask ("Fern asks to borrow $600 for a car repair") sits first in the card with two big buttons. Readable at 390 px, but cards are now ~100 px taller; a full circle of 7 people is a long scroll. Sims: lives that stay broke (most Play-only lives without a job) never get asked, since an ask needs $400+; with $20k at 18 people asked 1–3 times by 40 and one in seven loans went bad.
+- **Yearly growth is a gentle push, not a ladder:** main power at 40 averages rank A either way (407 vs 313 mastery). Without it, every second power sat at D 0 to 40 in Play-only lives; with it they reach C. No powers granted, power level unchanged within noise.
+
+## Afternoon pass (2026-11-10 pm): the money life as a first-time player
+
+**Played:** engine sims on Play only (an office worker in Metro who rents a tiny flat at 19 and opens a café at 23, seeds 3 and 4, to 40; a shop worker in New York and a café barista in the Hood, to 30), plus the morning's saves (Metro adult at 28 with a café, Bruce Wayne at 25) on the phone at 390×844 (`/workspace/shots-2026-11-10-pm/`).
+
+**Findings:**
+- **Every life with the same name and look had the same markets (fixed, increment 1).** Seeds 3 and 4 printed identical café books, ledgers and cash to the dollar from 25 to 40: the economy's seed hashed name / face / city / upbringing only. New lives now mix in the life's dice; old saves keep theirs.
+- **The $700 squeeze is fair, but silent (fixed, increment 1).** Shop worker in a New York tiny flat ($22k, $970 rent): −$550 to −$860 a month from 20 and nothing tells you; savings drift down for a decade. Barista in the Hood (cheap city): +$250 a month. Office worker in Metro: ~+$2.7k a month at 19, $450k by 30 on promotions. So the floor isn't too high, the problem is that nobody says why money is leaking. Now a one-time hint after three red months points at a roommate (with the amount) or a cheaper place.
+- **Interrupts on Play are about right.** Adult taps 18–30: 65–68 for 12 years (season pace's floor is 48), so ~1.5 extra stops a year; the top stoppers are hero and villain pings and the relic tip (mostly a sim artefact: the bot keeps selling the tip, so it keeps coming back). Decision: keep the current stop rules.
+- **Businesses are thin once open.** The café sat at reputation 40 for 17 years with nothing happening to it: no events, no staff mood, no manager, and if you move city it keeps running at full speed with nobody there. Nothing to react to between upgrades. (Increment 2.)
+- **Money hub on a phone:** tab content starts at ~830 px, below the Play bar: the hub repeats the event card and a long subtitle above a tall net-worth card. (Increment 3.)
+
+## Morning pass (2026-11-10 am): Money hub and Life Flow as a first-time player
+
+**Played:** engine sims on Play only (seeds 3 and 4: a Metro mystery hero, office job at 18, tiny flat at 19, Oscorp shares at 22, a café or truck at 23, to 40), a 9-year-old on Play, Bruce Wayne at 25, and old saves (night-adult24, night-kid12, night-spidey16, nn-cold: all load, get an economy and Play on). Phone screens at 390×844: `/workspace/shots-2026-11-10-am/`.
+
+**Findings (before fixes):**
+- **Money runs away (fixed, increment 1):** $759k cash at 28 and $1.8M at 40 on a $42k desk job. No cost of living existed, and the routine worked a heavy shift (8% of a year's pay) every month. Now $324k at 28; ~$15–25k saved a year.
+- **Recaps read as noise:** a Play season's card leads with rival-hero ticker lines ("Afterimage: sponsoring a cereal that hates them") in bold, and the money line sits at the end of a truncated body. The kid's year card "Meanwhile" is all ticker lines.
+- **Adult Play stops a lot:** 173–180 taps from 0 to 40 on seed 3/4; most adult steps stop after 1–2 months for an event. Fine (events need you), but each stop card should still say what the months did to your money.
+- **Six-move reshuffle (fixed):** dropping your only guard by hand got undone by the next action's top-up.
+- **Money hub on a phone:** the net-worth card, ticker and tabs fit; the Business tab content starts below the fold; Bruce's sparkline is red-jagged even while net worth climbs (it scales to the last 24 months).
+
+## Night pass (2026-11-10 night): living economy — engine sims and phone check
+
+- **Metro office worker** (mystery, rents a tiny flat at 21, buys one at 28–30 with 20% down, puts 40% of spare cash into Oscorp at 26): nets ~+$1.6k a month at 31 with a $1.6k mortgage, no arrears to 80; portfolio swings ±$30k a month in volatile years, which reads well in the "on paper" line.
+- **No-job adult** is evicted after three red months (intended).
+- **Bruce / Tony:** net worth above $10M from the estate from childhood; trust shares can't be sold or pay out until 18 / 21, so kid Bruce no longer piles up dividend cash. Mansion upkeep (would be ~$11k/mo) is waived for estates.
+- **Peter:** family home until 18, then a rent-controlled Queens walk-up at ~$720/mo; +$2.8k a month at 23.
+- **Stocks** were running 4–5× in 35 years; anchors and drift were cut so growth is gentle and bounded (80-year bounds test); district ordering holds (Midtown > Brooklyn > Queens).
+- **Phone (390×844):** hub top card, ticker, Home and Markets tabs, district cards, trade panel all fit; four-option boards fit one row. No console errors.
+- **Life Flow (increment 4):** to 60 on Play only — mystery 13 / 29 / 67 / 83 / 87 taps (0–12 / 13–17 / 18–29 / 30–44 / 45–59), Spider-Man 13 / 25 / 71 / 100 / 90 with 10 canon beats, Batman 13 / 23 / 61 / 80 / 75 with 8 canon beats. A kid's tap reads "12 months go by, and you turn 9. You kept to your routine: Hit the books ×12, Hit the gym ×1…" with stat chips. Watch: recap notes for kids are mostly rival-hero ticker lines; a "best of the year" pick would read better.
+- **Businesses (increment 2):** first tuning paid a café back in 6 months (~$15k/mo); added supplies cost and city-scaled wages: steady profit now Metro truck ~$1.9k, café ~$3.7k, gym ~$6.8k, security ~$9.3k, start-up ~$14.6k, newspaper ~$24k a month (payback 2–6 years). A new café runs −$5k → +$1.8k over its first 7 months. Wayne Enterprises draw ~$25k/mo from 18. Business tab fits at 390×844.
+
 ## Night pass (2026-11-09 night): playtest first — Harbor street kid, Dustreach alien God Mode, Wonder Woman, Hulk, Black Panther, Wolverine
 
 **Builds (new this pass):** a Harbor Bay / *Street kid* mystery (Nell Okafor) and a Dustreach / *Alien planet* **God Mode** life with **Telekinesis + Lightning Control** (Kai Moreno), with **Wonder Woman, Hulk, Black Panther and Wolverine** (the four legends still on generic moves) and Cap, Spider-Man, Batman for reference. Three seeds to 50, all four difficulties, 1,664 villain boards per difficulty, same tell-reading policy (`/workspace/playtest/n1109/`). Phone screens at 390×844: Harbor 20 vs The Auditor, Wonder Woman 24 vs Cheetah, Black Panther 22 vs Klaw (all Normal).
@@ -73,6 +139,8 @@ Seed 1 only (the am table's life): Iron Man Normal 0.59 / 0.38, Spider-Man 0.96 
 - **Crownbridge ice God Mode is the hardest life measured** (Legendary 0.17 / 0.03): strikes-heavy six (Frost Jab, Spark Jab, Pulse Shot, Squall Slap + Dome + Quick Cut).
 - **Power mixing at 15 re-verified.** Skip to 15 from 13 takes 3–8 skips (it stops for cases), lands on Jan at 15 with "A mentor finds you" on the summary; the mixing lock lifts and the mentor card shows in Powers. Fire + Speed God Mode: the mentor steers to Light Speed first and the braid works; ice + speed braids Absolute Zero Dash. The Neon mystery (Regeneration only at 15) has nothing to braid yet and the mentor points at a recipe instead, which is right.
 - **Move-select re-verified** on the Iron Man 26 save: tapping Stand Firm plays it (Ward pill, combo pip, log line), no console errors, no horizontal overflow at 390×844.
+
+**Arena with saved lives (increment 4):** before, Ava Reyes (28, mystery fire hero) and Bruce Wayne (25) were drawn as the paper doll on the draft card, roster and battle slot, and the kicker read "YOUR LIFE · YOUR LIFE". Now Ava gets a vector hero poster with her fire emblem, and Bruce uses Batman's painted art. Shots: `/workspace/shots-2026-11-10-am/arena-after/` (ava2-card.png, bruce-draft.png).
 
 ## Morning pass (2026-11-09 am): playtest first — Spider-Man, Iron Man, Hood mystery, Flash
 

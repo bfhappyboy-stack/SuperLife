@@ -1,4 +1,5 @@
 import { nextLesson } from "./combo";
+import { awakenBlock } from "./library";
 import { legendFits } from "./kin";
 import { powerById } from "./data";
 import { firstName } from "./format";
@@ -1169,16 +1170,42 @@ export function eligible(e: EventDef, g: Game): boolean {
   return true;
 }
 
-export function pickEvent(g: Game, r: number): EventDef | null {
-  const pool = EVENTS.filter((e) => eligible(e, g) && e.id !== g.lastEvent);
-  if (!pool.length) return null;
-  const total = pool.reduce((s, e) => s + e.weight, 0);
-  let x = r * total;
-  for (const e of pool) {
-    x -= e.weight;
-    if (x <= 0) return e;
+/** What an event's choices can hand out: a new power, or a powered person in your life (2026-11-10 eve). */
+function powerKinds(e: EventDef, g: Game): Set<string> {
+  const out = new Set<string>();
+  for (const choice of e.choices) {
+    let special: Special | undefined;
+    try {
+      special = typeof choice.special === "function" ? choice.special(g) : choice.special;
+    } catch {
+      special = undefined;
+    }
+    if (special) out.add(special.kind);
   }
-  return pool[pool.length - 1] ?? null;
+  return out;
+}
+
+/** Powered people are rare: events that bring one into your life come half as often. */
+export const CAPE_EVENT_WEIGHT = 0.5;
+
+export function pickEvent(g: Game, r: number): EventDef | null {
+  // A power on offer only shows up for a life that could take one (library.ts rarity rules).
+  const ready = !g.powerId || !awakenBlock(g);
+  const weighted = EVENTS.filter((e) => eligible(e, g) && e.id !== g.lastEvent)
+    .map((e) => {
+      const kinds = powerKinds(e, g);
+      if (!ready && (kinds.has("grant") || kinds.has("combine"))) return null;
+      return { e, w: kinds.has("meet") || kinds.has("meetHero") ? e.weight * CAPE_EVENT_WEIGHT : e.weight };
+    })
+    .filter((row): row is { e: EventDef; w: number } => !!row);
+  if (!weighted.length) return null;
+  const total = weighted.reduce((s, row) => s + row.w, 0);
+  let x = r * total;
+  for (const row of weighted) {
+    x -= row.w;
+    if (x <= 0) return row.e;
+  }
+  return weighted[weighted.length - 1]?.e ?? null;
 }
 
 function unmetHero(g: Game) {

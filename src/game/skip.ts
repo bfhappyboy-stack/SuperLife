@@ -7,8 +7,9 @@
  * their minis a little under your own average, skips the fights and stunts you would pick yourself, and
  * lets ordinary weeks pass quietly (fewer small events, good and bad).
  */
-import { act, actionsFor, ageUp, choose, focusId, resolveMini } from "./engine";
+import { act, actionsFor, ageUp, choose, focusId, isChatter, resolveMini } from "./engine";
 import { getPower } from "./combo";
+import { econOf } from "./economy";
 import { masteryLevel, powerRank } from "./mastery";
 import { firstName } from "./format";
 import { MIX_AGE } from "./mentors";
@@ -23,7 +24,7 @@ export const SKIP_MINI_TAX = 0.08;
 export const SKIP_MINI_RANGE = [0.3, 0.72] as const;
 
 /** Everyday actions fast-forward is allowed to play. Fights, stunts, crime, tryouts and moves stay yours. */
-const ROUTINE = ["train", "omen", "class", "shift", "books", "gym", "hobby", "volunteer", "confide", "befriend", "city-walk"] as const;
+export const ROUTINE = ["train", "omen", "class", "shift", "books", "gym", "hobby", "volunteer", "confide", "befriend", "city-walk"] as const;
 const SUBCHOICE_DEFAULT: Record<string, string> = { gym: "lift", books: "library", hobby: "music", volunteer: "tutor", out: "quiet" };
 const SAFE_ROLES = new Set<Person["role"]>(["parent", "partner", "child", "friend", "teammate"]);
 const CRISIS_ROLES = new Set<Person["role"]>(["parent", "partner", "child"]);
@@ -107,13 +108,24 @@ export function monthPlan(g: Game, used: Record<string, number> = {}): { id: str
   const rows = actionsFor(g)
     .filter((a) => !a.disabled && ((ROUTINE as readonly string[]).includes(a.id) || a.id.startsWith("time:")))
     .map((a) => {
-      const base = a.id.startsWith("time:") ? timeWeight(g, a.id) : defaultWeight(g, a.id);
+      const pinned = (g.routine ?? []).indexOf(a.id);
+      const natural = a.id.startsWith("time:") ? timeWeight(g, a.id) : defaultWeight(g, a.id);
+      // Your routine comes first, in your order; everything else is a quiet fallback.
+      // (Training still waits when you're worn down.)
+      const base = pinned >= 0 ? (a.id === "train" && g.stats.health < SKIP_TRAIN_FLOOR ? 0 : 12 - pinned * 2.5) : (g.routine?.length ? natural * 0.35 : natural);
       const label = a.id.startsWith("time:") ? `Time with ${firstName(g.relationships.find((r) => `time:${r.id}` === a.id)?.name ?? "family")}` : a.label;
       const score = base > 0 ? base + (h.acts[a.id] ?? 0) * 0.7 - (used[a.id] ?? 0) * SKIP_REPEAT_COST : 0;
       return { id: a.id, label, score: base > 0 ? Math.max(0.01, score) : 0 };
     })
-    .filter((row) => row.score > 0)
-    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+    .filter((row) => row.score > 0);
+  // A pinned shift at your own business (Life Flow routine slot; not an everyday action in the list).
+  (g.routine ?? []).forEach((id, pinned) => {
+    if (!id.startsWith("econ|biz|shift|")) return;
+    const biz = econOf(g)?.biz?.find((b) => b.uid === id.split("|")[3] && b.cityId === g.cityId);
+    if (!biz || g.majorsLeft <= 0) return;
+    rows.push({ id, label: `Shift at ${biz.name}`, score: Math.max(0.01, 12 - pinned * 2.5 - (used[id] ?? 0) * SKIP_REPEAT_COST) });
+  });
+  rows.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
   return rows.map(({ id, label }) => ({ id, label }));
 }
 
@@ -131,6 +143,8 @@ function subDefault(g: Game, pid: string): string {
 function tryAction(g: Game, id: string, ratio?: number): Game | null {
   let n = act(g, id);
   if (n === g) return null;
+  // Money actions answer "not now" with a banner instead of refusing; only a spent block counts.
+  if (id.startsWith("econ|") && n.majorsLeft >= g.majorsLeft) return null;
   for (let i = 0; i < 3 && n.phase === "choice" && n.pending && n.pending.id in SUBCHOICE_DEFAULT; i++) {
     const pid = n.pending.id;
     const want = habitsOf(g).picks[pid];
@@ -275,32 +289,142 @@ export function settleSmall(g: Game): { g: Game; line: string } | null {
   return { g: best.g, line: `${short} → ${best.label}` };
 }
 
-export function fastForward(game: Game, span: SkipSpan): Game {
+/**
+ * Adult Life Flow (owner's call, 2026-11-10 eve: "make it interrupt less"). Play keeps stopping for what truly
+ * needs you (canon beats, cases and story arcs, power moments, big life offers, a boss, your arch-enemy once a
+ * year, a fight you could lose) and settles the rest the way you'd likely play it, listed on the recap.
+ */
+/** Adult events that always stop: offers that change a life, and moments with people. */
+export const BIG_EVENTS = new Set([
+  "lab-offer", "villain-offer", "villain-gala", "sidekick-pitch", "shoulder-tap", "rival-school", "interview", "mentor-fight", "trainer-lesson",
+  "trainer-roof", "oath-roof", "nemesis-text", "year-power", "relic-run", "relic-crater", "relic-subway", "kid-spark", "spark-menu", "meteor",
+]);
+/** Power gap at which a street fight is a sure thing (the recap says you handled it). */
+export const OUTCLASS_GAP = 1.5;
+/** Your arch-enemy's monthly call stops Play at most once a year; the other months you leave them on read. */
+export const ARCH_STOP_EVERY = 12;
+const ARCH_FLAG = "flow:archStop";
+
+const at = (g: Game) => g.age * 12 + (g.month ?? 0);
+
+/** Is Auto fights on? Only when the player switched it on themselves (opt-in, owner's call 2026-11-10 late). */
+export function autoFightsOn(g: Pick<Game, "autoFights" | "autoFightsSet">): boolean {
+  return g.autoFights === true && g.autoFightsSet === true;
+}
+
+/**
+ * A street fight Play can settle. An outclassed foe ("sure": a clean win) always settles quietly into the recap,
+ * Auto fights on or off (owner's call, 2026-11-11: easy wins never stop Play). A foe you're about even with
+ * ("auto") settles only with Auto fights on. Bosses and tougher foes always stop.
+ */
+export function routineFight(g: Game, mini: Game["minigame"]): "sure" | "auto" | null {
+  if (!mini || mini.kind !== "duel" || mini.tag !== "duel" || !mini.duel || mini.duel.boss) return null;
+  const gap = g.stats.powerLevel - (mini.duel.foeLevel ?? 99);
+  if (gap >= OUTCLASS_GAP) return "sure";
+  return autoFightsOn(g) && gap >= -0.5 ? "auto" : null;
+}
+
+/** The score Auto-resolve settles a fight at: a little under your usual, but a foe you outclass is a clean win. */
+export function autoResolveRatio(g: Game): number {
+  const d = g.minigame?.duel;
+  const gap = d ? g.stats.powerLevel - (d.foeLevel ?? 99) : -99;
+  return !d?.boss && gap >= OUTCLASS_GAP ? Math.max(autoRatio(g), 0.7) : autoRatio(g);
+}
+
+/** What Auto-resolve would likely give, for the fight card ("Likely a win"). Edges from gear and home can lift it. */
+export function autoResolveOdds(g: Game): "win" | "scrape" | "loss" {
+  const r = autoResolveRatio(g);
+  return r >= 0.66 ? "win" : r >= 0.33 ? "scrape" : "loss";
+}
+
+/** Fight card ▸ Auto-resolve: settle the fight now at the auto score. Doesn't count toward your fighting habit. */
+export function autoResolveFight(g: Game): Game {
+  if (g.phase !== "mini" || g.minigame?.kind !== "duel") return g;
+  const foe = g.minigame.duel?.foeName ?? g.minigame.title;
+  const n = resolveMini(g, autoResolveRatio(g));
+  if (n !== g && n.card) n.card = { ...n.card, body: `Auto-resolved: ${foe}. ${n.card.body}` };
+  return n;
+}
+
+export function settleAdult(g: Game): { g: Game; line: string; fight?: boolean } | null {
+  if (g.phase !== "choice" || !g.pending) return null;
+  const id = g.pending.id;
+  if (id.startsWith("canon|") || /case|arc(?!h)/.test(id) || BIG_EVENTS.has(id) || id.startsWith("grief-") || id.startsWith("slip-")) return null;
+  // Your arch-enemy: a real fight once a year; the other calls go unanswered.
+  if (id === "arch-month") {
+    const last = g.flags[ARCH_FLAG];
+    if (last === undefined || at(g) - last >= ARCH_STOP_EVERY) {
+      g.flags[ARCH_FLAG] = at(g);
+      return null;
+    }
+    const n = choose(g, "skip");
+    return n === g || n.phase !== "live" ? null : { g: n, line: `${g.pending.prompt.split(/[.!?]/)[0]!.slice(0, 50)} → left on read` };
+  }
+  const prompt = g.pending.prompt.replace(/\s+/g, " ").trim();
+  const short = prompt.length > 60 ? `${prompt.slice(0, 57).trimEnd()}…` : prompt;
+  // Street villains: fight it out in the recap when it's routine, else stop for you.
+  if (id.startsWith("villain-p")) {
+    const fought = choose(g, "fight");
+    const how = fought.phase === "mini" ? routineFight(g, fought.minigame) : null;
+    if (!how) return null;
+    const ratio = how === "sure" ? Math.max(autoRatio(g), 0.7) : autoRatio(g);
+    const n = resolveMini(fought, ratio);
+    if (n.phase !== "live") return null;
+    const res = ratio >= 0.66 ? "won" : ratio >= 0.33 ? "a draw" : "lost";
+    const easy = how === "sure" ? ", an easy win" : "";
+    return { g: n, line: `Street fight: ${fought.minigame!.duel!.foeName} (${res}${easy})`, fight: true };
+  }
+  const chatter = /^hero-/.test(id) || id === "arch-billboard";
+  if (!chatter && /arch|enc|villain|hero/.test(id)) return null;
+  let best: { g: Game; label: string; score: number } | null = null;
+  for (const choice of g.pending.choices) {
+    let n = choose(g, choice.id);
+    if (n === g) continue;
+    if (n.phase === "mini" && n.minigame) {
+      if (n.minigame.kind === "duel" || n.minigame.tag) continue;
+      n = resolveMini(n, autoRatio(g));
+    }
+    if (n.phase === "dead" || n.phase === "choice" || n.phase === "mini") continue;
+    const score = tasteOf(g, n);
+    if (!best || score > best.score) best = { g: n, label: choice.label, score };
+  }
+  if (!best) return null;
+  return { g: best.g, line: `${short} → ${best.label}` };
+}
+
+export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean | "adult" } = {}): Game {
   if (game.phase !== "live" || game.reveal) return game;
   const start = structuredClone(game);
   start.skipReport = null;
   const months = skipMonths(start, span);
   const did = new Map<string, { label: string; count: number }>();
   const notes: string[] = [];
+  const chatter: string[] = [];
   const seen = new Set<string>();
   const note = (line: string) => {
     const t = line.trim();
     if (!t || seen.has(t)) return;
     seen.add(t);
-    notes.push(t);
+    // Rival capes' ticker lines go last, so the summary leads with your own life.
+    (isChatter(t) ? chatter : notes).push(t);
   };
   let g = start;
   let stop: SkipReport["stop"] = null;
   let passed = 0;
-  const fifteen = span === "fifteen";
+  // Skip to 15 (and childhood Play steps) settle small everyday moments for you.
+  const fifteen = span === "fifteen" || opts.settle === true;
+  const adult = opts.settle === "adult";
   let handled = 0;
+  let fights = 0;
   // Skip to 15 settles small everyday moments for you; anything bigger still stops the skip.
   const settle = (cur: Game, why: SkipReport["stop"]): Game | null => {
-    if (!fifteen || !why || (why.kind !== "event" && why.kind !== "case")) return null;
-    const done = settleSmall(cur);
+    if ((!fifteen && !adult) || !why || (why.kind !== "event" && why.kind !== "case" && why.kind !== "story")) return null;
+    if (fifteen && why.kind === "story") return null;
+    const done = adult ? settleAdult(cur) : settleSmall(cur);
     if (!done) return null;
-    handled += 1;
-    if (handled <= 3) note(done.line);
+    if ("fight" in done && done.fight) fights += 1;
+    else handled += 1;
+    if (handled + fights <= 4) note(done.line);
     return done.g;
   };
   outer: for (let m = 0; m < months; m++) {
@@ -308,7 +432,7 @@ export function fastForward(game: Game, span: SkipSpan): Game {
       const played = playMonth(g, did);
       g = played.g;
       if (!played.stop) break;
-      const next = tries < 4 ? settle(g, played.stop) : null;
+      const next = tries < (adult ? 8 : 4) ? settle(g, played.stop) : null;
       if (!next || !liveish(next)) {
         stop = played.stop;
         break outer;
@@ -333,7 +457,8 @@ export function fastForward(game: Game, span: SkipSpan): Game {
     }
   }
   if (handled) did.set("auto-moments", { label: "Small moments handled", count: handled });
-  g.skipReport = buildReport(start, g, span, passed, months, did, notes, stop);
+  if (fights) did.set("auto-fights", { label: "Street fights settled", count: fights });
+  g.skipReport = buildReport(start, g, span, passed, months, did, [...notes, ...chatter.slice(0, notes.length >= 3 ? 0 : 1)], stop);
   return g;
 }
 

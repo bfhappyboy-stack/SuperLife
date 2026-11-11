@@ -28,7 +28,7 @@ function live(g: Game, maxAge: number): Game {
   return g;
 }
 
-test("legend book cap: canon kit plus a slow trickle, hard max 12, none for ordinary lives", () => {
+test("legend book cap: canon kit plus a slow trickle, hard max 10, none for ordinary lives", () => {
   assert.equal(legendCap(null, 30), null);
   for (const p of PRESETS) {
     if (!p.powers.length) {
@@ -36,8 +36,8 @@ test("legend book cap: canon kit plus a slow trickle, hard max 12, none for ordi
       continue;
     }
     const wake = wakeAge(p.id) ?? 0;
-    assert.equal(legendCap(p.id, wake), Math.min(12, p.powers.length + 2), p.id);
-    assert.ok(legendCap(p.id, 90)! <= 12, p.id);
+    assert.equal(legendCap(p.id, wake), Math.min(10, p.powers.length + 1), p.id);
+    assert.ok(legendCap(p.id, 90)! <= 10, p.id);
     assert.ok(legendCap(p.id, wake + 12)! >= legendCap(p.id, wake)!, p.id);
   }
 });

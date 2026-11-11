@@ -9,7 +9,7 @@
  * All of it is data: add a mentor by adding a row. Presets are keyed by legend id so renaming a legend
  * never breaks its mentor.
  */
-import { getPower, possibleMixes, type PossibleMix } from "./combo";
+import { basePowers, getPower, possibleMixes, type CatalogPower, type PossibleMix } from "./combo";
 import { legendFits } from "./kin";
 import type { Game } from "./types";
 
@@ -109,6 +109,26 @@ export function mentorBraid(g: Game): PossibleMix | null {
   const score = (o: PossibleMix) =>
     (chain.includes(o.result.id) ? 100 : 0) + (g.preset && legendFits(g.preset, o.result.id) ? 20 : 0) + (2 - o.result.generation) * 5 + ((g.discovered ?? []).includes(o.result.id) ? 2 : 0);
   return [...options].sort((a, b) => score(b) - score(a) || a.result.name.localeCompare(b.result.name))[0] ?? null;
+}
+
+/**
+ * The base power a mentor tries to wake in you (2026-11-10 eve): the owner's required chain first (Super Speed
+ * for a Fire Control life, Super Strength once Light Speed is yours, Fire Control for a speedster), then a base
+ * that braids with what you hold into a named recipe (the legend's canon first), then any.
+ */
+export function mentorAwaken(g: Game): CatalogPower | null {
+  const owned = new Set(g.unlockedPowers ?? []);
+  const free = basePowers().filter((p) => !owned.has(p.id));
+  if (!free.length || !owned.size) return null;
+  const pick = (id: string) => free.find((p) => p.id === id) ?? null;
+  if (owned.has("light-speed") && !owned.has("super-strength")) return pick("super-strength");
+  if (owned.has("fire-control") && !owned.has("super-speed") && !owned.has("light-speed")) return pick("super-speed");
+  if (owned.has("super-speed") && !owned.has("fire-control") && !owned.has("light-speed")) return pick("fire-control");
+  const score = (p: CatalogPower) => {
+    const opens = possibleMixes([...owned, p.id]).filter((m) => m.left.id === p.id || m.right.id === p.id).length;
+    return (g.preset && legendFits(g.preset, p.id) ? 20 : 0) + Math.min(3, opens) * 3 + ((g.discovered ?? []).includes(p.id) ? 2 : 0);
+  };
+  return [...free].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name))[0] ?? null;
 }
 
 /** A recipe the mentor can teach you about on a study night: one you could braid soon, not yet in your notes. */

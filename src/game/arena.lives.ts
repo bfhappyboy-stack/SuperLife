@@ -8,6 +8,11 @@ import { kitFor } from "./kits";
 import { elementOfPower, type ElementId } from "./elements";
 import { arenaCooldown, arenaCost, type ArenaFighter, type ArenaPassive, type PassiveKind } from "./arena.roster";
 import type { DuelMove, Game, MoveStyle } from "./types";
+import { presetById } from "./presets";
+import { capeTheme, type CapeFamily } from "./theme";
+
+/** Poster colours per power family (mirrors the UI palette). */
+const FAMILY_HEX: Record<CapeFamily, string> = { fire: "#ff7a3d", ice: "#7fd3ff", storm: "#a59bff", mind: "#8fb0ff", might: "#ffb35c", swift: "#3fe0c5", veil: "#b9c2d6", life: "#4fe39a", arcane: "#e7a2ff" };
 
 const PASSIVE_BY_ELEMENT: Partial<Record<ElementId, [PassiveKind, string, string]>> = {
   fire: ["worthy", "Firestorm", "Area moves hit 25% harder."],
@@ -51,13 +56,18 @@ export function fighterFromLife(slot: number, game: Game): ArenaFighter | null {
   const source = game.unlockedPowers?.[0] ?? game.powerId;
   const [kind, name, text] = (source ? PASSIVE_BY_ELEMENT[elementOfPower(source)] : undefined) ?? FALLBACK;
   const passive: ArenaPassive = { kind, name, text };
+  // A legend's saved life fights in the legend's painted portrait; a mystery hero gets poster art in their colours.
+  const legend = presetById(game.preset);
+  const family = capeTheme(game).cape;
   return {
     id: `life-${slot}`,
     name: game.name,
-    title: `Your life · age ${game.age}`,
+    title: `Age ${game.age}${legend ? ` · ${legend.hero}` : ""}`,
     side: "hero",
-    world: "spider-man",
-    color: "#e6b34d",
+    world: legend?.id ?? "spider-man",
+    color: legend?.color ?? (family ? FAMILY_HEX[family] : "#e6b34d"),
+    ...(legend?.art ? { art: legend.art } : {}),
+    family,
     sex: game.sex === "female" ? "female" : "male",
     hp: 104,
     passive,

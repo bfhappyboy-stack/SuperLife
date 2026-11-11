@@ -1,4 +1,5 @@
 import type { MarketState } from "./market";
+import type { EconState, PeriodReport } from "./economy";
 import type { MiniKind, MiniVerb, SkillKind } from "./minis";
 import type { Chapter, ChapterNotice } from "./chapters";
 export type PowerId =
@@ -67,7 +68,10 @@ export type Sex = "female" | "male";
 
 export type Phase = "live" | "choice" | "mini" | "dead";
 
-export type PersonRole = "parent" | "friend" | "partner" | "rival" | "teammate" | "child" | "ex" | "hero" | "villain";
+export type PersonRole = "parent" | "friend" | "partner" | "rival" | "teammate" | "child" | "ex" | "hero" | "villain" | "crush";
+
+/** Dating (2026-11-11): how far it has gone with a partner. */
+export type LoveStage = "dating" | "together" | "living" | "engaged" | "married";
 
 export interface Stats {
   health: number;
@@ -192,6 +196,8 @@ export interface DuelBoard {
   personId?: string;
   /** Percent of incoming damage shrugged off by the suit. */
   guard?: number;
+  /** The foe's effective power level (2026-11-10 eve: lets Play judge a routine fight). */
+  foeLevel?: number;
   /** Legacy power id of the foe, for its look and element. */
   foePower?: string;
   /** Seed for the foe's generated look. */
@@ -324,6 +330,8 @@ export interface Card {
   banner: string[];
   body: string;
   deltas: Delta[];
+  /** A Play step's money report (cash in and out, market moves, headlines). */
+  money?: PeriodReport | null;
 }
 
 export interface HistoryEntry {
@@ -346,6 +354,44 @@ export interface Person {
   sex?: Sex;
   latentPower?: PowerId | null;
   arch?: boolean;
+  /** Ties: how far they trust you with money and promises (0-100, missing = 50). */
+  trust?: number;
+  /** Ties: the last few things that happened between you (money, favours). */
+  history?: { at: number; line: string }[];
+  /** Dating: a partner's stage (missing on older saves: Married if wed, else Dating). */
+  stage?: LoveStage;
+  /** The mask at home (mask.ts): this partner knows you're a hero. */
+  knowsSecret?: boolean;
+  /** The mask at home: 0-100, how much they wonder about the late nights (missing = 0). */
+  suspicion?: number;
+  /** The mask at home: when you last told them and they needed space (months, age×12+month). */
+  toldAt?: number;
+  /** The mask at home: when they last found the suit (months). */
+  foundAt?: number;
+}
+
+/** Money between you and someone in your life (ties.ts). */
+export interface Loan {
+  id: string;
+  personId: string;
+  /** "lent": they owe you. "borrowed": you owe them. */
+  dir: "lent" | "borrowed";
+  amount: number;
+  left: number;
+  monthly: number;
+  /** Month index it started (age * 12 + month). Payments begin the month after. */
+  since: number;
+  /** Missed payments in a row. */
+  misses: number;
+  status: "open" | "paid" | "forgiven" | "unpaid";
+}
+
+/** Someone close asking you for help with money. Waits on their People card for up to a year. */
+export interface TieAsk {
+  personId: string;
+  amount: number;
+  reason: string;
+  until: number;
 }
 
 export interface DeathReport {
@@ -397,11 +443,31 @@ export interface Game {
   /** Fight-move experience, keyed by move id. Separate from power mastery. */
   moveExp: Record<string, number>;
   loadout: string[];
+  /** The player has arranged the six by hand: the auto style-balancer leaves a full six alone. */
+  handSix?: boolean;
   moveSets: MoveSet[];
   wardrobe: Wardrobe;
   focusPower: string | null;
   story: StoryState;
   majorsLeft: number;
+  /** Life Flow: up to 3 everyday actions that fill the free time you don't spend yourself (in order). */
+  routine?: string[];
+  /** Life Flow: how far one Play tap goes. "auto" = a year as a kid, a season as a teen, a year from 18. */
+  pace?: Pace;
+  /** Life Flow: Play settles street fights you're about even with or better and lists them in the recap.
+   *  Opt-in (owner's call, 2026-11-10 late): off unless the player turned it on themselves. */
+  autoFights?: boolean;
+  /** The player has flipped the Auto fights switch by hand (so a save migration never overrides their choice). */
+  autoFightsSet?: boolean;
+  /** Powers you used since your last birthday (fights, training, lessons). Only these ripen on the birthday
+   *  (owner's call, 2026-11-11). Missing on older saves = not tracked yet: that first birthday ripens all. */
+  usedPowers?: string[];
+  /** Ties: money lent and borrowed with people in your life. */
+  loans?: Loan[];
+  /** Ties: someone asking you for help right now. */
+  tieAsk?: TieAsk | null;
+  /** The mask at home: a partner found the suit and waits for an answer until `until` (months). */
+  maskScene?: { personId: string; until: number } | null;
   flags: Record<string, number>;
   card: Card;
   pending: Pending | null;
@@ -418,6 +484,8 @@ export interface Game {
   chapterNotice?: ChapterNotice | null;
   /** What you own and what the market remembers. Optional for old saves. */
   market?: MarketState;
+  /** Living economy: moving markets, housing, portfolio (economy.ts). Optional for old saves (ensureEconomy). */
+  economy?: EconState;
   /** After a boss loss: that boss can't be rematched until this month index (age × 12 + month). Optional for old saves. */
   regroup?: { name: string; until: number } | null;
   /** "mystery" (the default for new lives) or "god". Missing on classic saves. */
@@ -430,6 +498,8 @@ export interface Game {
   preset?: string | null;
   /** The mentor who found you at 15 (mentors.ts). Missing before 15 and on old saves until their next birthday. */
   mentor?: MentorState | null;
+  /** The power you're slowly training toward (2026-11-10 eve): a base to wake, or a braid. One at a time. */
+  training?: TrainingProject | null;
   /** Arena purses paid into this life (anti-farm ledger). */
   arenaPurse?: ArenaPurseLedger;
   /** The big reveal waiting to play. UI-only, cleared on dismiss. */
@@ -452,6 +522,8 @@ export interface Habits {
 }
 
 export type SkipSpan = "season" | "year" | "fifteen";
+
+export type Pace = "auto" | "month" | "season" | "year";
 
 export type SkipStopKind = "reveal" | "story" | "chapter" | "case" | "event" | "fight" | "health" | "bond" | "death" | "mentor";
 
@@ -497,6 +569,16 @@ export interface ActionItem {
   detail?: string;
   disabled?: string;
   accent?: boolean;
+}
+
+export interface TrainingProject {
+  id: string;
+  kind: "awaken" | "braid";
+  progress: number;
+  need: number;
+  /** Who is teaching it (a mentor's or hero's name, or "you"). */
+  by?: string;
+  since: number;
 }
 
 export interface MentorState {

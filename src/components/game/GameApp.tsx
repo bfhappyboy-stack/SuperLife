@@ -1,4 +1,6 @@
-import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
+import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, Play, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
+import { DATING_ON, STAGE_LABEL, stageOf } from "@/game/dating";
+import { keepsMask, suspicionLabel } from "@/game/mask";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
 import { actMatches, type GoalRoute } from "@/game/chapters";
@@ -10,6 +12,12 @@ import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends"
 import { Closet } from "@/components/game/Closet";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
+import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
+import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
+import { RoutineCard } from "@/components/game/Routine";
+import { FLOW_ON, stepLabel } from "@/game/flow";
+import { autoResolveOdds } from "@/game/skip";
+import { borrowAmounts, borrowBlock, canTalkMoney, lendAmounts, loanLine, openLoan, temperOf, termFor, trustOf } from "@/game/ties";
 import { CityScene, TitleArt } from "@/components/game/Scene";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
@@ -170,8 +178,30 @@ function PlayScreen() {
   );
 }
 
+const ODDS_LINE = { win: "Likely a win", scrape: "Likely a scrape", loss: "Likely a loss" } as const;
+
+/** The fight card's choice (owner's call, 2026-11-10 late): play the fight, or let it resolve at a little under your usual. */
+function FightChoice({ game }: { game: Game }) {
+  const autoResolve = useGame((s) => s.autoResolve);
+  const [open, setOpen] = useState(true);
+  if (!open) return null;
+  const odds = autoResolveOdds(game);
+  return (
+    <div className="relative z-20 mx-3 mt-2 flex shrink-0 gap-2" role="group" aria-label="How do you want this fight?">
+      <button type="button" onClick={() => setOpen(false)} className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-gold px-3 text-sm font-extrabold text-paper-ink shadow-[0_2px_0_rgba(0,0,0,.35)]">
+        <Swords className="size-4" aria-hidden /> Fight it out
+      </button>
+      <button type="button" onClick={autoResolve} className="flex min-h-11 flex-1 flex-col items-center justify-center rounded-xl border border-white/15 bg-black/35 px-3 leading-tight text-fg">
+        <span className="flex items-center gap-1 text-sm font-bold"><FastForward className="size-4" aria-hidden /> Auto-resolve</span>
+        <span className={`text-[10px] font-bold ${odds === "win" ? "text-good" : odds === "loss" ? "text-bad" : "text-muted"}`}>{ODDS_LINE[odds]}</span>
+      </button>
+    </div>
+  );
+}
+
 function Life({ game }: { game: Game }) {
   const age = useGame((s) => s.age);
+  const play = useGame((s) => s.play);
   const [ffOpen, setFfOpen] = useState(false);
   const pick = useGame((s) => s.pick);
   const act = useGame((s) => s.do);
@@ -278,7 +308,7 @@ function Life({ game }: { game: Game }) {
               </div>
               <span className="chip shrink-0 text-fg" aria-label={`Money ${money(game.stats.money)}`}>
                 <Banknote className="size-3.5" style={{ color: STAT_COLOR.money }} />
-                <span className="t-num">{money(game.stats.money)}</span>
+                <CashTicker value={game.stats.money} format={money} />
               </span>
               <button type="button" aria-label="Menu" onClick={() => setSheet("menu")} className="btn btn-ghost !min-h-11 !w-11 !p-0">
                 <Menu className="size-5" />
@@ -315,6 +345,7 @@ function Life({ game }: { game: Game }) {
 
       {game.phase === "mini" && game.minigame ? (
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          {game.minigame.kind === "duel" && game.minigame.duel && <FightChoice key={`fc-${game.minigame.title}-${game.age}-${game.month ?? 0}-${game.missions}`} game={game} />}
           <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ legend: (() => { const l = presetById(game.preset); return l && hasArt(l.art) ? { art: l.art, color: l.color, name: l.hero } : undefined; })(), seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })() }} />
         </div>
       ) : (
@@ -340,6 +371,8 @@ function Life({ game }: { game: Game }) {
           )}
 
           <div ref={scroller} data-desk={desk} className="desk relative z-10 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
+            {/* The Money hub has its own header and floats each result above Play, so the month card steps aside there. */}
+            {(choosing || !(desk === "work" && activeShelf === "Money")) && (
             <article key={`${game.card.kicker}-${game.card.body.length}`} className="card-paper anim-rise relative overflow-hidden px-4 py-3.5">
               <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-gold to-cape" />
               <div className="flex items-start justify-between gap-3">
@@ -366,11 +399,35 @@ function Life({ game }: { game: Game }) {
                   ))}
                 </div>
               )}
+              {choosing && game.card.money && <MoneyLine report={game.card.money} />}
             </article>
+            )}
+            {!choosing && desk === "life" && game.card.money && (
+              <MoneyReport
+                key={`${game.age}-${game.month}`}
+                report={game.card.money}
+                onOpen={() => {
+                  setDesk("work");
+                  setShelf("Money");
+                  setAck("Money — pressed.");
+                }}
+              />
+            )}
             {!choosing && desk === "life" && <ChapterStrip game={game} />}
             {!choosing && desk === "life" && <NextGoal game={game} onGo={goTo} />}
-            {!choosing && <p className="desk-accent t-label mt-4">{DESK_LINE[desk]}</p>}
-            {!choosing && desk === "work" && activeShelf !== "Market" && (
+            {FLOW_ON && !choosing && desk === "life" && game.phase === "live" && <RoutineCard game={game} />}
+            {!choosing && desk === "life" && game.phase === "live" && (
+              <NewsTicker
+                game={game}
+                onOpen={() => {
+                  setDesk("work");
+                  setShelf("Money");
+                  setAck("Money — pressed.");
+                }}
+              />
+            )}
+            {!choosing && !(desk === "work" && activeShelf === "Money") && <p className="desk-accent t-label mt-4">{DESK_LINE[desk]}</p>}
+            {!choosing && desk === "work" && activeShelf !== "Shop" && activeShelf !== "Money" && (
               <p className="mt-2 text-sm text-muted">
                 {school ? school.name : "No hero school"}
                 {" · "}
@@ -379,7 +436,8 @@ function Life({ game }: { game: Game }) {
                 {team ? team.name : "No team"}
               </p>
             )}
-            {!choosing && desk === "work" && activeShelf === "Market" && <Market game={game} onAct={act} />}
+            {!choosing && desk === "work" && activeShelf === "Money" && <MoneyHub game={game} onAct={act} />}
+            {!choosing && desk === "work" && activeShelf === "Shop" && <Market game={game} onAct={act} />}
             {!choosing && desk === "people" && activeShelf === "Crew" && game.crew && (
               <p className="mt-2 text-sm text-muted">
                 {game.crew.name}
@@ -422,9 +480,9 @@ function Life({ game }: { game: Game }) {
             {!choosing && desk === "cases" && activeShelf === "Files" && <div className="mt-3"><CaseFile game={game} /></div>}
             {!choosing && desk === "cases" && activeShelf === "Board" && <div className="mt-3"><Roster game={game} /></div>}
             {!choosing && desk === "people" && activeShelf === "Circle" && (
-              <PeopleStack game={game} actions={visible} onPress={(action) => { setAck(`${action.label} — pressed.`); act(action.id); }} />
+              <PeopleStack game={game} actions={visible} onPress={(action) => { setAck(`${action.label} — pressed.`); act(action.id); }} onTie={(id) => act(id)} />
             )}
-            {!choosing && !(desk === "cases" && activeShelf === "Board") && !(desk === "work" && activeShelf === "Market") && !(desk === "people" && activeShelf === "Circle") && (
+            {!choosing && !(desk === "cases" && activeShelf === "Board") && !(desk === "work" && (activeShelf === "Shop" || activeShelf === "Money")) && !(desk === "people" && activeShelf === "Circle") && (
               <div className="mt-3 flex flex-col gap-4">
                 {sections.map((section) => (
                   <section key={section.title}>
@@ -449,7 +507,7 @@ function Life({ game }: { game: Game }) {
                 )}
                 {sections.length === 0 && !(desk === "gift" && (activeShelf === "Book" || activeShelf === "Teachers" || activeShelf === "Moves")) && !(desk === "cases" && activeShelf === "Files") && (
                   <div className="card px-4 py-4">
-                    <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? "Out of moves this month. Tap Next month, or Skip to fast-forward a season or a year." : EMPTY[desk]}</p>
+                    <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? FLOW_ON ? "Free time's spent. Tap Play: your routine carries on." : "Out of moves this month. Tap Next month, or Skip to fast-forward a season or a year." : EMPTY[desk]}</p>
                     {elsewhere.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         <p className="t-label w-full text-fg">Things you can do right now</p>
@@ -471,6 +529,27 @@ function Life({ game }: { game: Game }) {
                 {ack}
               </p>
               <div className="flex items-stretch gap-2">
+                {FLOW_ON ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAck(`${stepLabel(game).title} — pressed.`);
+                      play();
+                    }}
+                    className="btn btn-primary min-h-14 flex-1 flex-col !gap-0 text-lg"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Play className="size-4 fill-current" aria-hidden />
+                      {stepLabel(game).title}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] font-extrabold tracking-[0.14em] opacity-85" aria-label={`${game.majorsLeft} blocks of free time left this month; your routine fills the rest`}>
+                      {[0, 1, 2].map((i) => (
+                        <span key={i} className={`inline-block size-1.5 rounded-full ${i < game.majorsLeft ? "bg-white" : "bg-white/25"}`} />
+                      ))}
+                      <span className="ml-1 uppercase">{game.majorsLeft > 0 ? `${game.majorsLeft} free · then routine` : `${stepLabel(game).sub} · your routine`}</span>
+                    </span>
+                  </button>
+                ) : (
                 <button
                   type="button"
                   onClick={() => {
@@ -487,6 +566,7 @@ function Life({ game }: { game: Game }) {
                     <span className="ml-1">{game.majorsLeft > 0 ? `${game.majorsLeft} MOVE${game.majorsLeft === 1 ? "" : "S"} LEFT` : "OUT OF MOVES"}</span>
                   </span>
                 </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -497,7 +577,7 @@ function Life({ game }: { game: Game }) {
                   className="btn btn-gold min-h-14 w-[6.25rem] flex-col !gap-0 !px-2 text-sm"
                 >
                   <FastForward className="size-5" />
-                  <span className="text-[11px] font-extrabold tracking-[0.1em] uppercase">Skip</span>
+                  <span className="text-[11px] font-extrabold tracking-[0.1em] uppercase">{FLOW_ON ? "Time" : "Skip"}</span>
                 </button>
               </div>
             </div>
@@ -746,7 +826,7 @@ function DeltaChip({ delta }: { delta: Delta }) {
 
 type Desk = "life" | "gift" | "cases" | "people" | "work";
 
-/** Five primary tabs. The old Board tab lives under Cases; the Market lives under Work. */
+/** Five primary tabs. The old Board tab lives under Cases; Money (home, markets) and the Shop live under Work. */
 const DESKS: { id: Desk; label: string }[] = [
   { id: "life", label: "Life" },
   { id: "gift", label: "Powers" },
@@ -759,7 +839,7 @@ const ALWAYS_SHELF: Partial<Record<Desk, string[]>> = {
   gift: ["Book", "Moves", "Teachers"],
   cases: ["Files", "Board"],
   people: ["Circle"],
-  work: ["Market"],
+  work: ["Money", "Shop"],
 };
 
 const SHELF_ORDER: Record<Desk, string[]> = {
@@ -767,7 +847,7 @@ const SHELF_ORDER: Record<Desk, string[]> = {
   gift: ["Book", "Moves", "Drill", "Fight", "Teachers"],
   cases: ["Files", "League", "Street", "Board"],
   people: ["Circle", "Meet", "Family", "Crew"],
-  work: ["Market", "School", "Job"],
+  work: ["Money", "Shop", "School", "Job"],
 };
 
 const DESK_LINE: Record<Desk, string> = {
@@ -775,7 +855,7 @@ const DESK_LINE: Record<Desk, string> = {
   gift: "The book, the six moves, the drill, the teachers.",
   cases: "Open files, League calls, the street, and who is loose.",
   people: "The names that know yours.",
-  work: "The market, a seat in class, or a paycheck.",
+  work: "Your money, your home, the markets, the shop, class and the paycheck.",
 };
 
 const EMPTY: Record<Desk, string> = {
@@ -858,7 +938,7 @@ function ActionRow({ action, file, onPress }: { action: ActionItem; file?: boole
   );
 }
 
-function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionItem[]; onPress: (action: ActionItem) => void }) {
+function PeopleStack({ game, actions, onPress, onTie }: { game: Game; actions: ActionItem[]; onPress: (action: ActionItem) => void; onTie: (id: string) => void }) {
   const buckets: { title: string; person?: Person; items: ActionItem[] }[] = [];
   for (const action of actions) {
     const last = buckets[buckets.length - 1];
@@ -867,13 +947,13 @@ function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionIt
     } else last.items.push(action);
   }
   if (!buckets.length) return <p className="mt-3 text-sm text-muted">Nobody in the circle yet.</p>;
-  const rank = (person?: Person) => (person?.arch ? 0 : person?.role === "partner" ? 1 : person?.role === "parent" ? 2 : person?.role === "hero" ? 3 : person?.role === "villain" ? 4 : 5);
+  const rank = (person?: Person) => (person?.arch ? 0 : person?.role === "partner" ? 1 : person?.role === "crush" ? 1.5 : person?.role === "parent" ? 2 : person?.role === "hero" ? 3 : person?.role === "villain" ? 4 : 5);
   buckets.sort((a, b) => rank(a.person) - rank(b.person));
   return (
     <div className="mt-3 flex flex-col gap-3">
       {buckets.map((bucket) => {
         const person = bucket.person;
-        const tone = person?.arch || person?.role === "villain" || person?.role === "rival" ? "#ff5a4f" : person?.role === "hero" ? "#e6b34d" : person?.role === "partner" || person?.role === "parent" ? "#3fe0c5" : "#7d879c";
+        const tone = person?.arch || person?.role === "villain" || person?.role === "rival" ? "#ff5a4f" : person?.role === "hero" ? "#e6b34d" : person?.role === "crush" ? "#ff7eb6" : person?.role === "partner" || person?.role === "parent" ? "#3fe0c5" : "#7d879c";
         return (
           <article key={bucket.title} className="card-glass relative overflow-hidden px-3 py-3" style={{ borderColor: `${tone}88` }}>
             <div className="pointer-events-none absolute inset-x-0 top-0 h-16 opacity-25" style={{ background: `linear-gradient(180deg, ${tone}, transparent)` }} />
@@ -884,8 +964,8 @@ function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionIt
               <div className="min-w-0 flex-1">
                 <p className="truncate font-extrabold text-fg">{bucket.title}</p>
                 <p className="truncate text-xs text-muted">
-                  {person?.arch ? "Arch-enemy" : person?.role ?? "Someone"}
-                  {person?.note ? ` · ${person.note}` : ""}
+                  {person?.arch ? "Arch-enemy" : DATING_ON && person?.role === "partner" ? `Partner · ${STAGE_LABEL[stageOf(game, person)]}` : DATING_ON && person?.role === "crush" ? "Crush" : person?.role ?? "Someone"}
+                  {person?.note && !(DATING_ON && person.role === "partner") ? ` · ${person.note}` : ""}
                 </p>
                 {person && (
                   <div className="mt-1.5 flex items-center gap-1.5">
@@ -898,6 +978,8 @@ function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionIt
                 )}
               </div>
             </div>
+            {person?.role === "partner" && keepsMask(game) && <MaskLine game={game} person={person} />}
+            {person && canTalkMoney(game, person) && <TieBlock game={game} person={person} onTie={onTie} />}
             <div className="relative mt-3 flex flex-col gap-2">
               {bucket.items.map((action) => (
                 <ActionRow key={action.id} action={action} onPress={() => onPress(action)} />
@@ -906,6 +988,94 @@ function PeopleStack({ game, actions, onPress }: { game: Game; actions: ActionIt
           </article>
         );
       })}
+    </div>
+  );
+}
+
+/** The mask at home (2026-11-11 pm): does your partner know you're a hero, and how much do they wonder? */
+function MaskLine({ game, person }: { game: Game; person: Person }) {
+  const who = firstName(person.name);
+  if (person.knowsSecret) return <p className="mt-2 text-[11px] font-bold text-good">Knows you're a hero. Your secret is safe with {who}.</p>;
+  if (game.maskScene?.personId === person.id) {
+    return (
+      <div className="mt-2 rounded-xl border border-gold/50 bg-gold/10 px-3 py-2 text-xs font-bold text-fg">
+        {who} found the suit. They're waiting for you to explain.
+      </div>
+    );
+  }
+  const worry = suspicionLabel(person);
+  return <p className={`mt-2 text-[11px] font-bold ${worry ? "text-bad" : "text-muted"}`}>{worry ? `${worry}.` : `Doesn't know you're a hero.`}</p>;
+}
+
+/** Ties (2026-11-10 late): personality, trust, history and the money between you, on the person's card. */
+function TieBlock({ game, person, onTie }: { game: Game; person: Person; onTie: (id: string) => void }) {
+  const [open, setOpen] = useState<null | "lend" | "borrow">(null);
+  const temper = temperOf(person);
+  const trust = trustOf(person);
+  const loan = openLoan(game, person.id);
+  const ask = game.tieAsk?.personId === person.id ? game.tieAsk : null;
+  const last = person.history?.[person.history.length - 1];
+  const block = borrowBlock(game, person);
+  const lend = lendAmounts(game);
+  const who = firstName(person.name);
+  return (
+    <div className="relative mt-2.5 flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+        <span className="chip !py-0.5 text-fg" title={temper.line}>{temper.label}<span className="font-semibold text-muted">· {temper.line}</span></span>
+        <span className={`chip !py-0.5 t-num ${trust < 40 ? "text-bad" : trust >= 70 ? "text-good" : "text-fg"}`}>Trust {Math.round(trust)}</span>
+      </div>
+      {last && <p className="truncate text-[11px] text-muted">Last: {last.line}, age {Math.floor(last.at / 12)}.</p>}
+      {ask && (
+        <div className="rounded-xl border border-gold/50 bg-gold/10 px-3 py-2">
+          <p className="text-xs font-bold text-fg">{who} asks to borrow {money(ask.amount)} for {ask.reason}.</p>
+          <div className="mt-1.5 flex gap-2">
+            <button type="button" onClick={() => onTie("tie|help|yes")} disabled={game.stats.money < ask.amount || !!loan} className="min-h-9 flex-1 rounded-lg bg-gold px-2 text-xs font-extrabold text-paper-ink disabled:opacity-40">Lend {money(ask.amount)}</button>
+            <button type="button" onClick={() => onTie("tie|help|no")} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg">Not this time</button>
+          </div>
+        </div>
+      )}
+      {loan ? (
+        <div className="rounded-xl bg-black/25 px-3 py-2">
+          <p className="text-xs font-bold text-fg">{loanLine(game, loan, person)}</p>
+          <div className="mt-1.5 flex gap-2">
+            {loan.dir === "lent" ? (
+              <>
+                <button type="button" onClick={() => onTie(`tie|chase|${loan.id}`)} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg">Ask for it back</button>
+                <button type="button" onClick={() => onTie(`tie|forgive|${loan.id}`)} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg">Let it go</button>
+              </>
+            ) : (
+              <button type="button" onClick={() => onTie(`tie|payoff|${loan.id}`)} disabled={game.stats.money < loan.left} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg disabled:opacity-40">Pay it all now ({money(loan.left)})</button>
+            )}
+          </div>
+        </div>
+      ) : ask ? null : (
+        <div className="flex gap-2">
+          <button type="button" aria-expanded={open === "lend"} onClick={() => setOpen(open === "lend" ? null : "lend")} disabled={!lend.length} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg disabled:opacity-40"><Banknote className="mr-1 inline size-3.5" aria-hidden />Lend money</button>
+          <button type="button" aria-expanded={open === "borrow"} onClick={() => setOpen(open === "borrow" ? null : "borrow")} className="min-h-9 flex-1 rounded-lg bg-black/30 px-2 text-xs font-bold text-fg">Ask to borrow</button>
+        </div>
+      )}
+      {!loan && open === "lend" && (
+        <div className="flex flex-col gap-1.5 rounded-xl bg-black/20 px-3 py-2">
+          <p className="text-[11px] text-muted">{who} would pay it back monthly. {temper.line}</p>
+          <div className="flex gap-2">
+            {lend.map((a) => (
+              <button key={a} type="button" onClick={() => { setOpen(null); onTie(`tie|lend|${person.id}|${a}`); }} className="min-h-9 flex-1 rounded-lg bg-gold/90 px-1 text-xs font-extrabold text-paper-ink">{money(a)}<span className="block text-[9px] font-bold opacity-75">{termFor(a)} months</span></button>
+            ))}
+          </div>
+        </div>
+      )}
+      {!loan && open === "borrow" && (
+        <div className="flex flex-col gap-1.5 rounded-xl bg-black/20 px-3 py-2">
+          {block ? <p className="text-[11px] font-bold text-bad">{block}</p> : <p className="text-[11px] text-muted">Paid back from your cash each month. Missing payments costs trust.</p>}
+          {!block && (
+            <div className="flex gap-2">
+              {borrowAmounts(person).map((a) => (
+                <button key={a} type="button" onClick={() => { setOpen(null); onTie(`tie|borrow|${person.id}|${a}`); }} className="min-h-9 flex-1 rounded-lg bg-black/40 px-1 text-xs font-extrabold text-fg">{money(a)}<span className="block text-[9px] font-bold opacity-75">{money(Math.ceil(a / termFor(a)))}/mo</span></button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

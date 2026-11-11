@@ -3,8 +3,8 @@
  * plus hand-drawn filled glyphs for the nine power families. Tiles wrap any icon in a lit badge.
  */
 import {
-  Banknote, BookOpen, Brain, Briefcase, Building2, Cpu, Crown, Eye, FileSearch, Flame, Gem, GraduationCap, Heart, HeartPulse,
-  Landmark, Megaphone, Shield, ShieldCheck, ShoppingBag, Smile, Sparkles, Star, Swords, Target, Users, Wrench, Zap, type LucideIcon,
+  Banknote, BookOpen, Brain, Briefcase, Building2, Cpu, Crown, Eye, FileSearch, Flame, Gem, GraduationCap, Heart, HeartCrack, HeartPulse,
+  Landmark, Megaphone, Shield, ShieldCheck, ShoppingBag, Smile, Sparkles, Star, Swords, Target, Users, VenetianMask, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import type { CapeFamily } from "@/game/theme";
@@ -23,7 +23,7 @@ export const FAMILY_COLOR: Record<CapeFamily, string> = {
 };
 
 /** Filled glyphs for power families. viewBox 0 0 24 24. */
-const FAMILY_PATH: Record<CapeFamily, string> = {
+export const FAMILY_PATH: Record<CapeFamily, string> = {
   fire: "M12 2c1 3.5 5 5.6 5 10.2A5 5 0 0 1 12 17a5 5 0 0 1-5-4.8c0-2 1-3.4 2.2-4.4-.1 1.6.6 2.8 1.8 3.2C10.4 8.4 11.2 5 12 2Zm0 10.5c.8 1.2 2 1.9 2 3.3a2 2 0 0 1-4 0c0-1 .7-1.8 2-3.3ZM5 20h14v2H5z",
   ice: "M11 2h2v4.2l2.6-1.5 1 1.7L13 8.6v2.7l2.3-1.3 3.6-2.1 1 1.7-3.6 2.1L18.6 13l-1 1.7-2.3-1.3-2.3 1.3V17.4l3.6 2.1-1 1.7L13 19.6V22h-2v-2.4l-2.6 1.6-1-1.7 3.6-2.1v-2.7l-2.3 1.3-2.3 1.3-1-1.7L7.7 13l-3.6-2.1 1-1.7 3.6 2.1L11 11.3V8.6L7.4 6.4l1-1.7L11 6.2Z",
   storm: "M13.5 2 5 13.5h5.2L8.8 22 19 9.8h-5.6L15.8 2Z",
@@ -90,7 +90,11 @@ export const CAT_COLOR: Record<MarketCat, string> = {
 
 /** Section/action glyphs keyed by loose words in an action's section or id. */
 export function actionIcon(id: string, section: string): LucideIcon {
-  const s = `${id} ${section}`.toLowerCase();
+  if (id.startsWith("love|split|")) return HeartCrack;
+  if (id.startsWith("mask|")) return VenetianMask;
+  if (id.startsWith("love|") || id === "propose") return Heart;
+  // A person's card is titled with their name: never pick an icon from it ("Marchetti" is not a story arc).
+  const s = (id.startsWith("time:") || id.startsWith("gift:") ? id : `${id} ${section}`).toLowerCase();
   if (/rest|doctor|health|clinic/.test(s)) return HeartPulse;
   if (/train|drill|gym|stunt/.test(s)) return Zap;
   if (/fight|brawl|duel|patrol|mission|arc|case/.test(s)) return Swords;

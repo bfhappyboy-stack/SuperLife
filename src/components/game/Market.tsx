@@ -3,7 +3,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CAT_COLOR, CAT_ICON, IconTile } from "@/components/game/icons";
 import { money } from "@/game/format";
 import { assetYear, CAT_META, CAT_ORDER, holdings, isBlackMarketOpen, itemById, marketOf, sellValue, shelfOf, type MarketCat, type MarketItem } from "@/game/market";
+import { ECON_FLAGS } from "@/game/economy";
 import type { Effects, Game } from "@/game/types";
+
+/** Homes to live in moved to Work ▸ Money; the Shop keeps bases and hideouts (owned ones still show). */
+const LIVING_HOMES = new Set(["studio", "brownstone", "rental", "penthouse"]);
 
 const EFFECT_LABEL: Partial<Record<keyof Effects, string>> = {
   health: "HP",
@@ -55,7 +59,11 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
     // Only on first paint: later taps are already in view.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const shelf = useMemo(() => shelfOf(game, cat), [game, cat]);
+  const shelf = useMemo(() => {
+    const rows = shelfOf(game, cat);
+    if (!ECON_FLAGS.hub || cat !== "property") return rows;
+    return rows.filter(({ item }) => !LIVING_HOMES.has(item.id) || marketOf(game).assets.some((a) => a.itemId === item.id));
+  }, [game, cat]);
   const held = holdings(game);
   const m = marketOf(game);
   const black = isBlackMarketOpen(game);
@@ -64,7 +72,7 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
     setFlash({ key: Date.now(), text: `−${money(price)}` });
   };
   return (
-    <section className="mt-3 flex flex-col gap-3" aria-label="Market">
+    <section className="mt-3 flex flex-col gap-3" aria-label="Shop">
       <div className="card overflow-hidden px-4 py-4">
         <div className="pointer-events-none absolute -top-16 -right-10 size-44 rounded-full opacity-40 blur-2xl" style={{ background: "radial-gradient(circle, var(--color-gold), transparent 70%)" }} />
         <div className="flex items-center gap-3">
@@ -110,12 +118,12 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
               className="seg flex items-center gap-1.5 !px-3"
             >
               <Icon className="size-4" style={on ? undefined : { color: CAT_COLOR[id] }} />
-              {CAT_META[id].short}
+              {ECON_FLAGS.hub && id === "property" ? "Bases" : CAT_META[id].short}
             </button>
           );
         })}
       </div>
-      <p className="text-sm text-muted">{CAT_META[cat].line}</p>
+      <p className="text-sm text-muted">{ECON_FLAGS.hub && cat === "property" ? "Bases, hideouts and HQs for the work. Homes to live in, rent or let out: Work ▸ Money." : CAT_META[cat].line}</p>
 
       <div key={cat} className="stagger flex flex-col gap-2">
         {shelf.length === 0 && <p className="card px-4 py-4 text-sm text-muted">Nothing on this shelf for you yet. Come back older, richer, or better connected.</p>}

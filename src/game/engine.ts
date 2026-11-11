@@ -1,5 +1,6 @@
 import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
-import { library, notePage } from "./library";
+import { bizFightEdge, ECON_FLAGS, econAct, econRelocate, economyMonth, ensureEconomy, homeEdge, livingOf, noteFight, spendBizEdge } from "./economy";
+import { AWAKEN_LESSONS, BRAID_LESSONS, HERO_AWAKEN_BOND, MENTOR_AWAKEN_BOND, SOLO_RATE, awakenBlock, braidBlock, library, notePage, notePower, pageBlock } from "./library";
 import {
   CITIES,
   FEMALE_NAMES,
@@ -27,22 +28,25 @@ import { pickEvent, type EventDef, type MiniTemplate } from "./events";
 import { clamp, firstName, money, whenLabel } from "./format";
 import { basePowers, type CatalogPower, getPower, legacyComboId, legacyFromCombo, mix, offerPower, possibleMixes, randomMissingBase, teachableBases } from "./combo";
 import { kinOrder, kinPool, legendFits } from "./kin";
-import { MIX_AGE, mentorBondGain, mentorBoost, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, mixOpen } from "./mentors";
+import { MIX_AGE, mentorAwaken, mentorBondGain, mentorBoost, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, mixOpen } from "./mentors";
 import { buffLine, costumeMods, ensureWardrobe, fitBlock, fitById, starterWardrobe } from "./costume";
 import { resolveLook } from "./look";
 import { ELEMENTS, elementOfLegacy, elementOfPower } from "./elements";
-import { isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
+import { edgeFamily, isSkillKind, pickMini, SKILL_KIND_IDS } from "./minis";
 import { BOND_DRIFT_FLOOR, bondStep, judgeTalk, mergeHeroes, seedHeroes, settleHeroLevel } from "./heroes";
 import { arcById, availableArcs, currentCase, type ArcStep } from "./arcs";
 import { pickPrompt, type PromptKey } from "./prompts";
 import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp, youthGain } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
+import { tieAct, tieMonth } from "./ties";
+import { hidingFrom, maskAct, maskMonth, oddsOfTell, tellBlock } from "./mask";
 import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainPhase3, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
 import { asDifficulty, BOSS_HP_MULT, DEFAULT_DIFFICULTY, DUEL_HP_SCALE, streetTwisted, tuneOf } from "./difficulty";
 import { kitFor } from "./kits";
+import { ASK_AT, ASK_COST, askChance, DATING_ON, FLIRTS, flirtChance, meetChance, MET_AT, MAX_CRUSHES, MOVE_IN_AT, oddsLabel, OFFICIAL_AT, PLACES, placeBlock, PROPOSE_AT, splitCost, type Spark, stageOf, tasteOf, WEDDINGS } from "./dating";
 import { battleMoves, equippedMoves, fillLoadout, grantMoveExp, moveById, MOVESET_SIZE, placeInSlot, slotKitArrival, STREET_MOVES, toggleLoadout } from "./moves";
 import { stageForCity } from "./battle";
 import {
@@ -701,6 +705,11 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
       : " Something offers you a gift. You turn it down. You were always going to do this the human way.";
   }
   if (special.kind === "combine") {
+    // A second gift is an awakening like any other (2026-11-10 eve).
+    if (d.powerId && awakenBlock(d)) {
+      const focus = focusId(d);
+      return ` The light reaches for you and finds no room yet. Powers don't come that easily. It sharpens the one you have.${focus ? grantMastery(d, focus, 12) : ""}`;
+    }
     return grantSecondGift(d, deltas);
   }
   if (special.kind === "grant") {
@@ -711,8 +720,16 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     if (!special.comboId) d.flags.lastGrantAge = d.age;
     const id = special.comboId ?? strayBase(d)?.id ?? null;
     const blocked = id && !(d.unlockedPowers ?? []).includes(id) ? library(d).block : null;
+    const rare = id && !(d.unlockedPowers ?? []).includes(id) ? pageBlock(d, id) : null;
     const name = unlockCombo(d, id);
-    if (!name) return blocked ? " The spark settles in your palm, then fades. Your book has no room for it yet." : " The spark fizzles. You already hold that page.";
+    if (!name) {
+      // Powers are rare (2026-11-10 eve): a brush with one deepens what you already hold instead.
+      const focus = focusId(d);
+      const drilled = focus ? grantMastery(d, focus, 10) : "";
+      const what = getPower(id)?.name ?? "a power";
+      if (id) discoverPower(d, id);
+      return blocked || rare ? ` You feel the edge of ${what} for one breath, then it's gone. Powers don't come that easily. It sharpens the one you have.${drilled}` : " The spark fizzles. You already hold that page.";
+    }
     const legacy = id ? legacyFromCombo(id) : null;
     if (!d.powerId && legacy) {
       d.powerId = legacy;
@@ -742,10 +759,16 @@ function applySpecial(d: Game, special: Special | undefined, deltas: Delta[]): s
     const before = hero.level;
     raiseBond(d, hero, special.bond);
     settleHeroLevel(hero);
-    const taught = special.teach ? unlockCombo(d, special.teach) : "";
-    const drilled = special.masteryId && special.masteryExp ? grantMastery(d, special.masteryId, special.masteryExp) : "";
+    let taught = "";
+    if (special.teach && !d.flags.powerLesson) {
+      const step = trainSession(d, special.teach, hero.alias, 1);
+      if (step.progressed) d.flags.powerLesson = 1;
+      taught = step.line;
+    }
+    const masteryId = special.masteryId && (d.unlockedPowers ?? []).includes(special.masteryId) ? special.masteryId : special.masteryId ? focusId(d) : undefined;
+    const drilled = masteryId && special.masteryExp ? grantMastery(d, masteryId, special.masteryExp) : "";
     const grew = hero.level > before ? ` ${hero.alias} hits level ${hero.level}. Slowly.` : "";
-    return `${taught ? ` They put ${taught} in your hands.` : ""}${drilled}${grew}`;
+    return `${taught}${drilled}${grew}`;
   }
   if (special.kind === "foundCrew") {
     return foundCrew(d, special.style);
@@ -1126,7 +1149,7 @@ function monthlyBody(d: Game, banners: string[]) {
 
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "omened" || key === "mentored" || key === "tutored" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (key === "rested" || key === "omened" || key === "mentored" || key === "tutored" || key === "powerLesson" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("flirt:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
   }
 }
 
@@ -1148,6 +1171,14 @@ function openYear(d: Game): string[] {
       }
     }
     if (person.role === "partner" && person.metAt < d.age) person.closeness = clamp(person.closeness - 1, 0, 100);
+    // A crush you leave alone cools off, and eventually moves on.
+    if (person.role === "crush" && person.metAt < d.age) {
+      person.closeness = clamp(person.closeness - 10, 0, 100);
+      if (person.closeness === 0) {
+        person.alive = false;
+        banners.push(`${firstName(person.name)} stops texting back. The moment passed.`);
+      }
+    }
   }
   const partner = d.relationships.find((r) => r.role === "partner" && r.alive);
   if (partner && partner.closeness >= 16 && partner.closeness < 24) {
@@ -1155,6 +1186,7 @@ function openYear(d: Game): string[] {
   }
   if (partner && partner.closeness < 16) {
     partner.role = "ex";
+    partner.stage = undefined;
     d.flags.married = 0;
     banners.push(`${firstName(partner.name)} ends it. You hear it in a text that took too long to draft.`);
   }
@@ -1175,21 +1207,24 @@ function openYear(d: Game): string[] {
       d.jobRank = 0;
       d.jobYears = 0;
     } else if (job) {
-      const mult = [1, 1.25, 1.55, 1.95, 2.45][d.jobRank] ?? 1;
-      pay += Math.round(job.pay * mult * (d.age < 18 ? 0.5 : 1));
-      if (job.id === "influencer") pay += Math.round(d.stats.fame * 420);
+      // With the living economy on, wages arrive monthly (economy.ts annualWage); the year only settles the rest.
+      if (!ECON_FLAGS.hub) {
+        const mult = [1, 1.25, 1.55, 1.95, 2.45][d.jobRank] ?? 1;
+        pay += Math.round(job.pay * mult * (d.age < 18 ? 0.5 : 1));
+        if (job.id === "influencer") pay += Math.round(d.stats.fame * 420);
+      }
       d.stats.happiness = clamp(d.stats.happiness + job.stress, 0, 100);
       // Through applyEffects so the soft ceiling on fame/rep applies to salaried fame too.
       applyEffects(d, { fame: job.fame || undefined, reputation: job.rep || undefined }, []);
       d.jobYears += 1;
     }
   }
-  if (d.leagueRank > 0 && !d.flags.villainContract) pay += STIPEND[d.leagueRank] ?? 0;
+  if (d.leagueRank > 0 && !d.flags.villainContract && !ECON_FLAGS.hub) pay += STIPEND[d.leagueRank] ?? 0;
   if (d.flags.villainContract) {
-    pay += 14000;
+    if (!ECON_FLAGS.hub) pay += 14000;
     d.stats.reputation = clamp(d.stats.reputation - 2, -100, 100);
   }
-  if (d.stats.fame > 45 && d.leagueRank >= 1) pay += Math.round(d.stats.fame * 150);
+  if (d.stats.fame > 45 && d.leagueRank >= 1 && !ECON_FLAGS.hub) pay += Math.round(d.stats.fame * 150);
 
   if (d.schoolId) {
     const school = schoolById(d.schoolId);
@@ -1302,21 +1337,22 @@ function strayBase(d: Game) {
   return pool.length ? pool[rollInt(d, pool.length)] ?? null : null;
 }
 
+/** A birthday awakening: rare, and only for a life that has earned it (2026-11-10 eve). */
+export const YEAR_POWER_CHANCE = 0.05;
+
 function offerYearPower(d: Game, banners: string[]): boolean {
-  if (d.age < 13 || d.hiddenGift) return false;
-  const owned = (d.unlockedPowers ?? []).length;
-  const chance = (d.age < 18 ? 0.34 : d.age < 30 ? 0.28 : 0.2) * (owned >= 10 ? 0.5 : 1);
-  if (roll(d) >= chance) return false;
+  if (d.age < 15 || d.hiddenGift || !d.powerId || awakenBlock(d)) return false;
+  if (roll(d) >= YEAR_POWER_CHANCE) return false;
   const kinRoll = roll(d);
-  const offer = offerPower(d.unlockedPowers ?? [], d.age, roll(d), (list) => kinPool(d.preset, list, kinRoll));
-  if (!offer) return false;
+  const offer = offerPower(d.unlockedPowers ?? [], 0, roll(d), (list) => kinPool(d.preset, list, kinRoll));
+  if (!offer || pageBlock(d, offer.id)) return false;
   discoverPower(d, offer.id);
   const rank = offer.tierName.toLowerCase();
   showChoice(
     d,
     {
       id: "year-power",
-      prompt: `You turn ${d.age}. A power you did not own yesterday is willing: ${offer.name}. It is ${rank}. Basics stay smaller than mixed powers. Take it, or let the year keep it.`,
+      prompt: `You turn ${d.age}. Something has been waking in you for years, and tonight it has a name: ${offer.name}. It is ${rank}. This happens to almost no one. Take it, or let it sleep.`,
       choices: [
         { id: "take", label: `Take ${offer.name}` },
         { id: "leave", label: "Let it pass" },
@@ -1328,7 +1364,7 @@ function offerYearPower(d: Game, banners: string[]): boolean {
           effects: { happiness: 2 },
         },
         leave: {
-          text: `You let ${offer.name} go. The name stays in the book. The year does not offer it twice.`,
+          text: `You let ${offer.name} sleep. The name stays in your book. It may never knock again.`,
           effects: { happiness: 1 },
         },
       },
@@ -1495,6 +1531,8 @@ export function createGame(input: NewLifeOpts): Game {
     d.omenLog = [];
   } else if (chosen) {
     for (const id of picks) unlockCombo(d, id, true);
+    // God Mode trios start with a fuller book; the room for later pages sits on top (2026-11-10 eve).
+    d.flags.startPages = picks.length;
   }
   if (chosen) {
     unlockCombo(d, chosen, true);
@@ -1508,6 +1546,7 @@ export function createGame(input: NewLifeOpts): Game {
     d.powerId = null;
     d.focusPower = null;
   }
+  if (ECON_FLAGS.hub) ensureEconomy(d);
   const born = d.sex === "female" ? "a girl" : "a boy";
   const faceLine = traitById(asFace(opts.face))?.blurb ?? "";
   const driveLine = traitById(asDrive(opts.drive))?.blurb ?? "";
@@ -1558,6 +1597,11 @@ const ROSTER_BEATS = [
   "retired for a week, then didn't",
   "sponsoring a cereal that hates them",
 ];
+/** Rival-cape ticker lines ("Kiln: benched after a quote.", "X leaves the board. Y takes the square."): flavour, not news about you. */
+export function isChatter(line: string): boolean {
+  return / leaves the board\. .+ takes the square\.$/.test(line) || ROSTER_BEATS.some((beat) => line.endsWith(`: ${beat}.`));
+}
+
 const MONTH_QUIET = [
   "The month stays ordinary. You almost file a complaint.",
   "Groceries, weather, a group chat. You live all of it.",
@@ -1652,6 +1696,7 @@ function makeDuel(
       foeMoves: signatureMoves(foe.name, pl) ?? movesFrom(foe.powerId, pl),
       personId: foe.personId,
       guard: suit.guard,
+      foeLevel: Math.round(pl * 100) / 100,
       foePower: foe.powerId,
       ...foeLook(d, foe),
       boss: foe.boss || undefined,
@@ -1958,16 +2003,49 @@ function tutorLesson(game: Game, d: Game, kind: string): Game {
   if (!state || !mentor || mixLock(d) || d.flags.tutored || noTime(d, true) || d.phase !== "live") return game;
   const boost = mentorBoost(state.bond);
   if (kind === "braid") {
+    // 2026-11-10 eve: a guided braid is a months-long project, not one evening.
     const pick = mentorBraid(d);
-    if (!pick || library(d).block) return game;
+    if (!pick || braidBlock(d, pick.left.id, pick.right.id, pick.result.id) || d.flags.powerLesson) return game;
     spend(d);
     d.flags.tutored = 1;
+    d.flags.powerLesson = 1;
     state.lessons += 1;
     state.bond = clamp(state.bond + mentorBondGain(state.bond), 0, 100);
-    const name = braidInto(d, pick.left.id, pick.result, ` ${mentor.name} talks you through it: ${pick.left.name} into ${pick.right.name}.`);
-    // A guided braid lands a little drilled: the mentor's head start.
-    const drilled = name ? grantMastery(d, pick.result.id, Math.round(10 * boost)) : "";
-    if (drilled && d.card) d.card = { ...d.card, body: `${d.card.body}${drilled}` };
+    const step = trainSession(d, pick.result.id, mentor.name, boost);
+    if (step.done) {
+      braidInto(d, pick.left.id, pick.result, ` ${mentor.name} talked you through every one of those lessons: ${pick.left.name} into ${pick.right.name}.`);
+      const drilled = grantMastery(d, pick.result.id, Math.round(10 * boost));
+      if (drilled && d.card) d.card = { ...d.card, body: `${d.card.body}${drilled}` };
+      return d;
+    }
+    const deltas: Delta[] = [];
+    applyEffects(d, { powerLevel: 0.02, smarts: 1 }, deltas);
+    setStory(d, `${mentor.name} has you hold ${pick.left.name} against ${pick.right.name} until your hands shake.${step.line}`, deltas, [`Braid lesson: ${pick.result.name}`]);
+    peaks(d);
+    return d;
+  }
+  if (kind === "awaken") {
+    // A new base power, woken slowly by someone who knows you (bond, a drilled power, years apart).
+    const target = mentorAwaken(d);
+    if (!target || state.bond < MENTOR_AWAKEN_BOND || awakenBlock(d, target.id) || d.flags.powerLesson) return game;
+    spend(d);
+    d.flags.tutored = 1;
+    d.flags.powerLesson = 1;
+    state.lessons += 1;
+    state.bond = clamp(state.bond + mentorBondGain(state.bond), 0, 100);
+    const step = trainSession(d, target.id, mentor.name, boost);
+    const deltas: Delta[] = [];
+    applyEffects(d, { powerLevel: step.done ? 0.05 : 0.02, happiness: step.done ? 3 : 0, health: -2 }, deltas);
+    setStory(
+      d,
+      step.done
+        ? `Months of ${mentor.name}'s strangest lessons, and tonight something answers.${step.line} It starts at rank D, like anything worth having.`
+        : `${mentor.name} pushes you somewhere your power has never been, looking for ${target.name}.${step.line}`,
+      deltas,
+      [step.done ? `Awakened: ${target.name}` : `Awakening: ${target.name}`],
+      step.done ? "major" : undefined,
+    );
+    peaks(d);
     return d;
   }
   if (kind === "drill") {
@@ -2012,6 +2090,46 @@ function tutorLesson(game: Game, d: Game, kind: string): Game {
   return game;
 }
 
+/**
+ * One session on a long power project (2026-11-10 eve): waking a base power or braiding two you hold.
+ * One power lesson a month; a base takes AWAKEN_LESSONS, a braid 6 (Gen 1) or 10 (Gen 2), solo braids at half pace.
+ * Switching target starts the new one from zero.
+ */
+export function trainSession(d: Game, targetId: string, by: string, rate: number): { line: string; done: string; progressed: boolean } {
+  const power = getPower(targetId);
+  if (!power || (d.unlockedPowers ?? []).includes(targetId)) return { line: "", done: "", progressed: false };
+  const [a, b] = power.ingredients;
+  const block = power.generation === 0 ? awakenBlock(d, targetId) : a && b ? braidBlock(d, a, b, targetId) : "That one can't be trained.";
+  if (block) return { line: ` ${block}`, done: "", progressed: false };
+  const need = power.generation === 0 ? AWAKEN_LESSONS : BRAID_LESSONS[power.generation === 1 ? 1 : 2];
+  const cur = d.training && d.training.id === targetId ? d.training : { id: targetId, kind: power.generation === 0 ? ("awaken" as const) : ("braid" as const), progress: 0, need, since: d.age };
+  cur.progress = Math.round((cur.progress + rate) * 100) / 100;
+  cur.need = need;
+  cur.by = by;
+  d.training = cur;
+  discoverPower(d, targetId);
+  // A braid lesson works both halves.
+  if (power.generation > 0) for (const id of power.ingredients) markUsed(d, id);
+  if (cur.progress < need) {
+    const left = Math.max(1, Math.ceil((need - cur.progress) / Math.max(0.01, rate)));
+    return { line: ` ${power.generation === 0 ? "Waking" : "Braiding"} ${power.name}: ${Math.floor(cur.progress)}/${need}. About ${left} more lesson${left === 1 ? "" : "s"}.`, done: "", progressed: true };
+  }
+  d.training = null;
+  const name = unlockCombo(d, targetId);
+  return { line: name ? ` ${name} wakes in you. ${power.generation === 0 ? "A new power, after all that work." : "The braid holds."}` : "", done: name, progressed: true };
+}
+
+/** Mastery each power you used this year gains on a birthday: powers ripen with use. */
+export const RIPEN_EXP = 7;
+
+/** Years between searches for a sparring partner. */
+export const SEEK_GAP = 3;
+/** Years until you can look for another powered trainer (0 = now). */
+export function seekWait(g: Pick<Game, "age" | "flags">): number {
+  const at = g.flags.seekAge;
+  return at === undefined ? 0 : Math.max(0, SEEK_GAP - (g.age - at));
+}
+
 function discoverPower(d: Game, id: string | null | undefined) {
   if (!id || !getPower(id)) return;
   if (!Array.isArray(d.discovered)) d.discovered = [];
@@ -2033,9 +2151,11 @@ function unlockCombo(d: Game, id: string | null | undefined, force = false): str
   if (!Array.isArray(d.unlockedPowers)) d.unlockedPowers = [];
   if (d.unlockedPowers.includes(id)) return "";
   if (!force) {
-    if (library(d).block) return "";
+    // 2026-11-10 eve: every non-story power passes the rarity rules (library.ts pageBlock).
+    if (pageBlock(d, id)) return "";
     notePage(d);
   }
+  notePower(d, power.generation);
   d.unlockedPowers.push(id);
   if (!d.mastery) d.mastery = {};
   if (d.mastery[id] == null) d.mastery[id] = 0;
@@ -2077,9 +2197,25 @@ export function focusId(d: Game): string {
   return legacyComboId(d.powerId) ?? d.unlockedPowers?.[0] ?? "";
 }
 
-function grantMastery(d: Game, powerId: string, raw: number): string {
+/** Note a power as used this year (fights, training, lessons): only used powers ripen on the next birthday. */
+export function markUsed(d: Game, powerId: string | undefined) {
+  if (!powerId || !(d.unlockedPowers ?? []).includes(powerId)) return;
+  const list = Array.isArray(d.usedPowers) ? d.usedPowers : [];
+  if (!list.includes(powerId)) list.push(powerId);
+  d.usedPowers = list;
+}
+
+/** Birthday ripening: a little mastery for each power you used this year, then a fresh year starts. */
+export function ripenUsed(d: Game) {
+  const used = Array.isArray(d.usedPowers) ? d.usedPowers : (d.unlockedPowers ?? []);
+  for (const id of used) if ((d.unlockedPowers ?? []).includes(id)) grantMastery(d, id, RIPEN_EXP, false);
+  d.usedPowers = [];
+}
+
+function grantMastery(d: Game, powerId: string, raw: number, use = true): string {
   const power = getPower(powerId);
   if (!power || !(d.unlockedPowers ?? []).includes(powerId) || raw <= 0) return "";
+  if (use) markUsed(d, powerId);
   if (!d.mastery) d.mastery = {};
   const beforeExp = d.mastery[powerId] ?? 0;
   const before = masteryLevel(beforeExp, power.generation);
@@ -2227,10 +2363,11 @@ function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): b
   }
   const heat = d.stats.fame;
   const knownCity = heat >= 4 || !!d.powerId || d.leagueRank > 0;
-  if (d.age >= 10 && knownCity && roll(d) < (forced ? 0.64 : (0.16 + heat / 380) * calm)) {
+  // Powered people are rare (2026-11-10 eve): a cape seeks you out about half as often as before.
+  if (d.age >= 10 && knownCity && roll(d) < (forced ? 0.64 : (0.08 + heat / 700) * calm)) {
     if (roll(d) < 0.48) {
       const known = d.relationships.filter((r) => r.role === "hero" && r.alive);
-      const person = known.length && (known.length >= 4 || roll(d) < 0.7) ? known[rollInt(d, known.length)]! : introduceCape(d, "hero");
+      const person = known.length && (known.length >= 2 || roll(d) < 0.85) ? known[rollInt(d, known.length)]! : introduceCape(d, "hero");
       showChoice(
         d,
         {
@@ -2239,13 +2376,13 @@ function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): b
           choices: [
             { id: "train", label: "Train together" },
             { id: "coffee", label: "Just coffee" },
-            { id: "lesson", label: "Ask for a power" },
+            { id: "lesson", label: "Ask them to drill you" },
             { id: "no", label: "Not today" },
           ],
           outcomes: {
             train: { text: `You and ${person.note} bruise the same hour. It helps.`, effects: { powerLevel: 0.12, happiness: 2, fame: 1, closeness: 8, personId: person.id, karma: 1 } },
             coffee: { text: `${person.note} drinks something awful and tells you who on the board is lying.`, effects: { happiness: 3, smarts: 1, closeness: 6, personId: person.id } },
-            lesson: { text: `${person.note} puts a spark in your hand and tells you not to name it until it behaves.`, special: { kind: "grant" }, effects: { closeness: 5, personId: person.id, powerLevel: 0.06 } },
+            lesson: { text: `You ask ${person.note} for a power. They laugh, then drill the one you have until it's less embarrassing. Powers aren't handed out.`, special: { kind: "mastery", powerId: focusId(d), exp: 8 }, effects: { closeness: 5, personId: person.id, powerLevel: 0.04, health: -2 } },
             no: { text: "You duck them. They put a polite question mark in your texts.", effects: { happiness: -1, closeness: -4, personId: person.id } },
           },
         },
@@ -2296,7 +2433,8 @@ function maybeEncounter(d: Game, banners: string[], forced = false, calm = 1): b
     return true;
   }
   // Legends get their gifts from canon, not from a stranger guarding a humming door.
-  if (d.powerId && !d.preset && d.age >= 12 && roll(d) < (forced ? 0.28 : (d.secondaryId ? 0.06 : 0.14) * calm)) {
+  // A relic that hands out a second gift: a rare story moment for a life that has earned one (2026-11-10 eve).
+  if (d.powerId && !d.preset && d.age >= 15 && !awakenBlock(d) && roll(d) < (forced ? 0.28 : (d.secondaryId ? 0.015 : 0.035) * calm)) {
     const site = RELIC_SITES[rollInt(d, RELIC_SITES.length)] ?? RELIC_SITES[0]!;
     const guard = makeCape(d, "rogue");
     showChoice(
@@ -2360,6 +2498,19 @@ function beltBirthday(d: Game, banners: string[]) {
   if (d.age === kit.ultimateAge) banners.push(`${kit.name}: your strongest ${kit.piece} is now your Ultimate at full Momentum.`);
 }
 
+/** The living economy's month: markets move, wages and bills settle, the home gives its perks. */
+function econTick(d: Game, banners: string[]) {
+  const out = economyMonth(d);
+  if (out.joy) applyEffects(d, { happiness: out.joy }, []);
+  if (out.hp) d.stats.health = clamp(d.stats.health + out.hp, 0, 100);
+  if (out.heat && (d.flags.heat ?? 0) > 0) {
+    const heat = Math.max(0, (d.flags.heat ?? 0) - out.heat);
+    if (heat > 0) d.flags.heat = heat;
+    else delete d.flags.heat;
+  }
+  banners.push(...out.banners);
+}
+
 export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
@@ -2368,6 +2519,7 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
   let banners: string[] = [];
   if (birthday) {
     banners = openYear(d);
+    econTick(d, banners);
     meetMentor(d, banners);
     beltBirthday(d, banners);
     if (turnChapter(d)) banners.push(`Chapter ${(d.chapters?.length ?? 1)} begins: ${d.chapters?.[d.chapters.length - 1]?.title ?? "a new decade"}.`);
@@ -2397,6 +2549,7 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
     d.majorsLeft = 3;
     clearMonthFlags(d);
     marketMonth(d);
+    econTick(d, banners);
     if (d.crew) {
       if ((d.crew.heat ?? 0) > 0) d.crew.heat = Math.max(0, (d.crew.heat ?? 0) - 3);
       if (d.crew.members.length) {
@@ -2411,6 +2564,8 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
     }
   }
   banners.push(...tickRoster(d));
+  if (d.phase === "live") tieMonth(d, banners);
+  if (d.phase === "live") maskMonth(d, banners);
   if (d.phase === "live") monthlyBody(d, banners);
   if (d.phase === "live" && d.stats.health <= 0) {
     collapse(d, "Your legs file a complaint and the floor accepts it.");
@@ -2424,6 +2579,8 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
     peaks(d);
     return d;
   }
+  // Powers you used this year deepen a little on your birthday (2026-11-10 eve; only used ones since 2026-11-11).
+  if (birthday && !giftsSealed(d)) ripenUsed(d);
   if (birthday && d.hiddenGift && !d.preset && d.age >= 3) banners.push(`Strange: ${noteOmen(d)}`);
   if (maybeEncounter(d, banners, false, opts.quiet ? SKIP_ENCOUNTER_CALM : 1)) {
     peaks(d);
@@ -2554,6 +2711,17 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   if (!spec) return game;
   d.minigame = null;
   const edge = marketEdge(d, spec.kind);
+  const homeBonus = homeEdge(d, edgeFamily(spec.kind));
+  if (homeBonus > 0) edge.bonus = Math.min(0.3, edge.bonus + homeBonus);
+  const villainFight = spec.kind === "duel" && spec.duel?.foeSide === "villain";
+  if (villainFight) {
+    const biz = bizFightEdge(d);
+    if (biz.bonus > 0) {
+      edge.bonus = Math.min(0.3, edge.bonus + biz.bonus);
+      edge.notes.push(...biz.notes);
+      spendBizEdge(d);
+    }
+  }
   const score = clamp(ratio + edge.bonus, 0, 1);
   const win = score >= 0.66;
   const partial = !win && score >= 0.33;
@@ -2583,8 +2751,15 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
     extra += ` You need a month to regroup before you face ${spec.duel.foeName} again.`;
   } else if (spec.kind === "duel" && spec.duel?.boss && win && d.regroup?.name === spec.duel.foeName) d.regroup = null;
   if (spec.kind === "duel") {
+    // The powers behind the moves you threw (or your whole six on an auto-resolve) count as used this year.
+    for (const id of used.length ? used : (d.loadout ?? [])) markUsed(d, moveById(id)?.powerId);
     const trained = grantMoveExp(d, used, win ? 8 : 5);
     if (trained.length) extra += ` ${trained.join(". ")}.`;
+  }
+  if (spec.kind === "duel" && spec.duel?.foeSide === "villain" && (win || !partial)) {
+    // The city's markets notice who won (once a month).
+    const moved = noteFight(d, win, spec.duel.foeName);
+    if (moved) extra += ` Markets: ${moved}`;
   }
   if (spec.tag === "tryout" && score >= 0.33) extra += joinLeague(d);
   if (spec.tag === "mission" && score >= 0.33) {
@@ -2627,7 +2802,8 @@ function relocate(d: Game, cityId: string): string {
   d.city = city.name;
   d.cityId = city.id;
   d.flags.moved = 1;
-  return "";
+  const left = econRelocate(d);
+  return left ? ` ${left}` : "";
 }
 
 /**
@@ -2741,6 +2917,9 @@ function fitAct(d: Game, id: string): Game {
   return d;
 }
 
+/** A heavy shift pays this share of the yearly wage (was 8%; with Life Flow running it every month it nearly doubled pay). */
+export const SHIFT_SHARE = 0.03;
+
 export function act(game: Game, id: string): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
@@ -2783,6 +2962,53 @@ export function act(game: Game, id: string): Game {
       return !!def && (d.unlockedPowers ?? []).includes(def.powerId);
     }).slice(0, 6);
     fillLoadout(d);
+    return d;
+  }
+  if (id.startsWith("tie|")) {
+    const res = tieAct(d, id);
+    if (res.ok) pushHistory(d, res.line);
+    d.stats.money = clamp(d.stats.money, -20000, 100_000_000);
+    d.card = { kicker: whenLabel(d.age, d.month), banner: [res.line], body: d.card.body, deltas: [] };
+    peaks(d);
+    return res.ok ? d : { ...d };
+  }
+  if (id.startsWith("mask|")) {
+    if (id.startsWith("mask|tell|") && noTime(d, true)) return game;
+    const res = maskAct(d, id);
+    if (!res.ok) {
+      d.card = { ...d.card, banner: [res.line] };
+      return { ...d };
+    }
+    if (res.spend) spend(d);
+    const deltas: Delta[] = [];
+    if (res.leaves) {
+      const p = d.relationships.find((r) => r.role === "partner" && r.alive);
+      if (p) {
+        const wed = stageOf(d, p) === "married";
+        p.role = "ex";
+        p.stage = undefined;
+        d.flags.married = 0;
+        applyEffects(d, { happiness: wed ? -10 : -6 }, deltas);
+        pushHistory(d, `${p.name} left after learning the truth.`, "major");
+      }
+    }
+    setStory(d, res.line, deltas, [], res.leaves ? "major" : undefined);
+    peaks(d);
+    return d;
+  }
+  if (id.startsWith("econ|")) {
+    const res = econAct(d, id, d.majorsLeft);
+    if (!res.ok) {
+      d.card = { ...d.card, banner: [res.line] };
+      return d;
+    }
+    if (res.spend) {
+      spend(d);
+      pushHistory(d, res.line);
+    }
+    d.stats.money = clamp(d.stats.money, -20000, 100_000_000);
+    d.card = { kicker: whenLabel(d.age, d.month), banner: [res.line], body: d.card.body, deltas: [] };
+    peaks(d);
     return d;
   }
   if (id.startsWith("buy|") || id.startsWith("sell|")) {
@@ -3199,7 +3425,7 @@ export function act(game: Game, id: string): Game {
     if (!job || d.flags.shifted || noTime(d, true)) return game;
     spend(d);
     d.flags.shifted = 1;
-    const bonus = Math.round(job.pay * 0.08 * ([1, 1.1, 1.2, 1.35, 1.5][d.jobRank] ?? 1));
+    const bonus = Math.round(job.pay * SHIFT_SHARE * ([1, 1.1, 1.2, 1.35, 1.5][d.jobRank] ?? 1));
     const deltas: Delta[] = [];
     applyEffects(d, { money: bonus, happiness: -1 }, deltas);
     setStory(d, `You work a heavy shift at ${job.name}. The money is immediate. So is the back.`, deltas, []);
@@ -3414,6 +3640,8 @@ export function act(game: Game, id: string): Game {
     return d;
   }
 
+  if (id.startsWith("love|")) return loveAct(game, d, id);
+
   if (id === "date") {
     if (d.age < 16 || noTime(d, true) || d.relationships.some((r) => r.role === "partner" && r.alive)) return game;
     spend(d);
@@ -3436,11 +3664,13 @@ export function act(game: Game, id: string): Game {
     const person = d.relationships.find((r) => r.role === "partner" && r.alive);
     const cost = 700;
     if (!person || person.closeness < 72 || d.flags.married || d.stats.money < cost || d.age < 18 || noTime(d, true)) return game;
+    if (DATING_ON && !["together", "living"].includes(stageOf(d, person))) return game;
     spend(d);
-    d.flags.married = 1;
+    if (DATING_ON) person.stage = "engaged";
+    else d.flags.married = 1;
     const deltas: Delta[] = [];
     applyEffects(d, { money: -cost, happiness: 10, fame: d.stats.fame > 25 ? 3 : 1, closeness: 12, personId: person.id }, deltas);
-    setStory(d, `You ask ${firstName(person.name)}. They say yes like they practiced being surprised. You believe them anyway.`, deltas, [], "major");
+    setStory(d, `You ask ${firstName(person.name)}. They say yes like they practiced being surprised. You believe them anyway.${DATING_ON ? " Engaged. The wedding is on their card when you're ready." : ""}`, deltas, [], "major");
     peaks(d);
     return d;
   }
@@ -3524,16 +3754,28 @@ export function act(game: Game, id: string): Game {
     if (!left || !right || noTime(d, true) || mixLock(d)) return game;
     const attempt = mix(left, right, d.unlockedPowers ?? []);
     if (!attempt.ok) return game;
-    if (!(d.unlockedPowers ?? []).includes(attempt.power.id) && library(d).block) return game;
+    // 2026-11-10 eve: braiding alone is a long project at half a mentor's pace, one power lesson a month.
+    if (braidBlock(d, left, right, attempt.power.id) || d.flags.powerLesson) return game;
     spend(d);
-    braidInto(d, left, attempt.power, "");
+    d.flags.powerLesson = 1;
+    const step = trainSession(d, attempt.power.id, "you", SOLO_RATE);
+    if (step.done) {
+      braidInto(d, left, attempt.power, " You worked it out alone, lesson after lesson.");
+      return d;
+    }
+    const deltas: Delta[] = [];
+    applyEffects(d, { powerLevel: 0.01, health: -1 }, deltas);
+    setStory(d, `You try to hold ${getPower(left)?.name ?? "one"} and ${getPower(right)?.name ?? "the other"} at once. They slip, then hold a little longer.${step.line}`, deltas, [`Braid practice`]);
+    peaks(d);
     return d;
   }
 
   if (id.startsWith("tutor|")) return tutorLesson(game, d, id.slice(6));
 
   if (id === "seek-hero") {
-    if (d.age < 10 || noTime(d, true)) return game;
+    // Powered people are rare and don't come when called: one search every few years (2026-11-10 eve).
+    if (d.age < 10 || noTime(d, true) || seekWait(d) > 0) return game;
+    d.flags.seekAge = d.age;
     const unlocked = d.unlockedPowers ?? [];
     const home = new Set(dossier(d.cityId).heroes);
     const unmet = (d.heroes ?? [])
@@ -3883,7 +4125,8 @@ export function act(game: Game, id: string): Game {
     const drill = trainExp({ level: focusLevel, generation: focusGen, age: d.age, withHero, story: false, bond: hero.relationship });
     const knownBraid = taught ? (d.discovered ?? []).includes(taught.result.id) : false;
     const choices = [{ id: "braid", label: taught ? (knownBraid ? `Braid ${taught.result.name}` : "Braid a pair they know") : "Drill what you have" }];
-    if (base) choices.push({ id: "learn", label: `Learn ${base.name}` });
+    const canWake = !!base && hero.relationship >= HERO_AWAKEN_BOND && !awakenBlock(d, base.id) && !d.flags.powerLesson;
+    if (base && canWake) choices.push({ id: "learn", label: `Work on waking ${base.name}` });
     choices.push({ id: "spar", label: "Hard spar" });
     const outcomes: Record<string, Outcome> = {
       braid: {
@@ -3913,9 +4156,9 @@ export function act(game: Game, id: string): Game {
         },
       },
     };
-    if (base) {
+    if (base && canWake) {
       outcomes.learn = {
-        text: `${hero.alias} spends the hour installing ${base.name} instead of a speech. It arrives at mastery 1, not mastered.`,
+        text: `${hero.alias} spends the hour looking for ${base.name} in you. Powers aren't installed; they're coaxed.`,
         effects: { happiness: 1, smarts: 1 },
         special: { kind: "heroProgress", heroId: hero.id, exp: 10, bond: 3, teach: base.id, masteryId: base.id, masteryExp: 8 },
       };
@@ -3936,17 +4179,24 @@ export function act(game: Game, id: string): Game {
     const [, heroId, powerId] = id.split("|");
     const hero = d.heroes.find((item) => item.id === heroId && item.met);
     const power = getPower(powerId);
-    if (!hero || !power || power.generation !== 0 || hero.relationship < 28 || d.hiddenGift || noTime(d, true)) return game;
+    if (!hero || !power || power.generation !== 0 || hero.relationship < HERO_AWAKEN_BOND || d.hiddenGift || noTime(d, true)) return game;
     if (!hero.unlocked.includes(power.id) || (d.unlockedPowers ?? []).includes(power.id)) return game;
-    if (library(d).block) return game;
+    if (awakenBlock(d, power.id) || d.flags.powerLesson) return game;
     spend(d);
-    const name = unlockCombo(d, power.id);
-    raiseBond(d, hero, 5);
-    hero.exp += 18;
+    d.flags.powerLesson = 1;
+    const step = trainSession(d, power.id, hero.alias, 1);
+    raiseBond(d, hero, 3);
+    hero.exp += 12;
     const before = hero.level;
     settleHeroLevel(hero);
     const grew = hero.level > before ? ` They hit level ${hero.level}.` : "";
-    setStory(d, `${hero.alias} teaches you ${name || power.name}. It is yours now, which means it can braid.${grew}`, [], [`Learned ${power.name}`], "major");
+    setStory(
+      d,
+      step.done ? `${hero.alias} has been at this with you for months.${step.line} It can braid now.${grew}` : `${hero.alias} shows you where ${power.name} lives in them, and waits to see if it answers in you.${step.line}${grew}`,
+      [],
+      [step.done ? `Awakened: ${power.name}` : `Lesson: ${power.name}`],
+      step.done ? "major" : undefined,
+    );
     peaks(d);
     return d;
   }
@@ -4421,7 +4671,7 @@ export function actionsFor(g: Game): ActionItem[] {
   if (g.age >= 10 && (g.heroes ?? []).some((hero) => !hero.met)) {
     const heroRoster = mergeHeroes(g.heroes);
     const unmet = heroRoster.filter((hero) => !hero.met).length;
-    items.push(item({ id: "seek-hero", group: power, section: "Trainers", label: "Look for a sparring partner", detail: unmet ? `${unmet} still out there. Each one teaches powers you can braid.` : "You already know the circuit.", disabled: noTime(g, true) ?? (unmet ? undefined : "No one left to find."), accent: unmet > 0 }));
+    items.push(item({ id: "seek-hero", group: power, section: "Trainers", label: "Look for a sparring partner", detail: unmet ? seekWait(g) ? `Powered people are rare. Try again in ${seekWait(g)} year${seekWait(g) === 1 ? "" : "s"}.` : `${unmet} still out there, and they don't go looking for students.` : "You already know the circuit.", disabled: noTime(g, true) ?? (unmet ? (seekWait(g) ? `Wait ${seekWait(g)} more year${seekWait(g) === 1 ? "" : "s"}.` : undefined) : "No one left to find."), accent: unmet > 0 && !seekWait(g) }));
   }
 
   if (g.schoolId) {
@@ -4479,6 +4729,11 @@ export function actionsFor(g: Game): ActionItem[] {
     items.push(item({ id: `time:${person.id}`, group: people, section, label: person.role === "rival" || person.arch ? "Trade insults and drills" : "Spend time", detail: `${person.arch ? "arch-enemy" : person.role}${person.note ? ` · ${person.note}` : ""} · closeness ${person.closeness}`, disabled: g.flags[`time:${person.id}`] ? "Already did, this month." : undefined }));
     const cost = 40 + g.age * 6;
     items.push(item({ id: `gift:${person.id}`, group: people, section, label: "Give a gift", detail: money(cost), disabled: g.flags[`gift:${person.id}`] ? "Already gifted." : g.stats.money < cost ? "Too broke." : undefined }));
+    if (DATING_ON && (person.role === "partner" || person.role === "crush")) {
+      items.splice(items.length - 2, 2);
+      items.push(...loveItems(g, person));
+      continue;
+    }
     if (person.role === "partner" && !g.flags.married && g.age >= 18) {
       items.push(item({ id: "propose", group: people, section, label: "Propose", detail: "Costs $700. Needs real closeness.", disabled: noTime(g, true) ?? (person.closeness < 72 ? "Not close enough yet." : g.stats.money < 700 ? "The ring fund disagrees." : undefined), accent: person.closeness >= 72 }));
     }
@@ -4490,7 +4745,8 @@ export function actionsFor(g: Game): ActionItem[] {
   if (g.age >= 6 && g.relationships.filter((r) => r.role === "friend" && r.alive).length < 5) {
     items.push(item({ id: "befriend", group: people, section: "New faces", label: "Make a friend", detail: "Someone has to laugh at your jokes.", disabled: noTime(g, true) }));
   }
-  if (g.age >= 16 && !g.relationships.some((r) => r.role === "partner" && r.alive)) {
+  if (DATING_ON) items.push(...meetItems(g));
+  else if (g.age >= 16 && !g.relationships.some((r) => r.role === "partner" && r.alive)) {
     items.push(item({ id: "date", group: people, section: "New faces", label: "Go on a date", detail: "Looks and nerve help.", disabled: noTime(g, true) }));
   }
   const partner = g.relationships.find((r) => r.role === "partner" && r.alive);
@@ -4500,6 +4756,170 @@ export function actionsFor(g: Game): ActionItem[] {
   }
 
   return items;
+}
+
+/** Dating rows on a crush's or partner's card: flirts and asking out, or the next step and a way out. */
+function loveItems(g: Game, p: Person): ActionItem[] {
+  const section = p.name;
+  const out: ActionItem[] = [];
+  const who = firstName(p.name);
+  if (p.role === "crush") {
+    const flirted = g.flags[`flirt:${p.id}`] ? "Already flirted this month." : undefined;
+    for (const f of FLIRTS) {
+      const c = flirtChance(g, p, f.id);
+      out.push(item({ id: `love|flirt|${p.id}|${f.id}`, group: "people", section, label: f.label, detail: `${oddsLabel(c)} · ${f.uses}`, disabled: flirted, accent: !flirted && c >= 0.65 }));
+    }
+    const ready = p.closeness >= ASK_AT;
+    out.push(item({ id: `love|ask|${p.id}`, group: "people", section, label: `Ask ${who} out`, detail: `Dinner, ${money(ASK_COST)} · ${ready ? oddsLabel(askChance(p)) : `needs ${ASK_AT} interest`}`, disabled: noTime(g, true) ?? (!ready ? `Not into you enough yet (${Math.round(p.closeness)}/${ASK_AT}).` : g.stats.money < ASK_COST ? "Too broke." : undefined), accent: ready }));
+    return out;
+  }
+  out.push(item({ id: `time:${p.id}`, group: "people", section, label: "Spend time", detail: `closeness ${p.closeness}`, disabled: g.flags[`time:${p.id}`] ? "Already did, this month." : undefined }));
+  const gift = 40 + g.age * 6;
+  out.push(item({ id: `gift:${p.id}`, group: "people", section, label: "Give a gift", detail: money(gift), disabled: g.flags[`gift:${p.id}`] ? "Already gifted." : g.stats.money < gift ? "Too broke." : undefined }));
+  const st = stageOf(g, p);
+  if (st === "dating") {
+    out.push(item({ id: `love|official|${p.id}`, group: "people", section, label: "Make it official", detail: `Needs closeness ${OFFICIAL_AT}.`, disabled: p.closeness < OFFICIAL_AT ? `Too soon (${p.closeness}/${OFFICIAL_AT}).` : undefined, accent: p.closeness >= OFFICIAL_AT }));
+  } else if (st === "together") {
+    const place = livingOf(g).kind;
+    out.push(item({ id: `love|movein|${p.id}`, group: "people", section, label: "Move in together", detail: `Splits the bills. Needs closeness ${MOVE_IN_AT} and your own place.`, disabled: noTime(g, true) ?? (g.age < 18 ? "18+." : place === "family" ? "Get your own place first (Work ▸ Money ▸ Home)." : p.closeness < MOVE_IN_AT ? `Not yet (${p.closeness}/${MOVE_IN_AT}).` : undefined), accent: p.closeness >= MOVE_IN_AT && place !== "family" }));
+  }
+  if ((st === "together" || st === "living") && g.age >= 18) {
+    out.push(item({ id: "propose", group: "people", section, label: "Propose", detail: `Ring $700. Needs closeness ${PROPOSE_AT}.`, disabled: noTime(g, true) ?? (p.closeness < PROPOSE_AT ? `Not close enough yet (${p.closeness}/${PROPOSE_AT}).` : g.stats.money < 700 ? "The ring fund disagrees." : undefined), accent: p.closeness >= PROPOSE_AT }));
+  }
+  if (st === "engaged") {
+    for (const [kind, w] of Object.entries(WEDDINGS)) {
+      out.push(item({ id: `love|wed|${p.id}|${kind}`, group: "people", section, label: w.label, detail: `${money(w.cost)}${w.fame ? " · the whole city hears" : " · just the people who matter"}`, disabled: noTime(g, true) ?? (g.stats.money < w.cost ? "Too broke." : undefined), accent: kind === "small" }));
+    }
+  }
+  if (hidingFrom(g)?.id === p.id) {
+    if (g.maskScene?.personId === p.id) {
+      out.push(item({ id: "mask|truth", group: "people", section, label: "Tell them the truth", detail: `${who} found the suit · ${oddsOfTell(p, true)}`, accent: true }));
+      out.push(item({ id: "mask|deny", group: "people", section, label: "Deny it", detail: "A costume party. Trust takes the hit." }));
+    } else {
+      out.push(item({ id: `mask|tell|${p.id}`, group: "people", section, label: `Tell ${who} you're a hero`, detail: `No more cover stories · ${oddsOfTell(p)}`, disabled: noTime(g, true) ?? tellBlock(g, p) }));
+    }
+  }
+  const cost = splitCost(g, p);
+  out.push(item({ id: `love|split|${p.id}`, group: "people", section, label: st === "married" ? "Divorce" : "Break up", detail: cost ? `Lawyers take ${money(cost)}.` : "It ends here.", disabled: undefined }));
+  return out;
+}
+
+/** People ▸ Meet: places to meet someone (one block of free time each). */
+function meetItems(g: Game): ActionItem[] {
+  if (g.age < 16) return [];
+  const partner = g.relationships.some((r) => r.role === "partner" && r.alive);
+  if (partner) return [];
+  const crushes = g.relationships.filter((r) => r.role === "crush" && r.alive).length;
+  return PLACES.map((pl) =>
+    item({ id: `love|meet|${pl.id}`, group: "people", section: "New faces", label: pl.label, detail: `${pl.detail}${pl.cost ? ` ${money(pl.cost)}.` : ""}`, disabled: noTime(g, true) ?? (crushes >= MAX_CRUSHES ? "Two crushes is plenty. Flirt with one in your Circle." : placeBlock(g, pl)) }),
+  );
+}
+
+/** Flavour for flirts, by style and outcome. */
+const FLIRT_LINES: Record<Spark, { hit: string; miss: string }> = {
+  wit: { hit: "You land the joke. {n} laughs the real laugh, the one with a snort in it.", miss: "The joke needs explaining. You explain it. {n} checks their phone." },
+  bold: { hit: "You say exactly what you mean. {n} holds your eyes a second longer than they need to.", miss: "Too much, too fast. {n} takes a polite step back and keeps it there." },
+  sweet: { hit: "You remember the small thing {n} said last time. They notice that you noticed.", miss: "It comes out sappier than it sounded in your head. {n} gives you a kind, careful smile." },
+};
+
+function loveAct(game: Game, d: Game, id: string): Game {
+  if (!DATING_ON) return game;
+  const [, verb, a, b] = id.split("|");
+  const deltas: Delta[] = [];
+  const done = (line: string, major = false) => {
+    setStory(d, line, deltas, [], major ? "major" : undefined);
+    peaks(d);
+    return d;
+  };
+  if (verb === "meet") {
+    const place = PLACES.find((pl) => pl.id === a);
+    const blocked = !place || meetItems(game).find((row) => row.id === id)?.disabled;
+    if (!place || blocked !== undefined) return game;
+    spend(d);
+    if (place.cost) applyEffects(d, { money: -place.cost }, deltas);
+    if (roll(d) < meetChance(d, place)) {
+      const p = addPerson(d, { role: "crush", closeness: 18 + rollInt(d, 14), age: Math.max(18, d.age + rollInt(d, 9) - 4), note: MET_AT[place.id] });
+      return done(`${place.label}: you meet ${p.name}. Something sparks. They're in your Circle now: flirt, and see what they like.`);
+    }
+    applyEffects(d, { happiness: -1 }, deltas);
+    return done(place.id === "online" ? "Forty swipes, two matches, zero replies. The app suggests a premium plan." : "Nobody catches your eye, or nobody catches it back. Next time.");
+  }
+  const p = d.relationships.find((r) => r.id === a && r.alive);
+  if (!p) return game;
+  const who = firstName(p.name);
+  if (verb === "flirt" && p.role === "crush") {
+    const style = FLIRTS.find((f) => f.id === b)?.id;
+    if (!style || d.flags[`flirt:${p.id}`]) return game;
+    d.flags[`flirt:${p.id}`] = 1;
+    const fit = tasteOf(p) === style;
+    if (roll(d) < flirtChance(d, p, style)) {
+      p.closeness = clamp(p.closeness + 14 + (fit ? 8 : 0) + rollInt(d, 5), 0, 100);
+      applyEffects(d, { happiness: 2 }, deltas);
+      return done(`${FLIRT_LINES[style].hit.replace(/\{n\}/g, who)}${fit ? ` That's clearly ${who}'s thing.` : ""} Interest ${p.closeness}.`);
+    }
+    p.closeness = clamp(p.closeness - 12 - rollInt(d, 6), 0, 100);
+    applyEffects(d, { happiness: -2 }, deltas);
+    if (p.closeness <= 0) {
+      p.alive = false;
+      return done(`${FLIRT_LINES[style].miss.replace(/\{n\}/g, who)} That was the last straw: ${who} stops answering.`);
+    }
+    return done(`${FLIRT_LINES[style].miss.replace(/\{n\}/g, who)} Interest ${p.closeness}.`);
+  }
+  if (verb === "ask" && p.role === "crush") {
+    if (p.closeness < ASK_AT || noTime(d, true) || d.stats.money < ASK_COST || d.relationships.some((r) => r.role === "partner" && r.alive)) return game;
+    spend(d);
+    applyEffects(d, { money: -ASK_COST }, deltas);
+    if (roll(d) < askChance(p)) {
+      p.role = "partner";
+      p.stage = "dating";
+      p.closeness = Math.max(45, p.closeness);
+      p.note = undefined;
+      // Any other crush fades out of the picture.
+      for (const other of d.relationships) if (other.role === "crush" && other.alive) other.alive = false;
+      applyEffects(d, { happiness: 6 }, deltas);
+      pushHistory(d, `Started dating ${p.name}.`, "major");
+      return done(`Dinner with ${who} runs until they stack the chairs. You're dating ${who} now.`, true);
+    }
+    p.closeness = clamp(p.closeness - 15, 0, 100);
+    applyEffects(d, { happiness: -3 }, deltas);
+    return done(`${who} says they're "not looking for anything right now." Interest ${p.closeness}. Maybe later.`);
+  }
+  if (p.role !== "partner") return game;
+  const st = stageOf(d, p);
+  if (verb === "official") {
+    if (st !== "dating" || p.closeness < OFFICIAL_AT) return game;
+    p.stage = "together";
+    applyEffects(d, { happiness: 4, closeness: 4, personId: p.id }, deltas);
+    return done(`You ask ${who} what this is. "Us," they say. It's official.`);
+  }
+  if (verb === "movein") {
+    if (st !== "together" || p.closeness < MOVE_IN_AT || d.age < 18 || noTime(d, true) || livingOf(d).kind === "family") return game;
+    spend(d);
+    p.stage = "living";
+    applyEffects(d, { happiness: 5, closeness: 4, personId: p.id }, deltas);
+    pushHistory(d, `Moved in with ${p.name}.`, "major");
+    return done(`${who} moves in with four boxes and one enormous plant. The bills split. The closet doesn't.`, true);
+  }
+  if (verb === "wed") {
+    const w = b === "big" ? WEDDINGS.big : b === "small" ? WEDDINGS.small : null;
+    if (!w || st !== "engaged" || noTime(d, true) || d.stats.money < w.cost) return game;
+    spend(d);
+    p.stage = "married";
+    d.flags.married = 1;
+    applyEffects(d, { money: -w.cost, happiness: w.happiness, fame: w.fame || undefined, closeness: w.closeness, personId: p.id }, deltas);
+    pushHistory(d, `Married ${p.name}.`, "major");
+    return done(b === "big" ? `A big wedding. ${who} cries at the vows, you cry at the bill, everyone dances.` : `A small wedding: a courthouse, a few people who matter, cake on paper plates. Perfect.`, true);
+  }
+  if (verb === "split") {
+    const cost = splitCost(d, p);
+    p.role = "ex";
+    p.stage = undefined;
+    d.flags.married = 0;
+    applyEffects(d, { money: cost ? -cost : undefined, happiness: st === "married" ? -10 : -6 }, deltas);
+    pushHistory(d, `${st === "married" ? "Divorced" : "Broke up with"} ${p.name}.`, "major");
+    return done(st === "married" ? `The divorce is quiet and expensive. ${who} keeps the plant.` : `You end it with ${who}. It's the right call, and it still sits in your chest for a week.`, true);
+  }
+  return game;
 }
 
 export function heirFrom(g: Game): NewLifeOpts | null {

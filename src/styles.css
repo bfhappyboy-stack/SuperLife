@@ -479,6 +479,9 @@
 @keyframes fm-float { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-44px) scale(1.2); } }
 .fm-pop { animation: fm-float 600ms var(--ease-snappy, ease-out) forwards; }
 .anim-float { animation: float-y 3.2s ease-in-out infinite; }
+.life-rays { animation: rays 60s linear infinite; }
+/* Tiny square avatars frame the hero's head and emblem rather than the whole poster. */
+.life-head { transform: scale(2.1); transform-origin: 50% 24%; }
 .anim-glow { animation: glow-pulse 2.6s ease-in-out infinite; }
 .scene-arena {
   background:
@@ -549,7 +552,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .goal-pulse, .sealed-aura, .sealed-orb { animation: none !important; }
-  .anim-rise, .anim-pop, .anim-float, .anim-glow, .anim-drift, .anim-fade, .anim-shake, .anim-burst, .anim-float-up, .spark, .stagger > *, .shine-once::after, .stat-fill,
+  .life-rays, .anim-rise, .anim-pop, .anim-float, .anim-glow, .anim-drift, .anim-fade, .anim-shake, .anim-burst, .anim-float-up, .spark, .stagger > *, .shine-once::after, .stat-fill,
   .hp-flash,
   .fight-kick,
   .stamp-in,
@@ -678,3 +681,11 @@
 @keyframes battle-word { 0% { opacity: 0; transform: scale(2.2) rotate(-8deg); } 30% { opacity: 1; transform: scale(.94) rotate(-5deg); } 80% { opacity: 1; transform: scale(1) rotate(-5deg); } 100% { opacity: 0; transform: scale(1.06) rotate(-5deg); } }
 .battle-word { animation: battle-word 900ms cubic-bezier(.2,.9,.3,1.2) both; }
 @media (prefers-reduced-motion: reduce) { .battle-slash, .battle-word { animation-duration: 1ms !important; } }
+
+/* ---------- Money hub: live news ticker ---------- */
+.ticker-mask { mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent); }
+.ticker-run { animation: ticker 38s linear infinite; will-change: transform; }
+@keyframes ticker { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .ticker-run { animation: none; }
+}
