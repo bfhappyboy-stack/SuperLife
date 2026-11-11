@@ -6,6 +6,8 @@ import { Figure, type Pose } from "@/components/game/Figure";
 import { kitFor } from "@/components/game/duelKit";
 import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
+import { Standee, familyOfPower, mysteryArtKey } from "@/components/game/heroArt";
+import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
 import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
@@ -25,6 +27,8 @@ export interface DuelHero {
   aura?: string;
   /** A God Mode legend: drawn as their painted card instead of the paper doll. */
   legend?: { art: string; color: string; name: string };
+  /** Power family of a Mystery hero: picks their painted card (heroArt.tsx). */
+  family?: CapeFamily | null;
 }
 
 const HEX: Record<MoveStyle, string> = { strike: "#ff5a4f", guard: "#3fe0c5", trick: "#ffcf4d" };
@@ -106,7 +110,11 @@ const GIMMICK_COLOR: Record<GimmickKind, string> = {
 
 export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
   const legendArt = useArt(hero?.legend?.art ?? "");
+  const mysteryArt = useArt(hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24));
   const board = spec.duel;
+  // Hero-side NPC fighters (sparring partners, rival capes) wear a painted Mystery card too.
+  const foeHeroSeed = board ? (board.foeSeed ?? hashName(board.foeName)) : 0;
+  const foeHeroArt = useArt(board?.foeSide === "hero" ? mysteryArtKey(familyOfPower(board.foePower), board.foeSex ?? (foeHeroSeed % 2 ? "female" : "male")) : "");
   const [state, setState] = useState<DuelState | null>(() => (board ? startDuel(board) : null));
   const [shownHp, setShownHp] = useState(() => ({ me: board?.playerHp ?? 1, foe: board?.foeHp ?? 1 }));
   const [log, setLog] = useState(board?.gimmick ? `${board.gimmick.name}: ${board.gimmick.hint}` : "Read their tell, then answer it. Winning hits leave a status.");
@@ -326,16 +334,9 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   }
 
   const heroFigure = hero?.legend && legendArt ? (
-    <div className="flex h-full w-full items-end justify-center" role="img" aria-label={hero.legend.name}>
-      <div
-        className={`duel-standee relative aspect-[3/4.4] h-[98%] w-auto max-w-none shrink-0 overflow-hidden rounded-2xl border-2 ${mePose === "hit" ? "duel-standee-hit" : ""} ${mePose === "attack" ? "duel-standee-attack" : ""} ${mePose === "ko" ? "grayscale" : ""}`}
-        style={{ borderColor: hero.legend.color, boxShadow: `0 10px 28px -10px ${heroAura}, inset 0 0 0 1px rgb(255 255 255 / 0.12)` }}
-      >
-        <img src={legendArt} alt="" className="size-full object-cover object-top" draggable={false} />
-        {mePose === "guard" && <span className="absolute inset-0 rounded-2xl border-4 border-[#4dd8ff]/70 shadow-[inset_0_0_24px_#4dd8ff88]" aria-hidden />}
-        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-1.5 pt-5 pb-1 text-center text-[10px] leading-tight font-black tracking-wide text-fg uppercase">{hero.legend.name}</span>
-      </div>
-    </div>
+    <Standee src={legendArt} name={hero.legend.name} color={hero.legend.color} glow={heroAura} pose={mePose} />
+  ) : mysteryArt ? (
+    <Standee src={mysteryArt} name="You" color={heroAura} glow={heroAura} pose={mePose} />
   ) : (
     <Figure
       seed={hero?.seed ?? 11}
@@ -352,16 +353,11 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   // Illustrated rogues stand in the ring as their card (a "standee"), not the generic paper doll.
   // The Fighter wrapper mirrors the foe side, so the card flips back to face the right way.
   const foeFigure = rogueArt ? (
-    <div className="flex h-full w-full items-end justify-center" style={{ transform: "scaleX(-1)" }} role="img" aria-label={fight.foeName}>
-      <div
-        className={`duel-standee relative aspect-[3/4.4] h-[98%] w-auto max-w-none shrink-0 overflow-hidden rounded-2xl border-2 ${foePose === "hit" ? "duel-standee-hit" : ""} ${foePose === "attack" ? "duel-standee-attack" : ""} ${foePose === "ko" ? "grayscale" : ""}`}
-        style={{ borderColor: rogueArt.color === "#2b2d3a" || rogueArt.color === "#1f3a2a" || rogueArt.color === "#2a2a3a" ? "#d4382f" : rogueArt.color, boxShadow: `0 10px 28px -10px ${foeColor}, inset 0 0 0 1px rgb(255 255 255 / 0.12)` }}
-      >
-        <VillainArt id={rogueArt.id} color={rogueArt.color} crop="tall" />
-        {foePose === "guard" && <span className="absolute inset-0 rounded-2xl border-4 border-[#4dd8ff]/70 shadow-[inset_0_0_24px_#4dd8ff88]" aria-hidden />}
-        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-1.5 pt-5 pb-1 text-center text-[10px] leading-tight font-black tracking-wide text-fg uppercase">{fight.foeName}</span>
-      </div>
-    </div>
+    <Standee name={fight.foeName} color={rogueArt.color === "#2b2d3a" || rogueArt.color === "#1f3a2a" || rogueArt.color === "#2a2a3a" ? "#d4382f" : rogueArt.color} glow={foeColor} pose={foePose} flip>
+      <VillainArt id={rogueArt.id} color={rogueArt.color} crop="tall" />
+    </Standee>
+  ) : foeHeroArt ? (
+    <Standee src={foeHeroArt} name={fight.foeName} color={foeColor} glow={foeColor} pose={foePose} flip />
   ) : (
     <Figure seed={foeSeed} age={34} sex={fight.foeSex} tint={kit} aura={foeColor} bare pose={foePose} mood={fight.foeSide === "villain" ? 30 : 70} label={fight.foeName} />
   );
