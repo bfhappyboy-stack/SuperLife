@@ -313,15 +313,15 @@ export function autoFightsOn(g: Pick<Game, "autoFights" | "autoFightsSet">): boo
 }
 
 /**
- * A street fight Play can settle, only with Auto fights on: an outclassed foe ("sure") or one you're about even
- * with ("auto"). Bosses and tougher foes always stop. With Auto fights off every fight stops for you.
+ * A street fight Play can settle. An outclassed foe ("sure": a clean win) always settles quietly into the recap,
+ * Auto fights on or off (owner's call, 2026-11-11: easy wins never stop Play). A foe you're about even with
+ * ("auto") settles only with Auto fights on. Bosses and tougher foes always stop.
  */
-function routineFight(g: Game, mini: Game["minigame"]): "sure" | "auto" | null {
-  if (!autoFightsOn(g)) return null;
+export function routineFight(g: Game, mini: Game["minigame"]): "sure" | "auto" | null {
   if (!mini || mini.kind !== "duel" || mini.tag !== "duel" || !mini.duel || mini.duel.boss) return null;
   const gap = g.stats.powerLevel - (mini.duel.foeLevel ?? 99);
   if (gap >= OUTCLASS_GAP) return "sure";
-  return gap >= -0.5 ? "auto" : null;
+  return autoFightsOn(g) && gap >= -0.5 ? "auto" : null;
 }
 
 /** The score Auto-resolve settles a fight at: a little under your usual, but a foe you outclass is a clean win. */
@@ -371,7 +371,8 @@ export function settleAdult(g: Game): { g: Game; line: string; fight?: boolean }
     const n = resolveMini(fought, ratio);
     if (n.phase !== "live") return null;
     const res = ratio >= 0.66 ? "won" : ratio >= 0.33 ? "a draw" : "lost";
-    return { g: n, line: `Street fight: ${fought.minigame!.duel!.foeName} (${res})`, fight: true };
+    const easy = how === "sure" ? ", an easy win" : "";
+    return { g: n, line: `Street fight: ${fought.minigame!.duel!.foeName} (${res}${easy})`, fight: true };
   }
   const chatter = /^hero-/.test(id) || id === "arch-billboard";
   if (!chatter && /arch|enc|villain|hero/.test(id)) return null;

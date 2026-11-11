@@ -327,7 +327,7 @@ function PacePicker({ game, onPick }: { game: Game; onPick: (pace: Pace) => void
               Auto fights
               <span className={`rounded-full px-1.5 py-px text-[10px] font-extrabold ${autoFights ? "bg-good text-paper-ink" : "bg-white/15 text-fg"}`}>{autoFights ? "ON" : "OFF"}</span>
             </span>
-            <span className="block text-[11px] text-muted">{autoFights ? "Play settles street fights you're even with or better and lists them in the recap. Bosses, your arch-enemy and tougher foes still stop." : "Play stops for every fight. You pick Fight it out or Auto-resolve. Small everyday moments still go in the recap."}</span>
+            <span className="block text-[11px] text-muted">{autoFights ? "Play settles street fights you're even with or better and lists them in the recap. Bosses, your arch-enemy and tougher foes still stop." : "Play stops for real fights. You pick Fight it out or Auto-resolve. Easy wins and small everyday moments still go in the recap."}</span>
           </span>
           <span className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${autoFights ? "bg-good" : "bg-white/15"}`} aria-hidden>
             <span className={`absolute top-0.5 size-5 rounded-full bg-white transition-all ${autoFights ? "left-[18px]" : "left-0.5"}`} />

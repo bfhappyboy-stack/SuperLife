@@ -1,4 +1,5 @@
 import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, Play, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
+import { DATING_ON, STAGE_LABEL, stageOf } from "@/game/dating";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
 import { actMatches, type GoalRoute } from "@/game/chapters";
@@ -945,13 +946,13 @@ function PeopleStack({ game, actions, onPress, onTie }: { game: Game; actions: A
     } else last.items.push(action);
   }
   if (!buckets.length) return <p className="mt-3 text-sm text-muted">Nobody in the circle yet.</p>;
-  const rank = (person?: Person) => (person?.arch ? 0 : person?.role === "partner" ? 1 : person?.role === "parent" ? 2 : person?.role === "hero" ? 3 : person?.role === "villain" ? 4 : 5);
+  const rank = (person?: Person) => (person?.arch ? 0 : person?.role === "partner" ? 1 : person?.role === "crush" ? 1.5 : person?.role === "parent" ? 2 : person?.role === "hero" ? 3 : person?.role === "villain" ? 4 : 5);
   buckets.sort((a, b) => rank(a.person) - rank(b.person));
   return (
     <div className="mt-3 flex flex-col gap-3">
       {buckets.map((bucket) => {
         const person = bucket.person;
-        const tone = person?.arch || person?.role === "villain" || person?.role === "rival" ? "#ff5a4f" : person?.role === "hero" ? "#e6b34d" : person?.role === "partner" || person?.role === "parent" ? "#3fe0c5" : "#7d879c";
+        const tone = person?.arch || person?.role === "villain" || person?.role === "rival" ? "#ff5a4f" : person?.role === "hero" ? "#e6b34d" : person?.role === "crush" ? "#ff7eb6" : person?.role === "partner" || person?.role === "parent" ? "#3fe0c5" : "#7d879c";
         return (
           <article key={bucket.title} className="card-glass relative overflow-hidden px-3 py-3" style={{ borderColor: `${tone}88` }}>
             <div className="pointer-events-none absolute inset-x-0 top-0 h-16 opacity-25" style={{ background: `linear-gradient(180deg, ${tone}, transparent)` }} />
@@ -962,8 +963,8 @@ function PeopleStack({ game, actions, onPress, onTie }: { game: Game; actions: A
               <div className="min-w-0 flex-1">
                 <p className="truncate font-extrabold text-fg">{bucket.title}</p>
                 <p className="truncate text-xs text-muted">
-                  {person?.arch ? "Arch-enemy" : person?.role ?? "Someone"}
-                  {person?.note ? ` · ${person.note}` : ""}
+                  {person?.arch ? "Arch-enemy" : DATING_ON && person?.role === "partner" ? `Partner · ${STAGE_LABEL[stageOf(game, person)]}` : DATING_ON && person?.role === "crush" ? "Crush" : person?.role ?? "Someone"}
+                  {person?.note && !(DATING_ON && person.role === "partner") ? ` · ${person.note}` : ""}
                 </p>
                 {person && (
                   <div className="mt-1.5 flex items-center gap-1.5">
