@@ -4,7 +4,7 @@
  */
 import {
   Banknote, BookOpen, Brain, Briefcase, Building2, Cpu, Crown, Eye, FileSearch, Flame, Gem, GraduationCap, Heart, HeartCrack, HeartPulse,
-  Landmark, Megaphone, Shield, ShieldCheck, ShoppingBag, Smile, Sparkles, Star, Swords, Target, Users, Wrench, Zap, type LucideIcon,
+  Landmark, Megaphone, Shield, ShieldCheck, ShoppingBag, Smile, Sparkles, Star, Swords, Target, Users, VenetianMask, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import type { CapeFamily } from "@/game/theme";
@@ -91,6 +91,7 @@ export const CAT_COLOR: Record<MarketCat, string> = {
 /** Section/action glyphs keyed by loose words in an action's section or id. */
 export function actionIcon(id: string, section: string): LucideIcon {
   if (id.startsWith("love|split|")) return HeartCrack;
+  if (id.startsWith("mask|")) return VenetianMask;
   if (id.startsWith("love|") || id === "propose") return Heart;
   // A person's card is titled with their name: never pick an icon from it ("Marchetti" is not a story arc).
   const s = (id.startsWith("time:") || id.startsWith("gift:") ? id : `${id} ${section}`).toLowerCase();

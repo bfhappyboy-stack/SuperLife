@@ -360,6 +360,14 @@ export interface Person {
   history?: { at: number; line: string }[];
   /** Dating: a partner's stage (missing on older saves: Married if wed, else Dating). */
   stage?: LoveStage;
+  /** The mask at home (mask.ts): this partner knows you're a hero. */
+  knowsSecret?: boolean;
+  /** The mask at home: 0-100, how much they wonder about the late nights (missing = 0). */
+  suspicion?: number;
+  /** The mask at home: when you last told them and they needed space (months, age×12+month). */
+  toldAt?: number;
+  /** The mask at home: when they last found the suit (months). */
+  foundAt?: number;
 }
 
 /** Money between you and someone in your life (ties.ts). */
@@ -458,6 +466,8 @@ export interface Game {
   loans?: Loan[];
   /** Ties: someone asking you for help right now. */
   tieAsk?: TieAsk | null;
+  /** The mask at home: a partner found the suit and waits for an answer until `until` (months). */
+  maskScene?: { personId: string; until: number } | null;
   flags: Record<string, number>;
   card: Card;
   pending: Pending | null;
