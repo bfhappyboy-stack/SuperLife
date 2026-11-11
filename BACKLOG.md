@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-11 pm pass
+
+- **Done:** the mask at home (partner suspicion, jealousy, finding the suit, telling them; increment 1).
+- **Dating next:** a partner who knows can help (covers for you, patches you up: a small HP or Joy lift) or, if Slippery and you split, sell your story; a crush while partnered (getting caught); anniversaries and date nights as routine slots; kids as heirs for the will (Start a family exists; the will and play-as-heir are Priority 0d).
+- **Then:** family events and invites through Life Flow (birthdays, weddings, parties, galas, funerals with choices at the event).
+
 ## From the 2026-11-10 late pass
 
 - **Done:** Auto fights opt-in with a fight-card Fight it out / Auto-resolve choice (increment 1); People cards with temper, trust, history, lend / borrow with schedules, non-payers and family asking for help (increment 2).

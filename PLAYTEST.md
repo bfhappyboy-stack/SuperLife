@@ -1,5 +1,15 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-11 pm): the mask at home
+
+**Played:** engine sims (6 Mystery seeds, secret identity, a partner moved in at 25, Play only to 45, never answering), and the phone at 390×844 from the seed-4 Metro save at 29 switched to a secret identity (`/workspace/shots-2026-11-11-pm/`).
+
+**Findings:**
+- **Before:** a secret-identity hero's partner never noticed anything. Roommates could catch you (since 2026-11-10), the person you share a bed with couldn't.
+- **After:** jealousy at 26–27, found the suit at 29 in every seed; ignoring it costs trust 15 a time and the partner leaves at ~36 after three finds. 5–7 lines over 20 years, each once, none stop Play.
+- **Phone:** the partner card shows "Silas found the suit. They're waiting for you to explain." with Tell them the truth (Good odds) and Deny it under it; before a find, "Tell Silas you're a hero · Good odds". Rows had crossed swords from "Marchetti" (the am icon fix only covered love rows): now a mask icon. Fits 390 px, no overflow, no console errors.
+- **Still open:** partner cards are tall (temper, trust, money, up to 7 rows).
+
 ## Morning pass (2026-11-11 am): easy wins, growth by use, then people
 
 **Played:** engine sims on Play only, 0 → 40, Auto fights off, a steady 60% player (6 Mystery seeds in Metro; Superman, Spider-Man, Hulk, Thor), before (86be4d7) and after increment 1; phone at 390×844 from a seed-4 Metro save at 29 (`/workspace/shots-2026-11-11-am/`).
