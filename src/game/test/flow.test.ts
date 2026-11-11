@@ -230,7 +230,7 @@ test("arch-enemy: one real stop a year, the other calls are left on read", async
   assert.equal(settleAdult(pend(year, "arch-month", calls)), null, "a year on, it stops again");
 });
 
-test("street fights: with Auto fights on, an outclassed or even foe is a recap line; off (the default), every fight stops", async () => {
+test("street fights: an outclassed foe is always a recap line; an even foe only with Auto fights on (off by default)", async () => {
   const { settleAdult, OUTCLASS_GAP } = await import("../skip.ts");
   const duel = (lvl: number, boss = false) => ({
     fight: {
@@ -247,7 +247,9 @@ test("street fights: with Auto fights on, an outclassed or even foe is a recap l
   const off = at(30);
   off.stats.powerLevel = 6;
   assert.equal(off.autoFights ?? false, false, "new lives start with Auto fights off");
-  assert.equal(settleAdult(pend(structuredClone(off), "villain-p1", duel(6 - OUTCLASS_GAP))), null, "off: even a sure win stops for you");
+  const quiet = settleAdult(pend(structuredClone(off), "villain-p1", duel(6 - OUTCLASS_GAP)));
+  assert.ok(quiet?.fight && /won, an easy win/.test(quiet.line), "off: an easy win still settles quietly into the recap (2026-11-11)");
+  assert.equal(settleAdult(pend(structuredClone(off), "villain-p1", duel(6 - OUTCLASS_GAP, true))), null, "off: a boss you outclass still stops");
   assert.equal(settleAdult(pend(structuredClone(off), "villain-p1", duel(6.2))), null, "off: an even fight stops");
   assert.equal(settleAdult(pend({ ...structuredClone(off), autoFights: true }, "villain-p1", duel(6.2))), null, "a stray true without the player's flip stays off");
   const g = setAutoFights(off, true);
@@ -257,7 +259,7 @@ test("street fights: with Auto fights on, an outclassed or even foe is a recap l
   assert.ok(settleAdult(pend(structuredClone(g), "villain-p1", duel(6.2))), "on: an even fight settles");
   assert.equal(settleAdult(pend(structuredClone(g), "villain-p1", duel(8))), null, "a foe stronger than you stops");
   assert.equal(settleAdult(pend(structuredClone(g), "villain-p1", duel(1, true))), null, "a boss stops");
-  assert.equal(settleAdult(pend(setAutoFights(g, false), "villain-p1", duel(3))), null, "switched back off: it stops again");
+  assert.equal(settleAdult(pend(setAutoFights(g, false), "villain-p1", duel(6.2))), null, "switched back off: an even fight stops again");
 });
 
 test("fight card: Auto-resolve settles the fight now, a little under your usual; a foe you outclass is a clean win", async () => {
@@ -334,4 +336,50 @@ test("a new chapter is one tap: the recap rides on the card under the chapter pa
     g = settle(n);
   }
   assert.ok(found, "the chapter turned");
+});
+
+test("yearly growth: only powers used this year ripen on the birthday, and it never grants a power (2026-11-11)", async () => {
+  const { ripenUsed, markUsed, RIPEN_EXP } = await import("../engine.ts");
+  const g = at(30);
+  const held = (g.unlockedPowers ?? []).slice(0, 2);
+  assert.ok(held.length >= 1, "test life holds a power");
+  const [a, b] = held;
+  g.mastery = { ...(g.mastery ?? {}) };
+  for (const id of held) g.mastery[id] = 0;
+  g.usedPowers = [];
+  markUsed(g, a);
+  markUsed(g, "not-a-held-power");
+  assert.deepEqual(g.usedPowers, [a], "only held powers are marked");
+  const powers = [...(g.unlockedPowers ?? [])];
+  ripenUsed(g);
+  assert.equal(g.mastery[a!], RIPEN_EXP, "used power ripens");
+  if (b) assert.equal(g.mastery[b], 0, "unused power stays put");
+  assert.deepEqual(g.usedPowers, [], "a fresh year starts");
+  assert.deepEqual(g.unlockedPowers, powers, "never grants a power");
+  ripenUsed(g);
+  assert.equal(g.mastery[a!], RIPEN_EXP, "nothing used since: no growth");
+  const old = at(30);
+  delete old.usedPowers;
+  old.mastery = {};
+  ripenUsed(old);
+  for (const id of old.unlockedPowers ?? []) assert.ok((old.mastery[id] ?? 0) > 0, "an older save's first birthday ripens all once");
+});
+
+test("yearly growth: a fight marks the powers behind the moves you threw", async () => {
+  const { resolveMini } = await import("../engine.ts");
+  const { moveById } = await import("../moves.ts");
+  const g = at(30);
+  const move = (g.loadout ?? []).find((id) => moveById(id) && (g.unlockedPowers ?? []).includes(moveById(id)!.powerId));
+  assert.ok(move, "test life has a power move equipped");
+  g.usedPowers = [];
+  const fight = {
+    ...g, phase: "mini",
+    minigame: {
+      kind: "duel", title: "Rook", subtitle: "", difficulty: 1, tag: "duel", winText: "w", partialText: "p", loseText: "l",
+      winEffects: {}, partialEffects: {}, loseEffects: {},
+      duel: { foeName: "Rook", foeTitle: "Rook", foeSide: "hero", playerHp: 40, foeHp: 30, playerMoves: [], foeMoves: [], foeLevel: 1 },
+    },
+  } as unknown as Game;
+  const done = resolveMini(fight, 0.9, [move!]);
+  assert.ok(done.usedPowers?.includes(moveById(move!)!.powerId));
 });
