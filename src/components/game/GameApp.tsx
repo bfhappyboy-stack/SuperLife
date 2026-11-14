@@ -1,6 +1,6 @@
 import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, Play, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
 import { DATING_ON, STAGE_LABEL, stageOf } from "@/game/dating";
-import { keepsMask, suspicionLabel } from "@/game/mask";
+import { careLine, keepsMask, suspicionLabel } from "@/game/mask";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
 import { actMatches, type GoalRoute } from "@/game/chapters";
@@ -995,7 +995,15 @@ function PeopleStack({ game, actions, onPress, onTie }: { game: Game; actions: A
 /** The mask at home (2026-11-11 pm): does your partner know you're a hero, and how much do they wonder? */
 function MaskLine({ game, person }: { game: Game; person: Person }) {
   const who = firstName(person.name);
-  if (person.knowsSecret) return <p className="mt-2 text-[11px] font-bold text-good">Knows you're a hero. Your secret is safe with {who}.</p>;
+  if (person.knowsSecret) {
+    const care = careLine(game, person);
+    return (
+      <p className="mt-2 text-[11px] font-bold text-good">
+        Knows you're a hero. Your secret is safe with {who}.
+        {care && <span className="mt-0.5 block font-semibold text-fg/80">✚ {care}</span>}
+      </p>
+    );
+  }
   if (game.maskScene?.personId === person.id) {
     return (
       <div className="mt-2 rounded-xl border border-gold/50 bg-gold/10 px-3 py-2 text-xs font-bold text-fg">
