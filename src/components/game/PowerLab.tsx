@@ -6,7 +6,8 @@ import { ElementIcon } from "@/components/game/Vfx";
 import { arcsCleared, availableArcs, currentCase, plotFor, type ArcDef, type ArcStep } from "@/game/arcs";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { getPower, mix, possibleMixes, teachableBases, viewPowers } from "@/game/combo";
-import { MIX_AGE, mentorAwaken, mentorBraid, mentorById, mentorFor, mentorRecipe, mixLock, type MentorDef } from "@/game/mentors";
+import { MIX_AGE, mentorAwaken, mentorBraid, mentorById, mentorFace, mentorFor, mentorRecipe, mixLock, type MentorDef } from "@/game/mentors";
+import { PAINTED_FACES } from "@/components/game/Portrait";
 import { canSkipToFifteen } from "@/game/skip";
 import { caseRegroup, focusId } from "@/game/engine";
 import { mergeHeroes, replyLocally } from "@/game/heroes";
@@ -828,6 +829,7 @@ function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct:
   const mentor = mentorById(state?.id);
   if (!state || !mentor) return null;
   const Sigil = SIGIL[mentor.sigil];
+  const face = mentorFace(mentor.id);
   const braid = mentorBraid(game);
   const room = library(game);
   const focus = getPower(focusId(game));
@@ -860,9 +862,20 @@ function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct:
     <section className="card relative overflow-hidden px-4 py-3" style={{ borderColor: `${mentor.color}88` }} aria-label={`Mentor ${mentor.name}`}>
       <div className="pointer-events-none absolute -top-12 -left-8 size-40 rounded-full blur-2xl" style={{ background: `${mentor.color}22` }} aria-hidden />
       <div className="relative flex items-center gap-3">
-        <span className="grid size-14 shrink-0 place-items-center rounded-full border-2" style={{ borderColor: mentor.color, background: `radial-gradient(circle at 35% 30%, ${mentor.color}55, ${mentor.color}11 70%)`, boxShadow: `0 0 18px ${mentor.color}55` }}>
-          <Sigil className="size-7" style={{ color: mentor.color }} aria-hidden />
-        </span>
+        {PAINTED_FACES ? (
+          <span className="relative size-16 shrink-0">
+            <span className="block size-16 overflow-hidden rounded-2xl border-2" style={{ borderColor: mentor.color, boxShadow: `0 0 18px ${mentor.color}55` }}>
+              <Portrait seed={face.seed} age={face.age} sex={face.sex} mood={62} className="block size-full" />
+            </span>
+            <span className="absolute -right-1.5 -bottom-1.5 grid size-6 place-items-center rounded-full border border-white/20 bg-ink shadow" aria-hidden>
+              <Sigil className="size-3.5" style={{ color: mentor.color }} />
+            </span>
+          </span>
+        ) : (
+          <span className="grid size-14 shrink-0 place-items-center rounded-full border-2" style={{ borderColor: mentor.color, background: `radial-gradient(circle at 35% 30%, ${mentor.color}55, ${mentor.color}11 70%)`, boxShadow: `0 0 18px ${mentor.color}55` }}>
+            <Sigil className="size-7" style={{ color: mentor.color }} aria-hidden />
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <p className="t-label text-[10px]" style={{ color: mentor.color }}>
             YOUR MENTOR · {state.lessons} lesson{state.lessons === 1 ? "" : "s"}

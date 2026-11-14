@@ -189,6 +189,7 @@ export function PaintedFace({
           <ellipse cx="34" cy="27" rx="7" ry="4" fill="#fff" opacity="0.16" filter={url("blur")} />
           <ellipse cx="33" cy="43" rx="3.2" ry="2" fill="#e0606a" opacity={baby || kid ? 0.28 : female ? 0.16 : 0.08} filter={url("soft")} />
           <ellipse cx="47" cy="43" rx="3.2" ry="2" fill="#e0606a" opacity={baby || kid ? 0.22 : female ? 0.12 : 0.06} filter={url("soft")} />
+          {beard === "none" && !female && age >= 18 && <path d="M27.4 40 Q29 52 34 54 Q40 58 46 54 Q51 52 52.6 40 Q51 48.6 46.6 49.6 Q40 48 33.4 49.6 Q29 48.6 27.4 40 Z" fill={shade(skin, -0.5)} opacity="0.14" filter={url("soft")} />}
           {beard === "stubble" && <path d="M27 40 Q29 52 34 54 Q40 58 46 54 Q51 52 53 40 Q52 49 47 49.5 Q40 47.5 33 49.5 Q28 49 27 40 Z" fill={hair} opacity="0.28" filter={url("soft")} />}
           {beard === "full" && <path d="M27 38 Q28 52 33.5 55 Q40 59.5 46.5 55 Q52 52 53 38 Q51.5 47 47 48 Q40 46 33 48 Q28.5 47 27 38 Z" fill={url("hair")} />}
           {old && (

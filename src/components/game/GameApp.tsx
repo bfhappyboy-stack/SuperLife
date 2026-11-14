@@ -18,7 +18,8 @@ import { RoutineCard } from "@/components/game/Routine";
 import { FLOW_ON, stepLabel } from "@/game/flow";
 import { autoResolveOdds } from "@/game/skip";
 import { borrowAmounts, borrowBlock, canTalkMoney, lendAmounts, loanLine, openLoan, temperOf, termFor, trustOf } from "@/game/ties";
-import { CityScene, TitleArt } from "@/components/game/Scene";
+import { CityScene, TitleArt, useArt } from "@/components/game/Scene";
+import { mysteryArtKey } from "@/components/game/heroArt";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
 import { Minigame } from "@/components/game/Minigame";
@@ -252,6 +253,11 @@ function Life({ game }: { game: Game }) {
   const chapterNo = game.chapters?.length ?? 1;
   const phase = game.chapters?.[game.chapters.length - 1]?.phase ?? null;
   const family = capeTheme(game).cape;
+  // The gift card shows who you are in the suit: a legend's painting, or your painted Mystery cutout (16+).
+  const giftLegend = presetById(game.preset);
+  const giftLegendArt = useArt(giftLegend && hasArt(giftLegend.art) ? giftLegend.art : "");
+  const giftKey = giftLegend ? "" : mysteryArtKey(family, game.sex, game.age);
+  const giftCut = useArt(giftKey ? `cut-${giftKey}` : "");
   const showTabs = !choosing && game.phase !== "mini";
   // Chapter goals: Go jumps to the tab and shelf, then the matching button pulses.
   const [pulse, setPulse] = useState<string[] | null>(null);
@@ -447,9 +453,23 @@ function Life({ game }: { game: Game }) {
               </p>
             )}
             {!choosing && desk === "gift" && activeShelf === "Book" && (power || fusion) && (
-              <section className="card mt-3 overflow-hidden px-4 py-4">
+              <section className={`card relative isolate mt-3 overflow-hidden px-4 py-4 ${giftLegendArt || giftCut ? "min-h-[15rem] pr-[8.5rem]" : ""}`}>
                 <div className="pointer-events-none absolute -top-10 -right-8 size-36 rounded-full opacity-50 blur-2xl" style={{ background: `radial-gradient(circle, ${family ? FAMILY_COLOR[family] : "var(--color-gold)"}, transparent 70%)` }} />
-                <div className="flex items-center gap-3">
+                {giftLegendArt ? (
+                  <img src={giftLegendArt} alt="" draggable={false} className="pointer-events-none absolute inset-y-0 right-0 -z-10 h-full w-[11rem] object-cover object-top [mask-image:linear-gradient(90deg,transparent,#000_38%)]" />
+                ) : giftCut ? (
+                  <>
+                    <span className="pointer-events-none absolute right-2 bottom-2 -z-10 h-5 w-32 rounded-[50%] bg-black/60 blur-md" aria-hidden />
+                    <img
+                      src={giftCut}
+                      alt=""
+                      draggable={false}
+                      className="cut-breathe pointer-events-none absolute right-0 bottom-0 -z-10 h-[15rem] w-auto max-w-none"
+                      style={{ filter: `drop-shadow(0 0 1.5px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 85%, white)) drop-shadow(0 0 12px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 45%, transparent))` }}
+                    />
+                  </>
+                ) : null}
+                <div className="relative flex items-center gap-3">
                   <IconTile color={family ? FAMILY_COLOR[family] : "#e6b34d"} size="size-12">
                     <FamilyGlyph family={family} className="size-7" />
                   </IconTile>
