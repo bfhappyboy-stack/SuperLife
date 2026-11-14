@@ -4,6 +4,14 @@
 
 Built on `origin/devbot/2026-11-14-am` (2b00df2, itself on art2 bc9a9b7), so it merges after both. No art2 files touched. Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 2: your hero on the gift card, and mentors with faces
+
+- **Why:** the Powers tab is the hero's home, but "Your gift" was an icon and text, and every mentor (Uncle Ben, Alfred, Skyline, Pops Delgado…) was a glyph in a circle. Nobody you train with had a face.
+- **Your gift (Powers ▸ Book):** the card now shows you in the suit. A Mystery hero from 16 stands on the right as their painted full-body cutout (power family × sex, rim-lit in the power colour, idle breathing, ground shadow); a God Mode legend's painting fades in from the right. Kids, the powerless and lives with no family keep the plain card. The text column narrows so nothing overlaps.
+- **Mentors:** the mentor card shows the mentor's painted bust (with their sigil as a small badge) instead of the bare glyph. Who they look like is data (`MENTOR_FACE` in `mentors.ts`: sex and a rough age for all 32 mentors; the seed comes from the id, so a mentor always has the same face). `PAINTED_FACES` off brings the glyph back.
+- **Tests:** +1 (`mentors.test.ts`: every mentor has a face entry, a grown-up age and a stable seed; unknown ids fall back). 335 game tests pass.
+- **Also:** adult men without a beard get a faint jaw shadow, so short-haired and tied-hair men read as men at 48 px.
+
 ### Increment 1: every procedural face is a painted bust
 
 - **Why:** a first-time Mystery life still met cartoon faces everywhere outside a fight: you in the header, your parents, friends, partners, rivals, mentors and rival capes were round emoji heads with blush dots, and the creator showed a stick-limbed paper doll on a cream card. That was the crudest art left next to the painted hero and villain cast.
