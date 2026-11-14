@@ -1,11 +1,14 @@
 import { useId } from "react";
 import { PaintedFace } from "@/components/game/PaintedFace";
+import { PhotoFace } from "@/components/game/PhotoFace";
 import { powerById } from "@/game/data";
 import { HAIR, resolveLook, SKIN } from "@/game/look";
 import type { Look, PowerId, Sex } from "@/game/types";
 
 /** Painted busts for every procedural face (2026-11-14 pm). Off = the original cartoon vector face. */
 export const PAINTED_FACES = true;
+/** Real painted portraits (2026-11-14 portraits pass) over the SVG busts. Off = the SVG busts above. */
+export const PHOTO_FACES = true;
 
 export function Portrait({
   seed,
@@ -15,6 +18,7 @@ export function Portrait({
   mood = 60,
   sex,
   look,
+  cape = false,
   className = "h-16 w-16",
 }: {
   seed: number;
@@ -24,6 +28,8 @@ export function Portrait({
   mood?: number;
   sex?: Sex;
   look?: Partial<Look> | null;
+  /** A rival cape: drawn from the masked portrait sheet from 16. */
+  cape?: boolean;
   className?: string;
 }) {
   const face = resolveLook(seed, look);
@@ -46,7 +52,7 @@ export function Portrait({
   const beard = !female && !baby && age >= 16 && (h >>> 12) % 3 !== 0 ? (age >= 22 && (h >>> 14) % 2 === 0 ? "full" : "stubble") : "none";
 
   if (PAINTED_FACES) {
-    return (
+    const bust = (
       <svg viewBox="11 10 58 70" preserveAspectRatio="xMidYMin slice" className={`${className} ${tone}`} aria-hidden>
         <PaintedFace seed={h} age={age} female={female} face={face} rank={rank} mood={mood} beard={beard} />
         {rank >= 4 && (
@@ -57,6 +63,12 @@ export function Portrait({
           </g>
         )}
       </svg>
+    );
+    if (!PHOTO_FACES) return bust;
+    return (
+      <PhotoFace seed={h} age={age} sex={body} look={face} cape={cape} className={className} fallback={bust}>
+        {rank >= 4 && <span className="absolute right-0.5 bottom-0.5 grid size-[28%] max-h-5 max-w-5 place-items-center rounded-full bg-gold text-[9px] leading-none text-ink shadow" aria-hidden>★</span>}
+      </PhotoFace>
     );
   }
   return (
