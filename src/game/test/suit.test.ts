@@ -72,3 +72,28 @@ test("teens look for a teen painting first, then the grown suit; adults never do
   assert.deepEqual(stageKeys("ice", "female", 16, "a"), ["mystery-ice-f"]);
   assert.deepEqual(stageKeys("ice", "female", 12, "a"), []);
 });
+
+test("suit B is painted: every family and sex except the male speedster resolves to its own B card and cutout", async () => {
+  const { readFileSync } = await import("node:fs");
+  const art = (key: string) => readFileSync(new URL(`../../assets/art/${key}.ts`, import.meta.url), "utf8");
+  let painted = 0;
+  for (const f of ART_FAMILIES) for (const sex of ["male", "female"] as const) {
+    const key = mysteryKey(f, sex);
+    const card = suitKeys(key, "b").find((k) => hasArt(k));
+    const cut = suitKeys(stageKey(f, sex, 30), "b").find((k) => hasArt(`cut-${k}`));
+    if (key === "mystery-swift-m") {
+      assert.equal(card, key, "the male speedster keeps suit A");
+      assert.equal(cut, key);
+      continue;
+    }
+    assert.equal(card, `${key}-b`, `${key} B card`);
+    assert.equal(cut, `${key}-b`, `${key} B cutout`);
+    for (const k of [card, `cut-${cut}`]) {
+      const src = art(k!);
+      assert.match(src, /export default "data:image\/webp;base64,/, `${k} is an inlined webp`);
+      assert.notEqual(src.split('"')[1], art(k!.replace(/-b$/, "")).split('"')[1], `${k} differs from suit A`);
+    }
+    painted++;
+  }
+  assert.equal(painted, 17);
+});
