@@ -21,3 +21,12 @@ export function familyOfPower(powerId: string | null | undefined): CapeFamily | 
   if (!powerId) return null;
   return capeTheme({ powerId, unlockedPowers: [powerId], powerless: false, secondaryId: null } as never).cape;
 }
+
+/** Street-villain archetypes with a painted stage cutout (keys match the legacy power ids in duelKit). */
+export const STREET_CUTS = ["fire", "ice", "lightning", "speed", "mind", "strength", "blasts", "telekinesis", "invisibility", "shapeshift", "forcefield", "elastic", "healing", "intellect", "flight"] as const;
+
+/** Stage cutout for a villain with no named painting: their power's archetype, or the unpowered street thug. */
+export function streetCutKey(power: string | null | undefined): string {
+  if (!ART_HEROES) return "";
+  return `cut-street-${power && (STREET_CUTS as readonly string[]).includes(power) ? power : "street"}`;
+}
