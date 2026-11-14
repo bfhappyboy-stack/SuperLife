@@ -254,6 +254,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 
 - **One style for the whole cast:** painted, cinematic, night city, rim light in the power's colour, full figure on a 9:16 card. Legends (11), named villains (49) and Mystery heroes (18, by power family × sex) all share it.
 - **Approach:** painted cards over a rigged vector figure. A data-driven painted set (family × sex, later × villain archetype) gives every procedural character a designed look at the cost of one asset per combination; pose feedback (attack lunge, hit shake, guard ring, KO grey) is applied to the card. Assets are inlined webp data URIs in `src/assets/art/*.ts` (text-only pushes carry them) and load as lazy chunks.
+- **Stage cutouts (art2):** on the duel stage, Mystery heroes and street villains are full-body transparent cutouts (rembg on the paintings, or villains painted on a plain backdrop) standing on the floor with a ground shadow and power-colour rim light; the city painting is the backdrop. Street villains pick their archetype by power (`streetCutKey`), falling back to an unpowered thug.
 - **Rules:** a card appears from 16; children, the powerless and the wardrobe/creator keep the paper doll. `src/game/heroArt.ts` picks the key; `components/game/heroArt.tsx` draws the `Standee`. `ART_HEROES` is the off switch.
 
 ## Existing extras (built, not in the original design)

@@ -23,3 +23,11 @@ test("NPC powers map to a family", () => {
   assert.equal(familyOfPower("fire-control"), "fire");
   assert.equal(familyOfPower(null), null);
 });
+
+test("every street-villain archetype and Mystery hero has a stage cutout", async () => {
+  const { STREET_CUTS, streetCutKey } = await import("../heroArt.ts");
+  for (const p of STREET_CUTS) assert.ok(hasArt(streetCutKey(p)), p);
+  assert.equal(streetCutKey("nonsense"), "cut-street-street");
+  assert.ok(hasArt(streetCutKey(undefined)));
+  for (const f of FAMILIES) for (const sex of ["male", "female"] as const) assert.ok(hasArt(`cut-${mysteryArtKey(f, sex)}`));
+});

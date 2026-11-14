@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-11 (art2): real fighters on the stage (`devbot/2026-11-11-art2`)
+
+Built on `origin/devbot/2026-11-11-art-main` (c1aecc4, on main 3857fea). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: painted full-body fighters stand on a painted stage
+
+- **Why (owner, 19:57):** "They still look like they're made on paint so make them much better." Street villains were still the drawn paper doll, and the hero was a small framed card.
+- **16 painted street-villain archetypes** (`cut-street-<power>.ts`): Pyro, Cryo, Storm, Blur, Mentalist, Brute, Blaster, Kinetic, Phantom, Skinwalker, Bulwark, Snap, Leech, Mastermind, Raptor and an unpowered street thug. Full body, front three-quarter, same painted style as the legends and the 49 named villains; generated on a plain backdrop and cut out (rembg, isnet), 720 px tall transparent webp, ~40–90 KB each, lazy chunks.
+- **18 hero cutouts** (`cut-mystery-<family>-<m|f>.ts`) from the art-pass paintings.
+- **Stage (`Cutout` in `components/game/heroArt.tsx`):** both fighters stand on the floor facing each other at the same scale, with a ground shadow, rim light in their power colour, idle breathing, a forward lean on attack, a white hit flash with a shake, and a fall on KO (on top of the existing lunge and float). The stage is taller (226 px, 184 with a gimmick strip) and shows your city's painting behind the fight, darkened. Named villains and legends keep their painted cards; children keep the paper doll.
+- **Rules unchanged:** pure presentation; `ART_HEROES` still turns it all off. Saves untouched.
+- **Tests:** +1 (`art.test.ts`: every archetype and hero has a cutout; unknown powers fall back to the street thug). 327 game tests pass.
+
 ## 2026-11-11 (art): painted characters for everyone who isn't a legend (`devbot/2026-11-11-art`)
 
 Built on `origin/devbot/2026-11-11-pm` (44df36a, the same content as main 3857fea). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.
