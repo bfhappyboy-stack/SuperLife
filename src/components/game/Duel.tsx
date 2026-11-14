@@ -33,6 +33,8 @@ export interface DuelHero {
   city?: string;
   /** Power family of a Mystery hero: picks their painted card (heroArt.tsx). */
   family?: CapeFamily | null;
+  /** Suit line this life wears (heroArt.ts); B falls back to A when unpainted. */
+  suit?: "a" | "b";
 }
 
 const HEX: Record<MoveStyle, string> = { strike: "#ff5a4f", guard: "#3fe0c5", trick: "#ffcf4d" };
@@ -114,15 +116,16 @@ const GIMMICK_COLOR: Record<GimmickKind, string> = {
 
 export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
   const legendArt = useArt(hero?.legend?.art ?? "");
-  const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24);
+  const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit);
   const mysteryArt = useArt(mysteryKey);
-  const teenKey = hero?.legend ? "" : stageArtKey(hero?.family, hero?.sex, hero?.age ?? 24);
+  const teenKey = hero?.legend ? "" : stageArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit);
   const mysteryCut = useArt(teenKey ? `cut-${teenKey}` : "");
   const stageArt = useArt(hero?.city ?? "");
   const board = spec.duel;
   // Hero-side NPC fighters (sparring partners, rival capes) wear a painted Mystery card too.
   const foeHeroSeed = board ? (board.foeSeed ?? hashName(board.foeName)) : 0;
-  const foeHeroKey = board?.foeSide === "hero" ? mysteryArtKey(familyOfPower(board.foePower), board.foeSex ?? (foeHeroSeed % 2 ? "female" : "male")) : "";
+  // A hero with no power family (a trained fighter, a sparring partner) wears the Might suit rather than the paper doll.
+  const foeHeroKey = board?.foeSide === "hero" ? mysteryArtKey(familyOfPower(board.foePower) ?? "might", board.foeSex ?? (foeHeroSeed % 2 ? "female" : "male")) : "";
   const foeHeroArt = useArt(foeHeroKey ? `cut-${foeHeroKey}` : "");
   // Street villains with no named painting stand in as their power's painted archetype.
   const streetCut = useArt(board?.foeSide === "villain" ? streetCutKey(board.foePower) : "");

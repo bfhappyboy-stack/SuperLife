@@ -257,7 +257,7 @@ function Life({ game }: { game: Game }) {
   // The gift card shows who you are in the suit: a legend's painting, or your painted Mystery cutout (13+, smaller as a teen).
   const giftLegend = presetById(game.preset);
   const giftLegendArt = useArt(giftLegend && hasArt(giftLegend.art) ? giftLegend.art : "");
-  const giftKey = giftLegend ? "" : stageArtKey(family, game.sex, game.age);
+  const giftKey = giftLegend ? "" : stageArtKey(family, game.sex, game.age, game.suit);
   const giftCut = useArt(giftKey ? `cut-${giftKey}` : "");
   const showTabs = !choosing && game.phase !== "mini";
   // Chapter goals: Go jumps to the tab and shelf, then the matching button pulses.
@@ -353,7 +353,7 @@ function Life({ game }: { game: Game }) {
       {game.phase === "mini" && game.minigame ? (
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           {game.minigame.kind === "duel" && game.minigame.duel && <FightChoice key={`fc-${game.minigame.title}-${game.age}-${game.month ?? 0}-${game.missions}`} game={game} />}
-          <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ legend: (() => { const l = presetById(game.preset); return l && hasArt(l.art) ? { art: l.art, color: l.color, name: l.hero } : undefined; })(), seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })(), family: capeTheme(game).cape, city: game.cityId }} />
+          <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ legend: (() => { const l = presetById(game.preset); return l && hasArt(l.art) ? { art: l.art, color: l.color, name: l.hero } : undefined; })(), seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })(), family: capeTheme(game).cape, suit: game.suit, city: game.cityId }} />
         </div>
       ) : (
         <>
