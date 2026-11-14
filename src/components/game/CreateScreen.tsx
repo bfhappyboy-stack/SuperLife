@@ -1,7 +1,7 @@
 import { ArrowLeft, Check, ChevronRight, Dices, Search, Shuffle } from "lucide-react";
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Figure } from "@/components/game/Figure";
-import { Portrait } from "@/components/game/Portrait";
+import { PAINTED_FACES, Portrait } from "@/components/game/Portrait";
 import { CityScene } from "@/components/game/Scene";
 import { ElementIcon } from "@/components/game/Vfx";
 import { allPowers } from "@/game/combo";
@@ -216,9 +216,16 @@ function LookStep(props: {
   return (
     <>
       <div className="relative overflow-hidden rounded-[1.5rem] border border-white/10 shadow-[0_18px_40px_-20px_rgba(0,0,0,.8)]">
-        <div className="relative h-64">
-          <Figure seed={props.portrait} age={16} sex={sex} look={look} wardrobe={props.wardrobe} className="absolute inset-0 h-full w-full" />
-        </div>
+        {PAINTED_FACES ? (
+          <div className="relative h-64 bg-[radial-gradient(120%_90%_at_50%_30%,#232b3d_0%,#0f131c_60%,#07090e_100%)]">
+            <Portrait seed={props.portrait} age={16} sex={sex} look={look} className="absolute inset-y-0 left-1/2 block h-full w-[13.4rem] -translate-x-1/2 [mask-image:linear-gradient(90deg,transparent,#000_22%,#000_78%,transparent)]" />
+            <span className="t-label absolute top-3 left-3 rounded-full bg-ink/60 px-2.5 py-1 text-[10px] text-gold backdrop-blur">AGE 16</span>
+          </div>
+        ) : (
+          <div className="relative h-64">
+            <Figure seed={props.portrait} age={16} sex={sex} look={look} wardrobe={props.wardrobe} className="absolute inset-0 h-full w-full" />
+          </div>
+        )}
         <button type="button" onClick={props.onReroll} className="btn btn-ghost absolute right-2 bottom-2 !min-h-10 gap-1.5 !bg-ink/70 !px-3 text-sm backdrop-blur">
           <Shuffle className="size-4" aria-hidden />
           Reroll look

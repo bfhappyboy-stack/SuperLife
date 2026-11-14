@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-14 (pm): painted faces for everyone (`devbot/2026-11-14-pm`)
+
+Built on `origin/devbot/2026-11-14-am` (2b00df2, itself on art2 bc9a9b7), so it merges after both. No art2 files touched. Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: every procedural face is a painted bust
+
+- **Why:** a first-time Mystery life still met cartoon faces everywhere outside a fight: you in the header, your parents, friends, partners, rivals, mentors and rival capes were round emoji heads with blush dots, and the creator showed a stick-limbed paper doll on a cream card. That was the crudest art left next to the painted hero and villain cast.
+- **What (`PaintedFace.tsx`, used by `Portrait`):** a painted head-and-shoulders bust in the cast's style: night-city bokeh and a skyline behind, a key light from the upper left and a rim light in the power colour from the right, a real jaw (softer for women and kids), small almond eyes with irises and a lid line, a shaded nose, painted lips, clothes on the shoulders (coat, open collar, sometimes a tie or a fine necklace), film grain and a vignette. Babies get a round face and wisps, kids a bigger head on narrow shoulders with a crew neck, over-60s greying hair and fine lines, 70+ white hair. All existing look data still drives it (skin, hair colour, the six cuts, scar, glasses, freckles, stubble or beard, the domino mask for ranked heroes, the rank medal). Pure SVG: no downloads, and every saved face keeps its seed.
+- **Creator:** the Look step shows your painted bust at 16 instead of the paper doll (the wardrobe keeps the doll, because it shows the clothes).
+- **Off switch:** `PAINTED_FACES` in `Portrait.tsx` brings back the old vector faces and the creator doll. No rules or saves change.
+
 ## 2026-11-14 (am): legend signature growth, partner patch-up and story sale (`devbot/2026-11-14-am`)
 
 Built on `origin/devbot/2026-11-11-art2` (bc9a9b7), so it should merge after that branch. No art files touched. Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
