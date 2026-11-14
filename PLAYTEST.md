@@ -1,5 +1,9 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Art pass 2 (2026-11-11 art2): fighters on the stage
+
+**Before:** `/workspace/shots-art/after/duel-m.png` (framed hero card vs the drawn Skinwalker). **After:** `/workspace/shots-art/art2/duel-m.png` (full-body hero vs the painted Skinwalker on the city backdrop), `duel-f.png` (Might heroine vs a Kinetic), `duel-m-hit.png` (hit frame).
+
 ## Art pass (2026-11-11 art): where characters are drawn
 
 **Audit (390×844, `/workspace/shots-art/before/`):** the paper doll (`Figure.tsx`) stood in for the player in every Mystery fight (`duel-m.png`, `duel-f.png`), for street villains and hero NPCs on the battle stage, for Arena fighters from saved lives, and in the wardrobe and creator. `LifeHeroArt.tsx` drew a flat silhouette on Arena posters. `Portrait.tsx` draws vector faces on people cards and the header. Legends and the 49 named villains were already painted (`duel-bat.png`). Minigames use `MiniHead` icons.
