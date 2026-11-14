@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-11-14 (night): a painted Closet and a second suit line (`devbot/2026-11-14-night`)
+
+Built on `origin/devbot/2026-11-14-portraits` (f2e79d9), so this branch carries the whole unmerged chain (art2 → am → pm → portraits): merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (345 pass), built and loaded at 390×844 before push.
+
+- **Why (owner):** all character art must be painted and serious; the Closet was the last everyday screen still showing the Mii-like paper doll, and two Mystery lives with the same power looked identical.
+- **Closet mirror:** a Mystery hero from 13 sees their painted full-body suit cutout (breathing, rim-lit in the power colour) on their city at night; a God Mode legend sees their painting; kids and the powerless see their painted portrait in a frame lit in their colour ("The suit waits for the power"). `ART_HEROES` off brings the doll back.
+- **Suit lines A/B (`src/game/heroArt.ts`):** each new life gets `suit: "a" | "b"` from its seed (a pure hash, so nothing else about a life changes); old saves get a stable one from their name and face on load. Duels, the gift card, the Closet and Arena posters (saved lives carry `life.suit`) look for `<key>-b` first and fall back to suit A per image, so B paintings can land one at a time. The male speedster is locked to his current suit. `SUIT_B` is the off switch. No B paintings exist yet, so everyone still wears A on screen.
+- **Teen suit slots:** ages 13–15 look for `cut-<key>-teen` (and `cut-<key>-b-teen`) before the grown suit shrunk to 86/90/94%.
+- **Smaller:** a portrait that is still loading shows a dark frame with a soft sweep instead of flashing the drawn bust; hero-side sparring partners with no power family stand as the Might cutout instead of the paper doll.
+- **Tests:** +4 (`suit.test.ts`: seeded 50/50 split that leaves the rest of the life identical, migration is stable, B→A fallback for every family and sex with the speedster locked, teen key order).
+
+### Paintings still needed (no image generator in this pass)
+
+Same pipeline as the existing art: paint on a plain dark-grey backdrop, cut out (rembg), trim, 720 px tall transparent webp (q≈80, ~30–60 kB) inlined as `src/assets/art/<name>.ts`, plus one loader line in `src/assets/art/index.ts`. Cards are 540×960 (9:16) opaque webp like `mystery-*`. Style for every prompt: *"AAA game concept art, realistic painted digital illustration, realistic adult proportions, serious expression, cinematic rim light in <colour> from behind, night city mood, full body head to boots, three-quarter heroic standing pose, plain flat dark grey background, no text, no logo, not cartoon, not chibi."* (teens: *"realistic 14-year-old proportions, slimmer and shorter, youthful but serious face"*).
+
+- **Suit B cutouts `cut-mystery-<family>-<m|f>-b` (17, all but swift-m), 9:21 tall, transparent:** fire: charcoal heat-resistant armour with cracked ember-orange seams and a half-face rebreather mask; ice: frosted white-and-steel plated suit with a crystalline collar and visor; storm: navy flight suit with a long split storm coat and electric-blue piping; mind: deep violet bodysuit with a smooth silver circlet and a short high-collared cape; might: gunmetal heavy plating over black, reinforced gauntlets and a gold chest bar; swift (female only): white-and-teal aerodynamic racing suit with a winged cowl; veil: matte black stealth suit, hood and smoked half-mask with a faint smoke trail; life: forest-green field-medic armour with a white sash and leaf emblem; arcane: dark crimson-and-gold sorcerer's coat over armour, glowing magenta sigils at the hands.
+- **Suit B cards `mystery-<family>-<m|f>-b` (17), 540×960 (9:16):** the same character and suit as the matching cutout, painted on their city at night (rooftops, rain, neon), framed knees-up to head with room above.
+- **Teen cutouts `cut-mystery-<family>-<m|f>-teen` (18), 9:21 tall, transparent:** the existing suit A of each family (use the matching `cut-mystery-*` as the reference image) worn by a 14-year-old; same colours and emblem, fitted sportier and a little simpler. Optional later: `-b-teen` for suit B.
+- **Powerless vigilante cutouts `cut-vigilante-m` / `cut-vigilante-f`, 9:21, transparent:** a trained street vigilante with no powers: dark tactical jacket, taped knuckles, cloth mask, utility belt, boxer's guard stance (reference: `cut-street-street`, but a hero, cleaner and lit gold).
+
 ## 2026-11-14 (portraits): real painted faces for everyone (`devbot/2026-11-14-portraits`)
 
 Built on `origin/devbot/2026-11-14-pm` (024efd6). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.

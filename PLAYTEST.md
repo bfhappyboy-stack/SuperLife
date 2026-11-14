@@ -1,5 +1,11 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-14 night): the Closet, suit lines
+
+**Played:** the Metro save (Sam Lee, Flight) at 29 and at 14, and the same life at 10, at 390×844 (`/workspace/pt1114night/shots/`). Before/after: `/workspace/pt1114night/before-after-closet.png` (before: `before-adult-closet.png`; after: `after-adult-closet.png`, `after-teen-closet.png`, `after-kid-closet.png`).
+
+**Findings:** the Closet opened on the stick-limbed paper doll with a cartoon face, the crudest thing left on an everyday screen; it now shows the painted Flight cutout on Metro City at night (teen: the same suit, shorter) and, at 10, the painted portrait with "The suit waits for the power". Header, Powers ▸ Book and Life main load with no console errors at every age. Suit B shows nothing new yet: every B life falls back to suit A until the paintings land (unit-tested for all 18 family × sex pairs). The Closet's piece list (Street jacket, Training suit…) no longer shows on the body; the slot chips still say what's worn.
+
 ## Portraits pass (2026-11-14 portraits)
 
 **Played:** the Metro save at 29 (partner Silas, arch-enemy Greta) and a new Mystery life in the creator, at 390×844. Before/after: `/workspace/pt1114portraits/before-after-people.png`, `/workspace/pt1114portraits/before-after-creator-header.png`.

@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-14 night pass
+
+- **Done:** the Closet mirror is painted (suit cutout, legend painting, or your painted portrait; increment 1); suit lines A/B per life, seeded and saved, with art slots that fall back to A (increment 1); teen suit slots for 13–15 (increment 1); loading portraits show a dark frame instead of the drawn bust; hero sparring partners with no family wear the Might suit.
+- **Blocked on paintings (no image generator in this pass):** 17 suit-B cards + 17 suit-B cutouts (swift male stays), 18 teen cutouts, and a powerless vigilante cutout pair. Filenames, sizes and prompts are in the night CHANGELOG entry.
+- **Still drawn:** under-13 fights and powerless players in fights keep the paper doll; saved powerless lives in the Arena keep the SVG silhouette poster; event "Your call" screens need a scene illustration; kids' minigame heads (`MiniHead`).
+- **Ask the owner:** should the player be able to switch suit line in the Closet (cosmetic, free), or stay seeded per life?
+
 ## From the 2026-11-14 pm pass
 
 - **Done:** painted busts for every procedural face and the creator (increment 1); your hero on the gift card, mentors with faces (increment 2); teens 13–15 fight as their painted cutout (increment 3).
