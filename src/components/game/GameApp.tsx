@@ -784,7 +784,7 @@ function Roster({ game }: { game: Game }) {
           <article key={cape.id} className="card relative overflow-hidden px-3 py-3" style={{ borderColor: `${sideColor}aa` }}>
             <div className="pointer-events-none absolute -top-8 -right-8 size-24 rounded-full opacity-40 blur-xl" style={{ background: sideColor }} />
             <div className="flex items-start justify-between">
-              <Portrait seed={cape.portrait} age={you ? game.age : 28} powerId={cape.powerId} rank={you ? game.leagueRank : 0} sex={you ? game.sex : cape.sex} className="h-12 w-12" />
+              <Portrait seed={cape.portrait} age={you ? game.age : 28} powerId={cape.powerId} rank={you ? game.leagueRank : 0} sex={you ? game.sex : cape.sex} look={you ? game.look : undefined} cape={!you} className="h-12 w-12" />
               <span className="t-label rounded-full px-1.5 py-0.5 text-[9px]" style={{ background: `${sideColor}33`, color: sideColor }}>{cape.side === "villain" ? "Villain" : cape.side === "hero" ? "Hero" : "Rogue"}</span>
             </div>
             <p className="mt-2 truncate font-bold text-fg">

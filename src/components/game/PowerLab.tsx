@@ -216,7 +216,7 @@ function TrainerCircle({
           return (
             <article key={hero.id} className={`card px-3 py-3 ${local ? "!border-gold !bg-panel-2" : ""}`}>
               <div className="flex items-center gap-3">
-                <Portrait seed={hero.portrait} age={32} sex={hero.sex} className="h-12 w-12" />
+                <Portrait seed={hero.portrait} age={32} sex={hero.sex} cape className="h-12 w-12" />
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-fg">
                     {hero.alias}
