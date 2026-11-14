@@ -699,3 +699,7 @@
 @keyframes cut-hit { 0% { filter: brightness(3) saturate(0); translate: 0 0; } 25% { translate: -8% 0; rotate: -4deg; } 55% { translate: 4% 0; rotate: 2deg; filter: brightness(1.4); } 100% { translate: 0 0; rotate: 0deg; } }
 .cut-ko { rotate: -78deg; translate: -10% 18%; filter: grayscale(1) brightness(0.55) !important; transition: rotate 0.6s cubic-bezier(.5,0,.75,0), translate 0.6s ease-in, filter 0.6s; }
 @media (prefers-reduced-motion: reduce) { .cut-breathe, .cut-hit { animation: none; } }
+/* 2026-11-14 night: a painted portrait still loading shows a dark frame with a soft sweep, not the old drawn bust. */
+.photo-wait::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.07) 50%, transparent 70%); background-size: 220% 100%; animation: photo-wait 1.3s linear infinite; }
+@keyframes photo-wait { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@media (prefers-reduced-motion: reduce) { .photo-wait::after { animation: none; } }

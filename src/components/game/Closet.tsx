@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { Figure } from "@/components/game/Figure";
+import { Cutout, stageArtKey } from "@/components/game/heroArt";
+import { Portrait } from "@/components/game/Portrait";
+import { useArt } from "@/components/game/Scene";
+import { hasArt } from "@/assets/art";
+import { ART_HEROES, stageScale } from "@/game/heroArt";
+import { presetById } from "@/game/presets";
 import { Check, Lock, X } from "lucide-react";
 import { FAMILY_COLOR } from "@/components/game/icons";
 import { capeTheme } from "@/game/theme";
@@ -59,7 +65,7 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto pb-24">
         <div className="relative mx-4 mt-3 h-56 shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 shadow-[0_18px_40px_-20px_rgba(0,0,0,.8)]">
-          <Figure seed={game.portrait} age={Math.max(game.age, 16)} sex={game.sex} look={game.look} wardrobe={game.wardrobe} mood={game.stats.happiness} aura={aura} className="absolute inset-0 h-full w-full" />
+          {ART_HEROES ? <Mirror game={game} aura={aura} /> : <Figure seed={game.portrait} age={Math.max(game.age, 16)} sex={game.sex} look={game.look} wardrobe={game.wardrobe} mood={game.stats.happiness} aura={aura} className="absolute inset-0 h-full w-full" />}
         </div>
         <p className="px-4 pt-3 text-sm font-bold text-gold">{summary === "No stat change. It just looks like you." ? "Street clothes. The shop is where the suit starts earning." : summary}</p>
         <p className="px-4 pt-1 text-xs text-muted">Buy or tap to wear. Buffs last only while the piece is on. {game.age < 8 ? "The glass shows the suit, not the year." : "Tap a piece again to take it off."}</p>
@@ -126,6 +132,43 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
         })}
       </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The closet mirror (2026-11-14 night): painted, like the rest of the cast. A God Mode legend sees their painting, a
+ * Mystery hero from 13 their full-body suit cutout (suit line A or B) on their city at night, and anyone without a
+ * suit yet (kids, the powerless, a power with no family) their painted portrait. The paper doll is gone from here;
+ * `ART_HEROES` off brings it back.
+ */
+function Mirror({ game, aura }: { game: Game; aura?: string }) {
+  const legend = presetById(game.preset);
+  const legendArt = useArt(legend && hasArt(legend.art) ? legend.art : "");
+  const family = capeTheme(game).cape;
+  const key = legend ? "" : stageArtKey(family, game.sex, game.age, game.suit);
+  const cut = useArt(key ? `cut-${key}` : "");
+  const city = useArt(game.cityId);
+  const glow = legend?.color ?? aura ?? "#e6b34d";
+  const caption = legend ? legend.hero : key ? (key.endsWith("-b") ? "Suit line B" : "Your suit") : game.age < 13 ? "The suit waits for the power" : "No suit fits a power you don't have yet";
+  return (
+    <div className="absolute inset-0 bg-[#0b0f18]" data-mirror={legend ? "legend" : key ? `cut-${key}` : "portrait"}>
+      {city && <img src={city} alt="" draggable={false} className="anim-fade absolute inset-0 size-full object-cover opacity-45 saturate-[.7]" />}
+      <span className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(60% 70% at 50% 62%, color-mix(in srgb, ${glow} 30%, transparent), transparent 70%), linear-gradient(180deg, rgb(11 15 24 / .35), rgb(11 15 24 / .2) 55%, rgb(11 15 24 / .92))` }} aria-hidden />
+      {legend && legendArt ? (
+        <img src={legendArt} alt="" draggable={false} className="anim-fade absolute inset-0 size-full object-cover object-top" />
+      ) : key && cut ? (
+        <span className="absolute inset-x-0 top-2 bottom-0 block">
+          <Cutout src={cut} name={game.name} glow={glow} pose="idle" scale={stageScale(game.age)} />
+        </span>
+      ) : !key && !legend ? (
+        <span className="absolute inset-0 grid place-items-center pb-5">
+          <span className="block rounded-[26%] p-[3px]" style={{ background: `linear-gradient(160deg, ${glow}, transparent 70%)`, boxShadow: `0 16px 40px -16px ${glow}` }}>
+            <Portrait seed={game.portrait} age={game.age} sex={game.sex} look={game.look} mood={game.stats.happiness} className="block size-36" />
+          </span>
+        </span>
+      ) : null}
+      <span className="t-label absolute inset-x-0 bottom-2 text-center text-[10px] tracking-[0.2em] text-fg/80 uppercase">{caption}</span>
     </div>
   );
 }
