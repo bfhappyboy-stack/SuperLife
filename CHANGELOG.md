@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-14 (portraits): real painted faces for everyone (`devbot/2026-11-14-portraits`)
+
+Built on `origin/devbot/2026-11-14-pm` (024efd6). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+- **Why (owner):** the SVG busts were "much better but … looks like a Wii character".
+- **46 painted portraits** cropped from five painted sheets: 3 babies, 6 kids, 9 teens, 10 adults, 9 people 55–75 and 9 masked rival capes. 192×192 webp (teens 320×320, since the creator shows them large), one lazy chunk per sheet (~45–95 KB each), in `src/assets/art/portraits-<sheet>.ts`.
+- **Picker (`src/game/portraits.ts` `pickPortrait`):** same age band (baby <4, child <13, teen <18, adult <55, older 55+), same sex, then the closest skin tone and hair from the person's look; ties broken by their seed, so each person keeps their face and moves to an older portrait with the same seed after 55. Rival capes (pro heroes on the Teachers shelf, the League table) use the masked sheet from 16. Mentors keep their fixed seed, age and sex, so their face is fixed too.
+- **Everywhere `Portrait` drew a bust:** you in the header, family, friends, partners, rivals, the lives list, the obituary, mentors and the character creator (Reroll look cycles through the faces that fit your choices). Rounded frame with a soft rim; existing rings keep the relationship colour.
+- **Kept:** the two portraits in hero suits are left out of the pool for now. `PHOTO_FACES` in `Portrait.tsx` switches back to the SVG busts, which also show for the moment a sheet is loading. No rules or saves change.
+- **Tests:** +5 (`portraits.test.ts`).
+
 ## 2026-11-14 (pm): painted faces for everyone (`devbot/2026-11-14-pm`)
 
 Built on `origin/devbot/2026-11-14-am` (2b00df2, itself on art2 bc9a9b7), so it merges after both. No art2 files touched. Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.

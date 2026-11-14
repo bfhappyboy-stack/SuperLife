@@ -1,5 +1,11 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Portraits pass (2026-11-14 portraits)
+
+**Played:** the Metro save at 29 (partner Silas, arch-enemy Greta) and a new Mystery life in the creator, at 390×844. Before/after: `/workspace/pt1114portraits/before-after-people.png`, `/workspace/pt1114portraits/before-after-creator-header.png`.
+
+**Findings:** the toy-like busts are gone; header, Circle cards and the creator now show painted faces that match the fighter art. Greta (red hair) gets a red-haired portrait, Silas a dark-haired one. Only 3 baby portraits (1 girl), so babies repeat often; the adult pool has 4 women vs 5 men; dyed hair colours (cobalt, teal, violet, rose, crimson) fall back to dark-haired portraits.
+
 ## Afternoon pass (2026-11-14 pm): faces, mentors and teens
 
 **Played:** a fresh Mystery life at 390×844 from the creator to 20 (New York City, Normal kid, Invisibility at 12; `/workspace/pt1114pm/life/`), plus the morning's Metro save (Sam Lee, 29, Flight, partner Silas who knows) and a God Mode Peter Parker at 16.
