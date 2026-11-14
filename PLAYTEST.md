@@ -1,5 +1,18 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-14 pm): faces, mentors and teens
+
+**Played:** a fresh Mystery life at 390×844 from the creator to 20 (New York City, Normal kid, Invisibility at 12; `/workspace/pt1114pm/life/`), plus the morning's Metro save (Sam Lee, 29, Flight, partner Silas who knows) and a God Mode Peter Parker at 16.
+
+**Before:** `/workspace/pt1114pm/shots/before-2.png` (People: emoji faces with blush dots for Greta and Silas, and the same for you in the header), `cbefore-2.png` (creator: stick-limbed paper doll on a cream card), `t-1.png` (Powers ▸ Book: an icon and text for your gift, a star glyph for the mentor). **After:** `after-2.png`, `cafter-2.png`, `p-1.png` / `p-2.png`, `legs-4.png`, `teen-4.png` (side by side: `/workspace/pt1114pm/before-after-people.png`, `/workspace/pt1114pm/before-after-creator.png`).
+
+**Findings:**
+- **The crudest art left was every face outside a fight (fixed, increment 1).** You, parents, friends, partners, rivals and rival capes were cartoon heads; the first screen of a new life (the creator) was the paper doll. Now one painted bust style, matching the cast's night-city, rim-lit look, at every age (babies round, kids big-headed, greying from 56, white at 70).
+- **Powers ▸ Book never showed you as a hero (fixed, increment 2).** The gift card now shows your painted cutout (or a legend's painting), and mentors have faces.
+- **Ages 13–15 fought as the doll (fixed, increment 3).** Invisibility woke at 12 in the test life and the first fights came at 13–14: the hero now stands as a slightly shorter painted cutout.
+- **Still crude or bare:** the wardrobe (Closet) is still the paper doll; under-13 fights keep the doll; event "Your call" screens are a beige card over a large empty dark area (room for a city or scene illustration); kids' minigames use the `MiniHead` icons. A second costume per family needs new paintings: no image generator was available to this pass.
+- **Money, rules and saves:** unchanged. Old saves load (Peter Parker 16 and the Metro 29 save both open and play; every face keeps its seed).
+
 ## Morning pass (2026-11-14 am): after the truth
 
 **Before:** a partner who knew your secret had one line on their card ("Knows you're a hero. Your secret is safe with Silas.", see `/workspace/shots-2026-11-11-pm/`) and nothing happened after fights or a bad break-up. **After (390×844, `/workspace/shots-2026-11-14-am/`):** `care-main.png` (a lost fight: "Silas is up when you get in, kit already open. Stitches, ice, no questions." with the +8 Health chip), `care-care.png` (Silas's card: "✚ Patches you up after fights (once so far)"), `sold-main.png` (breaking up with Silas at closeness 22: "MY LIFE WITH THE MASK", Fame +8 / Reputation −6 / Joy chips). No console errors, no horizontal overflow. Legend drift: an idle Superman 0 → 45 ends with each kit power at rank C (82) instead of D (7).

@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-14 pm pass
+
+- **Done:** painted busts for every procedural face and the creator (increment 1); your hero on the gift card, mentors with faces (increment 2); teens 13–15 fight as their painted cutout (increment 3).
+- **Blocked on paintings (no image generator in this pass):** a second costume per power family (18 cards + 18 cutouts, same pipeline as `mystery-*` / `cut-mystery-*`); a real kid set (7–12) for the stage; painted people photos if the owner prefers raster to the SVG busts.
+- **Next for art:** the Closet still shows the paper doll (it has to show clothes, so it needs a painted body with clothing layers or per-outfit art); event "Your call" screens need a scene illustration in the empty area; kids' minigame heads (`MiniHead`).
+- **Ask the owner:** are the new painted busts the right direction for people, or should family/partners get raster paintings too (costly: one asset per face type)?
+
 ## From the 2026-11-14 am pass
 
 - **Done:** legend signature powers drift +3 a year unused (increment 1); partners who know patch you up, bitter exes sell the story, good exes keep it (increment 2).
