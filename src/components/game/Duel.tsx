@@ -6,7 +6,8 @@ import { Figure, type Pose } from "@/components/game/Figure";
 import { kitFor } from "@/components/game/duelKit";
 import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
-import { Standee, familyOfPower, mysteryArtKey } from "@/components/game/heroArt";
+import { Cutout, Standee, familyOfPower, mysteryArtKey } from "@/components/game/heroArt";
+import { streetCutKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
 import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
@@ -27,6 +28,8 @@ export interface DuelHero {
   aura?: string;
   /** A God Mode legend: drawn as their painted card instead of the paper doll. */
   legend?: { art: string; color: string; name: string };
+  /** City art key: the painted backdrop behind the duel stage. */
+  city?: string;
   /** Power family of a Mystery hero: picks their painted card (heroArt.tsx). */
   family?: CapeFamily | null;
 }
@@ -110,11 +113,17 @@ const GIMMICK_COLOR: Record<GimmickKind, string> = {
 
 export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
   const legendArt = useArt(hero?.legend?.art ?? "");
-  const mysteryArt = useArt(hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24));
+  const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24);
+  const mysteryArt = useArt(mysteryKey);
+  const mysteryCut = useArt(mysteryKey ? `cut-${mysteryKey}` : "");
+  const stageArt = useArt(hero?.city ?? "");
   const board = spec.duel;
   // Hero-side NPC fighters (sparring partners, rival capes) wear a painted Mystery card too.
   const foeHeroSeed = board ? (board.foeSeed ?? hashName(board.foeName)) : 0;
-  const foeHeroArt = useArt(board?.foeSide === "hero" ? mysteryArtKey(familyOfPower(board.foePower), board.foeSex ?? (foeHeroSeed % 2 ? "female" : "male")) : "");
+  const foeHeroKey = board?.foeSide === "hero" ? mysteryArtKey(familyOfPower(board.foePower), board.foeSex ?? (foeHeroSeed % 2 ? "female" : "male")) : "";
+  const foeHeroArt = useArt(foeHeroKey ? `cut-${foeHeroKey}` : "");
+  // Street villains with no named painting stand in as their power's painted archetype.
+  const streetCut = useArt(board?.foeSide === "villain" ? streetCutKey(board.foePower) : "");
   const [state, setState] = useState<DuelState | null>(() => (board ? startDuel(board) : null));
   const [shownHp, setShownHp] = useState(() => ({ me: board?.playerHp ?? 1, foe: board?.foeHp ?? 1 }));
   const [log, setLog] = useState(board?.gimmick ? `${board.gimmick.name}: ${board.gimmick.hint}` : "Read their tell, then answer it. Winning hits leave a status.");
@@ -335,6 +344,8 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
 
   const heroFigure = hero?.legend && legendArt ? (
     <Standee src={legendArt} name={hero.legend.name} color={hero.legend.color} glow={heroAura} pose={mePose} />
+  ) : mysteryCut ? (
+    <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} />
   ) : mysteryArt ? (
     <Standee src={mysteryArt} name="You" color={heroAura} glow={heroAura} pose={mePose} />
   ) : (
@@ -357,7 +368,9 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
       <VillainArt id={rogueArt.id} color={rogueArt.color} crop="tall" />
     </Standee>
   ) : foeHeroArt ? (
-    <Standee src={foeHeroArt} name={fight.foeName} color={foeColor} glow={foeColor} pose={foePose} flip />
+    <Cutout src={foeHeroArt} name={fight.foeName} glow={foeColor} pose={foePose} />
+  ) : streetCut ? (
+    <Cutout src={streetCut} name={fight.foeName} glow={foeColor} pose={foePose} flip />
   ) : (
     <Figure seed={foeSeed} age={34} sex={fight.foeSex} tint={kit} aura={foeColor} bare pose={foePose} mood={fight.foeSide === "villain" ? 30 : 70} label={fight.foeName} />
   );
@@ -430,7 +443,14 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
       </div>
       {gimmick && <GimmickStrip gimmick={gimmick} live={live} status={status} state={hud} next={fight.phase3 && hud.phase === 2 ? (fight.phase3.at ?? PHASE3_AT) : null} third={hud.phase === 3} />}
 
-      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[146px]" : "h-[178px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[184px]" : "h-[226px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+        {stageArt && (
+          <>
+            <img src={stageArt} alt="" className="anim-fade absolute inset-0 size-full object-cover object-[50%_62%] opacity-70 saturate-[0.85]" draggable={false} aria-hidden />
+            <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/20 to-ink/80" aria-hidden />
+            <div className="absolute inset-x-0 bottom-0 h-[22%] bg-[linear-gradient(180deg,transparent,rgb(8_10_18/0.9))]" aria-hidden />
+          </>
+        )}
         <div className="absolute inset-0" style={{ background: `radial-gradient(45% 55% at 22% 92%, color-mix(in srgb, ${heroAura} 32%, transparent), transparent 70%), radial-gradient(45% 55% at 78% 92%, color-mix(in srgb, ${foeColor} ${live ? 52 : 34}%, transparent), transparent 70%)` }} />
         {fight.boss && <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(255,59,48,0.35)]" />}
         {live && gimmick && <div className="duel-phase-aura pointer-events-none absolute inset-0" style={{ "--aura": GIMMICK_COLOR[gimmick.kind] } as React.CSSProperties} />}

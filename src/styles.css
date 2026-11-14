@@ -689,3 +689,13 @@
 @media (prefers-reduced-motion: reduce) {
   .ticker-run { animation: none; }
 }
+/* 2026-11-11 art2: painted stage cutouts. Pose classes animate `translate`/`scale`/`rotate` so the mirror `transform` survives. */
+.cut-fig { transform-origin: 50% 100%; transition: translate 0.2s ease, rotate 0.25s ease, filter 0.25s ease; }
+.cut-breathe { animation: cut-breathe 3.2s ease-in-out infinite; }
+@keyframes cut-breathe { 0%, 100% { scale: 1 1; } 50% { scale: 1.012 1.025; } }
+.cut-attack { translate: 6% -2%; rotate: 4deg; scale: 1.05; }
+.cut-guard { translate: -3% 0; scale: 0.98; }
+.cut-hit { animation: cut-hit 0.45s ease-out; }
+@keyframes cut-hit { 0% { filter: brightness(3) saturate(0); translate: 0 0; } 25% { translate: -8% 0; rotate: -4deg; } 55% { translate: 4% 0; rotate: 2deg; filter: brightness(1.4); } 100% { translate: 0 0; rotate: 0deg; } }
+.cut-ko { rotate: -78deg; translate: -10% 18%; filter: grayscale(1) brightness(0.55) !important; transition: rotate 0.6s cubic-bezier(.5,0,.75,0), translate 0.6s ease-in, filter 0.6s; }
+@media (prefers-reduced-motion: reduce) { .cut-breathe, .cut-hit { animation: none; } }
