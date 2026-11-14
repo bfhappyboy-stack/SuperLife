@@ -1,5 +1,9 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-14 am): after the truth
+
+**Before:** a partner who knew your secret had one line on their card ("Knows you're a hero. Your secret is safe with Silas.", see `/workspace/shots-2026-11-11-pm/`) and nothing happened after fights or a bad break-up. **After (390×844, `/workspace/shots-2026-11-14-am/`):** `care-main.png` (a lost fight: "Silas is up when you get in, kit already open. Stitches, ice, no questions." with the +8 Health chip), `care-care.png` (Silas's card: "✚ Patches you up after fights (once so far)"), `sold-main.png` (breaking up with Silas at closeness 22: "MY LIFE WITH THE MASK", Fame +8 / Reputation −6 / Joy chips). No console errors, no horizontal overflow. Legend drift: an idle Superman 0 → 45 ends with each kit power at rank C (82) instead of D (7).
+
 ## Art pass 2 (2026-11-11 art2): fighters on the stage
 
 **Before:** `/workspace/shots-art/after/duel-m.png` (framed hero card vs the drawn Skinwalker). **After:** `/workspace/shots-art/art2/duel-m.png` (full-body hero vs the painted Skinwalker on the city backdrop), `duel-f.png` (Might heroine vs a Kinetic), `duel-m-hit.png` (hit frame).

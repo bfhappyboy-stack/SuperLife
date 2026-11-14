@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-11-14 (am): legend signature growth, partner patch-up and story sale (`devbot/2026-11-14-am`)
+
+Built on `origin/devbot/2026-11-11-art2` (bc9a9b7), so it should merge after that branch. No art files touched. Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 2: after the truth: a partner who knows looks after you; a bitter ex sells the story (owner's call, 2026-11-11 eve)
+
+- **Patch-ups (`patchUp` in `mask.ts`):** a partner who knows you're a hero, with closeness 60+ and trust 40+, looks after you after a villain fight, at most once a month: Health +4 / Joy +2 after a win, Health +8 / Joy +3 after a loss or draw. Its own bold line on the fight card ("Silas is up when you get in, kit already open. Stitches, ice, no questions."), a recap line after a Play step ("Silas patched you up after 2 fights."), and on their card under "Knows you're a hero": "✚ Patches you up after fights (N times)" (or "Will patch you up after fights" before the first time). Sparring with heroes, partners who don't know, distant partners and public heroes: nothing.
+- **The story sale (`afterSplit`):** when a partner who knew becomes an ex (Break up, Divorce, or they end it at closeness under 16) and it ended badly (closeness under 35 or trust under 30), they sell your story: the secret identity is gone for good (the `secret` trait becomes a public `loud` mark, like the "Let it run" photo event), Fame +12 / Reputation −6 / Joy −8 through the usual curves, a front-page line on the card ("\"MY LIFE WITH THE MASK\": Silas sold your story…"), a major history entry and a Play recap line once. A good-terms ex keeps it ("Keeps your secret" in their history, and a line on the card). An ex who never knew has nothing to sell.
+- **Saves:** new optional fields `Person.patchedAt`, `patches`, `soldStory` and `Game.storySold`; old saves load as never patched / never sold, and a malformed `storySold` is dropped. Flag `AFTER_ON` in `mask.ts`.
+- **Tests (`after.test.ts`, 6):** patch-up after a win and a loss, once a month, card and recap lines; no patch-up for unaware / distant partners, hero sparring or public heroes; a bad break-up sells the story (low closeness or low trust alone); a good-terms ex keeps it and an unaware ex has nothing; a partner who walks out over the years sells it too; old saves and a malformed field. 334 game tests pass.
+
+### Increment 1: God Mode legends' signature powers grow on their own (owner's call, 2026-11-11 pm)
+
+- **Why:** since 2026-11-11 only powers you used grow on the birthday. The owner wants a legend's signature powers (Superman's Flight) to grow a little on their own.
+- **Rule (`legendSignature` / `ripenUsed` in `engine.ts`):** each birthday, every canon-kit power a God Mode legend holds gains `LEGEND_DRIFT_EXP` 3 mastery if it wasn't used that year (used ones get the normal 7, never both). Mystery lives and kit-less legends (Batman) are unchanged: growth only through use, and it never grants a power.
+- **Balance:** a Superman life left idle 0 → 45 (no actions at all) ends with each kit power at 82 mastery (rank C) instead of 7 (rank D); B needs 140. For comparison a played main power averages rank A (~400) at 40.
+- **Tests:** +1 (`legend.test.ts`: unused Flight drifts +3, a used kit power gets 7 only, an off-kit power and a Mystery life's power don't move, Batman has no signature). 328 game tests pass.
+
 ## 2026-11-11 (art2): real fighters on the stage (`devbot/2026-11-11-art2`)
 
 Built on `origin/devbot/2026-11-11-art-main` (c1aecc4, on main 3857fea). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.

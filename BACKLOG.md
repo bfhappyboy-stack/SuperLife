@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-14 am pass
+
+- **Done:** legend signature powers drift +3 a year unused (increment 1); partners who know patch you up, bitter exes sell the story, good exes keep it (increment 2).
+- **Ask the owner:** should a public hero's partner patch you up too (now only a secret-identity partner who knows)? Should a partner who found the suit, heard the truth and left anyway count as "knowing" (now they can't sell, because they never accepted it)? Is a story sale always certain on a bad break-up, or should temper decide (Slippery always, Steady rarely)?
+- **Next for dating:** a crush while partnered (getting caught), date nights and anniversaries as routine slots, the press hounding you for a while after a sale (a short "exposed" chapter thread).
+
 ## From the 2026-11-11 art pass
 
 - **Done (art2 increment 1):** painted street-villain archetypes and full-body hero cutouts on a painted stage.
