@@ -1,3 +1,4 @@
+import { ensureSuit } from "./heroArt";
 import { RANKS, UPBRINGINGS, powerById } from "./data";
 import { getPower, legacyComboId } from "./combo";
 import { ensureWardrobe } from "./costume";
@@ -122,6 +123,7 @@ function migrate(game: Game): Game {
   }
   migrateChapters(next);
   migrateAutoFights(next);
+  ensureSuit(next);
   ensureTies(next);
   ensureMarket(next);
   ensureEconomy(next);

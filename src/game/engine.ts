@@ -1,3 +1,4 @@
+import { suitForSeed } from "./heroArt";
 import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
 import { bizFightEdge, ECON_FLAGS, econAct, econRelocate, economyMonth, ensureEconomy, homeEdge, livingOf, noteFight, spendBizEdge } from "./economy";
 import { AWAKEN_LESSONS, BRAID_LESSONS, HERO_AWAKEN_BOND, MENTOR_AWAKEN_BOND, SOLO_RATE, awakenBlock, braidBlock, library, notePage, notePower, pageBlock } from "./library";
@@ -1474,6 +1475,7 @@ export function createGame(input: NewLifeOpts): Game {
     death: null,
     lastEvent: "",
     peak: { fame: 0, power: 0, rank: 0, money: 0, rep: 0 },
+    suit: suitForSeed(seed),
   };
   d.stats = {
     health: clamp(84 + rollInt(d, 12), 0, 100),
