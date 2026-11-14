@@ -6,7 +6,8 @@ import { Figure, type Pose } from "@/components/game/Figure";
 import { kitFor } from "@/components/game/duelKit";
 import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
-import { Cutout, Standee, familyOfPower, mysteryArtKey } from "@/components/game/heroArt";
+import { Cutout, Standee, familyOfPower, mysteryArtKey, stageArtKey } from "@/components/game/heroArt";
+import { stageScale } from "@/game/heroArt";
 import { streetCutKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
@@ -115,7 +116,8 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const legendArt = useArt(hero?.legend?.art ?? "");
   const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24);
   const mysteryArt = useArt(mysteryKey);
-  const mysteryCut = useArt(mysteryKey ? `cut-${mysteryKey}` : "");
+  const teenKey = hero?.legend ? "" : stageArtKey(hero?.family, hero?.sex, hero?.age ?? 24);
+  const mysteryCut = useArt(teenKey ? `cut-${teenKey}` : "");
   const stageArt = useArt(hero?.city ?? "");
   const board = spec.duel;
   // Hero-side NPC fighters (sparring partners, rival capes) wear a painted Mystery card too.
@@ -345,7 +347,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const heroFigure = hero?.legend && legendArt ? (
     <Standee src={legendArt} name={hero.legend.name} color={hero.legend.color} glow={heroAura} pose={mePose} />
   ) : mysteryCut ? (
-    <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} />
+    <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} scale={stageScale(hero?.age ?? 24)} />
   ) : mysteryArt ? (
     <Standee src={mysteryArt} name="You" color={heroAura} glow={heroAura} pose={mePose} />
   ) : (

@@ -19,7 +19,8 @@ import { FLOW_ON, stepLabel } from "@/game/flow";
 import { autoResolveOdds } from "@/game/skip";
 import { borrowAmounts, borrowBlock, canTalkMoney, lendAmounts, loanLine, openLoan, temperOf, termFor, trustOf } from "@/game/ties";
 import { CityScene, TitleArt, useArt } from "@/components/game/Scene";
-import { mysteryArtKey } from "@/components/game/heroArt";
+import { stageArtKey } from "@/components/game/heroArt";
+import { stageScale } from "@/game/heroArt";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
 import { Minigame } from "@/components/game/Minigame";
@@ -253,10 +254,10 @@ function Life({ game }: { game: Game }) {
   const chapterNo = game.chapters?.length ?? 1;
   const phase = game.chapters?.[game.chapters.length - 1]?.phase ?? null;
   const family = capeTheme(game).cape;
-  // The gift card shows who you are in the suit: a legend's painting, or your painted Mystery cutout (16+).
+  // The gift card shows who you are in the suit: a legend's painting, or your painted Mystery cutout (13+, smaller as a teen).
   const giftLegend = presetById(game.preset);
   const giftLegendArt = useArt(giftLegend && hasArt(giftLegend.art) ? giftLegend.art : "");
-  const giftKey = giftLegend ? "" : mysteryArtKey(family, game.sex, game.age);
+  const giftKey = giftLegend ? "" : stageArtKey(family, game.sex, game.age);
   const giftCut = useArt(giftKey ? `cut-${giftKey}` : "");
   const showTabs = !choosing && game.phase !== "mini";
   // Chapter goals: Go jumps to the tab and shelf, then the matching button pulses.
@@ -465,7 +466,7 @@ function Life({ game }: { game: Game }) {
                       alt=""
                       draggable={false}
                       className="cut-breathe pointer-events-none absolute right-0 bottom-0 -z-10 h-[15rem] w-auto max-w-none"
-                      style={{ filter: `drop-shadow(0 0 1.5px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 85%, white)) drop-shadow(0 0 12px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 45%, transparent))` }}
+                      style={{ height: `${15 * stageScale(game.age)}rem`, filter: `drop-shadow(0 0 1.5px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 85%, white)) drop-shadow(0 0 12px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 45%, transparent))` }}
                     />
                   </>
                 ) : null}

@@ -7,7 +7,7 @@
 import type { ReactNode } from "react";
 import type { Pose } from "@/components/game/Figure";
 import { hasArt } from "@/assets/art";
-import { mysteryKey } from "@/game/heroArt";
+import { mysteryKey, stageKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
 import type { Sex } from "@/game/types";
 
@@ -17,6 +17,12 @@ export { familyOfPower } from "@/game/heroArt";
 export function mysteryArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30): string {
   const key = mysteryKey(family, sex, age);
   return key && hasArt(key) ? key : "";
+}
+
+/** Stage cutout key for your Mystery hero from 13 that exists in the asset table, or "". */
+export function stageArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30): string {
+  const key = stageKey(family, sex, age);
+  return key && hasArt(`cut-${key}`) ? key : "";
 }
 
 /** A painted fighter card on the duel stage, with the same pose cues the paper doll had. */
@@ -42,7 +48,7 @@ export function Standee({ src, name, color, glow, pose, flip, children }: { src?
  * idle breathing, a white hit flash with a shake, a forward lean on attack and a fall on KO. `face` flips the art so
  * the fighter looks at their opponent (the stage mirrors the foe side, so foe cutouts painted facing left pass flip).
  */
-export function Cutout({ src, name, glow, pose, flip }: { src: string; name: string; glow: string; pose: Pose; flip?: boolean }) {
+export function Cutout({ src, name, glow, pose, flip, scale = 1 }: { src: string; name: string; glow: string; pose: Pose; flip?: boolean; scale?: number }) {
   return (
     <div className="relative flex h-full w-full items-end justify-center" role="img" aria-label={name}>
       <span className="cut-shadow pointer-events-none absolute bottom-[1%] left-1/2 h-[9%] w-[78%] -translate-x-1/2 rounded-[50%]" style={{ background: `radial-gradient(closest-side, rgb(0 0 0 / 0.75), color-mix(in srgb, ${glow} 25%, transparent) 70%, transparent)` }} aria-hidden />
@@ -51,7 +57,7 @@ export function Cutout({ src, name, glow, pose, flip }: { src: string; name: str
         alt=""
         draggable={false}
         className={`cut-fig relative h-[96%] w-auto max-w-none object-contain object-bottom ${pose === "idle" || pose === "stand" ? "cut-breathe" : ""} ${pose === "hit" ? "cut-hit" : ""} ${pose === "attack" ? "cut-attack" : ""} ${pose === "ko" ? "cut-ko" : ""} ${pose === "guard" ? "cut-guard" : ""}`}
-        style={{ transform: flip ? "scaleX(-1)" : undefined, filter: `drop-shadow(0 0 1.5px color-mix(in srgb, ${glow} 85%, white)) drop-shadow(0 0 10px color-mix(in srgb, ${glow} 45%, transparent))` }}
+        style={{ height: scale < 1 ? `${96 * scale}%` : undefined, transform: flip ? "scaleX(-1)" : undefined, filter: `drop-shadow(0 0 1.5px color-mix(in srgb, ${glow} 85%, white)) drop-shadow(0 0 10px color-mix(in srgb, ${glow} 45%, transparent))` }}
       />
     </div>
   );

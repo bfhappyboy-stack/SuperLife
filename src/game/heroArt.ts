@@ -16,6 +16,25 @@ export function mysteryKey(family: CapeFamily | null | undefined, sex: Sex | und
   return `mystery-${family}-${sex === "female" ? "f" : "m"}`;
 }
 
+/**
+ * Teens on the stage (2026-11-14 pm): from 13 a Mystery hero with a power family stands in the ring as their painted
+ * cutout, a little smaller each year younger than 16 (the paper doll already showed them grown). Cards and posters still
+ * start at 16. Under 13 keeps the doll.
+ */
+export const TEEN_STAGE_AGE = 13;
+
+/** Stage cutout key (without the `cut-` prefix) for your Mystery hero, or "" (no family, under 13, art off). */
+export function stageKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30): string {
+  if (age < TEEN_STAGE_AGE) return "";
+  return mysteryKey(family, sex, Math.max(age, ART_MIN_AGE));
+}
+
+/** How tall a teen stands next to a grown fighter: 13 → 0.86, 14 → 0.9, 15 → 0.94, 16+ → 1. */
+export function stageScale(age: number): number {
+  if (age >= ART_MIN_AGE) return 1;
+  return Math.max(0.86, 0.86 + (age - TEEN_STAGE_AGE) * 0.04);
+}
+
 /** The power family a single power belongs to (for NPC fighters). */
 export function familyOfPower(powerId: string | null | undefined): CapeFamily | null {
   if (!powerId) return null;
