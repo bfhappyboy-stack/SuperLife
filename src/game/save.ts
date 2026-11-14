@@ -128,6 +128,8 @@ function migrate(game: Game): Game {
   next.difficulty = asDifficulty(next.difficulty ?? DEFAULT_DIFFICULTY);
   const rg = next.regroup as unknown;
   if (rg !== undefined && rg !== null && !(typeof rg === "object" && typeof (rg as { name?: unknown }).name === "string" && typeof (rg as { until?: unknown }).until === "number")) next.regroup = null;
+  const sold = next.storySold as unknown;
+  if (sold !== undefined && sold !== null && !(typeof sold === "object" && typeof (sold as { by?: unknown }).by === "string" && typeof (sold as { at?: unknown }).at === "number")) next.storySold = null;
   return next;
 }
 

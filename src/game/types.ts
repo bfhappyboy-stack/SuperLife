@@ -368,6 +368,12 @@ export interface Person {
   toldAt?: number;
   /** The mask at home: when they last found the suit (months). */
   foundAt?: number;
+  /** After the truth (mask.ts): the month they last patched you up after a fight (months, age×12+month). */
+  patchedAt?: number;
+  /** After the truth: how many times they've patched you up (missing = 0). */
+  patches?: number;
+  /** After the truth: this ex sold your story to the press. */
+  soldStory?: boolean;
 }
 
 /** Money between you and someone in your life (ties.ts). */
@@ -468,6 +474,8 @@ export interface Game {
   tieAsk?: TieAsk | null;
   /** The mask at home: a partner found the suit and waits for an answer until `until` (months). */
   maskScene?: { personId: string; until: number } | null;
+  /** After the truth: an ex sold your story (who, and when in months). Missing on older saves = never. */
+  storySold?: { by: string; at: number } | null;
   flags: Record<string, number>;
   card: Card;
   pending: Pending | null;

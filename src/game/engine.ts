@@ -40,7 +40,7 @@ import { arcsCleared } from "./arcs";
 import { bondForMastery, masteryCap, masteryLevel, masteryRoom, powerLevelCap, powerRank, trainCost, trainExp, youthGain } from "./mastery";
 import { addWakeGoal, migrateChapters, openChapter, turnChapter } from "./chapters";
 import { tieAct, tieMonth } from "./ties";
-import { hidingFrom, maskAct, maskMonth, oddsOfTell, tellBlock } from "./mask";
+import { afterSplit, hidingFrom, maskAct, maskMonth, oddsOfTell, patchUp, tellBlock } from "./mask";
 import { canonAt, canonBetween, presetById, presetVillain, signatureMoves, villainGimmick, villainPhase3, villainSex, wakeAge, type CanonBeat, dominantPath, villainDebut, type PresetVillain } from "./presets";
 import { callItOptions, omenCooldown, omenFor, omenStage, OMEN_STAGES, pickHiddenGift, pickWakeAge, revealLine, ELEMENT_ORDER, WAKE_MAX, WAKE_MIN } from "./mystery";
 import { powerGimmick } from "./gimmicks";
@@ -1189,6 +1189,12 @@ function openYear(d: Game): string[] {
     partner.stage = undefined;
     d.flags.married = 0;
     banners.push(`${firstName(partner.name)} ends it. You hear it in a text that took too long to draft.`);
+    const after = afterSplit(d, partner);
+    if (after?.sold) {
+      applyEffects(d, after.effects, []);
+      banners.push(after.line);
+      pushHistory(d, `${partner.name} sold your story to the press. Your secret identity is out.`, "major");
+    }
   }
   if (partner && partner.alive && partner.role === "partner" && partner.age > 80 && roll(d) < (partner.age - 78) * 0.03) {
     partner.alive = false;
@@ -2205,10 +2211,26 @@ export function markUsed(d: Game, powerId: string | undefined) {
   d.usedPowers = list;
 }
 
+/**
+ * A God Mode legend's signature powers (the canon kit, e.g. Superman's Flight) grow a little every birthday on
+ * their own, even unused (owner's call, 2026-11-11). Used ones still get the full ripening instead. Mystery lives
+ * have no signature: their powers grow only through use.
+ */
+export const LEGEND_DRIFT_EXP = 3;
+
+/** The legend's canon-kit powers you hold. Empty for Mystery lives and kit-less legends (Batman). */
+export function legendSignature(d: Pick<Game, "preset" | "unlockedPowers">): string[] {
+  const legend = presetById(d.preset);
+  if (!legend) return [];
+  const held = d.unlockedPowers ?? [];
+  return legend.powers.filter((id) => held.includes(id));
+}
+
 /** Birthday ripening: a little mastery for each power you used this year, then a fresh year starts. */
 export function ripenUsed(d: Game) {
   const used = Array.isArray(d.usedPowers) ? d.usedPowers : (d.unlockedPowers ?? []);
   for (const id of used) if ((d.unlockedPowers ?? []).includes(id)) grantMastery(d, id, RIPEN_EXP, false);
+  for (const id of legendSignature(d)) if (!used.includes(id)) grantMastery(d, id, LEGEND_DRIFT_EXP, false);
   d.usedPowers = [];
 }
 
@@ -2761,12 +2783,15 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
     const moved = noteFight(d, win, spec.duel.foeName);
     if (moved) extra += ` Markets: ${moved}`;
   }
+  // A partner who knows you're a hero looks after you when you get home (2026-11-14): a line of its own on the card.
+  const care = villainFight && special?.kind !== "death" ? patchUp(d, !win) : null;
+  if (care) applyEffects(d, { health: care.health, happiness: care.happiness }, deltas);
   if (spec.tag === "tryout" && score >= 0.33) extra += joinLeague(d);
   if (spec.tag === "mission" && score >= 0.33) {
     d.missions += 1;
     d.flags.missionsAll = (d.flags.missionsAll ?? 0) + 1;
   }
-  const banners: string[] = [];
+  const banners: string[] = care ? [care.line] : [];
   noteGrowth(before, d, banners);
   const kit = edge.bonus > 0 ? ` Kit edge +${Math.round(edge.bonus * 100)}%.${edge.notes.length ? ` ${edge.notes.join(" ")}` : ""}` : "";
   const story = `${win ? spec.winText : partial ? spec.partialText : spec.loseText}${extra}${archLine}${kit}`;
@@ -4917,7 +4942,15 @@ function loveAct(game: Game, d: Game, id: string): Game {
     d.flags.married = 0;
     applyEffects(d, { money: cost ? -cost : undefined, happiness: st === "married" ? -10 : -6 }, deltas);
     pushHistory(d, `${st === "married" ? "Divorced" : "Broke up with"} ${p.name}.`, "major");
-    return done(st === "married" ? `The divorce is quiet and expensive. ${who} keeps the plant.` : `You end it with ${who}. It's the right call, and it still sits in your chest for a week.`, true);
+    // An ex who knew your secret: kept if it ended well, sold to the press if it ended badly (2026-11-14).
+    const after = afterSplit(d, p);
+    if (after?.sold) {
+      applyEffects(d, after.effects, deltas);
+      pushHistory(d, `${p.name} sold your story to the press. Your secret identity is out.`, "major");
+    }
+    const out = done(st === "married" ? `The divorce is quiet and expensive. ${who} keeps the plant.` : `You end it with ${who}. It's the right call, and it still sits in your chest for a week.`, true);
+    if (after) out.card = { ...out.card, banner: [after.line] };
+    return out;
   }
   return game;
 }
