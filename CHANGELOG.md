@@ -4,6 +4,12 @@
 
 Built on `origin/devbot/2026-11-14-am` (2b00df2, itself on art2 bc9a9b7), so it merges after both. No art2 files touched. Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
 
+### Increment 3: teens fight as themselves
+
+- **Why:** powers manifest between 7 and 15, so many Mystery lives fight for years before 16, and all of that time the player stood in the ring as the paper doll (drawn at 16 anyway) facing a painted villain cutout.
+- **What (`stageKey` / `stageScale` in `game/heroArt.ts`, `stageArtKey` in `components/game/heroArt.tsx`):** from 13 your Mystery hero stands on the duel stage as their painted cutout, a touch shorter each year under 16 (13: 86%, 14: 90%, 15: 94%), and the Powers ▸ Book gift card shows the same teen cutout. Cards and Arena posters still start at 16; under 13 keeps the doll. `ART_HEROES` still turns it all off.
+- **Tests:** +1 (`art.test.ts`: no cutout at 12, cutout at 13 and 15, nothing without a family, cards still 16+, the height steps). 336 game tests pass.
+
 ### Increment 2: your hero on the gift card, and mentors with faces
 
 - **Why:** the Powers tab is the hero's home, but "Your gift" was an icon and text, and every mentor (Uncle Ben, Alfred, Skyline, Pops Delgado…) was a glyph in a circle. Nobody you train with had a face.
