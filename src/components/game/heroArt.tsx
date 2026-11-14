@@ -7,22 +7,20 @@
 import type { ReactNode } from "react";
 import type { Pose } from "@/components/game/Figure";
 import { hasArt } from "@/assets/art";
-import { mysteryKey, stageKey } from "@/game/heroArt";
+import { mysteryKey, stageKeys, suitKeys, type Suit } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
 import type { Sex } from "@/game/types";
 
 export { familyOfPower } from "@/game/heroArt";
 
-/** Art key for a painted Mystery hero that exists in the asset table, or "". */
-export function mysteryArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30): string {
-  const key = mysteryKey(family, sex, age);
-  return key && hasArt(key) ? key : "";
+/** Art key for a painted Mystery hero card that exists in the asset table (suit B first when worn and painted), or "". */
+export function mysteryArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30, suit?: Suit | null): string {
+  return suitKeys(mysteryKey(family, sex, age), suit).find((key) => hasArt(key)) ?? "";
 }
 
-/** Stage cutout key for your Mystery hero from 13 that exists in the asset table, or "". */
-export function stageArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30): string {
-  const key = stageKey(family, sex, age);
-  return key && hasArt(`cut-${key}`) ? key : "";
+/** Stage cutout key (no `cut-` prefix) for your Mystery hero from 13 that exists in the asset table: a teen painting at 13-15, suit B first, or "". */
+export function stageArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30, suit?: Suit | null): string {
+  return stageKeys(family, sex, age, suit).find((key) => hasArt(`cut-${key}`)) ?? "";
 }
 
 /** A painted fighter card on the duel stage, with the same pose cues the paper doll had. */
