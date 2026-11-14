@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-14 (suitb): suit B paintings wired in (`devbot/2026-11-14-suitb`)
+
+Built on `origin/devbot/2026-11-14-night` (abfe1b3). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+- **17 suit B stage cutouts** `cut-mystery-<family>-<m|f>-b` (every family and sex but the male speedster, who stays locked to suit A): painted on plain dark grey, cut out with rembg (isnet-general-use, alpha matting), edge colour decontaminated against the local backdrop so no grey halo, specks dropped, trimmed, 720 px tall transparent webp q80 (~28–67 KB each). Checked on dark and light backdrops; the storm coats and veil hoods are clean.
+- **17 suit B cards** `mystery-<family>-<m|f>-b` (540×960): the full-res B cutout composited on a city painting (arcane: Crown, fire: Hood, ice: Harbor, storm: Metro, mind: Neon, might and swift: NYC, veil and life: Stacks), figure from top with headroom, night grade, a rim light and halo in the family colour, bottom fade and vignette. Close to the A cards; their figures don't stand on a rooftop like A, so the bottom fades out instead.
+- **Every life wearing suit B now sees it** in the Closet mirror, duels, the gift card and Arena posters; suit A lives are unchanged. `SUIT_B` in `src/game/heroArt.ts` still switches it all back to A. No save changes.
+- **Tests:** +1 (`suit.test.ts`: every B key resolves to its own card and cutout, distinct from A; swift-m stays A).
+
 ## 2026-11-14 (night): a painted Closet and a second suit line (`devbot/2026-11-14-night`)
 
 Built on `origin/devbot/2026-11-14-portraits` (f2e79d9), so this branch carries the whole unmerged chain (art2 → am → pm → portraits): merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (345 pass), built and loaded at 390×844 before push.

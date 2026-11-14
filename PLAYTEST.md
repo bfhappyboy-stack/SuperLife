@@ -1,5 +1,11 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Suit B pass (2026-11-14 suitb)
+
+**Played:** the Metro save at 29 as fire (m), storm (f), ice (f), mind (m), veil (m) and life (f), each on suit A and suit B, Closet open; then a storm (f) suit B duel against Rent, at 390×844. Grid: `/workspace/pt1114suitb/suits-grid.png`; duel: `/workspace/pt1114suitb/duel-suitb-storm-f.png`.
+
+**Findings:** suit B swaps in cleanly with no halo on the night city. B suits read more grounded (armour, coats, hoods) and carry less hand glow than A, so fire and veil B look quieter than their A. Mind A is blue and storm A purple, while their B suits are violet and navy, so the colours swap between lines. Veil B lost the faint smoke trail in the cutout.
+
 ## Night pass (2026-11-14 night): the Closet, suit lines
 
 **Played:** the Metro save (Sam Lee, Flight) at 29 and at 14, and the same life at 10, at 390×844 (`/workspace/pt1114night/shots/`). Before/after: `/workspace/pt1114night/before-after-closet.png` (before: `before-adult-closet.png`; after: `after-adult-closet.png`, `after-teen-closet.png`, `after-kid-closet.png`).
