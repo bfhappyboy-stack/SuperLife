@@ -65,6 +65,28 @@ export function DamageNumber({ amount, tone, big = false, gold = false, seed = 0
   );
 }
 
+/**
+ * Soft volumetric light from above for a K.O. or result header (2026-11-15 pm, the Arena's round-over and result screens;
+ * the same look as the Duel result card): a tone glow, blurred thin god-rays faded by a radial mask, and a spotlight cone.
+ * `top` = where the light source sits (px from the container top); `spotX` = the spotlight's centre. Null with FX_CINEMATIC off.
+ */
+export function KoLight({ tone, top = -170, spot = true, spotX = "50%" }: { tone: string; top?: number; spot?: boolean; spotX?: string }) {
+  if (!FX_CINEMATIC) return null;
+  const mask = "radial-gradient(circle, rgb(0 0 0 / 0.9) 8%, rgb(0 0 0 / 0.35) 34%, transparent 62%)";
+  return (
+    <span className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden" aria-hidden>
+      <span className="absolute left-1/2 h-[420px] w-[520px] -translate-x-1/2" style={{ top: top + 50, background: `radial-gradient(50% 45% at 50% 30%, color-mix(in srgb, ${tone} 34%, transparent), transparent 72%)` }} />
+      <span className="ko-rays ko-godrays absolute left-1/2 size-[560px] -translate-x-1/2 rounded-full" style={{ top, background: `repeating-conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, ${tone} 70%, white) 3deg, transparent 9deg, transparent 17deg)`, maskImage: mask, WebkitMaskImage: mask }} />
+      {/* The blur sits on a wrapper so it softens the cone's clipped edges (a filter on the clipped element itself would not). */}
+      {spot && (
+        <span className="ko-spot absolute h-[270px] w-[260px] -translate-x-1/2" style={{ top: top + 266, left: spotX }}>
+          <span className="absolute inset-0" style={{ background: `linear-gradient(180deg, color-mix(in srgb, ${tone} 30%, transparent), color-mix(in srgb, ${tone} 10%, transparent) 70%, transparent)`, clipPath: "polygon(40% 0, 60% 0, 100% 100%, 0 100%)" }} />
+        </span>
+      )}
+    </span>
+  );
+}
+
 /** Light that fills the hit side of the stage for a beat, in the element colour (screen blend, so it lights the art). */
 export function SideFlash({ side, element, big = false }: { side: "left" | "right"; element: string | undefined; big?: boolean }) {
   if (!FX_CINEMATIC) return null;

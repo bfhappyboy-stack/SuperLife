@@ -19,7 +19,7 @@ import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { VillainArt, type VillainCrop } from "@/components/game/VillainArt";
 import { hasVillainArt } from "@/components/game/villainArt.data";
 import { useArt } from "@/components/game/Scene";
-import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile, SideFlash } from "@/components/game/Vfx";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS } from "@/game/elements";
 import { answerOf, BREATH, keyOf } from "@/game/duel";
 import {
@@ -1110,10 +1110,15 @@ function DuelCard({ f, side, lunging, pose, hitKey }: { f: ArenaFighter; side: S
   );
 }
 
+/** The metal-cast K.O. title fills (same as the Duel result card, 2026-11-15 am). */
+const KO_GOLD = "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)";
+const KO_RED = "linear-gradient(180deg, #ffe1dd 0%, #ff5a4f 50%, #8a1f18 100%)";
+
 function RoundOver({ match, ko, onNext, onSkip, net }: { match: ArenaMatch; ko: "ko" | "time" | "double"; onNext: () => void; onSkip: () => void; net?: BattleNet }) {
   const rival = useContext(RivalName);
   const b = match.bout!;
   const won = b.winner === 0;
+  const tone = won ? "#ffcf4d" : "#ff5a4f";
   const after = [...match.results, b.winner];
   const w0 = after.filter((r) => r === 0).length;
   const w1 = after.filter((r) => r === 1).length;
@@ -1123,8 +1128,8 @@ function RoundOver({ match, ko, onNext, onSkip, net }: { match: ArenaMatch; ko: 
   const fb = fighterOf(b.fighters[1].id);
   return (
     <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/65 px-5" role="dialog" aria-label="Round over">
-      <span className="ko-rays pointer-events-none absolute top-1/3 left-1/2 size-[140%] -translate-x-1/2 -translate-y-1/2 opacity-30" style={{ background: `conic-gradient(from 0deg, transparent, ${won ? "#e6b34d" : "#ef5d52"}, transparent 10%, transparent 25%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 35%, transparent 50%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 60%, transparent 75%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 85%)` }} />
-      <span className="ko-in arena-vs relative text-7xl">{ko === "time" ? "TIME!" : "K.O.!"}</span>
+      {FX_CINEMATIC ? <KoLight tone={tone} top={-60} /> : <span className="ko-rays pointer-events-none absolute top-1/3 left-1/2 size-[140%] -translate-x-1/2 -translate-y-1/2 opacity-30" style={{ background: `conic-gradient(from 0deg, transparent, ${won ? "#e6b34d" : "#ef5d52"}, transparent 10%, transparent 25%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 35%, transparent 50%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 60%, transparent 75%, ${won ? "#e6b34d" : "#ef5d52"}, transparent 85%)` }}  />}
+      <span className={`ko-in relative text-7xl ${FX_CINEMATIC ? "ko-title font-display leading-none" : "arena-vs"}`} style={FX_CINEMATIC ? ({ "--ko": tone, backgroundImage: won ? KO_GOLD : KO_RED } as React.CSSProperties) : undefined}>{ko === "time" ? "TIME!" : "K.O.!"}</span>
       <div className="card-glass anim-rise relative mt-5 w-full px-4 py-4 text-center">
         <p className={`t-label ${won ? "text-gold" : "text-cape"}`}>Round {match.round + 1} · {won ? "You win it" : `${rival} wins it`}</p>
         <p className="t-display mt-1 text-fg">{won ? fa.name : fb.name}</p>
@@ -1159,7 +1164,7 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer, purse 
   const color = won ? "#e6b34d" : "#ef5d52";
   return (
     <main className="arena-root relative flex h-full min-h-0 flex-col overflow-hidden">
-      <span className="ko-rays pointer-events-none absolute top-[18%] left-1/2 size-[170%] -translate-x-1/2 -translate-y-1/2 opacity-25" style={{ background: `conic-gradient(from 0deg, transparent, ${color}, transparent 8%, transparent 25%, ${color}, transparent 33%, transparent 50%, ${color}, transparent 58%, transparent 75%, ${color}, transparent 83%)` }} />
+      {FX_CINEMATIC ? <KoLight tone={won ? "#ffcf4d" : "#ff5a4f"} spot={false} /> : <span className="ko-rays pointer-events-none absolute top-[18%] left-1/2 size-[170%] -translate-x-1/2 -translate-y-1/2 opacity-25" style={{ background: `conic-gradient(from 0deg, transparent, ${color}, transparent 8%, transparent 25%, ${color}, transparent 33%, transparent 50%, ${color}, transparent 58%, transparent 75%, ${color}, transparent 83%)` }}  />}
       <div className="relative min-h-0 flex-1 overflow-y-auto px-4 pt-8 pb-4">
         <p className="t-label text-center" style={{ color }}>{won ? "Match won" : "Match lost"}</p>
         <h1 className="arena-title ko-in mt-1 text-center text-[4.2rem]" style={won ? undefined : { background: "linear-gradient(180deg,#ffd9d6,#ef5d52 55%,#8a1f18)", WebkitBackgroundClip: "text", backgroundClip: "text" }}>{won ? "VICTORY" : "DEFEAT"}</h1>

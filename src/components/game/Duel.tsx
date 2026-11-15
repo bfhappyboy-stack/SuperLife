@@ -11,7 +11,7 @@ import { stageScale } from "@/game/heroArt";
 import { streetCutKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
-import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, Projectile, SideFlash } from "@/components/game/Vfx";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
@@ -823,12 +823,8 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
     <div className="anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 pb-5 backdrop-blur-sm" role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] overflow-hidden" aria-hidden>
         {FX_CINEMATIC ? (
-          <>
-            {/* 2026-11-15 am: soft volumetric light from above instead of flat comic wedges. */}
-            <div className="absolute top-[-120px] left-1/2 h-[420px] w-[520px] -translate-x-1/2" style={{ background: `radial-gradient(50% 45% at 50% 30%, color-mix(in srgb, ${tone} 34%, transparent), transparent 72%)` }} />
-            <div className="ko-rays ko-godrays absolute top-[-170px] left-1/2 size-[560px] -translate-x-1/2 rounded-full" style={{ background: `repeating-conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, ${tone} 70%, white) 3deg, transparent 9deg, transparent 17deg)`, maskImage: "radial-gradient(circle, rgb(0 0 0 / 0.9) 8%, rgb(0 0 0 / 0.35) 34%, transparent 62%)", WebkitMaskImage: "radial-gradient(circle, rgb(0 0 0 / 0.9) 8%, rgb(0 0 0 / 0.35) 34%, transparent 62%)" }} />
-            <div className={`ko-spot absolute top-[96px] ${win ? "left-[42%]" : "left-1/2"} h-[270px] w-[260px] -translate-x-1/2`} style={{ background: `linear-gradient(180deg, color-mix(in srgb, ${tone} 30%, transparent), color-mix(in srgb, ${tone} 10%, transparent) 70%, transparent)`, clipPath: "polygon(40% 0, 60% 0, 100% 100%, 0 100%)" }} />
-          </>
+          // 2026-11-15 am: soft volumetric light from above instead of flat comic wedges (shared with the Arena since pm).
+          <KoLight tone={tone} spotX={win ? "42%" : "50%"} />
         ) : (
           <div className="ko-rays absolute top-[-140px] left-1/2 size-[520px] -translate-x-1/2 rounded-full opacity-25" style={{ background: `repeating-conic-gradient(${tone} 0deg 8deg, transparent 8deg 22deg)`, maskImage: "radial-gradient(circle, black 20%, transparent 65%)", WebkitMaskImage: "radial-gradient(circle, black 20%, transparent 65%)" }} />
         )}
