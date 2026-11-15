@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-15 (villain): a painted villain opposite you in crime events (`devbot/2026-11-15-villain`)
+
+Built on `main` (b6ed50b, PR #7). Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game`, built and loaded at 390×844 before push.
+
+- **Owner-approved:** crime events on the "Your call" scene now show a painted street villain standing opposite your hero, mirrored to face you, with a glow in their power's colour. Ten events carry the new `tags: ["crime"]` (`maybe`, `villain-offer`, `villain-roof`, `villain-gala`, `villain-hire`, `mask-on`, `witness-stair`, `nyc-platform`, `receipt-offer`, `hood-jacket`). The villain is one of the 16 existing `cut-street-*` paintings, picked from the event id, age and month (`crimeVillainKey` in `src/game/heroArt.ts`), so the same moment always shows the same face. `eventHasTag` in `src/game/events.ts` looks the tag up by the pending event's id, so nothing new goes in the save.
+- **Precedence and layout:** if the event names someone you know, their portrait stays and no villain shows. Same scene, same hide-when-short rule. No rules or saves change.
+- **Tests:** +2 (`crimescene.test.ts`: the tag, and a deterministic, painted, varied villain pick).
+
 ## 2026-11-15 (night): the "Your call" scene, and the right suit label on B teens (`devbot/2026-11-15-night`)
 
 Built on `origin/devbot/2026-11-15-swift` (d8ac8d7), so it carries the whole unmerged art chain: merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (350 pass), built and loaded at 390×844 before push.
