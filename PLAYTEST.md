@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-15 am): the hit and the K.O.
+
+**Played:** the Metro save (Sam Lee, 29, Flight) against Rent, four turns frozen at 110 ms into each hit, then fought to the result, plus the same life at 14 (teen stage fallback), at 390×844 (`/workspace/shots-2026-11-15-am/`). Before/after: `before-after-hitfx.png` (frames `before-*-*.png` / `after-*-*.png`) and `before-after-ko.png` (`before-ko.png` / `after-ko.png`).
+
+**Findings:**
+- **The hit was clip art (fixed, increment 1).** Force hits landed as a flat gold comic star and the numbers were thin text. Now each hit has a shockwave, rays, a lens streak, shards and a side flash, and the numbers slam in, outlined and weighted. A big hit taken no longer turns the stage solid red (the flash is 60%, not 85%). Hits on you now land on your body instead of to its left.
+- **The K.O. card was flat yellow wedges (fixed, increment 2).** Soft god-rays, a spotlight on the winner and a metal-cast title now; layout unchanged.
+- **Teens 13–15** still stand as the grown suit, shrunk (no teen paintings yet; list in `/workspace/pt1115am/IMAGES.md`).
+- No console errors, no horizontal overflow, rules and saves unchanged. Arena uses the same `DamageNumber`/`SideFlash`; the Arena draft was walked to "To round 1", but the rival's random picks blocked a scripted Arena hit capture, so the Arena hit frames were checked by type only.
+- **Still flat:** kids' minigame heads (`MiniHead` icons); event "Your call" screens are a dark backdrop with an empty middle; the loser on the result card is a grey cutout lying down (fine, but could get a dust puff).
+
 ## Suit B pass (2026-11-14 suitb)
 
 **Played:** the Metro save at 29 as fire (m), storm (f), ice (f), mind (m), veil (m) and life (f), each on suit A and suit B, Closet open; then a storm (f) suit B duel against Rent, at 390×844. Grid: `/workspace/pt1114suitb/suits-grid.png`; duel: `/workspace/pt1114suitb/duel-suitb-storm-f.png`.

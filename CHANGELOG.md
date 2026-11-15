@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-15 (am): fights that hit like a film (`devbot/2026-11-15-am`)
+
+Built on `origin/devbot/2026-11-14-suitb` (5c7fba5), so this branch carries the whole unmerged art chain (art2 → am → pm → portraits → night → suitb): merge this one PR alone. Each increment typechecked, linted (no new problems), `npm run test:game` (346 pass), built and loaded at 390×844 before push.
+
+### Increment 1: cinematic impacts and slam-in damage numbers
+
+- **Why:** the 390×844 audit found the crudest thing left on the fight stage was the hit itself. Every plain-force blow (street moves, strength, most teen fights) landed as a flat, comic five-point gold star, and damage numbers were thin text that faded in. Next to the painted fighters it read like clip art.
+- **What (`Vfx.tsx`):** every landed hit now adds a white shockwave ring (a second coloured one on big hits), a short fan of light rays, an anamorphic lens streak and debris shards, under the element's own effect. The force hit is a white-hot core with dust, not a star. Ice's dashed ring is now a frosted ring, and life's "+" glyphs are glowing motes. A side flash in the element colour lights the hit half of the stage for 300 ms (screen blend, so it lights the art). Damage numbers (`DamageNumber`) slam in and rise. They have an outline and a gradient, are sized by hit weight, and are gold when you won the edge, red when you take the hit, and a small grey "Blocked". The full-stage flash on big hits drops from 85% to 60% so it no longer whites out the stage. Hits on you land on your body (the burst was left of the cutout). It's the same in life-sim duels and the Arena.
+- **Kept:** timings, shakes, hit numbers and rules are unchanged; everything switches off under `prefers-reduced-motion`. `FX_CINEMATIC` in `Vfx.tsx` turns it all back to the old bursts.
+
+### Increment 2: the fight result
+
+- **Why:** every fight ends on the result card, and its header was flat yellow comic wedges behind a plain "K.O.".
+- **What (`Duel.tsx` `ResultCard`):** soft blurred god-rays and a bloom from above, a spotlight cone onto the winner, a glowing floor ellipse under the fighters, and a metal-cast K.O. / DRAW title (gold for a win, steel for a draw, red for a loss). The layout and text are unchanged. `FX_CINEMATIC` covers it too.
+
+### Increment 3: teen paintings, ready to drop in
+
+- The teen slots (`cut-mystery-<family>-<m|f>-teen`, B: `-b-teen`) were wired on the night pass and still fall back to the grown cutout shrunk to 86/90/94%. This pass can't generate images, so it writes the exact list (18 teen suit-A cutouts, 17 optional teen suit-B, with filename, path, 9:16 and a full prompt each) and a one-command importer (rembg → cleaned 720 px webp → `src/assets/art/<key>.ts` + loader line) outside the repo: `/workspace/pt1115am/IMAGES.md`, `/workspace/pt1115am/import-cutouts.py`. No code change was needed for the slots.
+
 ## 2026-11-14 (suitb): suit B paintings wired in (`devbot/2026-11-14-suitb`)
 
 Built on `origin/devbot/2026-11-14-night` (abfe1b3). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.

@@ -153,6 +153,7 @@ A life is told in ~10-year chapters, so a long life has a shape instead of 960 i
 - 16 elements (`game/elements.ts`) each with a colour, glow and travel type (orb, beam, bolt, ripple, streak). Every power and move resolves to an element; unknown falls back to force. Since Stage 2 the element also picks the status a winning hit leaves (`battle.ts` `ELEMENT_STATUS`).
 - Moves are hand-authored in `moves.authored.ts`; the generator only fills gaps and never uses "Stem Noun" names.
 - A turn reads in about a second: hit (230ms), swap (520ms), counter (760ms), rest (1040ms). Big hits (≥10 or 20% max HP) shake and flash. A KO ends the turn.
+- Impacts (2026-11-15): every landed hit adds a shockwave, light rays, a lens streak, shards and a side flash on top of the element effect; damage numbers slam in, weighted by hit size (gold on a won edge, red when you are hit). `FX_CINEMATIC` in `Vfx.tsx`.
 - Foe looks come from `duelKit.ts` (villain/hero kit per legacy power, street fallback).
 
 ## 13. Fame curve

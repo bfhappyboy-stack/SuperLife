@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-15 am pass
+
+- **Done:** cinematic impacts (shockwave, rays, lens streak, shards, side flash) and slam-in damage numbers in duels and the Arena (increment 1); the fight result header gets god-rays, a spotlight and a metal title (increment 2). `FX_CINEMATIC` is the off switch.
+- **Blocked on paintings:** 18 teen suit-A cutouts (+17 optional teen suit-B). Exact list, prompts and an importer: `/workspace/pt1115am/IMAGES.md`, `/workspace/pt1115am/import-cutouts.py`.
+- **Ask the owner:** should the male speedster get a teen painting (same suit, 14 years old), or stay exactly as painted at every age?
+- **Next for juice:** a short hit-stop (40–60 ms freeze) on big hits; a dust puff when the loser goes down; Arena round transitions.
+
 ## From the 2026-11-14 night pass
 
 - **Done:** the Closet mirror is painted (suit cutout, legend painting, or your painted portrait; increment 1); suit lines A/B per life, seeded and saved, with art slots that fall back to A (increment 1); teen suit slots for 13–15 (increment 1); loading portraits show a dark frame instead of the drawn bust; hero sparring partners with no family wear the Might suit.
