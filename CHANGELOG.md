@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-15 (teens): painted teen heroes for 13–15 (`devbot/2026-11-15-teens`)
+
+Built on `origin/devbot/2026-11-15-am` (5ab385d). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+- **17 painted teen suit A cutouts** `cut-mystery-<family>-<m|f>-teen` (every family and sex but the male speedster, who keeps the grown suit shrunk to 86–94% until his teen painting is decided): same suit, colours and emblem as the grown A, worn by a 14-year-old. Cut with `/workspace/pt1115am/import-cutouts.py` (rembg isnet, edge decontamination, 720 px transparent webp q80, ~34–70 KB). Checked on dark and light; the fire, ice and arcane hand glow and the veil cloaks survived the cut.
+- **Where:** the duel stage and the Closet mirror from 13 to 15 now show the teen painting (lives on suit B wear the teen A until B teens are painted). 16+ is unchanged. No rules or saves change.
+- **Tests:** +1 (`suit.test.ts`: every teen at 13–15 resolves to its own painting, swift-m to the shrunk grown suit, 16 to the grown suit).
+
 ## 2026-11-15 (am): fights that hit like a film (`devbot/2026-11-15-am`)
 
 Built on `origin/devbot/2026-11-14-suitb` (5c7fba5), so this branch carries the whole unmerged art chain (art2 → am → pm → portraits → night → suitb): merge this one PR alone. Each increment typechecked, linted (no new problems), `npm run test:game` (346 pass), built and loaded at 390×844 before push.
