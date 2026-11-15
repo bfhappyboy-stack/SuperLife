@@ -10,6 +10,7 @@ import { LivesScreen } from "@/components/game/Lives";
 import { ArenaScreen } from "@/components/game/Arena";
 import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
+import { EVENT_SCENE, EventScene } from "@/components/game/EventScene";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
 import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
@@ -377,10 +378,10 @@ function Life({ game }: { game: Game }) {
             </div>
           )}
 
-          <div ref={scroller} data-desk={desk} className="desk relative z-10 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
+          <div ref={scroller} data-desk={desk} className={`desk relative z-10 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-4 pt-3 ${choosing && EVENT_SCENE ? "flex flex-col pb-2" : "pb-6"}`}>
             {/* The Money hub has its own header and floats each result above Play, so the month card steps aside there. */}
             {(choosing || !(desk === "work" && activeShelf === "Money")) && (
-            <article key={`${game.card.kicker}-${game.card.body.length}`} className="card-paper anim-rise relative overflow-hidden px-4 py-3.5">
+            <article key={`${game.card.kicker}-${game.card.body.length}`} className="card-paper anim-rise relative shrink-0 overflow-hidden px-4 py-3.5">
               <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-gold to-cape" />
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -409,6 +410,7 @@ function Life({ game }: { game: Game }) {
               {choosing && game.card.money && <MoneyLine report={game.card.money} />}
             </article>
             )}
+            {choosing && game.pending && <EventScene game={game} prompt={game.pending.prompt} />}
             {!choosing && desk === "life" && game.card.money && (
               <MoneyReport
                 key={`${game.age}-${game.month}`}

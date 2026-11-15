@@ -4,7 +4,7 @@ import { Cutout, stageArtKey } from "@/components/game/heroArt";
 import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
 import { hasArt } from "@/assets/art";
-import { ART_HEROES, stageScale } from "@/game/heroArt";
+import { ART_HEROES, stageScale, suitOfKey } from "@/game/heroArt";
 import { presetById } from "@/game/presets";
 import { Check, Lock, X } from "lucide-react";
 import { FAMILY_COLOR } from "@/components/game/icons";
@@ -150,7 +150,7 @@ function Mirror({ game, aura }: { game: Game; aura?: string }) {
   const cut = useArt(key ? `cut-${key}` : "");
   const city = useArt(game.cityId);
   const glow = legend?.color ?? aura ?? "#e6b34d";
-  const caption = legend ? legend.hero : key ? (key.endsWith("-b") ? "Suit line B" : "Your suit") : game.age < 13 ? "The suit waits for the power" : "No suit fits a power you don't have yet";
+  const caption = legend ? legend.hero : key ? (suitOfKey(key) === "b" ? "Suit line B" : "Your suit") : game.age < 13 ? "The suit waits for the power" : "No suit fits a power you don't have yet";
   return (
     <div className="absolute inset-0 bg-[#0b0f18]" data-mirror={legend ? "legend" : key ? `cut-${key}` : "portrait"}>
       {city && <img src={city} alt="" draggable={false} className="anim-fade absolute inset-0 size-full object-cover opacity-45 saturate-[.7]" />}

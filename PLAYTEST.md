@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-15 night): the "Your call" screen and the B-teen Closet label
+
+**Played:** "Your call" event screens at 390×844 from crafted choice saves (`/workspace/pt1115night/saves/choice-*.json`): fire (m) 14 suit B, ice (f) 14 suit B with a parent named in the text, a 10-year-old (portrait), a God Mode Batman life (legend painting), and a 30-year-old with long text and five choices. The Closet was opened on fire (m) and storm (f) suit-B teens.
+
+**Before/after:** `/workspace/pt1115night/before-after-yourcall.png` (`before-yourcall.png` / `after-yourcall.png`); `before-after-closet-b-teen.png`; more in `after-choice-*.png`.
+
+**Findings:**
+- **"Your call" had an empty middle (fixed).** About 300 px of dark backdrop sat between the card and the buttons. It's now a framed night scene with you painted in it, plus the named person's painted portrait (checked with "Harper", a parent). The 10-year-old shows their portrait and Batman shows his painting. With long text and five choices the scene hides and the gap is only what was left; the buttons don't move. No console errors.
+- **Closet on a B teen read "YOUR SUIT" (fixed):** fire (m) and storm (f) B teens now read "SUIT LINE B".
+- **Still open:** the five teen B girls (fire, ice, mind, swift, veil) wear teen A until their paintings exist (prompts in `/workspace/pt1115night/IMAGES.md`). The kids' minigame headers are icon tiles (no faces, fine).
+
 ## Afternoon pass (2026-11-15 pm): storm teen, the Arena hit and K.O.
 
 **Played:** the storm (f) teen life at 14 against Rent (duel and Closet); a vs-computer Arena match from the Metro save (random draft, order, three rounds, five turns frozen 110 ms and 260 ms into each hit, fought on to the result); the Metro save's duel against Rent to the K.O. card. All at 390×844 (`/workspace/pt1115pm/`; frames in `arena/` and `duel/`).
