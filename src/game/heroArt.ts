@@ -116,3 +116,17 @@ export function namedIn(text: string, people: readonly Person[]): Person | null 
   }
   return best?.person ?? null;
 }
+
+/**
+ * The painted street villain who stands opposite you on a crime event's "Your call" scene (2026-11-15 night): one of
+ * the street-villain cutouts, picked from the event id and the moment (age and month), so it never changes on re-render
+ * and the same moment always shows the same face. Returns the full art key (`cut-street-<power>`), or "" with art off.
+ */
+export function crimeVillainKey(eventId: string, age = 0, month = 0): { key: string; power: string | null } {
+  if (!ART_HEROES || !eventId) return { key: "", power: null };
+  const pool = [...STREET_CUTS, "street"] as const;
+  let h = 2166136261;
+  for (const ch of `${eventId}|${age}|${month}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+  const power = pool[h % pool.length];
+  return { key: streetCutKey(power === "street" ? null : power), power: power === "street" ? null : power };
+}

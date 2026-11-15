@@ -29,8 +29,12 @@ export interface EventChoice {
   flags?: Record<string, number>;
 }
 
+/** Scene tags (2026-11-15 night): "crime" puts a painted street villain opposite you on the "Your call" scene. Art only. */
+export type EventTag = "crime";
+
 export interface EventDef {
   id: string;
+  tags?: readonly EventTag[];
   weight: number;
   once?: boolean;
   minAge?: number;
@@ -354,7 +358,7 @@ const HAND: EventDef[] = [
     ],
   },
   {
-    id: "maybe", offCanon: true,
+    id: "maybe", tags: ["crime"], offCanon: true,
     weight: 5,
     once: true,
     minAge: 18,
@@ -402,7 +406,7 @@ const HAND: EventDef[] = [
     ],
   },
   {
-    id: "villain-offer",
+    id: "villain-offer", tags: ["crime"],
     weight: 3,
     once: true,
     minAge: 18,
@@ -858,7 +862,7 @@ function cityPulse(): EventDef[] {
       ],
     },
     {
-      id: "villain-roof",
+      id: "villain-roof", tags: ["crime"],
       weight: 5,
       minAge: 12,
       minFame: 10,
@@ -870,7 +874,7 @@ function cityPulse(): EventDef[] {
       ],
     },
     {
-      id: "villain-gala",
+      id: "villain-gala", tags: ["crime"],
       weight: 3,
       minAge: 16,
       minFame: 20,
@@ -1054,7 +1058,7 @@ function deeperMoments(): EventDef[] {
       ],
     },
     {
-      id: "villain-hire",
+      id: "villain-hire", tags: ["crime"],
       weight: 4,
       minAge: 16,
       maxKarma: -8,
@@ -1187,6 +1191,14 @@ function powerKinds(e: EventDef, g: Game): Set<string> {
 
 /** Powered people are rare: events that bring one into your life come half as often. */
 export const CAPE_EVENT_WEIGHT = 0.5;
+
+let tagIndex: Map<string, readonly EventTag[]> | null = null;
+/** Does the event behind a pending choice carry this scene tag? Looked up by id, so nothing new goes in the save. */
+export function eventHasTag(id: string | null | undefined, tag: EventTag): boolean {
+  if (!id) return false;
+  tagIndex ??= new Map(EVENTS.filter((e) => e.tags?.length).map((e) => [e.id, e.tags!]));
+  return tagIndex.get(id)?.includes(tag) ?? false;
+}
 
 export function pickEvent(g: Game, r: number): EventDef | null {
   // A power on offer only shows up for a life that could take one (library.ts rarity rules).
@@ -1395,7 +1407,7 @@ function richerMoments(): EventDef[] {
       ],
     },
     {
-      id: "receipt-offer", offCanon: true,
+      id: "receipt-offer", tags: ["crime"], offCanon: true,
       weight: 4,
       minAge: 15,
       maxKarma: -6,
@@ -1449,7 +1461,7 @@ function richerMoments(): EventDef[] {
       ],
     },
     {
-      id: "witness-stair",
+      id: "witness-stair", tags: ["crime"],
       weight: 4,
       minAge: 14,
       text: () => "You see a mugging start in a stairwell that smells like coins. Three outcomes are already writing themselves, and one of them is you walking.",
@@ -1520,7 +1532,7 @@ function richerMoments(): EventDef[] {
       ],
     },
     {
-      id: "mask-on",
+      id: "mask-on", tags: ["crime"],
       weight: 3,
       minAge: 16,
       maxKarma: -12,
@@ -1562,7 +1574,7 @@ function richerMoments(): EventDef[] {
 function originMoments(): EventDef[] {
   return [
     {
-      id: "nyc-platform",
+      id: "nyc-platform", tags: ["crime"],
       weight: 6,
       minAge: 11,
       once: true,
@@ -1601,7 +1613,7 @@ function originMoments(): EventDef[] {
       ],
     },
     {
-      id: "hood-jacket",
+      id: "hood-jacket", tags: ["crime"],
       weight: 5,
       minAge: 14,
       maxKarma: 25,

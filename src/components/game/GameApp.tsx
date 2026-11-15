@@ -410,7 +410,7 @@ function Life({ game }: { game: Game }) {
               {choosing && game.card.money && <MoneyLine report={game.card.money} />}
             </article>
             )}
-            {choosing && game.pending && <EventScene game={game} prompt={game.pending.prompt} />}
+            {choosing && game.pending && <EventScene game={game} prompt={game.pending.prompt} eventId={game.pending.id} />}
             {!choosing && desk === "life" && game.card.money && (
               <MoneyReport
                 key={`${game.age}-${game.month}`}

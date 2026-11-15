@@ -3,7 +3,7 @@
  * its card and the buttons. Now that space is a lit film still: your city's painting graded for night, soft god-rays
  * and drifting dust in your power colour, and you in it (your painted suit cutout from 13, a legend's painting, or
  * your painted portrait before the suit). When the moment names someone close to you, their painted portrait stands
- * opposite you. Painted art only; nothing here is drawn. `EVENT_SCENE` off brings the empty gap back.
+ * opposite you; a crime event with nobody named gets a painted street villain there instead. Painted art only; nothing here is drawn. `EVENT_SCENE` off brings the empty gap back.
  */
 import { useEffect, useRef, useState } from "react";
 import { hasArt } from "@/assets/art";
@@ -12,7 +12,8 @@ import { FAMILY_COLOR } from "@/components/game/icons";
 import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
 import { firstName } from "@/game/format";
-import { namedIn, stageScale } from "@/game/heroArt";
+import { crimeVillainKey, familyOfPower, namedIn, stageScale } from "@/game/heroArt";
+import { eventHasTag } from "@/game/events";
 import { presetById } from "@/game/presets";
 import { capeTheme } from "@/game/theme";
 import type { Game, PersonRole } from "@/game/types";
@@ -24,7 +25,7 @@ const ROLE_LINE: Record<PersonRole, string> = { parent: "Family", friend: "Frien
 /** Thirteen dust motes with fixed positions and timings (no randomness, so the scene never jumps on re-render). */
 const MOTES = Array.from({ length: 13 }, (_, i) => ({ left: (i * 37 + 11) % 96, top: 18 + ((i * 53) % 70), size: 1.5 + (i % 3), delay: -(i * 1.7), dur: 9 + (i % 5) * 2 }));
 
-export function EventScene({ game, prompt }: { game: Game; prompt: string }) {
+export function EventScene({ game, prompt, eventId }: { game: Game; prompt: string; eventId?: string }) {
   const legend = presetById(game.preset);
   const legendKey = legend && hasArt(legend.art) ? legend.art : "";
   const legendArt = useArt(legendKey);
@@ -34,6 +35,11 @@ export function EventScene({ game, prompt }: { game: Game; prompt: string }) {
   const city = useArt(game.cityId);
   const glow = legend?.color ?? (family ? FAMILY_COLOR[family] : "#e6b34d");
   const other = namedIn(prompt, game.relationships ?? []);
+  // Crime events with nobody you know named in them: a painted street villain stands opposite you, facing you.
+  const villain = !other && eventHasTag(eventId, "crime") ? crimeVillainKey(eventId ?? "", game.age, game.month) : null;
+  const villainArt = useArt(villain && hasArt(villain.key) ? villain.key : "");
+  const villainFamily = villain ? familyOfPower(villain.power) : null;
+  const villainGlow = villainFamily ? FAMILY_COLOR[villainFamily] : "#d24a4a";
   // The scene takes whatever room the card and the buttons leave; when that's a sliver (long text, many choices) it hides.
   const box = useRef<HTMLDivElement>(null);
   const [room, setRoom] = useState(true);
@@ -45,7 +51,7 @@ export function EventScene({ game, prompt }: { game: Game; prompt: string }) {
     return () => watch.disconnect();
   }, []);
   if (!EVENT_SCENE) return null;
-  const heroX = other ? "30%" : "50%";
+  const heroX = other || villainArt ? "30%" : "50%";
   return (
     <div ref={box} className={`event-scene anim-fade relative mt-3 min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-[#0b0f18] shadow-[0_18px_40px_-18px_rgb(0_0_0/0.9)] [container-type:size] ${room ? "" : "invisible"}`} data-room={room ? "1" : "0"} data-scene={legendKey ? "legend" : cutKey ? `cut-${cutKey}` : "portrait"} aria-hidden>
       {city && <img src={city} alt="" draggable={false} className="anim-fade anim-drift absolute inset-0 size-full object-cover object-[50%_35%]" style={{ filter: "brightness(.62) saturate(.8) contrast(1.08)" }} />}
@@ -73,6 +79,12 @@ export function EventScene({ game, prompt }: { game: Game; prompt: string }) {
           <span className="block rounded-[26%] p-[3px]" style={{ background: `linear-gradient(160deg, ${glow}, transparent 70%)`, boxShadow: `0 0 0 1px rgb(255 255 255 / .08), 0 18px 40px -14px ${glow}` }}>
             <Portrait seed={game.portrait} age={game.age} sex={game.sex} look={game.look} mood={game.stats.happiness} className="block size-[min(7rem,62cqh)]" />
           </span>
+        </span>
+      )}
+      {villainArt && (
+        <span className="anim-rise absolute top-3 right-[-2%] bottom-0 block w-[62%]" data-villain={villain?.key}>
+          <span className="absolute inset-0" style={{ background: `radial-gradient(42% 58% at 50% 72%, color-mix(in srgb, ${villainGlow} 28%, transparent), transparent 72%)` }} />
+          <Cutout src={villainArt} name="Villain" glow={villainGlow} pose="idle" flip />
         </span>
       )}
       {other && (
