@@ -7,6 +7,7 @@ Built on `origin/devbot/2026-11-15-am` (5ab385d). Typechecked, `npm run test:gam
 - **17 painted teen suit A cutouts** `cut-mystery-<family>-<m|f>-teen` (every family and sex but the male speedster, who keeps the grown suit shrunk to 86–94% until his teen painting is decided): same suit, colours and emblem as the grown A, worn by a 14-year-old. Cut with `/workspace/pt1115am/import-cutouts.py` (rembg isnet, edge decontamination, 720 px transparent webp q80, ~34–70 KB). Checked on dark and light; the fire, ice and arcane hand glow and the veil cloaks survived the cut.
 - **Where:** the duel stage and the Closet mirror from 13 to 15 now show the teen painting (lives on suit B wear the teen A until B teens are painted). 16+ is unchanged. No rules or saves change.
 - **Tests:** +1 (`suit.test.ts`: every teen at 13–15 resolves to its own painting, swift-m to the shrunk grown suit, 16 to the grown suit).
+- **Repainted (v2):** storm-f, arcane-f and veil-f teens read too old in the first set, so they were repainted younger (softer faces, slimmer builds) and re-cut the same way.
 
 ## 2026-11-15 (am): fights that hit like a film (`devbot/2026-11-15-am`)
 
