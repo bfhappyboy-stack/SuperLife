@@ -1,5 +1,18 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-15 pm): storm teen, the Arena hit and K.O.
+
+**Played:** the storm (f) teen life at 14 against Rent (duel and Closet); a vs-computer Arena match from the Metro save (random draft, order, three rounds, five turns frozen 110 ms and 260 ms into each hit, fought on to the result); the Metro save's duel against Rent to the K.O. card. All at 390×844 (`/workspace/pt1115pm/`; frames in `arena/` and `duel/`).
+
+**Before/after:** `storm-f-teen-before.png` / `storm-f-teen-after.png`; `before-after-arena-ko.png` (`arena-ko-before.png` / `arena-ko-after.png`); `before-after-arena-result.png`; `before-after-duel-ko.png`; Arena hits `arena-hits-after.png`.
+
+**Findings:**
+- **Storm (f) teen** now reads 13–14 (ponytail, slimmer); the cut is clean on the rooftop.
+- **Arena hit: fine.** Every effect lands on the card that was hit, on both sides; numbers sit at the card's top; no overflow, no console errors. A big hit still washes the stage white for a beat (same as the duel); fine in motion.
+- **Arena K.O.! was flat (fixed).** Flat conic wedges and a white-outlined comic K.O.!, gold even on a loss. Now there is soft light from above and a metal K.O.!, gold on a win and red on a loss. The result screen's wedges are now god-rays.
+- **Spotlight edge (fixed):** the cone on the duel result card (and the first Arena version) had a hard trapezoid edge. Now it's soft.
+- **Still flat:** the kids' minigame heads (`MiniHead`) and the empty middle of the "Your call" event screens.
+
 ## Morning pass (2026-11-15 am): the hit and the K.O.
 
 **Played:** the Metro save (Sam Lee, 29, Flight) against Rent, four turns frozen at 110 ms into each hit, then fought to the result, plus the same life at 14 (teen stage fallback), at 390×844 (`/workspace/shots-2026-11-15-am/`). Before/after: `before-after-hitfx.png` (frames `before-*-*.png` / `after-*-*.png`) and `before-after-ko.png` (`before-ko.png` / `after-ko.png`).

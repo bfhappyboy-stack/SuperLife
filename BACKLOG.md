@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-15 pm pass
+
+- **Done:** storm (f) teen repainted younger (v3); the Arena hit checked at 390×844; the Arena K.O. and result screens get the duel's soft light and metal K.O.; the spotlight cone edge is soft now.
+- **Still open for teens:** the male speedster teen painting (he still wears the grown suit shrunk), and suit B teen paintings (B lives wear teen A at 13–15).
+- **Next for art:** kids' minigame heads (`MiniHead`); a scene illustration for the empty "Your call" event screens.
+
 ## From the 2026-11-15 am pass
 
 - **Done:** cinematic impacts (shockwave, rays, lens streak, shards, side flash) and slam-in damage numbers in duels and the Arena (increment 1); the fight result header gets god-rays, a spotlight and a metal title (increment 2). `FX_CINEMATIC` is the off switch.

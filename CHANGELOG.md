@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-15 (pm): a younger storm teen, and the Arena's K.O. lit like the duel (`devbot/2026-11-15-pm`)
+
+Built on `origin/devbot/2026-11-15-teens` (a51ca5c), so it carries the whole unmerged art chain: merge this one PR alone. Each increment typechecked, linted (no new problems; the one lint error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (347 pass), built and loaded at 390×844 before push.
+
+### Increment 1: storm-f teen repainted younger (v3)
+
+- The storm (f) teen at 13–15 still read about 16. New painting: tied ponytail, slimmer, younger face, same purple suit, mask and hand lightning. Cut with `/workspace/pt1115am/import-cutouts.py` (254×720 webp, ~40 KB); it replaces `src/assets/art/cut-mystery-storm-f-teen.ts` (the loader line was already there). No rules or saves change.
+
+### Increment 2: Arena hits checked, Arena K.O. and result screens lit like the duel
+
+- **Arena hit verified at 390×844** (the am pass only type-checked it): a scripted vs-computer match (draft → order → three rounds), five turns frozen 110 ms into each hit. The shockwave, rays, shards, side flash and slam-in numbers sit on the hit card on both sides, nothing clips the stage, no console errors. `FX_CINEMATIC` was already `true` in `Vfx.tsx` and stays on.
+- **Arena round-over (K.O.!/TIME!) and the match result** still had the flat comic conic wedges, and the K.O. word was white with a gold outline even when you lost. Both now use the soft volumetric light from the duel result (glow, blurred god-rays, spotlight), and the K.O. word is metal-cast: gold when you win the round, red when you lose it. Layout, buttons and text unchanged.
+- **Spotlight edge fix (Arena and duel):** the spotlight cone had a hard trapezoid edge, because the blur was on the clipped element itself. The blur now sits on a wrapper, so the cone is soft. The duel result card uses the same shared `KoLight` now (no change to its layout).
+- Code: `KoLight` in `Vfx.tsx` (null with `FX_CINEMATIC` off, old wedges come back); `Arena.tsx` `RoundOver` and `Results`; `Duel.tsx` result card. No rules, tests or saves change.
+
 ## 2026-11-15 (teens): painted teen heroes for 13–15 (`devbot/2026-11-15-teens`)
 
 Built on `origin/devbot/2026-11-15-am` (5ab385d). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
