@@ -180,6 +180,19 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   "cut-mystery-veil-f-teen": () => import("./cut-mystery-veil-f-teen"),
   "cut-mystery-veil-m-teen": () => import("./cut-mystery-veil-m-teen"),
   "cut-mystery-swift-m-teen": () => import("./cut-mystery-swift-m-teen"),
+  // 2026-11-15 teen suit B: painted B for 13-15 (all 8 boys; storm, might, life and arcane girls). Missing ones fall back to teen suit A.
+  "cut-mystery-arcane-f-b-teen": () => import("./cut-mystery-arcane-f-b-teen"),
+  "cut-mystery-arcane-m-b-teen": () => import("./cut-mystery-arcane-m-b-teen"),
+  "cut-mystery-fire-m-b-teen": () => import("./cut-mystery-fire-m-b-teen"),
+  "cut-mystery-ice-m-b-teen": () => import("./cut-mystery-ice-m-b-teen"),
+  "cut-mystery-life-f-b-teen": () => import("./cut-mystery-life-f-b-teen"),
+  "cut-mystery-life-m-b-teen": () => import("./cut-mystery-life-m-b-teen"),
+  "cut-mystery-might-f-b-teen": () => import("./cut-mystery-might-f-b-teen"),
+  "cut-mystery-might-m-b-teen": () => import("./cut-mystery-might-m-b-teen"),
+  "cut-mystery-mind-m-b-teen": () => import("./cut-mystery-mind-m-b-teen"),
+  "cut-mystery-storm-f-b-teen": () => import("./cut-mystery-storm-f-b-teen"),
+  "cut-mystery-storm-m-b-teen": () => import("./cut-mystery-storm-m-b-teen"),
+  "cut-mystery-veil-m-b-teen": () => import("./cut-mystery-veil-m-b-teen"),
 };
 
 const cache = new Map<string, string>();

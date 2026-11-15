@@ -5,6 +5,7 @@
 Built on `origin/devbot/2026-11-15-pm` (170b927). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
 
 - **Owner-approved:** the male speedster now has his own painted teen self at 13–15 (`cut-mystery-swift-m-teen`, 339×720 webp, ~41 KB, same black suit, teal bolt and teal hand trail), replacing the grown suit shrunk to 86–94%. His suit stays locked to A at every age; 16+ is unchanged. Every Mystery family and sex now has a teen painting. Test updated to expect it.
+- **Teen suit B (owner-approved):** 12 painted B teens `cut-mystery-<family>-<m|f>-b-teen` (all 8 boys with a B suit, plus the storm, might, life and arcane girls), cut the same way (~30–64 KB each). Lives on suit B wear them at 13–15; the fire, ice, mind, swift and veil girls keep teen suit A until their B teens read young enough. Test: +1 (B teen when painted, else teen A; grown B at 16).
 
 ## 2026-11-15 (pm): a younger storm teen, and the Arena's K.O. lit like the duel (`devbot/2026-11-15-pm`)
 

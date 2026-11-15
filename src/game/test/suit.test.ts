@@ -98,14 +98,29 @@ test("suit B is painted: every family and sex except the male speedster resolves
   assert.equal(painted, 17);
 });
 
-test("teens 13-15 wear their own painted suit A (B lives too, until B teens are painted); the male speedster too, in his locked suit", async () => {
+test("suit A teens 13-15 wear their own painted suit A; the male speedster too, in his locked suit", async () => {
   const { stageKeys } = await import("../heroArt.ts");
   for (const f of ART_FAMILIES) for (const sex of ["male", "female"] as const) {
     const grown = stageKey(f, sex, 30);
-    for (const suit of ["a", "b"] as const) for (const age of [13, 14, 15]) {
-      const best = stageKeys(f, sex, age, suit).find((k) => hasArt(`cut-${k}`));
-      assert.equal(best, `${grown}-teen`, `${grown} ${suit} at ${age}`);
+    for (const age of [13, 14, 15]) {
+      const best = stageKeys(f, sex, age, "a").find((k) => hasArt(`cut-${k}`));
+      assert.equal(best, `${grown}-teen`, `${grown} a at ${age}`);
     }
     assert.equal(stageKeys(f, sex, 16, "a").find((k) => hasArt(`cut-${k}`)), grown, "16 wears the grown suit");
+  }
+});
+
+test("a suit B teen wears the painted B teen when there is one, otherwise teen suit A", async () => {
+  const { stageKeys } = await import("../heroArt.ts");
+  const painted = ["fire-m", "ice-m", "storm-m", "mind-m", "might-m", "veil-m", "life-m", "arcane-m", "storm-f", "might-f", "life-f", "arcane-f"];
+  for (const f of ART_FAMILIES) for (const sex of ["male", "female"] as const) {
+    const grown = stageKey(f, sex, 30);
+    const tag = `${f}-${sex === "female" ? "f" : "m"}`;
+    for (const age of [13, 14, 15]) {
+      const best = stageKeys(f, sex, age, "b").find((k) => hasArt(`cut-${k}`));
+      const want = grown === "mystery-swift-m" ? `${grown}-teen` : painted.includes(tag) ? `${grown}-b-teen` : `${grown}-teen`;
+      assert.equal(best, want, `${tag} b at ${age}`);
+    }
+    if (grown !== "mystery-swift-m") assert.equal(stageKeys(f, sex, 16, "b").find((k) => hasArt(`cut-${k}`)), `${grown}-b`, "16 wears the grown B");
   }
 });
