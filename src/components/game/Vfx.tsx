@@ -28,6 +28,75 @@ export function HitBurst({ color, count = 9, size = 72, seed = 0 }: { color: str
   );
 }
 
+/**
+ * Cinematic impacts (2026-11-15 am): every landed hit adds a white shockwave, a fan of light rays, an anamorphic lens
+ * streak and debris shards on top of the element's own effect; the plain-force hit loses its flat comic star; damage
+ * numbers slam in with an outline and weight by hit size. Off = the earlier bursts and floating numbers.
+ */
+export const FX_CINEMATIC = true;
+
+/**
+ * A damage number that slams in and rises: outlined, weighted by hit size, gold when the hit won the edge (`gold`).
+ * `tone`: "out" = damage you dealt (white / gold), "in" = damage you took (red), "block" = no damage.
+ */
+export function DamageNumber({ amount, tone, big = false, gold = false, seed = 0, className = "" }: { amount: number; tone: "out" | "in"; big?: boolean; gold?: boolean; seed?: number; className?: string }) {
+  const blocked = amount <= 0;
+  if (!FX_CINEMATIC) {
+    return <FloatNumber text={blocked ? "Blocked" : `−${amount}`} color={tone === "in" ? "#ff8f87" : gold ? "#ffe08a" : "#ffffff"} className={`${className} ${blocked ? "!text-lg" : ""}`} />;
+  }
+  const color = blocked ? "#c9d4e8" : tone === "in" ? "#ff5a4f" : gold ? "#ffcf4d" : "#ffffff";
+  const size = blocked ? 18 : big ? 40 : gold ? 35 : 32;
+  const drift = ((seed * 37) % 17) - 8;
+  return (
+    <span className={`dmg-pop pointer-events-none absolute flex flex-col items-center whitespace-nowrap ${className}`} style={{ "--drift": `${drift}px` } as CSSProperties} aria-hidden>
+      <span
+        className="dmg-num font-display leading-none"
+        style={{
+          fontSize: size,
+          color,
+          WebkitTextFillColor: blocked ? color : undefined,
+          backgroundImage: blocked ? undefined : tone === "in" ? "linear-gradient(180deg, #ffd0cc 0%, #ff5a4f 55%, #c81e14 100%)" : gold ? "linear-gradient(180deg, #fff7d6 0%, #ffcf4d 50%, #e08a12 100%)" : "linear-gradient(180deg, #ffffff 0%, #ffffff 55%, #c9d6ee 100%)",
+          filter: `drop-shadow(0 2px 0 rgb(0 0 0 / 0.8)) drop-shadow(0 0 10px color-mix(in srgb, ${color} 70%, transparent))`,
+        }}
+      >
+        {blocked ? "Blocked" : `−${amount}`}
+      </span>
+    </span>
+  );
+}
+
+/** Light that fills the hit side of the stage for a beat, in the element colour (screen blend, so it lights the art). */
+export function SideFlash({ side, element, big = false }: { side: "left" | "right"; element: string | undefined; big?: boolean }) {
+  if (!FX_CINEMATIC) return null;
+  const { color } = ELEMENTS[elementOf(element)];
+  const x = side === "right" ? "76%" : "24%";
+  return <span className="fx-sideflash pointer-events-none absolute inset-0" style={{ background: `radial-gradient(${big ? "70% 85%" : "48% 62%"} at ${x} 45%, color-mix(in srgb, ${color} 55%, white) 0%, color-mix(in srgb, ${color} 35%, transparent) 35%, transparent 70%)` }} aria-hidden />;
+}
+
+/** The shared cinematic layers drawn under every element's impact. */
+function ImpactCore({ color, glow, s, seed, big }: { color: string; glow: string; s: number; seed: number; big: boolean }) {
+  const shards = big ? 12 : 8;
+  return (
+    <>
+      <span className="fx-rays absolute rounded-full" style={{ width: s * 2.3, height: s * 2.3, rotate: `${Math.round(rand(seed, 3) * 360)}deg`, background: `repeating-conic-gradient(from 0deg, transparent 0deg 9deg, color-mix(in srgb, ${glow} 80%, white) 10deg 11.5deg, transparent 12.5deg 26deg)`, WebkitMaskImage: "radial-gradient(circle, transparent 14%, #000 24%, transparent 64%)", maskImage: "radial-gradient(circle, transparent 14%, #000 24%, transparent 64%)" }} />
+      <span className="fx-shock absolute rounded-full" style={{ width: s * 1.05, height: s * 1.05, border: "2px solid rgb(255 255 255 / 0.8)", boxShadow: `0 0 14px ${color}, inset 0 0 12px ${glow}` }} />
+      {big && <span className="fx-shock absolute rounded-full" style={{ width: s * 1.05, height: s * 1.05, animationDelay: "80ms", border: `3px solid ${color}`, boxShadow: `0 0 22px ${color}` }} />}
+      <span className="fx-flare absolute rounded-full" style={{ width: s * (big ? 3 : 2.4), height: big ? 4 : 3, background: `linear-gradient(90deg, transparent, ${glow} 30%, #fff 50%, ${glow} 70%, transparent)`, boxShadow: `0 0 10px ${color}` }} />
+      {Array.from({ length: shards }, (_, i) => {
+        const angle = (i / shards) * Math.PI * 2 + rand(seed, i + 40) * 0.5;
+        const dist = s * (0.7 + rand(seed, i + 50) * 0.55);
+        return (
+          <span
+            key={`shard${i}`}
+            className="spark absolute"
+            style={{ width: i % 3 ? 2 : 3, height: 9 + Math.round(rand(seed, i + 60) * 9), borderRadius: 2, rotate: `${(angle * 180) / Math.PI + 90}deg`, background: `linear-gradient(180deg, #fff, ${glow} 45%, transparent)`, boxShadow: `0 0 6px ${color}`, "--dx": `${Math.cos(angle) * dist}px`, "--dy": `${Math.sin(angle) * dist}px` } as CSSProperties}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 export function FloatNumber({ text, color, className = "" }: { text: string; color: string; className?: string }) {
   return (
     <span className={`anim-float-up pointer-events-none absolute font-display text-3xl ${className}`} style={{ color, textShadow: `0 2px 0 rgba(0,0,0,.6), 0 0 14px ${color}` }} aria-hidden>
@@ -131,7 +200,7 @@ export function ElementBurst({ element, size = 90, seed = 1, big = false }: { el
         const angle = (i / n) * 360;
         parts.push(<span key={i} className="spark absolute" style={{ width: 6, height: 22 + (i % 3) * 6, background: `linear-gradient(${glow}, ${color})`, clipPath: "polygon(50% 0, 100% 50%, 50% 100%, 0 50%)", rotate: `${angle + 90}deg`, filter: `drop-shadow(0 0 4px ${glow})`, ...fly(i) }} />);
       }
-      parts.push(<span key="frost" className="anim-burst absolute rounded-full" style={{ width: s, height: s, border: `2px dashed ${glow}`, boxShadow: `0 0 18px ${color}` }} />);
+      parts.push(<span key="frost" className="anim-burst absolute rounded-full" style={{ width: s, height: s, border: FX_CINEMATIC ? `1.5px solid ${glow}` : `2px dashed ${glow}`, boxShadow: FX_CINEMATIC ? `0 0 18px ${color}, inset 0 0 22px color-mix(in srgb, ${glow} 55%, transparent)` : `0 0 18px ${color}` }} />);
       break;
     case "lightning":
       parts.push(
@@ -166,7 +235,7 @@ export function ElementBurst({ element, size = 90, seed = 1, big = false }: { el
           />,
         ),
       );
-      if (id === "life") for (let i = 0; i < 6; i += 1) parts.push(<span key={`p${i}`} className="spark absolute font-black" style={{ color, fontSize: 14, textShadow: `0 0 6px ${color}`, ...fly(i, 0.8, s * 0.2) }}>+</span>);
+      if (id === "life") for (let i = 0; i < 6; i += 1) parts.push(FX_CINEMATIC ? <span key={`p${i}`} className="spark absolute rounded-full" style={{ width: 6 + (i % 3) * 2, height: 6 + (i % 3) * 2, background: `radial-gradient(circle, #fff, ${glow} 45%, transparent 72%)`, boxShadow: `0 0 10px ${color}`, ...fly(i, 0.8, s * 0.2) }} /> : <span key={`p${i}`} className="spark absolute font-black" style={{ color, fontSize: 14, textShadow: `0 0 6px ${color}`, ...fly(i, 0.8, s * 0.2) }}>+</span>);
       break;
     case "speed":
     case "wind":
@@ -188,13 +257,20 @@ export function ElementBurst({ element, size = 90, seed = 1, big = false }: { el
       for (let i = 0; i < 7; i += 1) parts.push(<span key={i} className="spark absolute rounded-full" style={{ width: 22 + (i % 3) * 8, height: 22 + (i % 3) * 8, background: `radial-gradient(circle, ${color}, transparent 70%)`, filter: "blur(2px)", ...fly(i, 0.7) }} />);
       break;
     default: {
+      if (FX_CINEMATIC) {
+        // A heavy blow: a white-hot core and dust, no comic star (the shared core adds the ring, rays and shards).
+        parts.push(<span key="core" className="anim-burst absolute rounded-full" style={{ width: s * 0.75, height: s * 0.75, background: `radial-gradient(circle, #fff 12%, color-mix(in srgb, ${glow} 85%, white) 30%, color-mix(in srgb, ${color} 55%, transparent) 55%, transparent 72%)` }} />);
+        for (let i = 0; i < 6; i += 1) parts.push(<span key={`dust${i}`} className="spark absolute rounded-full" style={{ width: 16 + (i % 3) * 8, height: 16 + (i % 3) * 8, background: "radial-gradient(circle, rgb(220 214 200 / 0.45), transparent 70%)", filter: "blur(1.5px)", ...fly(i, 0.55, -s * 0.05) }} />);
+        break;
+      }
       parts.push(<span key="star" className="anim-burst absolute" style={{ width: s, height: s, background: `radial-gradient(circle, #fff 10%, ${glow} 35%, ${color} 60%)`, clipPath: "polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)" }} />);
       for (let i = 0; i < n; i += 1) parts.push(<span key={i} className="spark absolute" style={{ width: 6, height: 6, background: i % 2 ? "#fff" : color, rotate: `${i * 30}deg`, ...fly(i) }} />);
     }
   }
   return (
     <span className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden>
-      <span className="anim-burst absolute rounded-full" style={{ width: s * 0.5, height: s * 0.5, background: `radial-gradient(circle, #fff, ${glow} 45%, transparent 70%)` }} />
+      {FX_CINEMATIC && <ImpactCore color={color} glow={glow} s={s} seed={seed} big={big} />}
+      <span className="anim-burst absolute rounded-full" style={{ width: s * 0.5, height: s * 0.5, background: `radial-gradient(circle, #fff, ${glow} 45%, transparent 70%)`, mixBlendMode: FX_CINEMATIC ? "screen" : undefined }} />
       {parts}
     </span>
   );

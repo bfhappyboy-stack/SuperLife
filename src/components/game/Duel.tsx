@@ -11,7 +11,7 @@ import { stageScale } from "@/game/heroArt";
 import { streetCutKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
-import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
@@ -499,15 +499,12 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
         {shot && <Projectile key={shot.key} element={shot.element} reverse={shot.from === "foe"} seed={shot.key} />}
 
         {impact && (
-          <span key={impact.key} className={`pointer-events-none absolute top-[14%] h-[62%] w-[34%] ${impact.on === "foe" ? "right-[4%]" : "left-[4%]"}`}>
+          <span key={impact.key} className={`pointer-events-none absolute top-[14%] h-[62%] w-[34%] ${impact.on === "foe" ? "right-[4%]" : FX_CINEMATIC ? "left-[9%]" : "left-[4%]"}`}>
             {impact.amount > 0 && <ElementBurst element={impact.element} size={impact.big ? 96 : 76} seed={impact.key} big={impact.big} />}
-            <FloatNumber
-              text={impact.amount > 0 ? `−${impact.amount}` : "Blocked"}
-              color={impact.on === "foe" ? (impact.crit ? "#ffe08a" : "#ffffff") : "#ff8f87"}
-              className={`-top-2 left-1/2 -translate-x-1/2 ${impact.amount > 0 ? "" : "!text-lg"}`}
-            />
+            <DamageNumber amount={impact.amount} tone={impact.on === "foe" ? "out" : "in"} big={impact.big} gold={impact.on === "foe" && impact.crit} seed={impact.key} className="-top-2 left-1/2 -translate-x-1/2" />
           </span>
         )}
+        {impact && impact.amount > 0 && <SideFlash key={`sf${impact.key}`} side={impact.on === "foe" ? "right" : "left"} element={impact.element} big={impact.big} />}
         {heal && (
           <span key={heal.key} className="pointer-events-none absolute top-[22%] right-[12%]">
             <FloatNumber text={`+${heal.amount}`} color="#5ef08a" className="" />
@@ -825,10 +822,19 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
   return (
     <div className="anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 pb-5 backdrop-blur-sm" role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] overflow-hidden" aria-hidden>
-        <div className="ko-rays absolute top-[-140px] left-1/2 size-[520px] -translate-x-1/2 rounded-full opacity-25" style={{ background: `repeating-conic-gradient(${tone} 0deg 8deg, transparent 8deg 22deg)`, maskImage: "radial-gradient(circle, black 20%, transparent 65%)", WebkitMaskImage: "radial-gradient(circle, black 20%, transparent 65%)" }} />
+        {FX_CINEMATIC ? (
+          <>
+            {/* 2026-11-15 am: soft volumetric light from above instead of flat comic wedges. */}
+            <div className="absolute top-[-120px] left-1/2 h-[420px] w-[520px] -translate-x-1/2" style={{ background: `radial-gradient(50% 45% at 50% 30%, color-mix(in srgb, ${tone} 34%, transparent), transparent 72%)` }} />
+            <div className="ko-rays ko-godrays absolute top-[-170px] left-1/2 size-[560px] -translate-x-1/2 rounded-full" style={{ background: `repeating-conic-gradient(from 0deg, transparent 0deg, color-mix(in srgb, ${tone} 70%, white) 3deg, transparent 9deg, transparent 17deg)`, maskImage: "radial-gradient(circle, rgb(0 0 0 / 0.9) 8%, rgb(0 0 0 / 0.35) 34%, transparent 62%)", WebkitMaskImage: "radial-gradient(circle, rgb(0 0 0 / 0.9) 8%, rgb(0 0 0 / 0.35) 34%, transparent 62%)" }} />
+            <div className={`ko-spot absolute top-[96px] ${win ? "left-[42%]" : "left-1/2"} h-[270px] w-[260px] -translate-x-1/2`} style={{ background: `linear-gradient(180deg, color-mix(in srgb, ${tone} 30%, transparent), color-mix(in srgb, ${tone} 10%, transparent) 70%, transparent)`, clipPath: "polygon(40% 0, 60% 0, 100% 100%, 0 100%)" }} />
+          </>
+        ) : (
+          <div className="ko-rays absolute top-[-140px] left-1/2 size-[520px] -translate-x-1/2 rounded-full opacity-25" style={{ background: `repeating-conic-gradient(${tone} 0deg 8deg, transparent 8deg 22deg)`, maskImage: "radial-gradient(circle, black 20%, transparent 65%)", WebkitMaskImage: "radial-gradient(circle, black 20%, transparent 65%)" }} />
+        )}
       </div>
       <div className="relative mt-auto flex flex-col items-center text-center">
-        <span className="ko-in font-display text-6xl leading-none" style={{ color: tone, textShadow: `0 4px 0 rgba(0,0,0,.6), 0 0 30px ${tone}` }}>
+        <span className={`ko-in font-display text-6xl leading-none ${FX_CINEMATIC ? "ko-title" : ""}`} style={FX_CINEMATIC ? { "--ko": tone, backgroundImage: win ? "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)" : draw ? "linear-gradient(180deg, #ffffff 0%, #c9ccd4 50%, #7d8494 100%)" : "linear-gradient(180deg, #ffe1dd 0%, #ff5a4f 50%, #8a1f18 100%)" } as React.CSSProperties : { color: tone, textShadow: `0 4px 0 rgba(0,0,0,.6), 0 0 30px ${tone}` }}>
           {win || !draw ? "K.O." : "DRAW"}
         </span>
         <p className="t-label mt-2 flex items-center gap-1.5" style={{ color: tone }}>
@@ -838,6 +844,7 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
         <p className="mt-1 text-sm font-semibold text-muted">{win ? `${foeName} is on the floor.` : draw ? `You and ${foeName} call it.` : `${foeName} walks away.`}</p>
       </div>
       <div className="relative mx-auto mt-3 flex h-[150px] w-full max-w-[300px] items-end justify-center gap-6">
+        {FX_CINEMATIC && <span className="pointer-events-none absolute bottom-[-6px] left-1/2 h-[26px] w-[110%] -translate-x-1/2 rounded-[50%]" style={{ background: `radial-gradient(closest-side, color-mix(in srgb, ${tone} 38%, transparent), rgb(0 0 0 / 0.5) 60%, transparent)` }} aria-hidden />}
         <div className="h-full w-[36%]" style={{ transform: win || draw ? undefined : "translateX(55%)" }}>{hero}</div>
         <div className="h-full w-[36%]" style={{ transform: win ? "translateX(-55%) scaleX(-1)" : "scaleX(-1)" }}>
           {foe}

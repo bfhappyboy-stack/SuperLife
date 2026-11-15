@@ -19,7 +19,7 @@ import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { VillainArt, type VillainCrop } from "@/components/game/VillainArt";
 import { hasVillainArt } from "@/components/game/villainArt.data";
 import { useArt } from "@/components/game/Scene";
-import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS } from "@/game/elements";
 import { answerOf, BREATH, keyOf } from "@/game/duel";
 import {
@@ -904,9 +904,10 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
         {impact && (
           <span key={impact.key} className={`pointer-events-none absolute top-[12%] h-[62%] w-[34%] ${impact.on === 1 ? "right-[4%]" : "left-[4%]"}`}>
             {impact.amount > 0 && <ElementBurst element={impact.element} size={impact.big ? 96 : 76} seed={impact.key} big={impact.big} />}
-            <FloatNumber text={impact.amount > 0 ? `−${impact.amount}` : "Blocked"} color={impact.on === 1 ? (impact.win ? "#ffe08a" : "#ffffff") : "#ff8f87"} className={`-top-2 left-1/2 -translate-x-1/2 ${impact.amount > 0 ? "" : "!text-lg"}`} />
+            <DamageNumber amount={impact.amount} tone={impact.on === 1 ? "out" : "in"} big={impact.big} gold={impact.on === 1 && impact.win} seed={impact.key} className="-top-2 left-1/2 -translate-x-1/2" />
           </span>
         )}
+        {impact && impact.amount > 0 && <SideFlash key={`sf${impact.key}`} side={impact.on === 1 ? "right" : "left"} element={impact.element} big={impact.big} />}
         {!roundOver && !busy && (
           <div className="pointer-events-none absolute top-2.5 left-1/2 -translate-x-1/2">
             {iLead ? (
