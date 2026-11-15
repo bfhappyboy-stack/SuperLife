@@ -161,6 +161,24 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   "cut-street-street": () => import("./cut-street-street"),
   "cut-street-strength": () => import("./cut-street-strength"),
   "cut-street-telekinesis": () => import("./cut-street-telekinesis"),
+  // 2026-11-15 teens: painted suit A for ages 13-15 (all but the male speedster, who keeps the shrunk grown suit).
+  "cut-mystery-arcane-f-teen": () => import("./cut-mystery-arcane-f-teen"),
+  "cut-mystery-arcane-m-teen": () => import("./cut-mystery-arcane-m-teen"),
+  "cut-mystery-fire-f-teen": () => import("./cut-mystery-fire-f-teen"),
+  "cut-mystery-fire-m-teen": () => import("./cut-mystery-fire-m-teen"),
+  "cut-mystery-ice-f-teen": () => import("./cut-mystery-ice-f-teen"),
+  "cut-mystery-ice-m-teen": () => import("./cut-mystery-ice-m-teen"),
+  "cut-mystery-life-f-teen": () => import("./cut-mystery-life-f-teen"),
+  "cut-mystery-life-m-teen": () => import("./cut-mystery-life-m-teen"),
+  "cut-mystery-might-f-teen": () => import("./cut-mystery-might-f-teen"),
+  "cut-mystery-might-m-teen": () => import("./cut-mystery-might-m-teen"),
+  "cut-mystery-mind-f-teen": () => import("./cut-mystery-mind-f-teen"),
+  "cut-mystery-mind-m-teen": () => import("./cut-mystery-mind-m-teen"),
+  "cut-mystery-storm-f-teen": () => import("./cut-mystery-storm-f-teen"),
+  "cut-mystery-storm-m-teen": () => import("./cut-mystery-storm-m-teen"),
+  "cut-mystery-swift-f-teen": () => import("./cut-mystery-swift-f-teen"),
+  "cut-mystery-veil-f-teen": () => import("./cut-mystery-veil-f-teen"),
+  "cut-mystery-veil-m-teen": () => import("./cut-mystery-veil-m-teen"),
 };
 
 const cache = new Map<string, string>();
