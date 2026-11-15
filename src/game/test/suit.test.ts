@@ -124,3 +124,25 @@ test("a suit B teen wears the painted B teen when there is one, otherwise teen s
     if (grown !== "mystery-swift-m") assert.equal(stageKeys(f, sex, 16, "b").find((k) => hasArt(`cut-${k}`)), `${grown}-b`, "16 wears the grown B");
   }
 });
+
+// 2026-11-15 night: the Closet caption names the suit line of the painting it shows, teen B included.
+test("suitOfKey reads the suit line off a resolved art key, teen B included", async () => {
+  const { suitOfKey } = await import("../heroArt.ts");
+  assert.equal(suitOfKey("mystery-fire-m-b"), "b");
+  assert.equal(suitOfKey("mystery-fire-m-b-teen"), "b");
+  assert.equal(suitOfKey("mystery-fire-m-teen"), "a");
+  assert.equal(suitOfKey("mystery-fire-f"), "a");
+  assert.equal(suitOfKey("mystery-swift-m-teen"), "a");
+});
+
+// 2026-11-15 night: the "Your call" scene puts the person an event names opposite you.
+test("namedIn finds the living person an event names first, by whole first name", async () => {
+  const { namedIn } = await import("../heroArt.ts");
+  const p = (id: string, name: string, alive = true) => ({ id, name, role: "friend", closeness: 50, age: 30, alive, metAt: 0 }) as Game["relationships"][number];
+  const people = [p("a", "Harper Lee"), p("b", "Remy Singh"), p("c", "Al Moss"), p("d", "Nia Costa", false)];
+  assert.equal(namedIn("Remy calls. Harper is with them.", people)?.id, "b");
+  assert.equal(namedIn("Harper and Remy.", people)?.id, "a");
+  assert.equal(namedIn("Remyx is not a name. Al waves.", people), null);
+  assert.equal(namedIn("Nia left flowers.", people), null);
+  assert.equal(namedIn("A wallet on a bench.", []), null);
+});

@@ -3,7 +3,8 @@
  * are drawn by `components/game/heroArt.tsx`. `ART_HEROES` turns the layer off and restores the paper dolls.
  */
 import { capeTheme, type CapeFamily } from "./theme";
-import type { Sex } from "./types";
+import { firstName } from "./format";
+import type { Person, Sex } from "./types";
 
 export const ART_HEROES = true;
 /** Painted cards start at this age; younger lives keep the paper doll. */
@@ -74,6 +75,11 @@ export function stageKeys(family: CapeFamily | null | undefined, sex: Sex | unde
   return [...grown.map((key) => `${key}-teen`), ...grown];
 }
 
+/** Which suit line a resolved art key shows: "b" for `<key>-b` and the teen `<key>-b-teen`, else "a" (the Closet caption). */
+export function suitOfKey(key: string): Suit {
+  return /-b(-teen)?$/.test(key) ? "b" : "a";
+}
+
 /** How tall a teen stands next to a grown fighter: 13 → 0.86, 14 → 0.9, 15 → 0.94, 16+ → 1. */
 export function stageScale(age: number): number {
   if (age >= ART_MIN_AGE) return 1;
@@ -93,4 +99,20 @@ export const STREET_CUTS = ["fire", "ice", "lightning", "speed", "mind", "streng
 export function streetCutKey(power: string | null | undefined): string {
   if (!ART_HEROES) return "";
   return `cut-street-${power && (STREET_CUTS as readonly string[]).includes(power) ? power : "street"}`;
+}
+
+/**
+ * "Your call" scene (2026-11-15 night): the living person an event's text names first (by first name, whole word,
+ * 3+ letters), who then stands opposite you in the scene; null when the moment names nobody you know.
+ */
+export function namedIn(text: string, people: readonly Person[]): Person | null {
+  let best: { at: number; person: Person } | null = null;
+  for (const person of people) {
+    if (!person.alive) continue;
+    const name = firstName(person.name);
+    if (name.length < 3) continue;
+    const match = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).exec(text);
+    if (match && (!best || match.index < best.at)) best = { at: match.index, person };
+  }
+  return best?.person ?? null;
 }
