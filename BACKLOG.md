@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-15 night pass
+
+- **Done:** the Closet caption names the suit line on B teens; "Your call" event screens get a painted scene (you, plus whoever the event names).
+- **Blocked on paintings:** 5 teen suit-B girls (fire, ice, mind, swift, veil). Prompts and drop-in steps are in `/workspace/pt1115night/IMAGES.md`.
+- **Next for art:** a painted villain or street figure opposite you in "Your call" when the event is about a crime (needs an event tag); the scene could tint by chapter phase (crisis red).
+- **Next for juice:** a short hit-stop on big hits; a dust puff when the loser goes down.
+
 ## From the 2026-11-15 pm pass
 
 - **Done:** storm (f) teen repainted younger (v3); the Arena hit checked at 390×844; the Arena K.O. and result screens get the duel's soft light and metal K.O.; the spotlight cone edge is soft now.
