@@ -112,7 +112,7 @@ test("suit A teens 13-15 wear their own painted suit A; the male speedster too, 
 
 test("a suit B teen wears the painted B teen when there is one, otherwise teen suit A", async () => {
   const { stageKeys } = await import("../heroArt.ts");
-  const painted = ["fire-m", "ice-m", "storm-m", "mind-m", "might-m", "veil-m", "life-m", "arcane-m", "storm-f", "might-f", "life-f", "arcane-f"];
+  const painted = ["fire-m", "ice-m", "storm-m", "mind-m", "might-m", "veil-m", "life-m", "arcane-m", "storm-f", "might-f", "life-f", "arcane-f", "fire-f", "ice-f", "mind-f", "swift-f", "veil-f"];
   for (const f of ART_FAMILIES) for (const sex of ["male", "female"] as const) {
     const grown = stageKey(f, sex, 30);
     const tag = `${f}-${sex === "female" ? "f" : "m"}`;
