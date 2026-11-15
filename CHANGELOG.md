@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-15 (swift): the speedster's teen painting (`devbot/2026-11-15-swift`)
+
+Built on `origin/devbot/2026-11-15-pm` (170b927). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+- **Owner-approved:** the male speedster now has his own painted teen self at 13–15 (`cut-mystery-swift-m-teen`, 339×720 webp, ~41 KB, same black suit, teal bolt and teal hand trail), replacing the grown suit shrunk to 86–94%. His suit stays locked to A at every age; 16+ is unchanged. Every Mystery family and sex now has a teen painting. Test updated to expect it.
+
 ## 2026-11-15 (pm): a younger storm teen, and the Arena's K.O. lit like the duel (`devbot/2026-11-15-pm`)
 
 Built on `origin/devbot/2026-11-15-teens` (a51ca5c), so it carries the whole unmerged art chain: merge this one PR alone. Each increment typechecked, linted (no new problems; the one lint error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (347 pass), built and loaded at 390×844 before push.

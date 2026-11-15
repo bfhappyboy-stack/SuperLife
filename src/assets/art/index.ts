@@ -161,7 +161,7 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   "cut-street-street": () => import("./cut-street-street"),
   "cut-street-strength": () => import("./cut-street-strength"),
   "cut-street-telekinesis": () => import("./cut-street-telekinesis"),
-  // 2026-11-15 teens: painted suit A for ages 13-15 (all but the male speedster, who keeps the shrunk grown suit).
+  // 2026-11-15 teens: painted suit A for ages 13-15 (the male speedster joined 2026-11-15, same locked suit).
   "cut-mystery-arcane-f-teen": () => import("./cut-mystery-arcane-f-teen"),
   "cut-mystery-arcane-m-teen": () => import("./cut-mystery-arcane-m-teen"),
   "cut-mystery-fire-f-teen": () => import("./cut-mystery-fire-f-teen"),
@@ -179,6 +179,7 @@ const LOADERS: Record<string, () => Promise<{ default: string }>> = {
   "cut-mystery-swift-f-teen": () => import("./cut-mystery-swift-f-teen"),
   "cut-mystery-veil-f-teen": () => import("./cut-mystery-veil-f-teen"),
   "cut-mystery-veil-m-teen": () => import("./cut-mystery-veil-m-teen"),
+  "cut-mystery-swift-m-teen": () => import("./cut-mystery-swift-m-teen"),
 };
 
 const cache = new Map<string, string>();

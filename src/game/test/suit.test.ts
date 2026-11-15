@@ -98,13 +98,13 @@ test("suit B is painted: every family and sex except the male speedster resolves
   assert.equal(painted, 17);
 });
 
-test("teens 13-15 wear their own painted suit A (B lives too, until B teens are painted); the male speedster keeps the shrunk grown suit", async () => {
+test("teens 13-15 wear their own painted suit A (B lives too, until B teens are painted); the male speedster too, in his locked suit", async () => {
   const { stageKeys } = await import("../heroArt.ts");
   for (const f of ART_FAMILIES) for (const sex of ["male", "female"] as const) {
     const grown = stageKey(f, sex, 30);
     for (const suit of ["a", "b"] as const) for (const age of [13, 14, 15]) {
       const best = stageKeys(f, sex, age, suit).find((k) => hasArt(`cut-${k}`));
-      assert.equal(best, grown === "mystery-swift-m" ? grown : `${grown}-teen`, `${grown} ${suit} at ${age}`);
+      assert.equal(best, `${grown}-teen`, `${grown} ${suit} at ${age}`);
     }
     assert.equal(stageKeys(f, sex, 16, "a").find((k) => hasArt(`cut-${k}`)), grown, "16 wears the grown suit");
   }
