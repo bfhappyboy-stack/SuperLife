@@ -9,7 +9,7 @@
 import { DATING_ON, stageOf } from "./dating";
 import { hash } from "./economy";
 import { firstName } from "./format";
-import { faceOf } from "./origin";
+import { dropTrait, faceOf, grantTrait } from "./origin";
 import { temperOf, trustOf } from "./ties";
 import type { Game, LoveStage, Person } from "./types";
 
@@ -208,6 +208,106 @@ export function maskNews(start: Game, end: Game): string[] {
     if (p.role !== "partner" || !p.alive || p.knowsSecret) continue;
     const before = start.relationships.find((r) => r.id === p.id);
     if (before && p.foundAt === undefined && suspicionOf(before) < JEALOUS_AT && suspicionOf(p) >= JEALOUS_AT) out.push(`${firstName(p.name)} thinks you're seeing someone. The late nights don't add up. People ▸ ${firstName(p.name)}.`);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// After the truth (owner's call, 2026-11-11 eve; built 2026-11-14): a partner who knows and is close looks after
+// you after fights; one who knew and leaves on bad terms sells your story. A good-terms ex keeps the secret.
+// ---------------------------------------------------------------------------------------------------------------
+
+/** Ship switch: off means no patch-ups and no story sales. */
+export const AFTER_ON = true;
+/** A partner who knows patches you up from this closeness and trust. */
+export const CARE_CLOSE = 60;
+export const CARE_TRUST = 40;
+/** What a patch-up gives: more after a fight that went badly. At most once a month. */
+export const CARE_WIN = { health: 4, happiness: 2 } as const;
+export const CARE_HURT = { health: 8, happiness: 3 } as const;
+/** An ex who knew sells the story when they leave this cold (closeness below or trust below). */
+export const SELL_CLOSE = 35;
+export const SELL_TRUST = 30;
+/** The fallout when your name hits the papers: famous overnight, trusted less, and it hurts. */
+export const SALE_FALLOUT = { fame: 12, reputation: -6, happiness: -8 } as const;
+
+/** Your partner who knows and would look after you, if any. */
+export function carer(g: Game): Person | undefined {
+  if (!AFTER_ON || !keepsMask(g)) return undefined;
+  return g.relationships.find((r) => r.role === "partner" && r.alive && r.knowsSecret && r.closeness >= CARE_CLOSE && trustOf(r) >= CARE_TRUST);
+}
+
+/**
+ * After a fight with a villain: a partner who knows patches you up (once a month). Marks the person and returns
+ * the effects for the engine to apply, plus the story line. Nothing when there's no carer or it's been done this month.
+ */
+export function patchUp(g: Game, hurt: boolean): { personId: string; line: string; health: number; happiness: number } | null {
+  const p = carer(g);
+  if (!p) return null;
+  const at = nowAt(g);
+  if (p.patchedAt === at) return null;
+  p.patchedAt = at;
+  p.patches = (p.patches ?? 0) + 1;
+  const fx = hurt ? CARE_HURT : CARE_WIN;
+  const who = firstName(p.name);
+  const line = hurt
+    ? `${who} is up when you get in, kit already open. Stitches, ice, no questions.`
+    : `${who} checks you over at the kitchen table and makes you eat something.`;
+  return { personId: p.id, line, health: fx.health, happiness: fx.happiness };
+}
+
+/** For the card: how a knowing partner looks after you. */
+export function careLine(g: Game, p: Person): string | null {
+  if (!AFTER_ON || !p.knowsSecret || p.role !== "partner") return null;
+  const n = p.patches ?? 0;
+  if (carer(g)?.id !== p.id) return n ? `Patched you up ${n === 1 ? "once" : `${n} times`}; things are cooler now.` : null;
+  return n ? `Patches you up after fights (${n === 1 ? "once so far" : `${n} times`}).` : "Will patch you up after fights.";
+}
+
+/** True when an ex leaving now would sell your story: they knew, you still wear the mask, and it ended badly. */
+export function wouldSell(g: Game, p: Person): boolean {
+  return AFTER_ON && keepsMask(g) && !!p.knowsSecret && !p.soldStory && (p.closeness < SELL_CLOSE || trustOf(p) < SELL_TRUST);
+}
+
+/**
+ * Call when a partner becomes an ex. If they knew and it ended badly, they sell your story: the mask is off for good
+ * (secret → public), with fame/reputation/Joy fallout for the engine to apply. A good-terms ex who knew keeps it.
+ */
+export function afterSplit(g: Game, p: Person): { sold: boolean; line: string; effects?: { fame: number; reputation: number; happiness: number } } | null {
+  if (!AFTER_ON || !p.knowsSecret || !keepsMask(g)) return null;
+  const at = nowAt(g);
+  const who = firstName(p.name);
+  if (!wouldSell(g, p)) {
+    note(p, "Keeps your secret", at);
+    return { sold: false, line: `${who} still knows who you are, and keeps it. Some things outlast the relationship.` };
+  }
+  p.soldStory = true;
+  note(p, "Sold your story to the press", at);
+  dropTrait(g, "secret");
+  grantTrait(g, "loud", "mark");
+  g.storySold = { by: p.name, at };
+  return {
+    sold: true,
+    line: `"MY LIFE WITH THE MASK": ${who} sold your story. Your face is on every front page by morning. The mask is off for good: more famous overnight, trusted a little less.`,
+    effects: { ...SALE_FALLOUT },
+  };
+}
+
+/** For the Play card: a story sale that happened during the step. Once. */
+export function saleNews(start: Game, end: Game): string[] {
+  const s = end.storySold;
+  if (!s || (start.storySold && start.storySold.at === s.at)) return [];
+  return [`${firstName(s.by)} sold your story to the press. Your secret identity is out; you're a public hero now.`];
+}
+
+/** For the Play card: how many times a partner patched you up during the step. Once per step. */
+export function careNews(start: Game, end: Game): string[] {
+  const out: string[] = [];
+  for (const p of end.relationships) {
+    if (p.role !== "partner" || !p.alive) continue;
+    const before = start.relationships.find((r) => r.id === p.id)?.patches ?? 0;
+    const n = (p.patches ?? 0) - before;
+    if (n > 0) out.push(`${firstName(p.name)} patched you up after ${n === 1 ? "a fight" : `${n} fights`}. Nobody else knows where the bruises came from.`);
   }
   return out;
 }

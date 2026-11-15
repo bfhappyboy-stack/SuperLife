@@ -5,6 +5,8 @@
  */
 import { useId } from "react";
 import { FAMILY_PATH } from "@/components/game/icons";
+import { mysteryArtKey } from "@/components/game/heroArt";
+import { useArt } from "@/components/game/Scene";
 import type { CapeFamily } from "@/game/theme";
 
 function rng(seed: number) {
@@ -22,8 +24,11 @@ const FEMALE =
 const HAIR_F = "M101 86C99 66 111 58 120 58 132 58 142 66 140 88 146 104 148 124 142 140 136 128 138 108 134 96 128 104 112 104 106 96 102 108 104 128 98 140 92 124 96 104 101 86Z";
 const HAIR_M = "M102 88C100 70 110 62 121 62 133 62 141 71 138 90 134 80 128 76 120 77 112 77 106 80 102 88Z";
 
-export function LifeHeroArt({ seed, sex, family, accent, className = "" }: { seed: number; sex: "male" | "female"; family: CapeFamily | null; accent: string; className?: string }) {
+export function LifeHeroArt({ seed, sex, family, suit, accent, className = "" }: { seed: number; sex: "male" | "female"; family: CapeFamily | null; suit?: "a" | "b"; accent: string; className?: string }) {
   const id = useId().replace(/:/g, "");
+  // 2026-11-11 art pass: the painted Mystery card for this family replaces the silhouette when it exists.
+  const painted = useArt(mysteryArtKey(family, sex, 30, suit));
+  if (painted) return <img src={painted} alt="" className={`anim-fade absolute inset-0 block size-full object-cover object-top ${className}`} draggable={false} />;
   const r = rng(seed);
   const body = sex === "female" ? FEMALE : MALE;
   // A skyline of eleven towers with a few lit windows, the same every time for this hero.

@@ -1,5 +1,85 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-15 night): the "Your call" screen and the B-teen Closet label
+
+**Played:** "Your call" event screens at 390×844 from crafted choice saves (`/workspace/pt1115night/saves/choice-*.json`): fire (m) 14 suit B, ice (f) 14 suit B with a parent named in the text, a 10-year-old (portrait), a God Mode Batman life (legend painting), and a 30-year-old with long text and five choices. The Closet was opened on fire (m) and storm (f) suit-B teens.
+
+**Before/after:** `/workspace/pt1115night/before-after-yourcall.png` (`before-yourcall.png` / `after-yourcall.png`); `before-after-closet-b-teen.png`; more in `after-choice-*.png`.
+
+**Findings:**
+- **"Your call" had an empty middle (fixed).** About 300 px of dark backdrop sat between the card and the buttons. It's now a framed night scene with you painted in it, plus the named person's painted portrait (checked with "Harper", a parent). The 10-year-old shows their portrait and Batman shows his painting. With long text and five choices the scene hides and the gap is only what was left; the buttons don't move. No console errors.
+- **Closet on a B teen read "YOUR SUIT" (fixed):** fire (m) and storm (f) B teens now read "SUIT LINE B".
+- **Still open:** the five teen B girls (fire, ice, mind, swift, veil) wear teen A until their paintings exist (prompts in `/workspace/pt1115night/IMAGES.md`). The kids' minigame headers are icon tiles (no faces, fine).
+
+## Afternoon pass (2026-11-15 pm): storm teen, the Arena hit and K.O.
+
+**Played:** the storm (f) teen life at 14 against Rent (duel and Closet); a vs-computer Arena match from the Metro save (random draft, order, three rounds, five turns frozen 110 ms and 260 ms into each hit, fought on to the result); the Metro save's duel against Rent to the K.O. card. All at 390×844 (`/workspace/pt1115pm/`; frames in `arena/` and `duel/`).
+
+**Before/after:** `storm-f-teen-before.png` / `storm-f-teen-after.png`; `before-after-arena-ko.png` (`arena-ko-before.png` / `arena-ko-after.png`); `before-after-arena-result.png`; `before-after-duel-ko.png`; Arena hits `arena-hits-after.png`.
+
+**Findings:**
+- **Storm (f) teen** now reads 13–14 (ponytail, slimmer); the cut is clean on the rooftop.
+- **Arena hit: fine.** Every effect lands on the card that was hit, on both sides; numbers sit at the card's top; no overflow, no console errors. A big hit still washes the stage white for a beat (same as the duel); fine in motion.
+- **Arena K.O.! was flat (fixed).** Flat conic wedges and a white-outlined comic K.O.!, gold even on a loss. Now there is soft light from above and a metal K.O.!, gold on a win and red on a loss. The result screen's wedges are now god-rays.
+- **Spotlight edge (fixed):** the cone on the duel result card (and the first Arena version) had a hard trapezoid edge. Now it's soft.
+- **Still flat:** the kids' minigame heads (`MiniHead`) and the empty middle of the "Your call" event screens.
+
+## Morning pass (2026-11-15 am): the hit and the K.O.
+
+**Played:** the Metro save (Sam Lee, 29, Flight) against Rent, four turns frozen at 110 ms into each hit, then fought to the result, plus the same life at 14 (teen stage fallback), at 390×844 (`/workspace/shots-2026-11-15-am/`). Before/after: `before-after-hitfx.png` (frames `before-*-*.png` / `after-*-*.png`) and `before-after-ko.png` (`before-ko.png` / `after-ko.png`).
+
+**Findings:**
+- **The hit was clip art (fixed, increment 1).** Force hits landed as a flat gold comic star and the numbers were thin text. Now each hit has a shockwave, rays, a lens streak, shards and a side flash, and the numbers slam in, outlined and weighted. A big hit taken no longer turns the stage solid red (the flash is 60%, not 85%). Hits on you now land on your body instead of to its left.
+- **The K.O. card was flat yellow wedges (fixed, increment 2).** Soft god-rays, a spotlight on the winner and a metal-cast title now; layout unchanged.
+- **Teens 13–15** still stand as the grown suit, shrunk (no teen paintings yet; list in `/workspace/pt1115am/IMAGES.md`).
+- No console errors, no horizontal overflow, rules and saves unchanged. Arena uses the same `DamageNumber`/`SideFlash`; the Arena draft was walked to "To round 1", but the rival's random picks blocked a scripted Arena hit capture, so the Arena hit frames were checked by type only.
+- **Still flat:** kids' minigame heads (`MiniHead` icons); event "Your call" screens are a dark backdrop with an empty middle; the loser on the result card is a grey cutout lying down (fine, but could get a dust puff).
+
+## Suit B pass (2026-11-14 suitb)
+
+**Played:** the Metro save at 29 as fire (m), storm (f), ice (f), mind (m), veil (m) and life (f), each on suit A and suit B, Closet open; then a storm (f) suit B duel against Rent, at 390×844. Grid: `/workspace/pt1114suitb/suits-grid.png`; duel: `/workspace/pt1114suitb/duel-suitb-storm-f.png`.
+
+**Findings:** suit B swaps in cleanly with no halo on the night city. B suits read more grounded (armour, coats, hoods) and carry less hand glow than A, so fire and veil B look quieter than their A. Mind A is blue and storm A purple, while their B suits are violet and navy, so the colours swap between lines. Veil B lost the faint smoke trail in the cutout.
+
+## Night pass (2026-11-14 night): the Closet, suit lines
+
+**Played:** the Metro save (Sam Lee, Flight) at 29 and at 14, and the same life at 10, at 390×844 (`/workspace/pt1114night/shots/`). Before/after: `/workspace/pt1114night/before-after-closet.png` (before: `before-adult-closet.png`; after: `after-adult-closet.png`, `after-teen-closet.png`, `after-kid-closet.png`).
+
+**Findings:** the Closet opened on the stick-limbed paper doll with a cartoon face, the crudest thing left on an everyday screen; it now shows the painted Flight cutout on Metro City at night (teen: the same suit, shorter) and, at 10, the painted portrait with "The suit waits for the power". Header, Powers ▸ Book and Life main load with no console errors at every age. Suit B shows nothing new yet: every B life falls back to suit A until the paintings land (unit-tested for all 18 family × sex pairs). The Closet's piece list (Street jacket, Training suit…) no longer shows on the body; the slot chips still say what's worn.
+
+## Portraits pass (2026-11-14 portraits)
+
+**Played:** the Metro save at 29 (partner Silas, arch-enemy Greta) and a new Mystery life in the creator, at 390×844. Before/after: `/workspace/pt1114portraits/before-after-people.png`, `/workspace/pt1114portraits/before-after-creator-header.png`.
+
+**Findings:** the toy-like busts are gone; header, Circle cards and the creator now show painted faces that match the fighter art. Greta (red hair) gets a red-haired portrait, Silas a dark-haired one. Only 3 baby portraits (1 girl), so babies repeat often; the adult pool has 4 women vs 5 men; dyed hair colours (cobalt, teal, violet, rose, crimson) fall back to dark-haired portraits.
+
+## Afternoon pass (2026-11-14 pm): faces, mentors and teens
+
+**Played:** a fresh Mystery life at 390×844 from the creator to 20 (New York City, Normal kid, Invisibility at 12; `/workspace/pt1114pm/life/`), plus the morning's Metro save (Sam Lee, 29, Flight, partner Silas who knows) and a God Mode Peter Parker at 16.
+
+**Before:** `/workspace/pt1114pm/shots/before-2.png` (People: emoji faces with blush dots for Greta and Silas, and the same for you in the header), `cbefore-2.png` (creator: stick-limbed paper doll on a cream card), `t-1.png` (Powers ▸ Book: an icon and text for your gift, a star glyph for the mentor). **After:** `after-2.png`, `cafter-2.png`, `p-1.png` / `p-2.png`, `legs-4.png`, `teen-4.png` (side by side: `/workspace/pt1114pm/before-after-people.png`, `/workspace/pt1114pm/before-after-creator.png`).
+
+**Findings:**
+- **The crudest art left was every face outside a fight (fixed, increment 1).** You, parents, friends, partners, rivals and rival capes were cartoon heads; the first screen of a new life (the creator) was the paper doll. Now one painted bust style, matching the cast's night-city, rim-lit look, at every age (babies round, kids big-headed, greying from 56, white at 70).
+- **Powers ▸ Book never showed you as a hero (fixed, increment 2).** The gift card now shows your painted cutout (or a legend's painting), and mentors have faces.
+- **Ages 13–15 fought as the doll (fixed, increment 3).** Invisibility woke at 12 in the test life and the first fights came at 13–14: the hero now stands as a slightly shorter painted cutout.
+- **Still crude or bare:** the wardrobe (Closet) is still the paper doll; under-13 fights keep the doll; event "Your call" screens are a beige card over a large empty dark area (room for a city or scene illustration); kids' minigames use the `MiniHead` icons. A second costume per family needs new paintings: no image generator was available to this pass.
+- **Money, rules and saves:** unchanged. Old saves load (Peter Parker 16 and the Metro 29 save both open and play; every face keeps its seed).
+
+## Morning pass (2026-11-14 am): after the truth
+
+**Before:** a partner who knew your secret had one line on their card ("Knows you're a hero. Your secret is safe with Silas.", see `/workspace/shots-2026-11-11-pm/`) and nothing happened after fights or a bad break-up. **After (390×844, `/workspace/shots-2026-11-14-am/`):** `care-main.png` (a lost fight: "Silas is up when you get in, kit already open. Stitches, ice, no questions." with the +8 Health chip), `care-care.png` (Silas's card: "✚ Patches you up after fights (once so far)"), `sold-main.png` (breaking up with Silas at closeness 22: "MY LIFE WITH THE MASK", Fame +8 / Reputation −6 / Joy chips). No console errors, no horizontal overflow. Legend drift: an idle Superman 0 → 45 ends with each kit power at rank C (82) instead of D (7).
+
+## Art pass 2 (2026-11-11 art2): fighters on the stage
+
+**Before:** `/workspace/shots-art/after/duel-m.png` (framed hero card vs the drawn Skinwalker). **After:** `/workspace/shots-art/art2/duel-m.png` (full-body hero vs the painted Skinwalker on the city backdrop), `duel-f.png` (Might heroine vs a Kinetic), `duel-m-hit.png` (hit frame).
+
+## Art pass (2026-11-11 art): where characters are drawn
+
+**Audit (390×844, `/workspace/shots-art/before/`):** the paper doll (`Figure.tsx`) stood in for the player in every Mystery fight (`duel-m.png`, `duel-f.png`), for street villains and hero NPCs on the battle stage, for Arena fighters from saved lives, and in the wardrobe and creator. `LifeHeroArt.tsx` drew a flat silhouette on Arena posters. `Portrait.tsx` draws vector faces on people cards and the header. Legends and the 49 named villains were already painted (`duel-bat.png`). Minigames use `MiniHead` icons.
+
+**After increment 1 (`/workspace/shots-art/after/`):** Mystery fights show the painted hero (`duel-m.png`, `duel-f.png`); Arena life posters use the same painting.
+
 ## Afternoon pass (2026-11-11 pm): the mask at home
 
 **Played:** engine sims (6 Mystery seeds, secret identity, a partner moved in at 25, Play only to 45, never answering), and the phone at 390×844 from the seed-4 Metro save at 29 switched to a secret identity (`/workspace/shots-2026-11-11-pm/`).

@@ -1,7 +1,14 @@
 import { useId } from "react";
+import { PaintedFace } from "@/components/game/PaintedFace";
+import { PhotoFace } from "@/components/game/PhotoFace";
 import { powerById } from "@/game/data";
 import { HAIR, resolveLook, SKIN } from "@/game/look";
 import type { Look, PowerId, Sex } from "@/game/types";
+
+/** Painted busts for every procedural face (2026-11-14 pm). Off = the original cartoon vector face. */
+export const PAINTED_FACES = true;
+/** Real painted portraits (2026-11-14 portraits pass) over the SVG busts. Off = the SVG busts above. */
+export const PHOTO_FACES = true;
 
 export function Portrait({
   seed,
@@ -11,6 +18,7 @@ export function Portrait({
   mood = 60,
   sex,
   look,
+  cape = false,
   className = "h-16 w-16",
 }: {
   seed: number;
@@ -20,6 +28,8 @@ export function Portrait({
   mood?: number;
   sex?: Sex;
   look?: Partial<Look> | null;
+  /** A rival cape: drawn from the masked portrait sheet from 16. */
+  cape?: boolean;
   className?: string;
 }) {
   const face = resolveLook(seed, look);
@@ -41,6 +51,26 @@ export function Portrait({
   const masked = rank > 0 && !baby;
   const beard = !female && !baby && age >= 16 && (h >>> 12) % 3 !== 0 ? (age >= 22 && (h >>> 14) % 2 === 0 ? "full" : "stubble") : "none";
 
+  if (PAINTED_FACES) {
+    const bust = (
+      <svg viewBox="11 10 58 70" preserveAspectRatio="xMidYMin slice" className={`${className} ${tone}`} aria-hidden>
+        <PaintedFace seed={h} age={age} female={female} face={face} rank={rank} mood={mood} beard={beard} />
+        {rank >= 4 && (
+          <g>
+            <circle cx="58" cy="66" r="5.5" className="fill-gold" />
+            <circle cx="58" cy="66" r="5.5" fill="none" stroke="#fff" strokeOpacity="0.5" strokeWidth="1" />
+            <path d="M58 62.6 L59 64.9 L61.4 65.1 L59.6 66.6 L60.2 69 L58 67.7 L55.8 69 L56.4 66.6 L54.6 65.1 L57 64.9 Z" fill="#fff" opacity="0.9" />
+          </g>
+        )}
+      </svg>
+    );
+    if (!PHOTO_FACES) return bust;
+    return (
+      <PhotoFace seed={h} age={age} sex={body} look={face} cape={cape} className={className} fallback={<span className={`photo-wait relative block overflow-hidden rounded-[26%] bg-[#141a26] ${className}`} aria-hidden />}>
+        {rank >= 4 && <span className="absolute right-0.5 bottom-0.5 grid size-[28%] max-h-5 max-w-5 place-items-center rounded-full bg-gold text-[9px] leading-none text-ink shadow" aria-hidden>★</span>}
+      </PhotoFace>
+    );
+  }
   return (
     <svg viewBox="0 0 80 96" className={`${className} ${tone}`} aria-hidden>
       <defs>

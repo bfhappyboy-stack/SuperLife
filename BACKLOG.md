@@ -1,5 +1,52 @@
 # SuperLife — Backlog
 
+## From the 2026-11-15 night pass
+
+- **Done:** the Closet caption names the suit line on B teens; "Your call" event screens get a painted scene (you, plus whoever the event names).
+- **Blocked on paintings:** 5 teen suit-B girls (fire, ice, mind, swift, veil). Prompts and drop-in steps are in `/workspace/pt1115night/IMAGES.md`.
+- **Next for art:** a painted villain or street figure opposite you in "Your call" when the event is about a crime (needs an event tag); the scene could tint by chapter phase (crisis red).
+- **Next for juice:** a short hit-stop on big hits; a dust puff when the loser goes down.
+
+## From the 2026-11-15 pm pass
+
+- **Done:** storm (f) teen repainted younger (v3); the Arena hit checked at 390×844; the Arena K.O. and result screens get the duel's soft light and metal K.O.; the spotlight cone edge is soft now.
+- **Still open for teens:** the male speedster teen painting (he still wears the grown suit shrunk), and suit B teen paintings (B lives wear teen A at 13–15).
+- **Next for art:** kids' minigame heads (`MiniHead`); a scene illustration for the empty "Your call" event screens.
+
+## From the 2026-11-15 am pass
+
+- **Done:** cinematic impacts (shockwave, rays, lens streak, shards, side flash) and slam-in damage numbers in duels and the Arena (increment 1); the fight result header gets god-rays, a spotlight and a metal title (increment 2). `FX_CINEMATIC` is the off switch.
+- **Blocked on paintings:** 18 teen suit-A cutouts (+17 optional teen suit-B). Exact list, prompts and an importer: `/workspace/pt1115am/IMAGES.md`, `/workspace/pt1115am/import-cutouts.py`.
+- **Ask the owner:** should the male speedster get a teen painting (same suit, 14 years old), or stay exactly as painted at every age?
+- **Next for juice:** a short hit-stop (40–60 ms freeze) on big hits; a dust puff when the loser goes down; Arena round transitions.
+
+## From the 2026-11-14 night pass
+
+- **Done:** the Closet mirror is painted (suit cutout, legend painting, or your painted portrait; increment 1); suit lines A/B per life, seeded and saved, with art slots that fall back to A (increment 1); teen suit slots for 13–15 (increment 1); loading portraits show a dark frame instead of the drawn bust; hero sparring partners with no family wear the Might suit.
+- **Blocked on paintings (no image generator in this pass):** 17 suit-B cards + 17 suit-B cutouts (swift male stays), 18 teen cutouts, and a powerless vigilante cutout pair. Filenames, sizes and prompts are in the night CHANGELOG entry.
+- **Still drawn:** under-13 fights and powerless players in fights keep the paper doll; saved powerless lives in the Arena keep the SVG silhouette poster; event "Your call" screens need a scene illustration; kids' minigame heads (`MiniHead`).
+- **Ask the owner:** should the player be able to switch suit line in the Closet (cosmetic, free), or stay seeded per life?
+
+## From the 2026-11-14 pm pass
+
+- **Done:** painted busts for every procedural face and the creator (increment 1); your hero on the gift card, mentors with faces (increment 2); teens 13–15 fight as their painted cutout (increment 3).
+- **Blocked on paintings (no image generator in this pass):** a second costume per power family (18 cards + 18 cutouts, same pipeline as `mystery-*` / `cut-mystery-*`); a real kid set (7–12) for the stage; painted people photos if the owner prefers raster to the SVG busts.
+- **Next for art:** the Closet still shows the paper doll (it has to show clothes, so it needs a painted body with clothing layers or per-outfit art); event "Your call" screens need a scene illustration in the empty area; kids' minigame heads (`MiniHead`).
+- **Ask the owner:** are the new painted busts the right direction for people, or should family/partners get raster paintings too (costly: one asset per face type)?
+
+## From the 2026-11-14 am pass
+
+- **Done:** legend signature powers drift +3 a year unused (increment 1); partners who know patch you up, bitter exes sell the story, good exes keep it (increment 2).
+- **Ask the owner:** should a public hero's partner patch you up too (now only a secret-identity partner who knows)? Should a partner who found the suit, heard the truth and left anyway count as "knowing" (now they can't sell, because they never accepted it)? Is a story sale always certain on a bad break-up, or should temper decide (Slippery always, Steady rarely)?
+- **Next for dating:** a crush while partnered (getting caught), date nights and anniversaries as routine slots, the press hounding you for a while after a sale (a short "exposed" chapter thread).
+
+## From the 2026-11-11 art pass
+
+- **Done (art2 increment 1):** painted street-villain archetypes and full-body hero cutouts on a painted stage.
+
+- **Done:** painted Mystery heroes (family × sex) in the ring and the Arena (increment 1).
+- **Next for art:** painted street-villain cards by power family; painted people portraits (family, partners, mentors) to replace the vector faces; a teen card set (13–15); a second costume per family so two Mystery lives with the same power don't look identical.
+
 ## From the 2026-11-11 pm pass
 
 - **Done:** the mask at home (partner suspicion, jealousy, finding the suit, telling them; increment 1).

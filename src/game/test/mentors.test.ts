@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { act, ageUp, createGame, dismissReveal, resolveMini, choose } from "../engine.ts";
 import { possibleMixes } from "../combo.ts";
-import { LEGEND_MENTORS, MIX_AGE, mentorBraid, mentorFor, mixLock, UPBRINGING_MENTORS } from "../mentors.ts";
+import { CITY_MENTORS, LEGEND_MENTORS, MENTOR_FACE, MIX_AGE, mentorBraid, mentorFace, mentorFor, mixLock, UPBRINGING_MENTORS } from "../mentors.ts";
 import { PRESETS } from "../presets.ts";
 import { canSkipToFifteen, dismissSkip, fastForward, settleSmall, skipMonths } from "../skip.ts";
 import type { Game } from "../types.ts";
@@ -125,4 +125,17 @@ test("settleSmall leaves fights, canon and villain cases to the player", () => {
   const small: Game = { ...g, phase: "choice", pending: { id: "rain", prompt: "It rains.", choices: [{ id: "sulk", label: "Sulk" }, { id: "dance", label: "Dance" }], outcomes: { sulk: { text: "meh", effects: { happiness: -2 } }, dance: { text: "yay", effects: { happiness: 3 } } } } } as Game;
   const done = settleSmall(small);
   assert.ok(done && done.line.includes("Dance"), "picks the kinder option");
+});
+
+test("every mentor has a face: sex, a grown-up age and a stable seed", () => {
+  const all = [...Object.values(LEGEND_MENTORS), ...Object.values(UPBRINGING_MENTORS), ...Object.values(CITY_MENTORS), mentorFor({ preset: null, upbringing: "nope", cityId: "nope" } as never)];
+  for (const row of all) {
+    if (!row) continue;
+    assert.ok(MENTOR_FACE[row.id], `${row.id} has a face`);
+    const face = mentorFace(row.id);
+    assert.ok(face.age >= 30 && face.age <= 90, `${row.id} is a grown-up`);
+    assert.equal(mentorFace(row.id).seed, face.seed, "same face every time");
+    assert.ok(face.seed > 0);
+  }
+  assert.equal(mentorFace("unknown-mentor").age, 55);
 });

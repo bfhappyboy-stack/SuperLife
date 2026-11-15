@@ -1,5 +1,172 @@
 # Changelog
 
+## 2026-11-15 (night): the "Your call" scene, and the right suit label on B teens (`devbot/2026-11-15-night`)
+
+Built on `origin/devbot/2026-11-15-swift` (d8ac8d7), so it carries the whole unmerged art chain: merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (350 pass), built and loaded at 390×844 before push.
+
+- **Closet label fix:** a suit-B teen wearing a painted B teen (`cut-mystery-<family>-<m|f>-b-teen`) read "YOUR SUIT". The caption now names the line of the painting on screen: "Suit line B" for both the grown B and the teen B. A B life that still falls back to teen A (the fire, ice, mind, swift and veil girls) reads "Your suit", because that is what she is wearing. New pure helper `suitOfKey` in `src/game/heroArt.ts`. Test +1.
+- **"Your call" scene:** an event that waits for your choice left a big empty dark gap between its card and the buttons. That gap is now a framed, lit film still. Your city's painting is graded for night with slow drift, the power colour pools behind you, soft god-rays sway from the top corner and dust drifts up. You stand in it as your painted suit cutout from 13 (teen paintings at 13–15), your legend's painting in God Mode, or your painted portrait before the suit (kids, the powerless). When the event's text names someone you know by first name (a parent, friend, partner, rival…), their painted portrait stands opposite you, labelled. It is painted art only, with no drawn faces. The scene takes whatever room is left and hides when that is under 96 px (long text, many choices), so nothing is pushed off screen. Reduced motion stops the sway and the dust. Code: `src/components/game/EventScene.tsx` (`EVENT_SCENE` is the off switch), `namedIn` in `src/game/heroArt.ts` (test +1), wired in `GameApp.tsx`, CSS in `styles.css`. No rules or saves change.
+- **Last five teen suit-B girls painted:** fire, ice, mind, swift and veil (`cut-mystery-<family>-f-b-teen`, cut with `/workspace/pt1115am/import-cutouts.py`, ~28–47 KB each; prompts in `/workspace/pt1115night/IMAGES.md`). Every family and sex with a suit B now has its own B teen at 13–15; the test expects all 17.
+
+## 2026-11-15 (swift): the speedster's teen painting (`devbot/2026-11-15-swift`)
+
+Built on `origin/devbot/2026-11-15-pm` (170b927). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+- **Owner-approved:** the male speedster now has his own painted teen self at 13–15 (`cut-mystery-swift-m-teen`, 339×720 webp, ~41 KB, same black suit, teal bolt and teal hand trail), replacing the grown suit shrunk to 86–94%. His suit stays locked to A at every age; 16+ is unchanged. Every Mystery family and sex now has a teen painting. Test updated to expect it.
+- **Teen suit B (owner-approved):** 12 painted B teens `cut-mystery-<family>-<m|f>-b-teen` (all 8 boys with a B suit, plus the storm, might, life and arcane girls), cut the same way (~30–64 KB each). Lives on suit B wear them at 13–15; the fire, ice, mind, swift and veil girls keep teen suit A until their B teens read young enough. Test: +1 (B teen when painted, else teen A; grown B at 16).
+
+## 2026-11-15 (pm): a younger storm teen, and the Arena's K.O. lit like the duel (`devbot/2026-11-15-pm`)
+
+Built on `origin/devbot/2026-11-15-teens` (a51ca5c), so it carries the whole unmerged art chain: merge this one PR alone. Each increment typechecked, linted (no new problems; the one lint error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (347 pass), built and loaded at 390×844 before push.
+
+### Increment 1: storm-f teen repainted younger (v3)
+
+- The storm (f) teen at 13–15 still read about 16. New painting: tied ponytail, slimmer, younger face, same purple suit, mask and hand lightning. Cut with `/workspace/pt1115am/import-cutouts.py` (254×720 webp, ~40 KB); it replaces `src/assets/art/cut-mystery-storm-f-teen.ts` (the loader line was already there). No rules or saves change.
+
+### Increment 2: Arena hits checked, Arena K.O. and result screens lit like the duel
+
+- **Arena hit verified at 390×844** (the am pass only type-checked it): a scripted vs-computer match (draft → order → three rounds), five turns frozen 110 ms into each hit. The shockwave, rays, shards, side flash and slam-in numbers sit on the hit card on both sides, nothing clips the stage, no console errors. `FX_CINEMATIC` was already `true` in `Vfx.tsx` and stays on.
+- **Arena round-over (K.O.!/TIME!) and the match result** still had the flat comic conic wedges, and the K.O. word was white with a gold outline even when you lost. Both now use the soft volumetric light from the duel result (glow, blurred god-rays, spotlight), and the K.O. word is metal-cast: gold when you win the round, red when you lose it. Layout, buttons and text unchanged.
+- **Spotlight edge fix (Arena and duel):** the spotlight cone had a hard trapezoid edge, because the blur was on the clipped element itself. The blur now sits on a wrapper, so the cone is soft. The duel result card uses the same shared `KoLight` now (no change to its layout).
+- Code: `KoLight` in `Vfx.tsx` (null with `FX_CINEMATIC` off, old wedges come back); `Arena.tsx` `RoundOver` and `Results`; `Duel.tsx` result card. No rules, tests or saves change.
+
+## 2026-11-15 (teens): painted teen heroes for 13–15 (`devbot/2026-11-15-teens`)
+
+Built on `origin/devbot/2026-11-15-am` (5ab385d). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+- **17 painted teen suit A cutouts** `cut-mystery-<family>-<m|f>-teen` (every family and sex but the male speedster, who keeps the grown suit shrunk to 86–94% until his teen painting is decided): same suit, colours and emblem as the grown A, worn by a 14-year-old. Cut with `/workspace/pt1115am/import-cutouts.py` (rembg isnet, edge decontamination, 720 px transparent webp q80, ~34–70 KB). Checked on dark and light; the fire, ice and arcane hand glow and the veil cloaks survived the cut.
+- **Where:** the duel stage and the Closet mirror from 13 to 15 now show the teen painting (lives on suit B wear the teen A until B teens are painted). 16+ is unchanged. No rules or saves change.
+- **Tests:** +1 (`suit.test.ts`: every teen at 13–15 resolves to its own painting, swift-m to the shrunk grown suit, 16 to the grown suit).
+- **Repainted (v2):** storm-f, arcane-f and veil-f teens read too old in the first set, so they were repainted younger (softer faces, slimmer builds) and re-cut the same way.
+
+## 2026-11-15 (am): fights that hit like a film (`devbot/2026-11-15-am`)
+
+Built on `origin/devbot/2026-11-14-suitb` (5c7fba5), so this branch carries the whole unmerged art chain (art2 → am → pm → portraits → night → suitb): merge this one PR alone. Each increment typechecked, linted (no new problems), `npm run test:game` (346 pass), built and loaded at 390×844 before push.
+
+### Increment 1: cinematic impacts and slam-in damage numbers
+
+- **Why:** the 390×844 audit found the crudest thing left on the fight stage was the hit itself. Every plain-force blow (street moves, strength, most teen fights) landed as a flat, comic five-point gold star, and damage numbers were thin text that faded in. Next to the painted fighters it read like clip art.
+- **What (`Vfx.tsx`):** every landed hit now adds a white shockwave ring (a second coloured one on big hits), a short fan of light rays, an anamorphic lens streak and debris shards, under the element's own effect. The force hit is a white-hot core with dust, not a star. Ice's dashed ring is now a frosted ring, and life's "+" glyphs are glowing motes. A side flash in the element colour lights the hit half of the stage for 300 ms (screen blend, so it lights the art). Damage numbers (`DamageNumber`) slam in and rise. They have an outline and a gradient, are sized by hit weight, and are gold when you won the edge, red when you take the hit, and a small grey "Blocked". The full-stage flash on big hits drops from 85% to 60% so it no longer whites out the stage. Hits on you land on your body (the burst was left of the cutout). It's the same in life-sim duels and the Arena.
+- **Kept:** timings, shakes, hit numbers and rules are unchanged; everything switches off under `prefers-reduced-motion`. `FX_CINEMATIC` in `Vfx.tsx` turns it all back to the old bursts.
+
+### Increment 2: the fight result
+
+- **Why:** every fight ends on the result card, and its header was flat yellow comic wedges behind a plain "K.O.".
+- **What (`Duel.tsx` `ResultCard`):** soft blurred god-rays and a bloom from above, a spotlight cone onto the winner, a glowing floor ellipse under the fighters, and a metal-cast K.O. / DRAW title (gold for a win, steel for a draw, red for a loss). The layout and text are unchanged. `FX_CINEMATIC` covers it too.
+
+### Increment 3: teen paintings, ready to drop in
+
+- The teen slots (`cut-mystery-<family>-<m|f>-teen`, B: `-b-teen`) were wired on the night pass and still fall back to the grown cutout shrunk to 86/90/94%. This pass can't generate images, so it writes the exact list (18 teen suit-A cutouts, 17 optional teen suit-B, with filename, path, 9:16 and a full prompt each) and a one-command importer (rembg → cleaned 720 px webp → `src/assets/art/<key>.ts` + loader line) outside the repo: `/workspace/pt1115am/IMAGES.md`, `/workspace/pt1115am/import-cutouts.py`. No code change was needed for the slots.
+
+## 2026-11-14 (suitb): suit B paintings wired in (`devbot/2026-11-14-suitb`)
+
+Built on `origin/devbot/2026-11-14-night` (abfe1b3). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+- **17 suit B stage cutouts** `cut-mystery-<family>-<m|f>-b` (every family and sex but the male speedster, who stays locked to suit A): painted on plain dark grey, cut out with rembg (isnet-general-use, alpha matting), edge colour decontaminated against the local backdrop so no grey halo, specks dropped, trimmed, 720 px tall transparent webp q80 (~28–67 KB each). Checked on dark and light backdrops; the storm coats and veil hoods are clean.
+- **17 suit B cards** `mystery-<family>-<m|f>-b` (540×960): the full-res B cutout composited on a city painting (arcane: Crown, fire: Hood, ice: Harbor, storm: Metro, mind: Neon, might and swift: NYC, veil and life: Stacks), figure from top with headroom, night grade, a rim light and halo in the family colour, bottom fade and vignette. Close to the A cards; their figures don't stand on a rooftop like A, so the bottom fades out instead.
+- **Every life wearing suit B now sees it** in the Closet mirror, duels, the gift card and Arena posters; suit A lives are unchanged. `SUIT_B` in `src/game/heroArt.ts` still switches it all back to A. No save changes.
+- **Tests:** +1 (`suit.test.ts`: every B key resolves to its own card and cutout, distinct from A; swift-m stays A).
+
+## 2026-11-14 (night): a painted Closet and a second suit line (`devbot/2026-11-14-night`)
+
+Built on `origin/devbot/2026-11-14-portraits` (f2e79d9), so this branch carries the whole unmerged chain (art2 → am → pm → portraits): merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (345 pass), built and loaded at 390×844 before push.
+
+- **Why (owner):** all character art must be painted and serious; the Closet was the last everyday screen still showing the Mii-like paper doll, and two Mystery lives with the same power looked identical.
+- **Closet mirror:** a Mystery hero from 13 sees their painted full-body suit cutout (breathing, rim-lit in the power colour) on their city at night; a God Mode legend sees their painting; kids and the powerless see their painted portrait in a frame lit in their colour ("The suit waits for the power"). `ART_HEROES` off brings the doll back.
+- **Suit lines A/B (`src/game/heroArt.ts`):** each new life gets `suit: "a" | "b"` from its seed (a pure hash, so nothing else about a life changes); old saves get a stable one from their name and face on load. Duels, the gift card, the Closet and Arena posters (saved lives carry `life.suit`) look for `<key>-b` first and fall back to suit A per image, so B paintings can land one at a time. The male speedster is locked to his current suit. `SUIT_B` is the off switch. No B paintings exist yet, so everyone still wears A on screen.
+- **Teen suit slots:** ages 13–15 look for `cut-<key>-teen` (and `cut-<key>-b-teen`) before the grown suit shrunk to 86/90/94%.
+- **Smaller:** a portrait that is still loading shows a dark frame with a soft sweep instead of flashing the drawn bust; hero-side sparring partners with no power family stand as the Might cutout instead of the paper doll.
+- **Tests:** +4 (`suit.test.ts`: seeded 50/50 split that leaves the rest of the life identical, migration is stable, B→A fallback for every family and sex with the speedster locked, teen key order).
+
+### Paintings still needed (no image generator in this pass)
+
+Same pipeline as the existing art: paint on a plain dark-grey backdrop, cut out (rembg), trim, 720 px tall transparent webp (q≈80, ~30–60 kB) inlined as `src/assets/art/<name>.ts`, plus one loader line in `src/assets/art/index.ts`. Cards are 540×960 (9:16) opaque webp like `mystery-*`. Style for every prompt: *"AAA game concept art, realistic painted digital illustration, realistic adult proportions, serious expression, cinematic rim light in <colour> from behind, night city mood, full body head to boots, three-quarter heroic standing pose, plain flat dark grey background, no text, no logo, not cartoon, not chibi."* (teens: *"realistic 14-year-old proportions, slimmer and shorter, youthful but serious face"*).
+
+- **Suit B cutouts `cut-mystery-<family>-<m|f>-b` (17, all but swift-m), 9:21 tall, transparent:** fire: charcoal heat-resistant armour with cracked ember-orange seams and a half-face rebreather mask; ice: frosted white-and-steel plated suit with a crystalline collar and visor; storm: navy flight suit with a long split storm coat and electric-blue piping; mind: deep violet bodysuit with a smooth silver circlet and a short high-collared cape; might: gunmetal heavy plating over black, reinforced gauntlets and a gold chest bar; swift (female only): white-and-teal aerodynamic racing suit with a winged cowl; veil: matte black stealth suit, hood and smoked half-mask with a faint smoke trail; life: forest-green field-medic armour with a white sash and leaf emblem; arcane: dark crimson-and-gold sorcerer's coat over armour, glowing magenta sigils at the hands.
+- **Suit B cards `mystery-<family>-<m|f>-b` (17), 540×960 (9:16):** the same character and suit as the matching cutout, painted on their city at night (rooftops, rain, neon), framed knees-up to head with room above.
+- **Teen cutouts `cut-mystery-<family>-<m|f>-teen` (18), 9:21 tall, transparent:** the existing suit A of each family (use the matching `cut-mystery-*` as the reference image) worn by a 14-year-old; same colours and emblem, fitted sportier and a little simpler. Optional later: `-b-teen` for suit B.
+- **Powerless vigilante cutouts `cut-vigilante-m` / `cut-vigilante-f`, 9:21, transparent:** a trained street vigilante with no powers: dark tactical jacket, taped knuckles, cloth mask, utility belt, boxer's guard stance (reference: `cut-street-street`, but a hero, cleaner and lit gold).
+
+## 2026-11-14 (portraits): real painted faces for everyone (`devbot/2026-11-14-portraits`)
+
+Built on `origin/devbot/2026-11-14-pm` (024efd6). Typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+- **Why (owner):** the SVG busts were "much better but … looks like a Wii character".
+- **46 painted portraits** cropped from five painted sheets: 3 babies, 6 kids, 9 teens, 10 adults, 9 people 55–75 and 9 masked rival capes. 192×192 webp (teens 320×320, since the creator shows them large), one lazy chunk per sheet (~45–95 KB each), in `src/assets/art/portraits-<sheet>.ts`.
+- **Picker (`src/game/portraits.ts` `pickPortrait`):** same age band (baby <4, child <13, teen <18, adult <55, older 55+), same sex, then the closest skin tone and hair from the person's look; ties broken by their seed, so each person keeps their face and moves to an older portrait with the same seed after 55. Rival capes (pro heroes on the Teachers shelf, the League table) use the masked sheet from 16. Mentors keep their fixed seed, age and sex, so their face is fixed too.
+- **Everywhere `Portrait` drew a bust:** you in the header, family, friends, partners, rivals, the lives list, the obituary, mentors and the character creator (Reroll look cycles through the faces that fit your choices). Rounded frame with a soft rim; existing rings keep the relationship colour.
+- **Kept:** the two portraits in hero suits are left out of the pool for now. `PHOTO_FACES` in `Portrait.tsx` switches back to the SVG busts, which also show for the moment a sheet is loading. No rules or saves change.
+- **Tests:** +5 (`portraits.test.ts`).
+
+## 2026-11-14 (pm): painted faces for everyone (`devbot/2026-11-14-pm`)
+
+Built on `origin/devbot/2026-11-14-am` (2b00df2, itself on art2 bc9a9b7), so it merges after both. No art2 files touched. Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 3: teens fight as themselves
+
+- **Why:** powers manifest between 7 and 15, so many Mystery lives fight for years before 16, and all of that time the player stood in the ring as the paper doll (drawn at 16 anyway) facing a painted villain cutout.
+- **What (`stageKey` / `stageScale` in `game/heroArt.ts`, `stageArtKey` in `components/game/heroArt.tsx`):** from 13 your Mystery hero stands on the duel stage as their painted cutout, a touch shorter each year under 16 (13: 86%, 14: 90%, 15: 94%), and the Powers ▸ Book gift card shows the same teen cutout. Cards and Arena posters still start at 16; under 13 keeps the doll. `ART_HEROES` still turns it all off.
+- **Tests:** +1 (`art.test.ts`: no cutout at 12, cutout at 13 and 15, nothing without a family, cards still 16+, the height steps). 336 game tests pass.
+
+### Increment 2: your hero on the gift card, and mentors with faces
+
+- **Why:** the Powers tab is the hero's home, but "Your gift" was an icon and text, and every mentor (Uncle Ben, Alfred, Skyline, Pops Delgado…) was a glyph in a circle. Nobody you train with had a face.
+- **Your gift (Powers ▸ Book):** the card now shows you in the suit. A Mystery hero from 16 stands on the right as their painted full-body cutout (power family × sex, rim-lit in the power colour, idle breathing, ground shadow); a God Mode legend's painting fades in from the right. Kids, the powerless and lives with no family keep the plain card. The text column narrows so nothing overlaps.
+- **Mentors:** the mentor card shows the mentor's painted bust (with their sigil as a small badge) instead of the bare glyph. Who they look like is data (`MENTOR_FACE` in `mentors.ts`: sex and a rough age for all 32 mentors; the seed comes from the id, so a mentor always has the same face). `PAINTED_FACES` off brings the glyph back.
+- **Tests:** +1 (`mentors.test.ts`: every mentor has a face entry, a grown-up age and a stable seed; unknown ids fall back). 335 game tests pass.
+- **Also:** adult men without a beard get a faint jaw shadow, so short-haired and tied-hair men read as men at 48 px.
+
+### Increment 1: every procedural face is a painted bust
+
+- **Why:** a first-time Mystery life still met cartoon faces everywhere outside a fight: you in the header, your parents, friends, partners, rivals, mentors and rival capes were round emoji heads with blush dots, and the creator showed a stick-limbed paper doll on a cream card. That was the crudest art left next to the painted hero and villain cast.
+- **What (`PaintedFace.tsx`, used by `Portrait`):** a painted head-and-shoulders bust in the cast's style: night-city bokeh and a skyline behind, a key light from the upper left and a rim light in the power colour from the right, a real jaw (softer for women and kids), small almond eyes with irises and a lid line, a shaded nose, painted lips, clothes on the shoulders (coat, open collar, sometimes a tie or a fine necklace), film grain and a vignette. Babies get a round face and wisps, kids a bigger head on narrow shoulders with a crew neck, over-60s greying hair and fine lines, 70+ white hair. All existing look data still drives it (skin, hair colour, the six cuts, scar, glasses, freckles, stubble or beard, the domino mask for ranked heroes, the rank medal). Pure SVG: no downloads, and every saved face keeps its seed.
+- **Creator:** the Look step shows your painted bust at 16 instead of the paper doll (the wardrobe keeps the doll, because it shows the clothes).
+- **Off switch:** `PAINTED_FACES` in `Portrait.tsx` brings back the old vector faces and the creator doll. No rules or saves change.
+
+## 2026-11-14 (am): legend signature growth, partner patch-up and story sale (`devbot/2026-11-14-am`)
+
+Built on `origin/devbot/2026-11-11-art2` (bc9a9b7), so it should merge after that branch. No art files touched. Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 2: after the truth: a partner who knows looks after you; a bitter ex sells the story (owner's call, 2026-11-11 eve)
+
+- **Patch-ups (`patchUp` in `mask.ts`):** a partner who knows you're a hero, with closeness 60+ and trust 40+, looks after you after a villain fight, at most once a month: Health +4 / Joy +2 after a win, Health +8 / Joy +3 after a loss or draw. Its own bold line on the fight card ("Silas is up when you get in, kit already open. Stitches, ice, no questions."), a recap line after a Play step ("Silas patched you up after 2 fights."), and on their card under "Knows you're a hero": "✚ Patches you up after fights (N times)" (or "Will patch you up after fights" before the first time). Sparring with heroes, partners who don't know, distant partners and public heroes: nothing.
+- **The story sale (`afterSplit`):** when a partner who knew becomes an ex (Break up, Divorce, or they end it at closeness under 16) and it ended badly (closeness under 35 or trust under 30), they sell your story: the secret identity is gone for good (the `secret` trait becomes a public `loud` mark, like the "Let it run" photo event), Fame +12 / Reputation −6 / Joy −8 through the usual curves, a front-page line on the card ("\"MY LIFE WITH THE MASK\": Silas sold your story…"), a major history entry and a Play recap line once. A good-terms ex keeps it ("Keeps your secret" in their history, and a line on the card). An ex who never knew has nothing to sell.
+- **Saves:** new optional fields `Person.patchedAt`, `patches`, `soldStory` and `Game.storySold`; old saves load as never patched / never sold, and a malformed `storySold` is dropped. Flag `AFTER_ON` in `mask.ts`.
+- **Tests (`after.test.ts`, 6):** patch-up after a win and a loss, once a month, card and recap lines; no patch-up for unaware / distant partners, hero sparring or public heroes; a bad break-up sells the story (low closeness or low trust alone); a good-terms ex keeps it and an unaware ex has nothing; a partner who walks out over the years sells it too; old saves and a malformed field. 334 game tests pass.
+
+### Increment 1: God Mode legends' signature powers grow on their own (owner's call, 2026-11-11 pm)
+
+- **Why:** since 2026-11-11 only powers you used grow on the birthday. The owner wants a legend's signature powers (Superman's Flight) to grow a little on their own.
+- **Rule (`legendSignature` / `ripenUsed` in `engine.ts`):** each birthday, every canon-kit power a God Mode legend holds gains `LEGEND_DRIFT_EXP` 3 mastery if it wasn't used that year (used ones get the normal 7, never both). Mystery lives and kit-less legends (Batman) are unchanged: growth only through use, and it never grants a power.
+- **Balance:** a Superman life left idle 0 → 45 (no actions at all) ends with each kit power at 82 mastery (rank C) instead of 7 (rank D); B needs 140. For comparison a played main power averages rank A (~400) at 40.
+- **Tests:** +1 (`legend.test.ts`: unused Flight drifts +3, a used kit power gets 7 only, an off-kit power and a Mystery life's power don't move, Batman has no signature). 328 game tests pass.
+
+## 2026-11-11 (art2): real fighters on the stage (`devbot/2026-11-11-art2`)
+
+Built on `origin/devbot/2026-11-11-art-main` (c1aecc4, on main 3857fea). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: painted full-body fighters stand on a painted stage
+
+- **Why (owner, 19:57):** "They still look like they're made on paint so make them much better." Street villains were still the drawn paper doll, and the hero was a small framed card.
+- **16 painted street-villain archetypes** (`cut-street-<power>.ts`): Pyro, Cryo, Storm, Blur, Mentalist, Brute, Blaster, Kinetic, Phantom, Skinwalker, Bulwark, Snap, Leech, Mastermind, Raptor and an unpowered street thug. Full body, front three-quarter, same painted style as the legends and the 49 named villains; generated on a plain backdrop and cut out (rembg, isnet), 720 px tall transparent webp, ~40–90 KB each, lazy chunks.
+- **18 hero cutouts** (`cut-mystery-<family>-<m|f>.ts`) from the art-pass paintings.
+- **Stage (`Cutout` in `components/game/heroArt.tsx`):** both fighters stand on the floor facing each other at the same scale, with a ground shadow, rim light in their power colour, idle breathing, a forward lean on attack, a white hit flash with a shake, and a fall on KO (on top of the existing lunge and float). The stage is taller (226 px, 184 with a gimmick strip) and shows your city's painting behind the fight, darkened. Named villains and legends keep their painted cards; children keep the paper doll.
+- **Rules unchanged:** pure presentation; `ART_HEROES` still turns it all off. Saves untouched.
+- **Tests:** +1 (`art.test.ts`: every archetype and hero has a cutout; unknown powers fall back to the street thug). 327 game tests pass.
+
+## 2026-11-11 (art): painted characters for everyone who isn't a legend (`devbot/2026-11-11-art`)
+
+Built on `origin/devbot/2026-11-11-pm` (44df36a, the same content as main 3857fea). Each increment is typechecked, `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: the Mystery hero is a painted character, in the ring and in the Arena
+
+- **Why (owner, 18:53):** "change all the crap characters so they all have better designs… especially if you aren't playing god mode." In a Mystery life the player fought as the paper doll while God Mode legends and named villains stood in the ring as paintings.
+- **18 painted Mystery heroes** (`src/assets/art/mystery-<family>-<m|f>.ts`, 540×960 webp, ~60 KB each, lazy chunks): one original suited hero per power family (fire, ice, storm, mind, might, swift, veil, life, arcane) and sex, painted in the same night-rooftop style as the legend and villain cards, so the whole cast matches.
+- **Battle stage:** from 16, your Mystery hero stands in the ring as their painted card (`Standee` in `components/game/heroArt.tsx`), picked by your main power's family and your sex, with the same pose cues as before (lunge on attack, shake on hit, guard ring, grey on KO). Hero-side NPC fighters (sparring partners, rival capes) wear the card for their power. Legends and named villains are unchanged; street villains still use the figure for now.
+- **Arena:** saved Mystery lives use the painting on their poster and in the ring instead of the silhouette or paper doll.
+- **Kept:** under 16, the powerless and the wardrobe/creator screens keep the paper doll (it shows the clothes you pick). `ART_HEROES` in `src/game/heroArt.ts` turns the layer off. No rules or saves change.
+- **Tests:** +3 (`art.test.ts`: every family has a painting for both sexes, kids and no-family keep the doll, NPC powers map to a family).
+
 ## 2026-11-11 (pm): the mask at home (`devbot/2026-11-11-pm`)
 
 Built on `origin/devbot/2026-11-11-am` (100f35c). Each increment is typechecked, linted, `npm run test:game`, built and loaded at 390×844 before push.

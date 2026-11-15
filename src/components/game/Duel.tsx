@@ -6,8 +6,12 @@ import { Figure, type Pose } from "@/components/game/Figure";
 import { kitFor } from "@/components/game/duelKit";
 import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
+import { Cutout, Standee, familyOfPower, mysteryArtKey, stageArtKey } from "@/components/game/heroArt";
+import { stageScale } from "@/game/heroArt";
+import { streetCutKey } from "@/game/heroArt";
+import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
-import { ElementBurst, ElementIcon, elementOf, FloatNumber, Projectile } from "@/components/game/Vfx";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
@@ -25,6 +29,12 @@ export interface DuelHero {
   aura?: string;
   /** A God Mode legend: drawn as their painted card instead of the paper doll. */
   legend?: { art: string; color: string; name: string };
+  /** City art key: the painted backdrop behind the duel stage. */
+  city?: string;
+  /** Power family of a Mystery hero: picks their painted card (heroArt.tsx). */
+  family?: CapeFamily | null;
+  /** Suit line this life wears (heroArt.ts); B falls back to A when unpainted. */
+  suit?: "a" | "b";
 }
 
 const HEX: Record<MoveStyle, string> = { strike: "#ff5a4f", guard: "#3fe0c5", trick: "#ffcf4d" };
@@ -106,7 +116,19 @@ const GIMMICK_COLOR: Record<GimmickKind, string> = {
 
 export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
   const legendArt = useArt(hero?.legend?.art ?? "");
+  const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit);
+  const mysteryArt = useArt(mysteryKey);
+  const teenKey = hero?.legend ? "" : stageArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit);
+  const mysteryCut = useArt(teenKey ? `cut-${teenKey}` : "");
+  const stageArt = useArt(hero?.city ?? "");
   const board = spec.duel;
+  // Hero-side NPC fighters (sparring partners, rival capes) wear a painted Mystery card too.
+  const foeHeroSeed = board ? (board.foeSeed ?? hashName(board.foeName)) : 0;
+  // A hero with no power family (a trained fighter, a sparring partner) wears the Might suit rather than the paper doll.
+  const foeHeroKey = board?.foeSide === "hero" ? mysteryArtKey(familyOfPower(board.foePower) ?? "might", board.foeSex ?? (foeHeroSeed % 2 ? "female" : "male")) : "";
+  const foeHeroArt = useArt(foeHeroKey ? `cut-${foeHeroKey}` : "");
+  // Street villains with no named painting stand in as their power's painted archetype.
+  const streetCut = useArt(board?.foeSide === "villain" ? streetCutKey(board.foePower) : "");
   const [state, setState] = useState<DuelState | null>(() => (board ? startDuel(board) : null));
   const [shownHp, setShownHp] = useState(() => ({ me: board?.playerHp ?? 1, foe: board?.foeHp ?? 1 }));
   const [log, setLog] = useState(board?.gimmick ? `${board.gimmick.name}: ${board.gimmick.hint}` : "Read their tell, then answer it. Winning hits leave a status.");
@@ -326,16 +348,11 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   }
 
   const heroFigure = hero?.legend && legendArt ? (
-    <div className="flex h-full w-full items-end justify-center" role="img" aria-label={hero.legend.name}>
-      <div
-        className={`duel-standee relative aspect-[3/4.4] h-[98%] w-auto max-w-none shrink-0 overflow-hidden rounded-2xl border-2 ${mePose === "hit" ? "duel-standee-hit" : ""} ${mePose === "attack" ? "duel-standee-attack" : ""} ${mePose === "ko" ? "grayscale" : ""}`}
-        style={{ borderColor: hero.legend.color, boxShadow: `0 10px 28px -10px ${heroAura}, inset 0 0 0 1px rgb(255 255 255 / 0.12)` }}
-      >
-        <img src={legendArt} alt="" className="size-full object-cover object-top" draggable={false} />
-        {mePose === "guard" && <span className="absolute inset-0 rounded-2xl border-4 border-[#4dd8ff]/70 shadow-[inset_0_0_24px_#4dd8ff88]" aria-hidden />}
-        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-1.5 pt-5 pb-1 text-center text-[10px] leading-tight font-black tracking-wide text-fg uppercase">{hero.legend.name}</span>
-      </div>
-    </div>
+    <Standee src={legendArt} name={hero.legend.name} color={hero.legend.color} glow={heroAura} pose={mePose} />
+  ) : mysteryCut ? (
+    <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} scale={stageScale(hero?.age ?? 24)} />
+  ) : mysteryArt ? (
+    <Standee src={mysteryArt} name="You" color={heroAura} glow={heroAura} pose={mePose} />
   ) : (
     <Figure
       seed={hero?.seed ?? 11}
@@ -352,16 +369,13 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   // Illustrated rogues stand in the ring as their card (a "standee"), not the generic paper doll.
   // The Fighter wrapper mirrors the foe side, so the card flips back to face the right way.
   const foeFigure = rogueArt ? (
-    <div className="flex h-full w-full items-end justify-center" style={{ transform: "scaleX(-1)" }} role="img" aria-label={fight.foeName}>
-      <div
-        className={`duel-standee relative aspect-[3/4.4] h-[98%] w-auto max-w-none shrink-0 overflow-hidden rounded-2xl border-2 ${foePose === "hit" ? "duel-standee-hit" : ""} ${foePose === "attack" ? "duel-standee-attack" : ""} ${foePose === "ko" ? "grayscale" : ""}`}
-        style={{ borderColor: rogueArt.color === "#2b2d3a" || rogueArt.color === "#1f3a2a" || rogueArt.color === "#2a2a3a" ? "#d4382f" : rogueArt.color, boxShadow: `0 10px 28px -10px ${foeColor}, inset 0 0 0 1px rgb(255 255 255 / 0.12)` }}
-      >
-        <VillainArt id={rogueArt.id} color={rogueArt.color} crop="tall" />
-        {foePose === "guard" && <span className="absolute inset-0 rounded-2xl border-4 border-[#4dd8ff]/70 shadow-[inset_0_0_24px_#4dd8ff88]" aria-hidden />}
-        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-1.5 pt-5 pb-1 text-center text-[10px] leading-tight font-black tracking-wide text-fg uppercase">{fight.foeName}</span>
-      </div>
-    </div>
+    <Standee name={fight.foeName} color={rogueArt.color === "#2b2d3a" || rogueArt.color === "#1f3a2a" || rogueArt.color === "#2a2a3a" ? "#d4382f" : rogueArt.color} glow={foeColor} pose={foePose} flip>
+      <VillainArt id={rogueArt.id} color={rogueArt.color} crop="tall" />
+    </Standee>
+  ) : foeHeroArt ? (
+    <Cutout src={foeHeroArt} name={fight.foeName} glow={foeColor} pose={foePose} />
+  ) : streetCut ? (
+    <Cutout src={streetCut} name={fight.foeName} glow={foeColor} pose={foePose} flip />
   ) : (
     <Figure seed={foeSeed} age={34} sex={fight.foeSex} tint={kit} aura={foeColor} bare pose={foePose} mood={fight.foeSide === "villain" ? 30 : 70} label={fight.foeName} />
   );
@@ -434,7 +448,14 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
       </div>
       {gimmick && <GimmickStrip gimmick={gimmick} live={live} status={status} state={hud} next={fight.phase3 && hud.phase === 2 ? (fight.phase3.at ?? PHASE3_AT) : null} third={hud.phase === 3} />}
 
-      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[146px]" : "h-[178px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[184px]" : "h-[226px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+        {stageArt && (
+          <>
+            <img src={stageArt} alt="" className="anim-fade absolute inset-0 size-full object-cover object-[50%_62%] opacity-70 saturate-[0.85]" draggable={false} aria-hidden />
+            <div className="absolute inset-0 bg-gradient-to-b from-ink/70 via-ink/20 to-ink/80" aria-hidden />
+            <div className="absolute inset-x-0 bottom-0 h-[22%] bg-[linear-gradient(180deg,transparent,rgb(8_10_18/0.9))]" aria-hidden />
+          </>
+        )}
         <div className="absolute inset-0" style={{ background: `radial-gradient(45% 55% at 22% 92%, color-mix(in srgb, ${heroAura} 32%, transparent), transparent 70%), radial-gradient(45% 55% at 78% 92%, color-mix(in srgb, ${foeColor} ${live ? 52 : 34}%, transparent), transparent 70%)` }} />
         {fight.boss && <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(255,59,48,0.35)]" />}
         {live && gimmick && <div className="duel-phase-aura pointer-events-none absolute inset-0" style={{ "--aura": GIMMICK_COLOR[gimmick.kind] } as React.CSSProperties} />}
@@ -478,15 +499,12 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
         {shot && <Projectile key={shot.key} element={shot.element} reverse={shot.from === "foe"} seed={shot.key} />}
 
         {impact && (
-          <span key={impact.key} className={`pointer-events-none absolute top-[14%] h-[62%] w-[34%] ${impact.on === "foe" ? "right-[4%]" : "left-[4%]"}`}>
+          <span key={impact.key} className={`pointer-events-none absolute top-[14%] h-[62%] w-[34%] ${impact.on === "foe" ? "right-[4%]" : FX_CINEMATIC ? "left-[9%]" : "left-[4%]"}`}>
             {impact.amount > 0 && <ElementBurst element={impact.element} size={impact.big ? 96 : 76} seed={impact.key} big={impact.big} />}
-            <FloatNumber
-              text={impact.amount > 0 ? `−${impact.amount}` : "Blocked"}
-              color={impact.on === "foe" ? (impact.crit ? "#ffe08a" : "#ffffff") : "#ff8f87"}
-              className={`-top-2 left-1/2 -translate-x-1/2 ${impact.amount > 0 ? "" : "!text-lg"}`}
-            />
+            <DamageNumber amount={impact.amount} tone={impact.on === "foe" ? "out" : "in"} big={impact.big} gold={impact.on === "foe" && impact.crit} seed={impact.key} className="-top-2 left-1/2 -translate-x-1/2" />
           </span>
         )}
+        {impact && impact.amount > 0 && <SideFlash key={`sf${impact.key}`} side={impact.on === "foe" ? "right" : "left"} element={impact.element} big={impact.big} />}
         {heal && (
           <span key={heal.key} className="pointer-events-none absolute top-[22%] right-[12%]">
             <FloatNumber text={`+${heal.amount}`} color="#5ef08a" className="" />
@@ -804,10 +822,15 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
   return (
     <div className="anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 pb-5 backdrop-blur-sm" role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] overflow-hidden" aria-hidden>
-        <div className="ko-rays absolute top-[-140px] left-1/2 size-[520px] -translate-x-1/2 rounded-full opacity-25" style={{ background: `repeating-conic-gradient(${tone} 0deg 8deg, transparent 8deg 22deg)`, maskImage: "radial-gradient(circle, black 20%, transparent 65%)", WebkitMaskImage: "radial-gradient(circle, black 20%, transparent 65%)" }} />
+        {FX_CINEMATIC ? (
+          // 2026-11-15 am: soft volumetric light from above instead of flat comic wedges (shared with the Arena since pm).
+          <KoLight tone={tone} spotX={win ? "42%" : "50%"} />
+        ) : (
+          <div className="ko-rays absolute top-[-140px] left-1/2 size-[520px] -translate-x-1/2 rounded-full opacity-25" style={{ background: `repeating-conic-gradient(${tone} 0deg 8deg, transparent 8deg 22deg)`, maskImage: "radial-gradient(circle, black 20%, transparent 65%)", WebkitMaskImage: "radial-gradient(circle, black 20%, transparent 65%)" }} />
+        )}
       </div>
       <div className="relative mt-auto flex flex-col items-center text-center">
-        <span className="ko-in font-display text-6xl leading-none" style={{ color: tone, textShadow: `0 4px 0 rgba(0,0,0,.6), 0 0 30px ${tone}` }}>
+        <span className={`ko-in font-display text-6xl leading-none ${FX_CINEMATIC ? "ko-title" : ""}`} style={FX_CINEMATIC ? { "--ko": tone, backgroundImage: win ? "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)" : draw ? "linear-gradient(180deg, #ffffff 0%, #c9ccd4 50%, #7d8494 100%)" : "linear-gradient(180deg, #ffe1dd 0%, #ff5a4f 50%, #8a1f18 100%)" } as React.CSSProperties : { color: tone, textShadow: `0 4px 0 rgba(0,0,0,.6), 0 0 30px ${tone}` }}>
           {win || !draw ? "K.O." : "DRAW"}
         </span>
         <p className="t-label mt-2 flex items-center gap-1.5" style={{ color: tone }}>
@@ -817,6 +840,7 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
         <p className="mt-1 text-sm font-semibold text-muted">{win ? `${foeName} is on the floor.` : draw ? `You and ${foeName} call it.` : `${foeName} walks away.`}</p>
       </div>
       <div className="relative mx-auto mt-3 flex h-[150px] w-full max-w-[300px] items-end justify-center gap-6">
+        {FX_CINEMATIC && <span className="pointer-events-none absolute bottom-[-6px] left-1/2 h-[26px] w-[110%] -translate-x-1/2 rounded-[50%]" style={{ background: `radial-gradient(closest-side, color-mix(in srgb, ${tone} 38%, transparent), rgb(0 0 0 / 0.5) 60%, transparent)` }} aria-hidden />}
         <div className="h-full w-[36%]" style={{ transform: win || draw ? undefined : "translateX(55%)" }}>{hero}</div>
         <div className="h-full w-[36%]" style={{ transform: win ? "translateX(-55%) scaleX(-1)" : "scaleX(-1)" }}>
           {foe}

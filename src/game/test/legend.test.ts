@@ -95,3 +95,31 @@ test("the loadout refills to six after a stale id is pruned", () => {
   assert.equal(new Set(g.loadout).size, MOVESET_SIZE);
   assert.ok(!g.loadout.includes("not-a-move"));
 });
+
+test("legend signature growth: Superman's canon powers grow a little each birthday even unused; Mystery lives don't (2026-11-14)", async () => {
+  const { ripenUsed, legendSignature, LEGEND_DRIFT_EXP, RIPEN_EXP, markUsed } = await import("../engine.ts");
+  const clark = createGame({ ...base, mode: "god", preset: "superman" } as never);
+  clark.age = 30;
+  clark.unlockedPowers = ["super-strength", "flight", "super-durability", "fire-control"] as never;
+  clark.mastery = { "super-strength": 0, flight: 0, "super-durability": 0, "fire-control": 0 };
+  assert.deepEqual(legendSignature(clark), ["super-strength", "flight", "super-durability"]);
+  clark.usedPowers = [];
+  markUsed(clark, "super-strength");
+  ripenUsed(clark);
+  assert.equal(clark.mastery["flight"], LEGEND_DRIFT_EXP, "unused Flight still grows a little");
+  assert.equal(clark.mastery["super-strength"], RIPEN_EXP, "a used signature power gets the normal ripening, not both");
+  assert.equal(clark.mastery["fire-control"], 0, "an off-kit power still needs use");
+  assert.ok(LEGEND_DRIFT_EXP > 0 && LEGEND_DRIFT_EXP < RIPEN_EXP, "drift is smaller than using it");
+  // Mystery life: nothing grows unused.
+  const mystery = createGame({ ...base, giftId: "flight", seed: 4 } as never);
+  mystery.age = 30;
+  mystery.unlockedPowers = ["flight"] as never;
+  mystery.mastery = { flight: 0 };
+  mystery.usedPowers = [];
+  assert.deepEqual(legendSignature(mystery), []);
+  ripenUsed(mystery);
+  assert.equal(mystery.mastery["flight"], 0);
+  // Batman has no kit: no drift.
+  const bruce = createGame({ ...base, mode: "god", preset: "batman" } as never);
+  assert.deepEqual(legendSignature(bruce), []);
+});

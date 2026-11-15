@@ -1,6 +1,6 @@
 import { Banknote, ChevronRight, Heart, FastForward, Home, Layers, Lock, Menu, Play, ScrollText, Shield, Shirt, Sparkles, Star, Swords, X } from "lucide-react";
 import { DATING_ON, STAGE_LABEL, stageOf } from "@/game/dating";
-import { keepsMask, suspicionLabel } from "@/game/mask";
+import { careLine, keepsMask, suspicionLabel } from "@/game/mask";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChapterOverlay, ChapterStrip, NextGoal } from "@/components/game/Chapters";
 import { actMatches, type GoalRoute } from "@/game/chapters";
@@ -10,6 +10,7 @@ import { LivesScreen } from "@/components/game/Lives";
 import { ArenaScreen } from "@/components/game/Arena";
 import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
+import { EVENT_SCENE, EventScene } from "@/components/game/EventScene";
 import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
 import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
@@ -18,7 +19,9 @@ import { RoutineCard } from "@/components/game/Routine";
 import { FLOW_ON, stepLabel } from "@/game/flow";
 import { autoResolveOdds } from "@/game/skip";
 import { borrowAmounts, borrowBlock, canTalkMoney, lendAmounts, loanLine, openLoan, temperOf, termFor, trustOf } from "@/game/ties";
-import { CityScene, TitleArt } from "@/components/game/Scene";
+import { CityScene, TitleArt, useArt } from "@/components/game/Scene";
+import { stageArtKey } from "@/components/game/heroArt";
+import { stageScale } from "@/game/heroArt";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
 import { Minigame } from "@/components/game/Minigame";
@@ -252,6 +255,11 @@ function Life({ game }: { game: Game }) {
   const chapterNo = game.chapters?.length ?? 1;
   const phase = game.chapters?.[game.chapters.length - 1]?.phase ?? null;
   const family = capeTheme(game).cape;
+  // The gift card shows who you are in the suit: a legend's painting, or your painted Mystery cutout (13+, smaller as a teen).
+  const giftLegend = presetById(game.preset);
+  const giftLegendArt = useArt(giftLegend && hasArt(giftLegend.art) ? giftLegend.art : "");
+  const giftKey = giftLegend ? "" : stageArtKey(family, game.sex, game.age, game.suit);
+  const giftCut = useArt(giftKey ? `cut-${giftKey}` : "");
   const showTabs = !choosing && game.phase !== "mini";
   // Chapter goals: Go jumps to the tab and shelf, then the matching button pulses.
   const [pulse, setPulse] = useState<string[] | null>(null);
@@ -346,7 +354,7 @@ function Life({ game }: { game: Game }) {
       {game.phase === "mini" && game.minigame ? (
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           {game.minigame.kind === "duel" && game.minigame.duel && <FightChoice key={`fc-${game.minigame.title}-${game.age}-${game.month ?? 0}-${game.missions}`} game={game} />}
-          <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ legend: (() => { const l = presetById(game.preset); return l && hasArt(l.art) ? { art: l.art, color: l.color, name: l.hero } : undefined; })(), seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })() }} />
+          <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ legend: (() => { const l = presetById(game.preset); return l && hasArt(l.art) ? { art: l.art, color: l.color, name: l.hero } : undefined; })(), seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })(), family: capeTheme(game).cape, suit: game.suit, city: game.cityId }} />
         </div>
       ) : (
         <>
@@ -370,10 +378,10 @@ function Life({ game }: { game: Game }) {
             </div>
           )}
 
-          <div ref={scroller} data-desk={desk} className="desk relative z-10 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-4 pt-3 pb-6">
+          <div ref={scroller} data-desk={desk} className={`desk relative z-10 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-contain px-4 pt-3 ${choosing && EVENT_SCENE ? "flex flex-col pb-2" : "pb-6"}`}>
             {/* The Money hub has its own header and floats each result above Play, so the month card steps aside there. */}
             {(choosing || !(desk === "work" && activeShelf === "Money")) && (
-            <article key={`${game.card.kicker}-${game.card.body.length}`} className="card-paper anim-rise relative overflow-hidden px-4 py-3.5">
+            <article key={`${game.card.kicker}-${game.card.body.length}`} className="card-paper anim-rise relative shrink-0 overflow-hidden px-4 py-3.5">
               <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-gold to-cape" />
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -402,6 +410,7 @@ function Life({ game }: { game: Game }) {
               {choosing && game.card.money && <MoneyLine report={game.card.money} />}
             </article>
             )}
+            {choosing && game.pending && <EventScene game={game} prompt={game.pending.prompt} />}
             {!choosing && desk === "life" && game.card.money && (
               <MoneyReport
                 key={`${game.age}-${game.month}`}
@@ -447,9 +456,23 @@ function Life({ game }: { game: Game }) {
               </p>
             )}
             {!choosing && desk === "gift" && activeShelf === "Book" && (power || fusion) && (
-              <section className="card mt-3 overflow-hidden px-4 py-4">
+              <section className={`card relative isolate mt-3 overflow-hidden px-4 py-4 ${giftLegendArt || giftCut ? "min-h-[15rem] pr-[8.5rem]" : ""}`}>
                 <div className="pointer-events-none absolute -top-10 -right-8 size-36 rounded-full opacity-50 blur-2xl" style={{ background: `radial-gradient(circle, ${family ? FAMILY_COLOR[family] : "var(--color-gold)"}, transparent 70%)` }} />
-                <div className="flex items-center gap-3">
+                {giftLegendArt ? (
+                  <img src={giftLegendArt} alt="" draggable={false} className="pointer-events-none absolute inset-y-0 right-0 -z-10 h-full w-[11rem] object-cover object-top [mask-image:linear-gradient(90deg,transparent,#000_38%)]" />
+                ) : giftCut ? (
+                  <>
+                    <span className="pointer-events-none absolute right-2 bottom-2 -z-10 h-5 w-32 rounded-[50%] bg-black/60 blur-md" aria-hidden />
+                    <img
+                      src={giftCut}
+                      alt=""
+                      draggable={false}
+                      className="cut-breathe pointer-events-none absolute right-0 bottom-0 -z-10 h-[15rem] w-auto max-w-none"
+                      style={{ height: `${15 * stageScale(game.age)}rem`, filter: `drop-shadow(0 0 1.5px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 85%, white)) drop-shadow(0 0 12px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 45%, transparent))` }}
+                    />
+                  </>
+                ) : null}
+                <div className="relative flex items-center gap-3">
                   <IconTile color={family ? FAMILY_COLOR[family] : "#e6b34d"} size="size-12">
                     <FamilyGlyph family={family} className="size-7" />
                   </IconTile>
@@ -763,7 +786,7 @@ function Roster({ game }: { game: Game }) {
           <article key={cape.id} className="card relative overflow-hidden px-3 py-3" style={{ borderColor: `${sideColor}aa` }}>
             <div className="pointer-events-none absolute -top-8 -right-8 size-24 rounded-full opacity-40 blur-xl" style={{ background: sideColor }} />
             <div className="flex items-start justify-between">
-              <Portrait seed={cape.portrait} age={you ? game.age : 28} powerId={cape.powerId} rank={you ? game.leagueRank : 0} sex={you ? game.sex : cape.sex} className="h-12 w-12" />
+              <Portrait seed={cape.portrait} age={you ? game.age : 28} powerId={cape.powerId} rank={you ? game.leagueRank : 0} sex={you ? game.sex : cape.sex} look={you ? game.look : undefined} cape={!you} className="h-12 w-12" />
               <span className="t-label rounded-full px-1.5 py-0.5 text-[9px]" style={{ background: `${sideColor}33`, color: sideColor }}>{cape.side === "villain" ? "Villain" : cape.side === "hero" ? "Hero" : "Rogue"}</span>
             </div>
             <p className="mt-2 truncate font-bold text-fg">
@@ -995,7 +1018,15 @@ function PeopleStack({ game, actions, onPress, onTie }: { game: Game; actions: A
 /** The mask at home (2026-11-11 pm): does your partner know you're a hero, and how much do they wonder? */
 function MaskLine({ game, person }: { game: Game; person: Person }) {
   const who = firstName(person.name);
-  if (person.knowsSecret) return <p className="mt-2 text-[11px] font-bold text-good">Knows you're a hero. Your secret is safe with {who}.</p>;
+  if (person.knowsSecret) {
+    const care = careLine(game, person);
+    return (
+      <p className="mt-2 text-[11px] font-bold text-good">
+        Knows you're a hero. Your secret is safe with {who}.
+        {care && <span className="mt-0.5 block font-semibold text-fg/80">✚ {care}</span>}
+      </p>
+    );
+  }
   if (game.maskScene?.personId === person.id) {
     return (
       <div className="mt-2 rounded-xl border border-gold/50 bg-gold/10 px-3 py-2 text-xs font-bold text-fg">

@@ -55,7 +55,7 @@ export interface ArenaFighter {
   seed?: number;
   custom?: boolean;
   /** A saved life's own look, so the Arena draws the hero you built. */
-  life?: { look: Look; wardrobe: Wardrobe; age: number; sex: Sex };
+  life?: { look: Look; wardrobe: Wardrobe; age: number; sex: Sex; suit?: "a" | "b" };
   /** A saved mystery life's power family, for its poster art (emblem and rim-light colour). */
   family?: CapeFamily | null;
   /** Unmasked villains get a fixed face so Doc Ock keeps his glasses and the Joker his green hair. */

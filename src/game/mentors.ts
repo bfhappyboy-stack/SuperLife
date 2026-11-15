@@ -77,6 +77,30 @@ export const CITY_MENTORS: Record<string, MentorDef> = {
 
 const FALLBACK = m("coach-sol", "Coach Sol", "A community-center coach who notices", "Coach Sol watches you lift the bleachers by accident, and hands you a clipboard instead of a lecture.", "Two gifts, one body. We teach the body to say yes to both.", "#e6b34d", "fist");
 
+/**
+ * Mentor faces (2026-11-14 pm): who each mentor looks like on their card, as data. Sex and a rough age feed the painted
+ * bust (`Portrait`); the seed comes from the id, so a mentor's face never changes. Unknown ids fall back to a 55-year-old.
+ */
+export const MENTOR_FACE: Record<string, { sex: "male" | "female"; age: number }> = {
+  "ben-parker": { sex: "male", age: 56 }, alfred: { sex: "male", age: 64 }, yinsen: { sex: "male", age: 58 }, samson: { sex: "male", age: 46 },
+  "jonathan-kent": { sex: "male", age: 58 }, antiope: { sex: "female", age: 46 }, erskine: { sex: "male", age: 60 }, odin: { sex: "male", age: 82 },
+  zuri: { sex: "male", age: 66 }, ogun: { sex: "male", age: 54 }, "jay-garrick": { sex: "male", age: 72 },
+  "sgt-okafor": { sex: "female", age: 50 }, "dr-halloway": { sex: "female", age: 52 }, "pops-delgado": { sex: "male", age: 66 }, vael: { sex: "female", age: 40 },
+  kessler: { sex: "male", age: 54 }, "sister-ruth": { sex: "female", age: 68 }, "old-wick": { sex: "male", age: 78 }, "lux-arden": { sex: "female", age: 48 },
+  keeper: { sex: "male", age: 70 }, "nora-vance": { sex: "female", age: 49 }, "old-guard": { sex: "male", age: 61 }, "prof-ilse": { sex: "female", age: 57 },
+  "cap-ruiz": { sex: "male", age: 63 }, "miss-odette": { sex: "female", age: 64 }, forge: { sex: "female", age: 44 }, skyline: { sex: "male", age: 52 },
+  tide: { sex: "female", age: 45 }, glint: { sex: "male", age: 47 }, "ranger-okoye": { sex: "female", age: 51 }, "dame-ashby": { sex: "female", age: 69 },
+  "coach-sol": { sex: "male", age: 55 },
+};
+
+/** A mentor's face: sex, age and a stable portrait seed from the id. */
+export function mentorFace(id: string): { sex: "male" | "female"; age: number; seed: number } {
+  const row = MENTOR_FACE[id] ?? { sex: "male" as const, age: 55 };
+  let seed = 7;
+  for (const ch of id) seed = (Math.imul(seed, 31) + ch.charCodeAt(0)) | 0;
+  return { ...row, seed: (seed >>> 0) % 100000 || 1 };
+}
+
 /** The mentor this life gets at 15. Legend → its canon teacher; else upbringing; else city. */
 export function mentorFor(g: Pick<Game, "preset" | "upbringing" | "cityId">): MentorDef {
   return (g.preset ? LEGEND_MENTORS[g.preset] : undefined) ?? UPBRINGING_MENTORS[g.upbringing] ?? CITY_MENTORS[g.cityId] ?? FALLBACK;
