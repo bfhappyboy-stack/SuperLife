@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Figure } from "@/components/game/Figure";
 import { Cutout, stageArtKey } from "@/components/game/heroArt";
+import { lifeLine } from "@/components/game/lifeLine";
 import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
 import { hasArt } from "@/assets/art";
 import { ART_HEROES, SUIT_LOCKED, stageScale, suitOfKey } from "@/game/heroArt";
-import { anchorOf, CLOAK_CAPES, outfitOf, PAINTED_SUIT, partKey, partShows, toneOf } from "@/game/outfit";
+import { anchorOf, CLOAK_CAPES, outfitOf, PAINTED_SUIT, partKey, nativeTone, partShows, toneGap, toneOf } from "@/game/outfit";
 import { presetById } from "@/game/presets";
 import { Check, Lock, X } from "lucide-react";
 import { FAMILY_COLOR } from "@/components/game/icons";
@@ -26,7 +27,7 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
   const family = capeTheme(game).cape;
   const aura = family ? FAMILY_COLOR[family] : undefined;
   // The painted hero on the mirror, so each piece can say honestly whether the painting shows it.
-  const heroKey = ART_HEROES && !presetById(game.preset) ? stageArtKey(family, game.sex, game.age, game.suit, toneOf(game.look)) : "";
+  const heroKey = ART_HEROES && !presetById(game.preset) ? stageArtKey(family, game.sex, game.age, lifeLine(game, family, game.sex), toneOf(game.look)) : "";
   const unpainted = (id: string) => !!heroKey && slot !== "chest" && !partShows(slot, id, heroKey, hasArt);
   const slotUnpainted = !!heroKey && slot !== "chest" && rows.some((item) => partKey(slot, item.id)) && rows.every((item) => !partKey(slot, item.id) || unpainted(item.id));
 
@@ -99,6 +100,7 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
           );
         })}
       </div>
+      {slot === "chest" && heroKey && <ToneNote heroKey={heroKey} game={game} />}
       {slot === "chest" && <SuitLines game={game} onAct={(id, line) => { if (id) onAct(id); setNotice(line); }} />}
       {slot !== "chest" && ART_HEROES && <PartNote game={game} slot={slot} />}
       <div className="mt-3 flex flex-col gap-2 px-4">
@@ -162,7 +164,7 @@ function Mirror({ game, aura }: { game: Game; aura?: string }) {
   const legend = presetById(game.preset);
   const legendArt = useArt(legend && hasArt(legend.art) ? legend.art : "");
   const family = capeTheme(game).cape;
-  const key = legend ? "" : stageArtKey(family, game.sex, game.age, game.suit, toneOf(game.look));
+  const key = legend ? "" : stageArtKey(family, game.sex, game.age, lifeLine(game, family, game.sex), toneOf(game.look));
   const cut = useArt(key ? `cut-${key}` : "");
   const city = useArt(game.cityId);
   const glow = legend?.color ?? aura ?? "#e6b34d";
@@ -206,7 +208,7 @@ function SuitLines({ game, onAct }: { game: Game; onAct: (id: string, notice: st
   const artB = useArt(keyB ? `cut-${keyB}` : "");
   const base = keyA.replace(/-s[1-4]$/, "").replace(/-teen$/, "");
   if (!keyA || !keyB || suitOfKey(keyB) !== "b" || SUIT_LOCKED.includes(base)) return null;
-  const wearing = game.suit === "b" ? "b" : "a";
+  const wearing = lifeLine(game, family, game.sex);
   const glow = family ? FAMILY_COLOR[family] : "#e6b34d";
   return (
     <div className="mt-3 px-4" data-suit-lines>
@@ -246,7 +248,7 @@ function PartNote({ game, slot }: { game: Game; slot: CostumeSlot }) {
   const id = game.wardrobe?.worn?.[slot];
   const key = id ? partKey(slot, id) : "";
   if (!key) return null;
-  const art = presetById(game.preset) ? "" : stageArtKey(capeTheme(game).cape, game.sex, game.age, game.suit, toneOf(game.look));
+  const art = presetById(game.preset) ? "" : stageArtKey(capeTheme(game).cape, game.sex, game.age, lifeLine(game, capeTheme(game).cape, game.sex), toneOf(game.look));
   if (!art) return null;
   const name = fitById(id)?.name;
   if (partShows(slot, id, art, hasArt)) {
@@ -254,4 +256,22 @@ function PartNote({ game, slot }: { game: Game; slot: CostumeSlot }) {
     return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{name} is on, worn behind your hero's painted cloak so its edges and hem show.</p>;
   }
   return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{name} is on: the buffs count now, and the mirror names it. Your painted hero doesn't show it yet; that painting is on the way.</p>;
+}
+
+/**
+ * Say plainly when the painting isn't in your creator skin tone yet (2026-11-16 pm): suit B and the teen suits are each
+ * painted in one tone so far, and a few suit A tones are still missing. The closest painted tone is shown meanwhile.
+ */
+function ToneNote({ heroKey, game }: { heroKey: string; game: Game }) {
+  const tone = toneOf(game.look);
+  const gap = toneGap(heroKey, tone);
+  const painted = nativeTone(heroKey);
+  if (!tone || !gap || !painted) return null;
+  const line = suitOfKey(heroKey) === "b" ? "Suit B" : "Suit A";
+  const what = heroKey.includes("-teen") ? `Your teen ${line.slice(5)} suit` : line;
+  return (
+    <p className="px-4 pt-2 text-xs text-muted" data-tone-note={tone}>
+      {what} is painted in {painted} skin so far. Your {tone} skin tone painting is on the way.
+    </p>
+  );
 }

@@ -75,7 +75,7 @@ export function fighterFromLife(slot: number, game: Game): ArenaFighter | null {
     moves,
     tint: { suit: "#2a3a5a", trim: "#e6b34d", mask: "domino" },
     seed: game.portrait * 7919 + slot,
-    life: { look: game.look, wardrobe: game.wardrobe, age: game.age, sex: game.sex, suit: ensureSuit({ suit: game.suit, name: game.name, portrait: game.portrait }) },
+    life: { look: game.look, wardrobe: game.wardrobe, age: game.age, sex: game.sex, suit: ensureSuit({ suit: game.suit, name: game.name, portrait: game.portrait }), ...(game.suitPicked ? { suitPicked: true } : {}) },
     custom: true,
   };
 }
