@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-16 (night): no more paper dolls on the stage, and hits that land (`devbot/2026-11-16-night`)
+
+Built on `origin/devbot/2026-11-16-pm` (e3a1fde, which carries the unmerged suits and am work), so merge this one PR alone. Each increment typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (382), built and loaded at 390×844 before push. Shots: `/workspace/pt1116night/shots/`.
+
+### Increment 1: painted portrait standees where the paper doll still stood
+
+- **The gap:** a Mystery power manifests between 7 and 15, but painted suits start at 13. So every kid fighting at 7–12 (and any life with no power family) stood in the duel as the old drawn paper doll (a toy-like SVG shown as a 16-year-old) opposite a painted villain. In the Arena, a saved life with no suit painting, which is every online opponent (their snapshot carries no power family), was a drawn SVG silhouette poster.
+- **Fix:** they now stand in as their own painted portrait in a lit fighter card: the same face as the header, the Closet and the "Your call" scene (creator scar/freckles/eyes included), feathered into a night city, rim-lit and glowing in the power colour, with the usual hit, attack, guard and K.O. cues. A kid's card stands shorter (7 → 74%, 12 → 84%), so they read as a kid next to a grown fighter, and from 13 the teen suit takes over as before. In the Arena the draft card, the pick sheet and the fight card all show the painted portrait. Painted art only; nothing drawn.
+- **Code:** `PortraitPoster` in `src/components/game/PortraitStandee.tsx`; `Standee` takes a `scale` and a `kind`; wired in `Duel.tsx`, `Arena.tsx` (`FighterFigure`) and `LifeHeroArt.tsx` (gets the saved life's face). Pure helpers `lifePortraitSeed` (gets a saved life's face back from its Arena seed, `portrait * 7919 + slot`) and `standeeScale` in `src/game/heroArt.ts`. Switch: `PORTRAIT_STANDEES` (off = the doll and the silhouette come back). No rules or saves change.
+- **Tests:** +2 (`standee.test.ts`: the Arena seed gives back the saved face for every slot, odd seeds stay stable; kid cards grow each year and hand over to the teen suit scale at 13).
+
+### Increment 2: hit-stop and K.O. dust
+
+- **Hit-stop:** on a big hit (the ones that already shake the screen) the fighters hold the impact frame for 65 ms (95 ms on a big critical): the struck fighter's white flash freezes, then the recoil and the shake play. Measured in a scripted duel at 390×844: holds of 92–108 ms including frame timing.
+- **K.O. dust:** the fighter who goes down kicks up a soft puff of warm dust, lightly tinted by their power light, as the fall lands (on suit cutouts and on painted cards). Reduced motion turns both off.
+- **Code:** `FX_HITSTOP`, `HITSTOP_MS`, `HITSTOP_CRIT_MS` in `Vfx.tsx`; `land()` in `Duel.tsx`; `KoDust` in `heroArt.tsx`; CSS `.fx-hitstop`, `.ko-dust` in `styles.css`. No rules or saves change.
+
 ## 2026-11-16 (pm): your skin tone picks the suit line (`devbot/2026-11-16-pm`)
 
 Built on `origin/devbot/2026-11-16-am` (f6b898a, itself on the unmerged suits branch cd75144), so this branch carries both: merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (380), built and loaded at 390×844 before push. Shots: `/workspace/shots-1116pm/`.

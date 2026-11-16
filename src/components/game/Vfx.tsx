@@ -36,6 +36,16 @@ export function HitBurst({ color, count = 9, size = 72, seed = 0 }: { color: str
 export const FX_CINEMATIC = true;
 
 /**
+ * Hit feel (2026-11-16 night): on a big hit the fighters hold the impact frame for a beat (a "hit-stop": the white flash
+ * on the struck fighter freezes, then the recoil and the screen shake play), and a fighter who goes down kicks up a puff
+ * of dust where they land. Off = hits flow straight through and the fall is silent.
+ */
+export const FX_HITSTOP = true;
+/** How long the impact frame holds (ms): a big hit, and a big critical (a crit reads heavier). */
+export const HITSTOP_MS = 65;
+export const HITSTOP_CRIT_MS = 95;
+
+/**
  * A damage number that slams in and rises: outlined, weighted by hit size, gold when the hit won the edge (`gold`).
  * `tone`: "out" = damage you dealt (white / gold), "in" = damage you took (red), "block" = no damage.
  */

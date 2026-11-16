@@ -1,5 +1,17 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-16 night): kids and faceless lives on the stage, hit feel
+
+**Played:** duels against Rent at 390×844 from crafted saves (`/workspace/pt1116night/saves/`): fire (m) at 10 (the power is in, no suit yet) and the same life at 24 played to a K.O.; the Arena draft and pick sheet with that saved life, once with its power family stripped (a temporary local edit, not committed) to stand in for an online opponent, whose snapshot never carries a family. Before = `PORTRAIT_STANDEES` off (same as the pm branch), after = on (port 8122).
+
+**Before/after:** `/workspace/pt1116night/shots/before-after-kid-duel.png` (left before, right after); `before-after-arena-draft.png`, `before-after-arena-pick.png`; K.O. dust frames `after-ko-dust-frames.png`.
+
+**Findings:**
+- **Paper doll in kid fights (fixed):** the 10-year-old fought as the drawn toy-like doll (grown to 16) next to the painted villain. He now stands as his painted portrait (glasses and all) in a lit card, a little shorter than the villain. No console errors, no sideways scroll.
+- **Arena silhouette (fixed):** the saved life with no suit painting showed the drawn SVG silhouette on the draft card and pick sheet; it now shows the painted face. Note: the adult portrait has no glasses although the kid wore them; the painted glasses variants are already on the image list (`/workspace/img-requests-1116am.md`).
+- **Hit-stop:** two big hits in the K.O. run held 92-108 ms, then shook. Feels weightier without slowing turns.
+- **K.O. dust:** visible as a soft cloud rolling out where Rent lands, for about a second, partly under the K.O. light. Subtle by design.
+
 ## Afternoon pass (2026-11-16 pm): creator skin tone vs the suit line
 
 **Played:** the Closet at 390×844 from crafted saves (`/workspace/pt1116pm/saves/`): storm (m) 27, dark skin, rolled suit B with a long cape; the same life at 14; mind (f) 27, dark, rolled B; ice (f) 14, dark. Tapped the suit-line picker B → A → B on each. Before = the am branch (port 8120), after = this branch (port 8121).
