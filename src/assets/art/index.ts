@@ -268,6 +268,11 @@ export function hasArt(key: string): boolean {
   return key in LOADERS;
 }
 
+/** Is any art key with this prefix painted? (The creator shows a pick only once its paintings exist.) */
+export function hasArtLike(prefix: string, part = ""): boolean {
+  return Object.keys(LOADERS).some((key) => key.startsWith(prefix) && key.includes(part));
+}
+
 export function cachedArt(key: string): string | undefined {
   return cache.get(key);
 }

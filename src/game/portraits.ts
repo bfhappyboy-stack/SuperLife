@@ -143,3 +143,45 @@ export function portraitsFor(age: number, sex: Sex): PortraitMeta[] {
   const band = ageBand(age);
   return PORTRAITS.filter((p) => p.band === band && p.sex === sex && !p.suited);
 }
+
+/* ---------- Painted variants of the same face (2026-11-16 am) ---------- */
+
+/** Variant name for each creator face feature (FEATURE), "" for Clear. */
+const FEATURE_VARIANT = ["", "scar", "glasses", "freckles"] as const;
+/** Variant name for each creator eye colour (look.ts EYE_NAMES), "" for "as painted". */
+export const EYE_VARIANT = ["", "brown", "blue", "green", "hazel", "grey"] as const;
+
+/**
+ * Art keys of painted variants of one portrait for a life's own creator picks, best first (owner, 2026-11-16: "use
+ * painted variants of the same characters with slight changes"). The same person, same framing, only the feature or
+ * the eyes changed: `pv-<id>-<feature>-eyes-<colour>`, then `pv-<id>-<feature>`, then `pv-<id>-eyes-<colour>`.
+ * A feature already painted into the portrait (`marks`) needs no variant. The UI keeps the first key that exists and
+ * otherwise shows the portrait as before, so each painting shows the moment it lands. Image list:
+ * /workspace/img-requests-1116am.md.
+ */
+export function portraitVariantKeys(meta: Pick<PortraitMeta, "id" | "marks" | "band">, feature?: number | null, eyes?: number | null): string[] {
+  if (meta.band === "cape") return [];
+  const feat = typeof feature === "number" && !meta.marks?.includes(feature) ? FEATURE_VARIANT[feature] ?? "" : "";
+  const eye = typeof eyes === "number" ? EYE_VARIANT[eyes] ?? "" : "";
+  const keys: string[] = [];
+  if (feat && eye) keys.push(`pv-${meta.id}-${feat}-eyes-${eye}`);
+  if (feat) keys.push(`pv-${meta.id}-${feat}`);
+  if (eye) keys.push(`pv-${meta.id}-eyes-${eye}`);
+  return keys;
+}
+
+/** Does a variant key carry this feature painted in (so no soft marks are laid on top)? */
+export function variantHasFeature(key: string, feature: number): boolean {
+  const name = FEATURE_VARIANT[feature];
+  return !!name && key.split("-eyes-")[0]!.endsWith(`-${name}`);
+}
+
+/**
+ * Will this life's portrait actually show its creator face feature? Scar and freckles always do (painted in, or laid
+ * on softly); glasses only on a face painted with them or a painted glasses variant. The creator says so when not.
+ */
+export function featureShows(seed: number, age: number, sex: Sex, look: Pick<Look, "skin" | "hair" | "feature"> & { eyes?: number }, has: (key: string) => boolean): boolean {
+  if (look.feature !== FEATURE.glasses) return true;
+  const meta = pickPortrait(seed, age, sex, look, false, look.feature);
+  return !!meta.marks?.includes(FEATURE.glasses) || portraitVariantKeys(meta, look.feature, look.eyes).some((key) => variantHasFeature(key, FEATURE.glasses) && has(key));
+}

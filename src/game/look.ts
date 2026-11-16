@@ -17,6 +17,13 @@ export const BUILD_NAMES = ["Lean", "Solid"];
 const BASE_SKIN = 6;
 const BASE_HAIR = 7;
 export const FEATURE_NAMES = ["Clear", "Scar", "Glasses", "Freckles"];
+/** Creator eye colours (2026-11-16 am). 0 keeps the painting's own eyes; the rest pick a painted variant. Never rolled. */
+export const EYE_NAMES = ["As painted", "Brown", "Blue", "Green", "Hazel", "Grey"];
+/**
+ * The creator's Eyes pick. Off until the eye-colour portrait variants are painted (image list); even when on, the chips
+ * only appear once at least one `pv-*-eyes-*` painting exists, so the pick never shows a choice the art can't honour.
+ */
+export const EYE_PICK = false;
 
 function mix(n: number): number {
   let x = n | 0;
@@ -32,7 +39,8 @@ export function resolveLook(seed: number, look?: Partial<Look> | null): Look {
   const style = clampIndex(look?.style, STYLE_NAMES.length, (h >>> 8) % STYLE_NAMES.length);
   const build = clampIndex(look?.build, BUILD_NAMES.length, (h >>> 20) % BUILD_NAMES.length);
   const feature = clampIndex(look?.feature, FEATURE_NAMES.length, (h >>> 12) % FEATURE_NAMES.length);
-  return { skin, hair, style, build, feature };
+  const eyes = typeof look?.eyes === "number" && look.eyes > 0 && look.eyes < EYE_NAMES.length ? Math.floor(look.eyes) : undefined;
+  return eyes ? { skin, hair, style, build, feature, eyes } : { skin, hair, style, build, feature };
 }
 
 function clampIndex(value: number | undefined, length: number, fallback: number): number {

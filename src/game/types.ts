@@ -159,6 +159,9 @@ export interface Look {
   style: number;
   build: number;
   feature: number;
+  /** Creator eye colour (look.ts EYE_NAMES), optional: absent or 0 = as painted. Shown only through painted portrait
+   * variants (`pv-<id>-eyes-<colour>`, 2026-11-16 am), so old saves need no migration. */
+  eyes?: number;
 }
 
 export type CostumeSlot = "cowl" | "chest" | "cape" | "gloves" | "boots" | "emblem";
