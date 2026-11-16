@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { act, choose, createGame } from "../engine.ts";
 import { basePowers, mix } from "../combo.ts";
 import { AWAKEN_GAP, BASE_MAX, LIBRARY_MAX, PAGE_GAP, awakenBlock, awakenRank, braidBlock, library, libraryCap, notePage, notePower, pageBlock, yearlyRoom } from "../library.ts";
+import { PACING } from "../pacing.ts";
 import type { Game } from "../types.ts";
 
 const base = { name: "Kai Moreno", cityId: "metro", upbringing: "supportive", portrait: 5, sex: "male", face: "secret", drive: "protector" } as const;
@@ -66,7 +67,9 @@ test("a braid needs both halves at rank C and two years since the last new power
   assert.equal(pageBlock(g, "light-speed"), null);
 });
 
-test("braiding is a journey: one session a month, six for a Gen 1 with a mentor, twice that alone", () => {
+test("braiding is a journey: one session a month (old pacing), six for a Gen 1 with a mentor, twice that alone", () => {
+  PACING.year = false;
+  try {
   let g = life({ unlockedPowers: ["fire-control", "super-speed"] });
   g.mastery = { "fire-control": 60, "super-speed": 60 };
   assert.ok(mix("fire-control", "super-speed", g.unlockedPowers).ok);
@@ -80,6 +83,29 @@ test("braiding is a journey: one session a month, six for a Gen 1 with a mentor,
   }
   assert.ok(g.unlockedPowers.includes("light-speed"), "Light Speed lands in the end");
   assert.equal(sessions, 12, "alone: 12 sessions at half pace");
+  } finally {
+    PACING.year = true;
+  }
+});
+
+test("year pacing: power lessons share a pool of 3 a year, so a lone braid takes four years", () => {
+  let g = life({ unlockedPowers: ["fire-control", "super-speed"] });
+  g.mastery = { "fire-control": 60, "super-speed": 60 };
+  let sessions = 0;
+  let years = 0;
+  for (; years < 10 && !g.unlockedPowers.includes("light-speed"); years++) {
+    g = { ...g, majorsLeft: 3, phase: "live", yearUses: {}, flags: { ...g.flags, powerLesson: 0 } };
+    for (let tap = 0; tap < 5; tap++) {
+      const next = act(g, "mix|fire-control|super-speed");
+      if ((next.training?.progress ?? 0) > (g.training?.progress ?? 0) || next.unlockedPowers.includes("light-speed")) sessions += 1;
+      g = next;
+      if (g.unlockedPowers.includes("light-speed")) break;
+    }
+    assert.ok((g.yearUses?.lesson ?? 0) <= 3, "never more than 3 lessons a year");
+  }
+  assert.ok(g.unlockedPowers.includes("light-speed"), "Light Speed lands in the end");
+  assert.equal(sessions, 12, "still 12 sessions alone");
+  assert.equal(years, 4, "three a year: four years");
 });
 
 test("a stray spark doesn't stick: a brush with a power sharpens the one you hold", () => {

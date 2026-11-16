@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-16 (pacing): every option up to 3 times a year, BitLife style (`devbot/2026-11-16-pacing`)
+
+Built on `devbot/2026-11-15-villain` (587ff47; itself on `main` b6ed50b), so merge the villain PR first or this one alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (365 pass), built and loaded at 390×844 before push.
+
+- **Owner's call:** "3 choices a year" is gone. Each option (each power's drill, each person, each business, gym, books, shifts, patrols, the Arena, mentor lessons…) can be done up to **3 times per in-game year**, tracked per option (`Game.yearUses`) and reset at every birthday. Rows show "n/3 THIS YEAR" and lock at 3. The Play button reads **Age up to N** (a year at every age on Auto pace); Month / Season pace, Skip to 15 and the year skips stay.
+- **Balance:** per-use numbers unchanged. A year still holds 36 blocks of free time: your own taps borrow from later months (`Game.yearDebt`) and the routine fills the rest, uncapped, so yearly totals can't inflate. Power lessons share one pool of 3 a year (was one a month). Free actions (rest, flirt, gift) count against their own cap; story steps are never capped. Details in DESIGN.md §19 "Year pacing".
+- **Code:** new `src/game/pacing.ts` (`PACING.year` switch, `optionKey`, `blocksLeft`, `hasTime`, lesson pool, `migratePacing`); `engine.ts` wraps `act` / `choose` / `actionsFor` for the cap, the counters and the lifted month gates, and adds `asRoutine` (used by `skip.ts` so fast-forward stays monthly and uncounted); `flow.ts` Age up label and pace; `UseCount.tsx` pill in the action rows, mentor lessons and business shifts; MoneyHub / PowerLab check the year's free time.
+- **Saves:** old saves load with no counts and nothing borrowed (`save.ts` → `migratePacing`).
+- **Tests:** +13 (new `pacing.test.ts`: option keys, 3-a-year caps across options, per-power training, the borrowed-time budget, running out of time, the Age up reset, the uncapped routine, Skip to 15 and chained year skips, free actions, old saves, the off switch; plus a year-pacing braid test). Six tests that checked once-a-month gates were updated: the new 3-a-year rule, and the old rule with the switch off where it still matters.
+
 ## 2026-11-15 (villain): a painted villain opposite you in crime events (`devbot/2026-11-15-villain`)
 
 Built on `main` (b6ed50b, PR #7). Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game`, built and loaded at 390×844 before push.
