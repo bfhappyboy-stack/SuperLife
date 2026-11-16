@@ -10,6 +10,7 @@
 - **Capes on cloaked heroes did nothing (fixed):** the Closet said "Long cape is on" but the cutout never changed. The cape now shows as a mantle behind the painted cloak, in the Closet and in the duel. Reads well on veil, storm B and mind B; on arcane (f), whose robe already fills the frame, only the cape's edges and hem show, which is the intended look.
 - **Masks, hands, boots said "on" with no change (honest now):** the Closet says buffs only until their per-hero paintings land (image list `/workspace/img-requests-1116am.md`).
 - **B teen label:** already fixed on the night pass (reads "SUIT LINE B"). No console errors.
+- **Creator, Glasses (honest now):** picking Glasses on a teen face (the creator's preview age) changed nothing, since no teen or adult face is painted with glasses. It now says so under the Face chips (`before-/after-create-glasses.png`). The painted glasses variants are on the image list. A stand-in variant registered for the check swapped in and the note went away (`/workspace/pt1116am/wiring-check-temp-variant.png`, temporary, not committed).
 
 ## Night pass (2026-11-15 night): the "Your call" screen and the B-teen Closet label
 

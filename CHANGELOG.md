@@ -12,6 +12,13 @@ Built on `origin/devbot/2026-11-16-suits` (cd75144, itself on `main` 4f67c05), s
 - **Mirror:** the figure stands above the caption now, so feet (and boots, once painted) aren't hidden behind it.
 - **Tests:** +1 (`outfit.test.ts`: every piece either shows or is reported as buffs-only; per-figure layers; every cloaked painting has its hem measured and shows a cape).
 
+### Increment 2: your creator face on painted variants of the same portrait
+
+- **Painted variants, same face:** a life's own portrait now asks for a painted variant of the same person with its creator pick painted in: `pv-<id>-<scar|glasses|freckles>`, `pv-<id>-eyes-<colour>`, or both (`portraitVariantKeys` in `src/game/portraits.ts`, best first), and keeps the base portrait when none exists. A variant with the feature painted in replaces the soft code marks for that face. NPC faces never move (only a life's own pick is passed). Switch: `PORTRAIT_VARIANTS` in `PhotoFace.tsx`. Checked with a temporary stand-in variant that the swap happens (then removed). Paintings: `/workspace/img-requests-1116am.md` sections 2-4; importer `/workspace/pt1116am/import-portrait-variants.py`.
+- **Glasses tell the truth:** no teen or adult portrait is painted with glasses, so picking Glasses in the creator (which previews you at 16) changed nothing. The creator now says "Glasses show on painted faces that wear them. This face's painted pair is on the way, so it reads clear for now." (`featureShows`). The note disappears for faces that have a painted pair.
+- **Eye colour (off):** `Look.eyes` (optional; absent = as painted, never rolled, so NPCs and old saves are unchanged, no migration) and an Eyes pick in the creator (`EYE_NAMES`). It is behind `EYE_PICK` (off) and, even when on, appears only once a `pv-*-eyes-*` painting exists.
+- **Tests:** +3 (`facevariants.test.ts`: variant key order and skips, the glasses truth check, the optional eye colour).
+
 ## 2026-11-16 (suits): the painted hero wears the Closet (`devbot/2026-11-16-suits`)
 
 Built on `main` (4f67c05, PR #8). Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game`, built and loaded at 390×844 before push.
