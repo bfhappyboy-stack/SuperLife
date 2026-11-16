@@ -6,7 +6,8 @@
  */
 import { useId, type CSSProperties, type ReactNode } from "react";
 import { useArt } from "@/components/game/Scene";
-import { anchorOf, type Outfit, type PartLayer } from "@/game/outfit";
+import { anchorOf, toneKeys, type Outfit, type PartLayer } from "@/game/outfit";
+import type { Tone } from "@/game/portraits";
 import type { HeroAnchor } from "@/game/heroAnchors";
 import type { Pose } from "@/components/game/Figure";
 import { hasArt } from "@/assets/art";
@@ -16,14 +17,18 @@ import type { Sex } from "@/game/types";
 
 export { familyOfPower } from "@/game/heroArt";
 
-/** Art key for a painted Mystery hero card that exists in the asset table (suit B first when worn and painted), or "". */
-export function mysteryArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30, suit?: Suit | null): string {
-  return suitKeys(mysteryKey(family, sex, age), suit).find((key) => hasArt(key)) ?? "";
+/**
+ * Art key for a painted Mystery hero card that exists in the asset table (suit B first when worn and painted), or "".
+ * `tone` (the creator's skin, `toneOf(look)`) prefers that character's skin-tone painting (`<key>-s1..4`), else the
+ * closest tone painted (2026-11-16 suits pass).
+ */
+export function mysteryArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30, suit?: Suit | null, tone?: Tone | null): string {
+  return suitKeys(mysteryKey(family, sex, age), suit).flatMap((key) => toneKeys(key, tone ?? null)).find((key) => hasArt(key)) ?? "";
 }
 
 /** Stage cutout key (no `cut-` prefix) for your Mystery hero from 13 that exists in the asset table: a teen painting at 13-15, suit B first, or "". */
-export function stageArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30, suit?: Suit | null): string {
-  return stageKeys(family, sex, age, suit).find((key) => hasArt(`cut-${key}`)) ?? "";
+export function stageArtKey(family: CapeFamily | null | undefined, sex: Sex | undefined, age = 30, suit?: Suit | null, tone?: Tone | null): string {
+  return stageKeys(family, sex, age, suit).flatMap((key) => toneKeys(key, tone ?? null)).find((key) => hasArt(`cut-${key}`)) ?? "";
 }
 
 /** A painted fighter card on the duel stage, with the same pose cues the paper doll had. */
@@ -140,7 +145,7 @@ export function HeroFigure({ src, artKey, outfit, glow, flip, className = "", st
  * shows until a painting exists.
  */
 function PartArt({ layer, artKey, anchor }: { layer: PartLayer; artKey: string; anchor: HeroAnchor | null }) {
-  const own = artKey ? `cut-${artKey}-${layer.key}` : "";
+  const own = artKey ? `cut-${artKey.replace(/-s[1-4]$/, "")}-${layer.key}` : "";
   const ownArt = useArt(own && hasArt(own) ? own : "");
   const generic = useArt(!ownArt && hasArt(layer.key) ? layer.key : "");
   if (ownArt) return <img src={ownArt} alt="" draggable={false} className="pointer-events-none absolute inset-0 block size-full" data-part={own} />;

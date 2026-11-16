@@ -77,7 +77,7 @@ export function stageKeys(family: CapeFamily | null | undefined, sex: Sex | unde
 
 /** Which suit line a resolved art key shows: "b" for `<key>-b` and the teen `<key>-b-teen`, else "a" (the Closet caption). */
 export function suitOfKey(key: string): Suit {
-  return /-b(-teen)?$/.test(key) ? "b" : "a";
+  return /-b(-teen)?(-s[1-4])?$/.test(key) ? "b" : "a";
 }
 
 /** How tall a teen stands next to a grown fighter: 13 → 0.86, 14 → 0.9, 15 → 0.94, 16+ → 1. */

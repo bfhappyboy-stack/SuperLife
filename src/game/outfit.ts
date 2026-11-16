@@ -120,7 +120,7 @@ export const TONES: readonly Tone[] = ["light", "medium", "brown", "dark"];
 /** Skin palette index (look.ts SKIN) → tone, same table the painted portraits use. */
 export const SKIN_TONE: readonly Tone[] = ["light", "light", "medium", "brown", "dark", "medium", "light", "medium", "brown", "dark", "light", "medium"];
 
-export function toneOf(look: Pick<Look, "skin"> | null | undefined): Tone | null {
+export function toneOf(look: { skin?: Look["skin"] } | null | undefined): Tone | null {
   if (!look || typeof look.skin !== "number") return null;
   return SKIN_TONE[look.skin] ?? null;
 }

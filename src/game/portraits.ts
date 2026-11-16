@@ -19,9 +19,14 @@ export interface PortraitMeta {
   hair: HairTone;
   /** In a hero suit: kept out of the everyday pool. */
   suited?: boolean;
+  /** Creator face features painted into this portrait (look.ts FEATURE_NAMES: 1 Scar, 2 Glasses, 3 Freckles). */
+  marks?: readonly number[];
 }
 
-const P = (id: string, band: PortraitMeta["band"], sex: Sex, skin: Tone, hair: HairTone, suited?: boolean): PortraitMeta => ({
+/** look.ts FEATURE_NAMES indices. */
+export const FEATURE = { clear: 0, scar: 1, glasses: 2, freckles: 3 } as const;
+
+const P = (id: string, band: PortraitMeta["band"], sex: Sex, skin: Tone, hair: HairTone, suited?: boolean, marks?: readonly number[]): PortraitMeta => ({
   id,
   sheet: id.split("-")[0] as Sheet,
   band,
@@ -29,7 +34,10 @@ const P = (id: string, band: PortraitMeta["band"], sex: Sex, skin: Tone, hair: H
   skin,
   hair,
   suited,
+  ...(marks ? { marks } : {}),
 });
+const FRECKLED = [FEATURE.freckles];
+const GLASSES = [FEATURE.glasses];
 const M: Sex = "male";
 const F: Sex = "female";
 
@@ -39,9 +47,9 @@ export const PORTRAITS: readonly PortraitMeta[] = [
   P("child-2", "baby", F, "light", "black"),
   P("child-3", "child", M, "medium", "brown"),
   P("child-4", "child", F, "brown", "black"),
-  P("child-5", "child", M, "light", "red"),
+  P("child-5", "child", M, "light", "red", false, FRECKLED),
   P("child-6", "child", F, "dark", "black"),
-  P("child-7", "child", M, "light", "brown"),
+  P("child-7", "child", M, "light", "brown", false, GLASSES),
   P("child-8", "child", F, "medium", "black"),
   P("teen-0", "teen", M, "light", "blond"),
   P("teen-1", "teen", F, "dark", "black"),
@@ -58,19 +66,19 @@ export const PORTRAITS: readonly PortraitMeta[] = [
   P("adult-3", "adult", F, "light", "black"),
   P("adult-4", "adult", M, "medium", "black", true),
   P("adult-5", "adult", M, "medium", "black"),
-  P("adult-6", "adult", F, "light", "red"),
+  P("adult-6", "adult", F, "light", "red", false, FRECKLED),
   P("adult-7", "adult", M, "medium", "black"),
   P("adult-8", "adult", F, "brown", "black"),
   P("adult-9", "adult", M, "light", "blond"),
-  P("older-0", "older", M, "dark", "grey"),
+  P("older-0", "older", M, "dark", "grey", false, GLASSES),
   P("older-1", "older", F, "light", "grey"),
   P("older-2", "older", M, "light", "grey"),
-  P("older-3", "older", F, "medium", "grey"),
+  P("older-3", "older", F, "medium", "grey", false, GLASSES),
   P("older-4", "older", M, "brown", "grey"),
   P("older-5", "older", F, "medium", "grey"),
   P("older-6", "older", M, "medium", "grey"),
   P("older-7", "older", F, "light", "grey"),
-  P("older-8", "older", F, "dark", "grey"),
+  P("older-8", "older", F, "dark", "grey", false, GLASSES),
   P("capes-0", "cape", F, "dark", "black"),
   P("capes-1", "cape", M, "medium", "black"),
   P("capes-2", "cape", M, "medium", "black"),
@@ -106,8 +114,10 @@ function hash(seed: number): number {
 /**
  * The portrait for a person: same band (rival capes from 16 use the masked sheet), same sex when the band has one,
  * then the closest skin tone and hair; ties broken by the seed, so a person keeps "their" face.
+ * `feature` (a life's own creator pick, never a random NPC roll) prefers a portrait with that feature painted in and
+ * keeps painted glasses off faces that didn't pick them (2026-11-16).
  */
-export function pickPortrait(seed: number, age: number, sex: Sex, look?: Pick<Look, "skin" | "hair"> | null, cape = false): PortraitMeta {
+export function pickPortrait(seed: number, age: number, sex: Sex, look?: Pick<Look, "skin" | "hair"> | null, cape = false, feature?: number | null): PortraitMeta {
   const band: PortraitMeta["band"] = cape && age >= 16 ? "cape" : ageBand(age);
   const inBand = PORTRAITS.filter((p) => p.band === band && !p.suited);
   const pool = inBand.some((p) => p.sex === sex) ? inBand.filter((p) => p.sex === sex) : inBand;
@@ -117,6 +127,10 @@ export function pickPortrait(seed: number, age: number, sex: Sex, look?: Pick<Lo
     let s = 0;
     if (tone) s += 2 - Math.min(2, Math.abs(TONE_ORDER.indexOf(p.skin) - TONE_ORDER.indexOf(tone)));
     if (hair && band !== "older" && p.hair === hair) s += 1;
+    if (typeof feature === "number") {
+      if (feature !== FEATURE.clear && p.marks?.includes(feature)) s += 1;
+      if (feature !== FEATURE.glasses && p.marks?.includes(FEATURE.glasses)) s -= 1;
+    }
     return s;
   };
   const best = Math.max(...pool.map(score));
