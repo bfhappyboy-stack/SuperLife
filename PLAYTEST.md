@@ -1,5 +1,15 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-16 pm): creator skin tone vs the suit line
+
+**Played:** the Closet at 390×844 from crafted saves (`/workspace/pt1116pm/saves/`): storm (m) 27, dark skin, rolled suit B with a long cape; the same life at 14; mind (f) 27, dark, rolled B; ice (f) 14, dark. Tapped the suit-line picker B → A → B on each. Before = the am branch (port 8120), after = this branch (port 8121).
+
+**Before/after:** `/workspace/shots-1116pm/before-after-storm-m-dark.png` (left before, right after); `before-/after-closet-storm-m-b-teen.png`, `before-/after-closet-mind-f-b-short.png`, `after-closet-ice-f-teen-dark.png`.
+
+**Findings:**
+- **Dark-skinned lives drawn light-skinned (fixed):** storm (m) and mind (f) B lives showed the light/medium B painting; they now open in their dark-skinned suit A, cape and all. The teen storm (m) shows his dark teen A too. Tapping B in the picker switches and stays switched; tapping A switches back. No console errors.
+- **Teens have one tone per suit (honest now):** ice (f) at 14 with dark skin still shows the light teen painting (there's no other yet); the Suit tab says "Your teen A suit is painted in light skin so far. Your dark skin tone painting is on the way." Prompts: `/workspace/img-requests-1116pm.md`.
+
 ## Morning pass (2026-11-16 am): the Closet's silent "on"
 
 **Played:** Closet and a duel against Rent at 390×844 from crafted saves (`/workspace/pt1116am/saves/`): veil (m) A with the long cape, veil (f) banner cape, arcane (f) long cape, storm (m) B and mind (f) B with capes, fire (m) with every slot filled. Before = the suits branch (port 8116), after = this branch (port 8120).

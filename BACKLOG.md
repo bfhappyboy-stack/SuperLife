@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-16 pm pass
+
+- **Images, in order:** storm-m-s1 redo, arcane-f-s3, glasses variants (`/workspace/img-requests-1116am.md` sections 1-2); then 54 teen suit-A skin-tone repaints and the 102 suit-B ones (`/workspace/img-requests-1116pm.md`). All wire in with no code change.
+- **Decision for the owner:** a life that never picked a suit line now wears the line painted in its skin tone (`TONE_PICKS_LINE`). Keep that, or always keep the rolled line and only show the "not painted in your tone yet" note?
+- Still open from the am pass: per-hero mask, glove and boot layers (Closet says "buffs only" until then), eye-colour variants behind `EYE_PICK`.
+
 ## From the 2026-11-15 night pass
 
 - **Done:** the Closet caption names the suit line on B teens; "Your call" event screens get a painted scene (you, plus whoever the event names).
