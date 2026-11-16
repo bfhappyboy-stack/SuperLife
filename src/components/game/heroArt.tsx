@@ -10,6 +10,7 @@ import { anchorOf, toneKeys, type Outfit, type PartLayer } from "@/game/outfit";
 import type { Tone } from "@/game/portraits";
 import type { HeroAnchor } from "@/game/heroAnchors";
 import { PART_FRAMES } from "@/game/partFrames";
+import { CLOAK_CAPES, CLOAK_WIDEN } from "@/game/outfit";
 import type { Pose } from "@/components/game/Figure";
 import { hasArt } from "@/assets/art";
 import { mysteryKey, stageKeys, suitKeys, type Suit } from "@/game/heroArt";
@@ -99,7 +100,10 @@ export function HeroFigure({ src, artKey, outfit, glow, flip, className = "", st
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const anchor = anchorOf(artKey);
   const neck = Math.round((anchor?.neck ?? 0.15) * 1000) / 10;
-  const behind = outfit.layers.filter((layer) => layer.behind && !(layer.slot === "cape" && anchor?.cape));
+  // A hero painted in their own cloak or long coat (arcane, veil, some suit B) wears the bought cape as a wider mantle
+  // behind it, so its edges and hem show past the painted cloak (`CLOAK_CAPES`; off = named on the mirror only).
+  const cloaked = !!anchor?.cape;
+  const behind = outfit.layers.filter((layer) => layer.behind && !(layer.slot === "cape" && cloaked && !CLOAK_CAPES));
   const front = outfit.layers.filter((layer) => !layer.behind);
   const tint = outfit.tint;
   const lift = tint ? Math.round(0.3 * (1 - lum(tint)) * 100) / 100 : 0;
@@ -108,35 +112,52 @@ export function HeroFigure({ src, artKey, outfit, glow, flip, className = "", st
     <span className={`inline-block max-w-none ${className}`} style={{ ...style, filter: rimFilter(glow, outfit.rim) }} data-outfit={tint ?? "painted"} data-layers={outfit.layers.map((l) => l.key).join(" ")}>
       <span className="relative block h-full" style={{ transform: flip ? "scaleX(-1)" : undefined }}>
         {behind.map((layer) => (
-          <PartArt key={layer.key} layer={layer} artKey={artKey} anchor={anchor} />
+          <PartArt key={layer.key} layer={layer} artKey={artKey} anchor={anchor} cloaked={cloaked} />
         ))}
         <img src={src} alt="" draggable={false} className="relative block h-full w-auto max-w-none" />
-        {tint && (
-          <>
-            <svg width="0" height="0" className="absolute" aria-hidden focusable="false">
-              <filter id={`suit-${uid}`} colorInterpolationFilters="sRGB" x="0" y="0" width="1" height="1">
-                <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum" />
-                <feComponentTransfer in="lum" result="dark">
-                  <feFuncA type="table" tableValues="1 1 0.75 0.3 0 0" />
-                </feComponentTransfer>
-                <feComposite in="dark" in2="SourceAlpha" operator="in" result="cloth" />
-                <feFlood floodColor={tint} floodOpacity={outfit.strength} result="dye" />
-                <feComposite in="dye" in2="cloth" operator="in" result="dyed" />
-                <feBlend in="dyed" in2="SourceGraphic" mode="color" result="coloured" />
-                <feFlood floodColor={tint} floodOpacity={lift} result="glow" />
-                <feComposite in="glow" in2="cloth" operator="in" result="lifted" />
-                <feBlend in="lifted" in2="coloured" mode="screen" result="lit" />
-                <feComposite in="lit" in2="SourceAlpha" operator="in" />
-              </filter>
-            </svg>
-            <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 block size-full" style={{ filter: `url(#suit-${uid})`, maskImage: neckMask, WebkitMaskImage: neckMask }} data-suit-tint={tint} />
-          </>
-        )}
+        {tint && <Dye src={src} id={`suit-${uid}`} tint={tint} strength={outfit.strength} lift={lift} mask={neckMask} data="suit" />}
         {front.map((layer) => (
           <PartArt key={layer.key} layer={layer} artKey={artKey} anchor={anchor} />
         ))}
       </span>
     </span>
+  );
+}
+
+/**
+ * The painting again, recoloured by an SVG filter: a luminance-preserving colour blend on the darker, painted cloth,
+ * with a soft lift so black cloth takes the colour too; bright glows and highlights keep their paint. `mask` / `clip`
+ * keep it to one region (the suit below the neck).
+ */
+function Dye({ src, id, tint, strength, lift, mask, clip, data }: { src: string; id: string; tint: string; strength: number; lift: number; mask?: string; clip?: string; data: string }) {
+  return (
+    <>
+      <svg width="0" height="0" className="absolute" aria-hidden focusable="false">
+        <filter id={id} colorInterpolationFilters="sRGB" x="0" y="0" width="1" height="1">
+          <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum" />
+          <feComponentTransfer in="lum" result="dark">
+            <feFuncA type="table" tableValues="1 1 0.75 0.3 0 0" />
+          </feComponentTransfer>
+          <feComposite in="dark" in2="SourceAlpha" operator="in" result="cloth" />
+          <feFlood floodColor={tint} floodOpacity={strength} result="dye" />
+          <feComposite in="dye" in2="cloth" operator="in" result="dyed" />
+          <feBlend in="dyed" in2="SourceGraphic" mode="color" result="coloured" />
+          <feFlood floodColor={tint} floodOpacity={lift} result="glow" />
+          <feComposite in="glow" in2="cloth" operator="in" result="lifted" />
+          <feBlend in="lifted" in2="coloured" mode="screen" result="lit" />
+          <feComposite in="lit" in2="SourceAlpha" operator="in" />
+        </filter>
+      </svg>
+      <img
+        src={src}
+        alt=""
+        draggable={false}
+        className="pointer-events-none absolute inset-0 block size-full"
+        style={{ filter: `url(#${id})`, maskImage: mask, WebkitMaskImage: mask, clipPath: clip }}
+        data-dye={data}
+        data-suit-tint={data === "suit" ? tint : undefined}
+      />
+    </>
   );
 }
 
@@ -148,13 +169,13 @@ export function HeroFigure({ src, artKey, outfit, glow, flip, className = "", st
  * - a belt or buckle across the waist, a badge or brand on the chest, a sash from one shoulder across to the other hip.
  * Nothing shows until a painting exists.
  */
-function PartArt({ layer, artKey, anchor }: { layer: PartLayer; artKey: string; anchor: HeroAnchor | null }) {
+function PartArt({ layer, artKey, anchor, cloaked = false }: { layer: PartLayer; artKey: string; anchor: HeroAnchor | null; cloaked?: boolean }) {
   const own = artKey ? `cut-${artKey.replace(/-s[1-4]$/, "")}-${layer.key}` : "";
   const ownArt = useArt(own && hasArt(own) ? own : "");
   const generic = useArt(!ownArt && hasArt(layer.key) ? layer.key : "");
   if (ownArt) return <img src={ownArt} alt="" draggable={false} className="pointer-events-none absolute inset-0 block size-full" data-part={own} />;
   if (!generic || !anchor) return null;
-  const place = partPlace(layer.key, anchor);
+  const place = partPlace(layer.key, anchor, cloaked);
   if (!place) return null;
   return <img src={generic} alt="" draggable={false} className="pointer-events-none absolute block max-w-none" style={place} data-part={layer.key} />;
 }
@@ -162,7 +183,7 @@ function PartArt({ layer, artKey, anchor }: { layer: PartLayer; artKey: string; 
 const pct = (n: number) => `${Math.round(n * 10000) / 100}%`;
 
 /** Where a generic part sits in a hero cutout's box (all fractions of that box), or null for parts with no generic fit. */
-function partFit(key: string, a: HeroAnchor): { left: number; top: number; width: number; height: number; rotate?: number } | null {
+function partFit(key: string, a: HeroAnchor, cloaked = false): { left: number; top: number; width: number; height: number; rotate?: number } | null {
   const f = PART_FRAMES[key];
   if (!f) return null;
   const aspect = f.h / f.w; // part height per unit width (px)
@@ -175,6 +196,15 @@ function partFit(key: string, a: HeroAnchor): { left: number; top: number; width
     const room = (a.bottom - a.sy) * 0.97;
     if (tall(width) * (1 - band) > room) width *= room / (tall(width) * (1 - band));
     const height = tall(width);
+    // On a cloaked hero the mantle is drawn wider at the same length (the cloth fans out), so it clears the painted cloak.
+    // Its hem also has to clear the painted cloak's own hem (`cl`..`cr`), so it is centred on the cloak and at least
+    // a little wider than it.
+    if (cloaked) {
+      const cloak = a.cl != null && a.cr != null ? (a.cr - a.cl) * 1.12 : 0;
+      width = Math.max(width, (a.sw * CLOAK_WIDEN) / bandW, cloak);
+      const centre = a.cl != null && a.cr != null ? (a.cl + a.cr) / 2 : a.cx;
+      return { left: centre - width / 2, top: a.sy - band * height - 0.004, width, height };
+    }
     const mid = ((f.sl ?? 0.25) + (f.sr ?? 0.75)) / 2;
     return { left: a.cx - mid * width, top: a.sy - band * height - 0.004, width, height };
   }
@@ -197,8 +227,8 @@ function partFit(key: string, a: HeroAnchor): { left: number; top: number; width
   return null;
 }
 
-function partPlace(key: string, a: HeroAnchor): CSSProperties | null {
-  const fit = partFit(key, a);
+function partPlace(key: string, a: HeroAnchor, cloaked = false): CSSProperties | null {
+  const fit = partFit(key, a, cloaked);
   if (!fit) return null;
   // Front pieces pick up the painting's light a little: a soft contact shadow and slightly lowered brightness.
   const front = !key.startsWith("part-cape-");

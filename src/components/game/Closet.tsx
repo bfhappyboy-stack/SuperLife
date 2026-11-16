@@ -5,7 +5,7 @@ import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
 import { hasArt } from "@/assets/art";
 import { ART_HEROES, SUIT_LOCKED, stageScale, suitOfKey } from "@/game/heroArt";
-import { anchorOf, outfitOf, PAINTED_SUIT, partKey, toneOf } from "@/game/outfit";
+import { anchorOf, CLOAK_CAPES, outfitOf, PAINTED_SUIT, partKey, partShows, toneOf } from "@/game/outfit";
 import { presetById } from "@/game/presets";
 import { Check, Lock, X } from "lucide-react";
 import { FAMILY_COLOR } from "@/components/game/icons";
@@ -13,6 +13,8 @@ import { capeTheme } from "@/game/theme";
 import { buffLine, costumeMods, fitBlock, fitById, fitsIn, modsLine, SLOT_LABEL, SLOTS } from "@/game/costume";
 import { money } from "@/game/format";
 import type { CostumeSlot, Game } from "@/game/types";
+
+const UNPAINTED_NOUN: Record<CostumeSlot, string> = { cowl: "masks", chest: "suits", cape: "capes", gloves: "gloves", boots: "boots", emblem: "marks" };
 
 export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: string) => void; onClose: () => void }) {
   const [slot, setSlot] = useState<CostumeSlot>("chest");
@@ -23,6 +25,10 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
   const rows = fitsIn(slot);
   const family = capeTheme(game).cape;
   const aura = family ? FAMILY_COLOR[family] : undefined;
+  // The painted hero on the mirror, so each piece can say honestly whether the painting shows it.
+  const heroKey = ART_HEROES && !presetById(game.preset) ? stageArtKey(family, game.sex, game.age, game.suit, toneOf(game.look)) : "";
+  const unpainted = (id: string) => !!heroKey && slot !== "chest" && !partShows(slot, id, heroKey, hasArt);
+  const slotUnpainted = !!heroKey && slot !== "chest" && rows.some((item) => partKey(slot, item.id)) && rows.every((item) => !partKey(slot, item.id) || unpainted(item.id));
 
   function buy(id: string) {
     const item = fitById(id);
@@ -97,6 +103,11 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
       {slot !== "chest" && ART_HEROES && <PartNote game={game} slot={slot} />}
       <div className="mt-3 flex flex-col gap-2 px-4">
         {slot === "chest" && ART_HEROES && <p className="t-label text-[10px] text-muted">Colourway · recolours your painted suit</p>}
+        {slotUnpainted && (
+          <p className="t-label text-[10px] text-muted" data-slot-unpainted={slot}>
+            Buffs only for now · painted {UNPAINTED_NOUN[slot]} for your hero are on the way
+          </p>
+        )}
         {rows.map((item) => {
           const owned = game.wardrobe?.owned?.includes(item.id) ?? false;
           const on = wornId === item.id;
@@ -130,6 +141,7 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
               </span>
               <span className="mt-1 block text-sm text-muted">{ART_HEROES && item.id === PAINTED_SUIT ? "Your suit in its own colours, exactly as painted." : item.detail}</span>
               <span className="mt-1 block text-xs text-gold">{buffLine(item)}</span>
+              {!slotUnpainted && unpainted(item.id) && <span className="mt-1 block text-xs text-muted" data-unpainted={item.id}>Buffs only for now: not painted on your hero yet.</span>}
               {block && <span className="mt-1 block text-xs text-muted">{block}</span>}
             </button>
           );
@@ -165,7 +177,7 @@ function Mirror({ game, aura }: { game: Game; aura?: string }) {
       {legend && legendArt ? (
         <img src={legendArt} alt="" draggable={false} className="anim-fade absolute inset-0 size-full object-cover object-top" />
       ) : key && cut ? (
-        <span className="absolute inset-x-0 top-2 bottom-0 block">
+        <span className="absolute inset-x-0 top-2 bottom-6 block">
           <Cutout key={`${key}|${outfit.tint ?? ""}`} src={cut} name={game.name} glow={glow} pose="idle" scale={stageScale(game.age)} outfit={outfit} artKey={key} />
         </span>
       ) : !key && !legend ? (
@@ -226,16 +238,20 @@ function SuitLines({ game, onAct }: { game: Game; onAct: (id: string, notice: st
   );
 }
 
-/** Until a part's painting is in, say so plainly: the piece is on (buffs and all) and named on the mirror. */
+/**
+ * Say plainly what the painting does with the worn piece: a cape on a hero painted in their own cloak is worn behind it;
+ * a piece with no painting for this hero yet is on (buffs and all) and named on the mirror, but not drawn.
+ */
 function PartNote({ game, slot }: { game: Game; slot: CostumeSlot }) {
   const id = game.wardrobe?.worn?.[slot];
   const key = id ? partKey(slot, id) : "";
   if (!key) return null;
-  if (hasArt(key)) {
-    if (slot !== "cape") return null;
-    const art = presetById(game.preset) ? "" : stageArtKey(capeTheme(game).cape, game.sex, game.age, game.suit, toneOf(game.look));
-    if (!anchorOf(art)?.cape) return null;
-    return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{fitById(id)?.name} is on. Your hero's painted cloak already covers the back, so the cape is named on the mirror instead of drawn over it.</p>;
+  const art = presetById(game.preset) ? "" : stageArtKey(capeTheme(game).cape, game.sex, game.age, game.suit, toneOf(game.look));
+  if (!art) return null;
+  const name = fitById(id)?.name;
+  if (partShows(slot, id, art, hasArt)) {
+    if (slot !== "cape" || !anchorOf(art)?.cape || !CLOAK_CAPES) return null;
+    return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{name} is on, worn behind your hero's painted cloak so its edges and hem show.</p>;
   }
-  return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{fitById(id)?.name} is on and named on the mirror. Its painting on your hero is on the way.</p>;
+  return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{name} is on: the buffs count now, and the mirror names it. Your painted hero doesn't show it yet; that painting is on the way.</p>;
 }

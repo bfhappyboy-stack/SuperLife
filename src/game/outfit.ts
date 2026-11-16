@@ -15,12 +15,22 @@
 import { fitById, SLOTS } from "./costume";
 import { suitKeys, SUIT_LOCKED, type Suit } from "./heroArt";
 import { HERO_ANCHORS, type HeroAnchor } from "./heroAnchors";
+import { PART_FRAMES } from "./partFrames";
 import type { CostumeSlot, Game, Look } from "./types";
 import type { Tone } from "./portraits";
 
 export const OUTFIT_ON = true;
 /** Painted part layers (capes, masks...). On: a layer shows as soon as its painting exists. */
 export const PART_LAYERS = true;
+
+/**
+ * Capes on heroes painted in their own cloak or long coat (arcane, veil, mind/storm/life-f suit B; `cape` in
+ * heroAnchors.ts): the bought cape hangs behind the painted cloak as a wider mantle, so its coloured edges and hem show
+ * past it (2026-11-16 am). Off = the cape is only named on the mirror, as before.
+ */
+export const CLOAK_CAPES = true;
+/** How much wider than the shoulders the mantle sits on a cloaked hero (plain heroes: 1.1). */
+export const CLOAK_WIDEN = 1.55;
 
 /** The suit piece that is "the suit as painted": no recolour. */
 export const PAINTED_SUIT = "street-jacket";
@@ -102,6 +112,23 @@ export function outfitOf(game: { wardrobe?: Game["wardrobe"]; suit?: Game["suit"
     layers,
     worn: named,
   };
+}
+
+/**
+ * Does the painted hero `heroKey` (stage key, no `cut-`) actually show the piece `id` (2026-11-16 am, owner: "it says
+ * it's on but doesn't change")? A part shows when a layer painted for that figure exists, or a generic painted layer
+ * the game knows how to fit (capes and marks: `PART_FRAMES`). Masks, hands and boots need per-hero paintings, so until
+ * those land the Closet says "buffs only" instead of implying a look. Bare pieces and the suit (colourway) always show.
+ */
+export function partShows(slot: CostumeSlot, id: string | null | undefined, heroKey: string, has: (key: string) => boolean): boolean {
+  if (!OUTFIT_ON) return false;
+  const key = id ? partKey(slot, id) : "";
+  if (!key) return true;
+  if (!PART_LAYERS) return false;
+  if (heroKey && has(`cut-${heroKey.replace(/-s[1-4]$/, "")}-${key}`)) return true;
+  if (!has(key) || !PART_FRAMES[key]) return false;
+  if (slot === "cape" && anchorOf(heroKey)?.cape) return CLOAK_CAPES;
+  return true;
 }
 
 /** Can this life switch suit lines? (The male speedster's suit is locked; the B painting must exist, checked by the UI.) */
