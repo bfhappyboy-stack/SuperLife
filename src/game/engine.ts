@@ -1,4 +1,5 @@
 import { suitForSeed } from "./heroArt";
+import { LESSON_KEY, PACING, USES_PER_YEAR, blocksLeft, isMonthGate, optionKey } from "./pacing";
 import { buyItem, ensureMarket, marketEdge, marketMonth, marketYear, sellAsset } from "./market";
 import { bizFightEdge, ECON_FLAGS, econAct, econRelocate, economyMonth, ensureEconomy, homeEdge, livingOf, noteFight, spendBizEdge } from "./economy";
 import { AWAKEN_LESSONS, BRAID_LESSONS, HERO_AWAKEN_BOND, MENTOR_AWAKEN_BOND, SOLO_RATE, awakenBlock, braidBlock, library, notePage, notePower, pageBlock } from "./library";
@@ -1150,7 +1151,7 @@ function monthlyBody(d: Game, banners: string[]) {
 
 function clearMonthFlags(d: Game) {
   for (const key of Object.keys(d.flags)) {
-    if (key === "rested" || key === "omened" || key === "mentored" || key === "tutored" || key === "powerLesson" || key === "shifted" || key === "patrolled" || key === "hobby" || key === "crewjob" || key === "crewpay" || key === "crewcool" || key === "moved" || key === "walked" || key.startsWith("time:") || key.startsWith("flirt:") || key.startsWith("gift:") || key.startsWith("talks:")) delete d.flags[key];
+    if (isMonthGate(key)) delete d.flags[key];
   }
 }
 
@@ -1159,6 +1160,9 @@ function openYear(d: Game): string[] {
   const before = abilityNames(d);
   d.age += 1;
   d.majorsLeft = 3;
+  // Year pacing: a new year, every option back to 0/3 and nothing borrowed.
+  d.yearUses = {};
+  d.yearDebt = 0;
   clearMonthFlags(d);
   driftBonds(d);
   for (const person of d.relationships) {
@@ -1467,6 +1471,8 @@ export function createGame(input: NewLifeOpts): Game {
     wardrobe: starterWardrobe(),
     story: { active: null, cleared: [], progress: {} },
     majorsLeft: 0,
+    yearUses: {},
+    yearDebt: 0,
     flags: {},
     card: { kicker: "Age 0", banner: [], body: "", deltas: [] },
     pending: null,
@@ -2570,7 +2576,10 @@ export function ageUp(game: Game, opts: { quiet?: boolean } = {}): Game {
       return d;
     }
   } else {
-    d.majorsLeft = 3;
+    // Year pacing: blocks you already spent from this month (acting early in the year) come out first.
+    const owed = Math.min(3, Math.max(0, d.yearDebt ?? 0));
+    if (owed) d.yearDebt = (d.yearDebt ?? 0) - owed;
+    d.majorsLeft = 3 - owed;
     clearMonthFlags(d);
     marketMonth(d);
     econTick(d, banners);
@@ -2677,6 +2686,13 @@ function resolveOutcome(d: Game, outcome: Outcome) {
 }
 
 export function choose(game: Game, choiceId: string): Game {
+  if (!playerYear() || game.phase !== "choice" || !game.pending) return chooseCore(game, choiceId);
+  const { view, gates } = stripGates(game);
+  const raw = chooseCore(view, choiceId);
+  return raw === view ? game : withGates(view, raw, gates).out;
+}
+
+function chooseCore(game: Game, choiceId: string): Game {
   if (game.phase !== "choice" || !game.pending) return game;
   const outcome = game.pending.outcomes[choiceId];
   if (!outcome) return game;
@@ -2810,20 +2826,65 @@ export function resolveMini(game: Game, ratio: number, used: readonly string[] =
   return d;
 }
 
+/**
+ * Year pacing (pacing.ts): your own taps draw on the whole year's free time and each option's 3-a-year cap;
+ * the routine (fast-forward, Life Flow's Play) still lives month to month on the 3 monthly blocks.
+ */
+let routineDepth = 0;
+/** Run fast-forward / routine work: monthly blocks and once-a-month gates, no per-option counting. */
+export function asRoutine<T>(fn: () => T): T {
+  routineDepth += 1;
+  try {
+    return fn();
+  } finally {
+    routineDepth -= 1;
+  }
+}
+function playerYear(): boolean {
+  return PACING.year && routineDepth === 0;
+}
+export const CAP_LINE = `Done ${USES_PER_YEAR} times this year. Age up to go again.`;
+
 function noTime(d: Game, major: boolean): string | undefined {
-  if (major && d.majorsLeft <= 0) return "No moves left this month.";
+  if (!major) return undefined;
+  if (playerYear()) return blocksLeft(d) <= 0 ? "No free time left this year. Age up." : undefined;
+  if (d.majorsLeft <= 0) return "No moves left this month.";
   return undefined;
 }
 
 function spend(d: Game) {
+  if (playerYear() && d.majorsLeft <= 0) {
+    d.yearDebt = (d.yearDebt ?? 0) + 1;
+    return;
+  }
   d.majorsLeft = Math.max(0, d.majorsLeft - 1);
+}
+
+/** Your own tap, with the month gates lifted (the 3-a-year cap replaces them). Gates come back after. */
+function stripGates(g: Game): { view: Game; gates: Record<string, unknown> } {
+  const gates: Record<string, unknown> = {};
+  const flags: Game["flags"] = {};
+  for (const [key, value] of Object.entries(g.flags)) {
+    if (isMonthGate(key)) gates[key] = value;
+    else flags[key] = value;
+  }
+  // Power lessons share one pool of 3 a year: with the pool spent, the engine's own lesson gate stays shut.
+  if ((g.yearUses?.[LESSON_KEY] ?? 0) >= USES_PER_YEAR) flags.powerLesson = 1;
+  return { view: { ...g, flags }, gates };
+}
+
+function withGates(view: Game, out: Game, gates: Record<string, unknown>): { out: Game; gated: boolean } {
+  const gated = Object.keys(out.flags ?? {}).some((key) => isMonthGate(key) && !(key in view.flags));
+  const next: Game = { ...out, flags: { ...(gates as Game["flags"]), ...out.flags } };
+  if (out.flags?.powerLesson && !view.flags.powerLesson) next.yearUses = { ...(next.yearUses ?? {}), [LESSON_KEY]: (next.yearUses?.[LESSON_KEY] ?? 0) + 1 };
+  return { out: next, gated };
 }
 
 function relocate(d: Game, cityId: string): string {
   const city = cityById(cityId);
   if (city.id !== cityId || city.id === d.cityId) return " You were already here.";
   const cost = travelCost(d);
-  if (d.stats.money < cost || d.majorsLeft <= 0) return " The ticket window laughs.";
+  if (d.stats.money < cost || noTime(d, true)) return " The ticket window laughs.";
   spend(d);
   d.stats.money -= cost;
   d.city = city.name;
@@ -2947,7 +3008,25 @@ function fitAct(d: Game, id: string): Game {
 /** A heavy shift pays this share of the yearly wage (was 8%; with Life Flow running it every month it nearly doubled pay). */
 export const SHIFT_SHARE = 0.03;
 
+/**
+ * Do one thing. Under year pacing (the default) your own taps can repeat any option up to 3 times a year:
+ * the cap is checked and counted here, and the once-a-month gates are lifted for the tap.
+ */
 export function act(game: Game, id: string): Game {
+  if (!playerYear() || game.phase !== "live") return actCore(game, id);
+  const key = optionKey(game, id);
+  const used = key ? (game.yearUses?.[key] ?? 0) : 0;
+  if (key && used >= USES_PER_YEAR) return { ...game, card: { ...game.card, banner: [CAP_LINE] } };
+  const { view, gates } = stripGates(game);
+  const raw = actCore(view, id);
+  if (raw === view) return game;
+  const { out, gated } = withGates(view, raw, gates);
+  const did = out.majorsLeft < game.majorsLeft || (out.yearDebt ?? 0) > (game.yearDebt ?? 0) || out.phase !== game.phase || gated;
+  if (key && did) out.yearUses = { ...(out.yearUses ?? {}), [key]: used + 1 };
+  return out;
+}
+
+function actCore(game: Game, id: string): Game {
   if (game.phase !== "live") return game;
   const d = structuredClone(game);
   ensureProgress(d);
@@ -3024,7 +3103,7 @@ export function act(game: Game, id: string): Game {
     return d;
   }
   if (id.startsWith("econ|")) {
-    const res = econAct(d, id, d.majorsLeft);
+    const res = econAct(d, id, playerYear() ? blocksLeft(d) : d.majorsLeft);
     if (!res.ok) {
       d.card = { ...d.card, banner: [res.line] };
       return d;
@@ -4557,7 +4636,18 @@ export function applyHeroTalk(game: Game, heroId: string, line: string, reply: s
   return d;
 }
 
+/** What you can do now. Under year pacing each option carries its "n/3 this year" count and locks at 3. */
 export function actionsFor(g: Game): ActionItem[] {
+  if (!playerYear() || g.phase !== "live") return actionsCore(g);
+  return actionsCore(stripGates(g).view).map((a) => {
+    const key = optionKey(g, a.id);
+    if (!key) return a;
+    const uses = g.yearUses?.[key] ?? 0;
+    return uses >= USES_PER_YEAR ? { ...a, uses, cap: USES_PER_YEAR, disabled: CAP_LINE, accent: false } : { ...a, uses, cap: USES_PER_YEAR };
+  });
+}
+
+function actionsCore(g: Game): ActionItem[] {
   if (g.phase !== "live") return [];
   const items: ActionItem[] = [];
   const life = "life" as const;
@@ -4584,8 +4674,8 @@ export function actionsFor(g: Game): ActionItem[] {
   }
 
   if (g.age >= 1) {
-    items.push(item({ id: "rest", group: life, section: "This month", label: "Rest", detail: "Health and a little peace. Once a month.", disabled: g.flags.rested ? "You already rested." : undefined }));
-    if (g.age >= 45) items.push(item({ id: "mentor", group: life, section: "This month", label: "Mentor a rookie", detail: "Legacy and a little joy. Once a month.", disabled: g.flags.mentored ? "One rookie a month is plenty." : noTime(g, true), accent: g.age >= 60 && !g.flags.mentored }));
+    items.push(item({ id: "rest", group: life, section: "This month", label: "Rest", detail: PACING.year ? "Health and a little peace. Costs no time." : "Health and a little peace. Once a month.", disabled: g.flags.rested ? "You already rested." : undefined }));
+    if (g.age >= 45) items.push(item({ id: "mentor", group: life, section: "This month", label: "Mentor a rookie", detail: PACING.year ? "Legacy and a little joy." : "Legacy and a little joy. Once a month.", disabled: g.flags.mentored ? "One rookie a month is plenty." : noTime(g, true), accent: g.age >= 60 && !g.flags.mentored }));
   }
   if (g.hiddenGift && !g.preset && g.age >= 4) {
     const wait = omenWait(g);

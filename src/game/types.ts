@@ -456,6 +456,16 @@ export interface Game {
   focusPower: string | null;
   story: StoryState;
   majorsLeft: number;
+  /**
+   * Year pacing (2026-11-16): times you've done each option this year, by option key (see pacing.ts).
+   * Wiped at every birthday. Missing on older saves = nothing used yet.
+   */
+  yearUses?: Record<string, number>;
+  /**
+   * Year pacing: blocks of free time you've taken from later months of this year (you act now, your routine
+   * gets less later). Paid back month by month, wiped at the birthday.
+   */
+  yearDebt?: number;
   /** Life Flow: up to 3 everyday actions that fill the free time you don't spend yourself (in order). */
   routine?: string[];
   /** Life Flow: how far one Play tap goes. "auto" = a year as a kid, a season as a teen, a year from 18. */
@@ -579,6 +589,9 @@ export interface ActionItem {
   detail?: string;
   disabled?: string;
   accent?: boolean;
+  /** Year pacing: times used this year and the yearly cap, for the "2/3 this year" counter. */
+  uses?: number;
+  cap?: number;
 }
 
 export interface TrainingProject {
