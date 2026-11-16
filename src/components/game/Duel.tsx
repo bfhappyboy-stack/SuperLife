@@ -7,6 +7,7 @@ import { kitFor } from "@/components/game/duelKit";
 import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
 import { Cutout, Standee, familyOfPower, mysteryArtKey, stageArtKey } from "@/components/game/heroArt";
+import { outfitOf } from "@/game/outfit";
 import { stageScale } from "@/game/heroArt";
 import { streetCutKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
@@ -350,7 +351,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const heroFigure = hero?.legend && legendArt ? (
     <Standee src={legendArt} name={hero.legend.name} color={hero.legend.color} glow={heroAura} pose={mePose} />
   ) : mysteryCut ? (
-    <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} scale={stageScale(hero?.age ?? 24)} />
+    <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} scale={stageScale(hero?.age ?? 24)} outfit={hero ? outfitOf({ wardrobe: hero.wardrobe, suit: hero.suit }) : null} artKey={teenKey} />
   ) : mysteryArt ? (
     <Standee src={mysteryArt} name="You" color={heroAura} glow={heroAura} pose={mePose} />
   ) : (

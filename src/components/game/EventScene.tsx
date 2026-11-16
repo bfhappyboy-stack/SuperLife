@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import { hasArt } from "@/assets/art";
 import { Cutout, stageArtKey } from "@/components/game/heroArt";
+import { outfitOf } from "@/game/outfit";
 import { FAMILY_COLOR } from "@/components/game/icons";
 import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
@@ -71,7 +72,7 @@ export function EventScene({ game, prompt, eventId }: { game: Game; prompt: stri
       ) : cutKey ? (
         cut && (
           <span className="absolute top-3 bottom-0 block w-[70%] -translate-x-1/2" style={{ left: heroX }}>
-            <Cutout src={cut} name={game.name} glow={glow} pose="idle" scale={stageScale(game.age)} />
+            <Cutout src={cut} name={game.name} glow={glow} pose="idle" scale={stageScale(game.age)} outfit={outfitOf(game)} artKey={cutKey} />
           </span>
         )
       ) : (
