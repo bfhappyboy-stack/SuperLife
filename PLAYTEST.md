@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-16 am): the Closet's silent "on"
+
+**Played:** Closet and a duel against Rent at 390×844 from crafted saves (`/workspace/pt1116am/saves/`): veil (m) A with the long cape, veil (f) banner cape, arcane (f) long cape, storm (m) B and mind (f) B with capes, fire (m) with every slot filled. Before = the suits branch (port 8116), after = this branch (port 8120).
+
+**Before/after:** `/workspace/shots-1116am/before-after-cloak-capes.png` (top before, bottom after), `before-after-veil-m-duel.png`, `before-/after-fire-m-full-mask.png`, `before-/after-*-long-cape.png`.
+
+**Findings:**
+- **Capes on cloaked heroes did nothing (fixed):** the Closet said "Long cape is on" but the cutout never changed. The cape now shows as a mantle behind the painted cloak, in the Closet and in the duel. Reads well on veil, storm B and mind B; on arcane (f), whose robe already fills the frame, only the cape's edges and hem show, which is the intended look.
+- **Masks, hands, boots said "on" with no change (honest now):** the Closet says buffs only until their per-hero paintings land (image list `/workspace/img-requests-1116am.md`).
+- **B teen label:** already fixed on the night pass (reads "SUIT LINE B"). No console errors.
+
 ## Night pass (2026-11-15 night): the "Your call" screen and the B-teen Closet label
 
 **Played:** "Your call" event screens at 390×844 from crafted choice saves (`/workspace/pt1115night/saves/choice-*.json`): fire (m) 14 suit B, ice (f) 14 suit B with a parent named in the text, a 10-year-old (portrait), a God Mode Batman life (legend painting), and a 30-year-old with long text and five choices. The Closet was opened on fire (m) and storm (f) suit-B teens.

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-16 (am): no silent "on" in the Closet (`devbot/2026-11-16-am`)
+
+Built on `origin/devbot/2026-11-16-suits` (cd75144, itself on `main` 4f67c05), so this branch carries the unmerged suits work: merge this one PR alone. Each increment typechecked, linted (no new problems), `npm run test:game`, built and loaded at 390×844 before push. Shots: `/workspace/shots-1116am/`.
+
+### Increment 1: capes on cloaked heroes, and an honest Closet
+
+- **Audit:** every Closet piece was checked against what the painted hero shows. Suit colourways, suit lines and the 5 capes and 5 marks show. Two cases said "on" but changed nothing: (1) any cape on a hero painted in their own cloak or long coat (arcane, veil, and the mind, storm and life-f suit B lines, 37 paintings incl. teens and skin tones); (2) every mask, glove and boot (no paintings yet; they need per-hero layers).
+- **Cloaked heroes wear the cape:** the bought cape now hangs behind the painted cloak as a wider mantle, centred on the cloak and at least 12% wider than its hem (measured per painting: new `cl`/`cr` fields in `heroAnchors.ts`), so its coloured edges, lining and hem show past the cloak, in the Closet, fights and everywhere the cutout appears. Same painted cape art, no drawn shapes. Switch: `CLOAK_CAPES` in `src/game/outfit.ts` (off = named only, as before).
+- **Honest UI for masks, hands and boots:** new pure `partShows(slot, id, heroKey, hasArt)` in `outfit.ts` says whether the painting really shows a piece (a layer painted for that figure, or a generic painted cape/mark the game can fit). Where it doesn't, the Closet's slot reads "Buffs only for now · painted masks for your hero are on the way", and the worn note says the buffs count and the mirror names it but the painting doesn't show it yet. The moment a per-hero layer (`cut-<hero>-part-<slot>-<kind>`) lands, the piece draws and the notes go away. (A code recolour of the painted boots was tried and dropped: it read as a block of dye, not boots.)
+- **Mirror:** the figure stands above the caption now, so feet (and boots, once painted) aren't hidden behind it.
+- **Tests:** +1 (`outfit.test.ts`: every piece either shows or is reported as buffs-only; per-figure layers; every cloaked painting has its hem measured and shows a cape).
+
 ## 2026-11-16 (suits): the painted hero wears the Closet (`devbot/2026-11-16-suits`)
 
 Built on `main` (4f67c05, PR #8). Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game`, built and loaded at 390×844 before push.

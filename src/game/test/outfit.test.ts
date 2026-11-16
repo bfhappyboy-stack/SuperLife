@@ -153,3 +153,34 @@ test("painted skin-tone variants and parts are registered, anchored and picked b
   g.wardrobe = { owned: ["long-cape", "utility-belt"], worn: { cape: "long-cape", emblem: "utility-belt" } } as Game["wardrobe"];
   assert.deepEqual(outfitOf(g).layers.map((l) => [l.key, l.behind]), [["part-cape-long", true], ["part-emblem-belt", false]]);
 });
+
+test("2026-11-16 am: every Closet piece either shows on the painted hero or says it doesn't (no silent 'on')", async () => {
+  const { partShows, CLOAK_CAPES } = await import("../outfit.ts");
+  const { fitsIn, SLOTS } = await import("../costume.ts");
+  const { PART_FRAMES } = await import("../partFrames.ts");
+  // The asset table as the parts pass left it: the five capes and five marks are painted, nothing else.
+  const painted = new Set(Object.keys(PART_FRAMES));
+  const has = (key: string) => painted.has(key);
+  for (const slot of SLOTS) {
+    for (const item of fitsIn(slot)) {
+      const key = partKey(slot, item.id);
+      const shows = partShows(slot, item.id, "mystery-fire-m", has);
+      if (!key) assert.ok(shows, `${item.id}: bare pieces and suits always 'show'`);
+      else if (slot === "cape" || slot === "emblem") assert.ok(shows, `${item.id} is painted and fitted`);
+      else assert.equal(shows, false, `${item.id} has no painting yet, so the Closet must say "buffs only"`);
+    }
+  }
+  // A layer painted for one figure makes the piece show on that figure only.
+  painted.add("cut-mystery-fire-m-part-boots-rocket");
+  assert.ok(partShows("boots", "rocket-boots", "mystery-fire-m-s3", has), "a skin-tone repaint uses its base's own layer");
+  assert.equal(partShows("boots", "rocket-boots", "mystery-ice-f", has), false);
+  // Cloaked heroes (arcane, veil, suit B coats) wear a bought cape behind their painted cloak.
+  assert.ok(CLOAK_CAPES);
+  for (const hero of ["mystery-veil-m", "mystery-arcane-f", "mystery-storm-m-b", "mystery-mind-f-b-teen"]) {
+    const a = anchorOf(hero);
+    assert.ok(a?.cape, `${hero} is painted cloaked`);
+    assert.ok(a.cl != null && a.cr != null && a.cl < a.cr, `${hero} has its cloak's hem measured`);
+    assert.ok(partShows("cape", "long-cape", hero, has), `the long cape shows on ${hero}`);
+  }
+  for (const [key, a] of Object.entries(HERO_ANCHORS)) if (a.cape) assert.ok(a.cl != null && a.cr != null, `${key}: every cloaked painting has its hem measured`);
+});
