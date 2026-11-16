@@ -20,6 +20,8 @@ import {
   BRAND_UPS, brandLift, brandsOf, brandUpCost, chainOverhead, expandOptions, BRANCH_RAMP, type BrandView,
 } from "@/game/economy";
 import { cityById } from "@/game/data";
+import { PACING, USES_PER_YEAR, hasTime, usesOf } from "@/game/pacing";
+import { UseCount } from "@/components/game/UseCount";
 import type { Game } from "@/game/types";
 
 const UP = "#5fe08f";
@@ -336,7 +338,7 @@ function HomeTab({ game, e, run }: { game: Game; e: EconState; run: (id: string)
   const [share, setShare] = useState(20);
   const [confirm, setConfirm] = useState<string | null>(null);
   const [mods, setMods] = useState<string | null>(null);
-  const noMoves = game.majorsLeft <= 0;
+  const noMoves = !hasTime(game);
   const last = e.last;
   return (
     <div className="flex flex-col gap-3">
@@ -525,7 +527,7 @@ function RentPanel({ game, homeId, dist, noMoves, run }: { game: Game; homeId: s
       <Row label="Due today" value={fmt(q.cash)} />
       <Row label="Share of your pay" value={wage ? `${Math.round(q.burden * 100)}%` : "No pay yet"} tone={q.burden > 0.5 || !wage ? "bad" : q.burden > 0.35 ? undefined : "good"} />
       <button type="button" disabled={!q.ok || noMoves} onClick={() => run(`econ|rent|${homeId}|${dist}`)} className="btn btn-gold mt-1 !min-h-11 text-sm">
-        {noMoves ? "No free time left this month" : q.ok ? "Sign the lease" : q.why}
+        {noMoves ? (PACING.year ? "No free time left this year" : "No free time left this month") : q.ok ? "Sign the lease" : q.why}
       </button>
     </div>
   );
@@ -558,7 +560,7 @@ function BuyPanel({ game, homeId, dist, share, setShare, noMoves, run }: { game:
       <Row label="Upkeep" value={`${fmt(q.upkeep)}/mo`} />
       <p className="text-[11px] text-muted">Sell any time at market value, less {Math.round(SELL_FEE * 100)}% fees and what you still owe. A bigger deposit gets a better rate.</p>
       <button type="button" disabled={!q.ok || noMoves} onClick={() => run(`econ|buy|${homeId}|${dist}|${Math.max(MIN_DEPOSIT * 100, share)}`)} className="btn btn-gold mt-1 !min-h-11 text-sm">
-        {noMoves ? "No free time left this month" : q.ok ? `Buy · ${fmt(q.cash)} today` : q.why}
+        {noMoves ? (PACING.year ? "No free time left this year" : "No free time left this month") : q.ok ? `Buy · ${fmt(q.cash)} today` : q.why}
       </button>
     </div>
   );
@@ -613,7 +615,7 @@ function OwnedCard({ game, e, h, run, confirm, setConfirm, mods, setMods }: { ga
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {!living && here && (
-          <button type="button" disabled={game.majorsLeft <= 0} onClick={() => run(`econ|movein|${h.uid}`)} className="btn btn-gold !min-h-11 !px-3 text-xs">
+          <button type="button" disabled={!hasTime(game)} onClick={() => run(`econ|movein|${h.uid}`)} className="btn btn-gold !min-h-11 !px-3 text-xs">
             Move in
           </button>
         )}
@@ -918,8 +920,8 @@ function BusinessTab({ game, e, run }: { game: Game; e: EconState; run: (id: str
                   </p>
                 </div>
               </div>
-              <button type="button" disabled={!q.ok || game.majorsLeft <= 0} onClick={() => run(`econ|biz|found|${def.id}`)} className="btn btn-gold mt-2.5 !min-h-11 w-full text-sm">
-                {q.ok ? (game.majorsLeft > 0 ? `Open it · ${fmt(def.cost)}` : "No free time left this month") : q.why}
+              <button type="button" disabled={!q.ok || !hasTime(game)} onClick={() => run(`econ|biz|found|${def.id}`)} className="btn btn-gold mt-2.5 !min-h-11 w-full text-sm">
+                {q.ok ? (hasTime(game) ? `Open it · ${fmt(def.cost)}` : (PACING.year ? "No free time left this year" : "No free time left this month")) : q.why}
               </button>
             </article>
           );
@@ -1072,8 +1074,9 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
       )}
       {!def.empire && (
         <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" disabled={game.majorsLeft <= 0 || b.cityId !== game.cityId} onClick={() => run(`econ|biz|shift|${b.uid}`)} className="btn btn-ghost !min-h-11 !px-3 text-xs">
+          <button type="button" disabled={!hasTime(game) || b.cityId !== game.cityId || (PACING.year && usesOf(game, `econ|biz|shift|${b.uid}`) >= USES_PER_YEAR)} onClick={() => run(`econ|biz|shift|${b.uid}`)} className="btn btn-ghost !min-h-11 !gap-1.5 !px-3 text-xs">
             Work a shift
+            <UseCount uses={usesOf(game, `econ|biz|shift|${b.uid}`)} />
           </button>
           <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="btn btn-ghost !min-h-11 !px-3 text-xs">
             Books
@@ -1197,7 +1200,7 @@ function Roommates({ game, run }: { game: Game; run: (id: string) => void }) {
               <div className="stat-bar !h-1.5 flex-1" aria-label={`Closeness ${person?.closeness ?? 0}`}>
                 <div className="stat-fill" style={{ width: `${person?.closeness ?? 0}%`, "--fill": "#ff8fd0" } as CSSProperties} />
               </div>
-              <button type="button" disabled={game.majorsLeft <= 0} onClick={() => run(`econ|mate|hang|${mate.pid}`)} className="btn btn-ghost !min-h-11 !px-3 text-xs">
+              <button type="button" disabled={!hasTime(game) || (PACING.year && usesOf(game, `econ|mate|hang|${mate.pid}`) >= USES_PER_YEAR)} onClick={() => run(`econ|mate|hang|${mate.pid}`)} className="btn btn-ghost !min-h-11 !px-3 text-xs">
                 Hang out
               </button>
               {confirm === mate.pid ? (
@@ -1359,8 +1362,8 @@ function ExpandPicker({ game, site, run }: { game: Game; site: Biz; run: (id: st
                 </p>
                 {!o.ok && o.why && <p className="text-[11px] font-semibold text-gold">{o.why}</p>}
               </div>
-              <button type="button" disabled={!o.ok || game.majorsLeft <= 0} onClick={() => { run(`econ|biz|expand|${site.uid}|${o.cityId}`); setOpenList(false); }} className="btn btn-gold !min-h-11 shrink-0 !px-3 text-xs">
-                {o.ok ? (game.majorsLeft > 0 ? "Open" : "No time") : o.why?.startsWith("You need") ? "Short" : "Wait"}
+              <button type="button" disabled={!o.ok || !hasTime(game)} onClick={() => { run(`econ|biz|expand|${site.uid}|${o.cityId}`); setOpenList(false); }} className="btn btn-gold !min-h-11 shrink-0 !px-3 text-xs">
+                {o.ok ? (hasTime(game) ? "Open" : "No time") : o.why?.startsWith("You need") ? "Short" : "Wait"}
               </button>
             </li>
           ))}
