@@ -14,6 +14,7 @@ import { bizById, econOf, periodReport } from "./economy";
 import { firstName, MONTHS } from "./format";
 import { MIX_AGE } from "./mentors";
 import { fastForward, playMonth, ROUTINE, stopFor } from "./skip";
+import { PACING } from "./pacing";
 import { tieNews } from "./ties";
 import { careNews, maskNews, saleNews } from "./mask";
 import type { Game, Pace, SkipReport } from "./types";
@@ -31,6 +32,8 @@ export type Step = "month" | "season" | "year";
 export function stepOf(g: Pick<Game, "age" | "pace">): Step {
   const pace = g.pace ?? "auto";
   if (pace !== "auto") return pace;
+  // 2026-11-16 (year pacing): every option 3 times a year, then you Age up a whole year at a time, at any age.
+  if (PACING.year) return "year";
   // 2026-11-10 eve ("make it interrupt less"): grown-ups move a year a tap too; teens keep the season.
   return g.age < KID_UNTIL || g.age >= ADULT_FROM ? "year" : "season";
 }
@@ -48,6 +51,7 @@ export function stepLabel(g: Game): { title: string; sub: string } {
   const step = stepOf(g);
   const months = stepMonths(g);
   if (step === "month") return { title: g.month === 11 ? `New year · age ${g.age + 1}` : "Next month", sub: MONTHS[(g.month + 1) % 12] ?? "" };
+  if (PACING.year && (step === "year" || g.month + months >= 12)) return { title: `Age up to ${g.age + 1}`, sub: `${months} month${months === 1 ? "" : "s"}` };
   if (step === "year" || g.month + months >= 12) return { title: `Play to age ${g.age + 1}`, sub: `${months} month${months === 1 ? "" : "s"}` };
   const from = MONTHS[(g.month + 1) % 12]?.slice(0, 3) ?? "";
   const to = MONTHS[(g.month + months) % 12]?.slice(0, 3) ?? "";
