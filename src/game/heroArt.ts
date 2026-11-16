@@ -130,3 +130,24 @@ export function crimeVillainKey(eventId: string, age = 0, month = 0): { key: str
   const power = pool[h % pool.length];
   return { key: streetCutKey(power === "street" ? null : power), power: power === "street" ? null : power };
 }
+
+/**
+ * Painted portrait standees (2026-11-16 night). Where no suit painting fits (a kid under 13 with a fresh power, a
+ * powerless life, a saved life with no power family in the Arena), the stage used to fall back to the drawn paper doll
+ * (a toy-like SVG) or a drawn silhouette poster. They now stand in as their own painted portrait in a lit fighter card,
+ * the same face the Closet, the header and the "Your call" scene show. Off = the doll and the silhouette come back.
+ */
+export const PORTRAIT_STANDEES = true;
+
+/** The seed a saved Arena life was snapshotted with is `portrait * 7919 + slot` (arena.lives.ts); this gets the face back. */
+export const LIFE_SEED_MUL = 7919;
+export function lifePortraitSeed(seed: number | null | undefined): number {
+  const s = Math.abs(Math.trunc(seed ?? 0));
+  return Math.floor(s / LIFE_SEED_MUL) || s || 1;
+}
+
+/** How tall a portrait standee stands next to a grown fighter: a 7-year-old 0.74, 12 → 0.84, 13+ as the suit (`stageScale`). */
+export function standeeScale(age: number): number {
+  if (age >= TEEN_STAGE_AGE) return stageScale(age);
+  return Math.min(0.84, Math.max(0.74, 0.74 + (age - 7) * 0.02));
+}

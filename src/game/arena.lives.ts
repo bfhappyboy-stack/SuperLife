@@ -1,4 +1,4 @@
-import { ensureSuit } from "./heroArt";
+import { ensureSuit, LIFE_SEED_MUL } from "./heroArt";
 /**
  * Saved lives in the Arena: any living hero with a power (age 14+) can be drafted as themselves.
  * Their equipped six come along, re-priced to Arena numbers so a level-90 veteran doesn't one-shot
@@ -74,7 +74,7 @@ export function fighterFromLife(slot: number, game: Game): ArenaFighter | null {
     passive,
     moves,
     tint: { suit: "#2a3a5a", trim: "#e6b34d", mask: "domino" },
-    seed: game.portrait * 7919 + slot,
+    seed: game.portrait * LIFE_SEED_MUL + slot,
     life: { look: game.look, wardrobe: game.wardrobe, age: game.age, sex: game.sex, suit: ensureSuit({ suit: game.suit, name: game.name, portrait: game.portrait }), ...(game.suitPicked ? { suitPicked: true } : {}) },
     custom: true,
   };
