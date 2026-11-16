@@ -66,7 +66,7 @@ export function Portrait({
     );
     if (!PHOTO_FACES) return bust;
     return (
-      <PhotoFace seed={h} age={age} sex={body} look={face} cape={cape} feature={look && typeof look.feature === "number" ? look.feature : null} className={className} fallback={<span className={`photo-wait relative block overflow-hidden rounded-[26%] bg-[#141a26] ${className}`} aria-hidden />}>
+      <PhotoFace seed={h} age={age} sex={body} look={face} cape={cape} feature={look && typeof look.feature === "number" ? look.feature : null} eyes={look && typeof look.eyes === "number" ? look.eyes : null} className={className} fallback={<span className={`photo-wait relative block overflow-hidden rounded-[26%] bg-[#141a26] ${className}`} aria-hidden />}>
         {rank >= 4 && <span className="absolute right-0.5 bottom-0.5 grid size-[28%] max-h-5 max-w-5 place-items-center rounded-full bg-gold text-[9px] leading-none text-ink shadow" aria-hidden>★</span>}
       </PhotoFace>
     );

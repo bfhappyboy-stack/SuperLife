@@ -4,7 +4,9 @@
  * one chunk each; until a sheet arrives the SVG bust (`fallback`) shows instead.
  */
 import { useEffect, useId, useState, type ReactNode } from "react";
-import { FEATURE, pickPortrait, type AgeBand, type PortraitMeta, type Sheet } from "@/game/portraits";
+import { FEATURE, pickPortrait, portraitVariantKeys, variantHasFeature, type AgeBand, type PortraitMeta, type Sheet } from "@/game/portraits";
+import { hasArt } from "@/assets/art";
+import { useArt } from "@/components/game/Scene";
 import type { Look, Sex } from "@/game/types";
 
 const LOADERS: Record<Sheet, () => Promise<{ default: Record<string, string> }>> = {
@@ -38,6 +40,7 @@ export function PhotoFace({
   look,
   cape = false,
   feature = null,
+  eyes = null,
   className = "h-16 w-16",
   fallback,
   children,
@@ -50,6 +53,8 @@ export function PhotoFace({
   /** The life's own creator face feature (look.feature), only for a player's life: prefers a portrait painted with it,
    * else lays freckles or a scar on softly (FACE_MARKS). Random NPC rolls never pass this, so their faces don't move. */
   feature?: number | null;
+  /** The life's own creator eye colour (look.eyes), player's life only: picks a painted variant when one exists. */
+  eyes?: number | null;
   className?: string;
   fallback?: ReactNode;
   children?: ReactNode;
@@ -63,17 +68,25 @@ export function PhotoFace({
       alive = false;
     };
   }, [meta.sheet]);
-  const src = table?.[meta.id];
+  // A painted variant of this same face with the life's feature or eyes (2026-11-16 am), when one exists.
+  const variant = PORTRAIT_VARIANTS ? (portraitVariantKeys(meta, feature, eyes).find((key) => hasArt(key)) ?? "") : "";
+  const variantSrc = useArt(variant);
+  const base = table?.[meta.id];
+  const src = (variant && variantSrc) || base;
   if (!src) return <>{fallback}</>;
+  const painted = !!variant && !!variantSrc && typeof feature === "number" && variantHasFeature(variant, feature);
   return (
-    <span className={`relative block overflow-hidden rounded-[26%] bg-[#141a26] ${className}`} data-portrait={meta.id}>
+    <span className={`relative block overflow-hidden rounded-[26%] bg-[#141a26] ${className}`} data-portrait={meta.id} data-variant={variant && variantSrc ? variant : undefined}>
       <img src={src} alt="" draggable={false} decoding="async" className="block size-full object-cover object-top" />
-      {FACE_MARKS && typeof feature === "number" && <FaceMarks meta={meta} feature={feature} seed={seed} />}
+      {FACE_MARKS && typeof feature === "number" && !painted && <FaceMarks meta={meta} feature={feature} seed={seed} />}
       <span className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.14),inset_0_-14px_18px_-12px_rgb(0_0_0/0.55)]" aria-hidden />
       {children}
     </span>
   );
 }
+
+/** Painted variants of a portrait (same face, the life's feature or eye colour painted in). Off = the base portrait. */
+export const PORTRAIT_VARIANTS = true;
 
 /** Soft freckles and a healed scar laid on a painted portrait for a life that picked them (2026-11-16). Off = portraits only. */
 export const FACE_MARKS = true;
