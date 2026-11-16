@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-16 (pm): your skin tone picks the suit line (`devbot/2026-11-16-pm`)
+
+Built on `origin/devbot/2026-11-16-am` (f6b898a, itself on the unmerged suits branch cd75144), so this branch carries both: merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (380), built and loaded at 390×844 before push. Shots: `/workspace/shots-1116pm/`.
+
+- **The bug:** suit A is painted in all four skin tones for most heroes, but suit B (and every teen suit) only in one, and each life's suit line is rolled at birth. So a dark-skinned storm (m) life that rolled B was drawn as a light-skinned man, while his A painting in his own tone sat unused. The creator's skin pick looked ignored.
+- **Fix:** until you pick a line yourself in the Closet, your life wears the line painted closest to your creator skin tone (ties keep the rolled line). Once you tap a line it's yours for good, even if it's the one you were already wearing. Teens use the same line they'll grow into. Applies everywhere your hero is drawn (Closet, duels, the "Your call" scene, the gift card, Arena cards of your saved lives). Pure `wornLine` in `src/game/outfit.ts`, UI helper `lifeLine` in `src/components/game/lifeLine.ts`; switch `TONE_PICKS_LINE` (off = the rolled line, as before).
+- **Honest label:** when the painting you wear isn't in your skin tone yet (suit B, and all teen suits), the Closet's Suit tab says so: "Your teen A suit is painted in light skin so far. Your dark skin tone painting is on the way." No silent mismatch.
+- **Saves:** new optional `Game.suitPicked` (missing on old saves = not picked, so older lives with a mismatched line now show the line in their tone; a line picked in the Closet before this pass is treated as unpicked once, since the save never recorded it). Arena life snapshots carry it.
+- **Images:** teen tone repaints are now the biggest gap. 54 teen suit-A prompts, then the B list: `/workspace/img-requests-1116pm.md` (top priority still storm-m-s1, arcane-f-s3 and glasses from `/workspace/img-requests-1116am.md`). No code needed when they land.
+- **Tests:** +3 (`toneline.test.ts`: the tone picks the line, a pick always wins, never further from your tone than the rolled line across every hero and tone, teen tone keys).
+
 ## 2026-11-16 (am): no silent "on" in the Closet (`devbot/2026-11-16-am`)
 
 Built on `origin/devbot/2026-11-16-suits` (cd75144, itself on `main` 4f67c05), so this branch carries the unmerged suits work: merge this one PR alone. Each increment typechecked, linted (no new problems), `npm run test:game`, built and loaded at 390×844 before push. Shots: `/workspace/shots-1116am/`.
