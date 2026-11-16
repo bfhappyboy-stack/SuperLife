@@ -8,11 +8,12 @@ import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
 import { Cutout, Standee, familyOfPower, mysteryArtKey, stageArtKey } from "@/components/game/heroArt";
 import { outfitOf, toneOf } from "@/game/outfit";
-import { stageScale } from "@/game/heroArt";
+import { PORTRAIT_STANDEES, stageScale, standeeScale } from "@/game/heroArt";
+import { PortraitPoster } from "@/components/game/PortraitStandee";
 import { streetCutKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
-import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, FX_HITSTOP, HITSTOP_CRIT_MS, HITSTOP_MS, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
@@ -142,6 +143,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const [shot, setShot] = useState<Shot | null>(null);
   const [lunge, setLunge] = useState<{ key: number; side: Side } | null>(null);
   const [impact, setImpact] = useState<Impact | null>(null);
+  const [stop, setStop] = useState(0);
   const [heal, setHeal] = useState<{ key: number; amount: number } | null>(null);
   const [quake, setQuake] = useState<{ key: number; color: string } | null>(null);
   const [banner, setBanner] = useState<PhaseBanner | null>(null);
@@ -211,6 +213,11 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
     setShot(null);
     (on === "me" ? setMePose : setFoePose)(amount > 0 ? (guarded ? "guard" : "hit") : "guard");
     if (big) setQuake({ key, color: on === "foe" ? "#ffffff" : "#ff3b30" });
+    // Hit-stop: the struck frame holds for a beat before the recoil and shake play.
+    if (big && FX_HITSTOP && amount > 0) {
+      setStop(key);
+      later(crit ? HITSTOP_CRIT_MS : HITSTOP_MS, () => setStop((k) => (k === key ? 0 : k)));
+    }
   }
 
   function showPhase(kind: "phase" | "revive" | "phase3") {
@@ -354,6 +361,11 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
     <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} scale={stageScale(hero?.age ?? 24)} outfit={hero ? outfitOf({ wardrobe: hero.wardrobe, suit: hero.suit }) : null} artKey={teenKey} />
   ) : mysteryArt ? (
     <Standee src={mysteryArt} name="You" color={heroAura} glow={heroAura} pose={mePose} />
+  ) : PORTRAIT_STANDEES && hero ? (
+    // No suit painting fits (under 13, powerless, no power family): your painted portrait in a lit fighter card.
+    <Standee name="You" color={heroAura} glow={heroAura} pose={mePose} scale={standeeScale(hero.age)} kind="portrait">
+      <PortraitPoster seed={hero.seed} age={hero.age} sex={hero.sex ?? "male"} look={hero.look} accent={heroAura} city={hero.city} mine />
+    </Standee>
   ) : (
     <Figure
       seed={hero?.seed ?? 11}
@@ -449,7 +461,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
       </div>
       {gimmick && <GimmickStrip gimmick={gimmick} live={live} status={status} state={hud} next={fight.phase3 && hud.phase === 2 ? (fight.phase3.at ?? PHASE3_AT) : null} third={hud.phase === 3} />}
 
-      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[184px]" : "h-[226px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[184px]" : "h-[226px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""} ${stop ? "fx-hitstop" : ""}`} data-hitstop={stop ? "on" : undefined}>
         {stageArt && (
           <>
             <img src={stageArt} alt="" className="anim-fade absolute inset-0 size-full object-cover object-[50%_62%] opacity-70 saturate-[0.85]" draggable={false} aria-hidden />

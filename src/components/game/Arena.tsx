@@ -14,6 +14,8 @@ import { Figure, type Pose } from "@/components/game/Figure";
 import { LifeHeroArt } from "@/components/game/LifeHeroArt";
 import { toneOf } from "@/game/outfit";
 import { Standee, mysteryArtKey } from "@/components/game/heroArt";
+import { PortraitPoster } from "@/components/game/PortraitStandee";
+import { lifePortraitSeed, PORTRAIT_STANDEES } from "@/game/heroArt";
 import { lifeLine } from "@/components/game/lifeLine";
 import { ComboPips, StatusIcon, StatusPills, StrikeBanner } from "@/components/game/BattleHud";
 import { hasStatus, INTERRUPT_MIN, STATUSES, statusOfMove } from "@/game/battle";
@@ -167,7 +169,7 @@ export function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%"
       ) : !f.custom && hasVillainArt(f.id) ? (
         <VillainArt id={f.id} color={f.color} crop={crop ?? (headCrop(focus) ? "head" : "card")} />
       ) : f.life ? (
-        <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} suit={f.life ? lifeLine(f.life, f.family, f.life.sex) : undefined} tone={toneOf(f.life?.look)} accent={f.color} className={headCrop(focus) ? "life-head" : ""} />
+        <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} suit={f.life ? lifeLine(f.life, f.family, f.life.sex) : undefined} tone={toneOf(f.life?.look)} accent={f.color} className={headCrop(focus) ? "life-head" : ""} face={f.life} head={headCrop(focus)} />
       ) : (
         <>
           {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-40 saturate-50" />}
@@ -185,6 +187,12 @@ export function FighterFigure({ f, pose, label }: { f: ArenaFighter; pose: Pose;
   // 2026-11-11 art pass: saved Mystery lives and hero-side fighters without a painting stand in as a painted card.
   const painted = useArt(f.life || f.side === "hero" ? mysteryArtKey(f.family ?? null, f.life?.sex ?? f.sex, 30, f.life ? lifeLine(f.life, f.family, f.life.sex) : undefined, toneOf(f.life?.look)) : "");
   if (painted) return <Standee src={painted} name={label ?? f.name} color={f.color} glow={f.color} pose={pose} />;
+  if (f.life && PORTRAIT_STANDEES)
+    return (
+      <Standee name={label ?? f.name} color={f.color} glow={f.color} pose={pose} kind="portrait">
+        <PortraitPoster seed={lifePortraitSeed(f.seed)} age={f.life.age} sex={f.life.sex} look={f.life.look} accent={f.color} mine />
+      </Standee>
+    );
   if (f.life) return <Figure seed={f.seed ?? 7} age={Math.max(18, f.life.age)} sex={f.life.sex} look={f.life.look} wardrobe={f.life.wardrobe} aura={f.color} bare pose={pose} label={label ?? f.name} />;
   return (
     <Figure
@@ -1088,7 +1096,7 @@ function DuelCard({ f, side, lunging, pose, hitKey }: { f: ArenaFighter; side: S
         ) : !f.custom && hasVillainArt(f.id) ? (
           <VillainArt id={f.id} color={f.color} />
         ) : f.life ? (
-          <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} suit={f.life ? lifeLine(f.life, f.family, f.life.sex) : undefined} tone={toneOf(f.life?.look)} accent={f.color} />
+          <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} suit={f.life ? lifeLine(f.life, f.family, f.life.sex) : undefined} tone={toneOf(f.life?.look)} accent={f.color} face={f.life} />
         ) : (
           <>
             {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-55 saturate-[.7]" />}

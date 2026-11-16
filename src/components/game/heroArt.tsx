@@ -11,6 +11,7 @@ import type { Tone } from "@/game/portraits";
 import type { HeroAnchor } from "@/game/heroAnchors";
 import { PART_FRAMES } from "@/game/partFrames";
 import { CLOAK_CAPES, CLOAK_WIDEN } from "@/game/outfit";
+import { FX_HITSTOP } from "@/components/game/Vfx";
 import type { Pose } from "@/components/game/Figure";
 import { hasArt } from "@/assets/art";
 import { mysteryKey, stageKeys, suitKeys, type Suit } from "@/game/heroArt";
@@ -34,12 +35,12 @@ export function stageArtKey(family: CapeFamily | null | undefined, sex: Sex | un
 }
 
 /** A painted fighter card on the duel stage, with the same pose cues the paper doll had. */
-export function Standee({ src, name, color, glow, pose, flip, children }: { src?: string; name: string; color: string; glow: string; pose: Pose; flip?: boolean; children?: ReactNode }) {
+export function Standee({ src, name, color, glow, pose, flip, scale = 1, kind, children }: { src?: string; name: string; color: string; glow: string; pose: Pose; flip?: boolean; scale?: number; kind?: string; children?: ReactNode }) {
   return (
-    <div className="flex h-full w-full items-end justify-center" style={flip ? { transform: "scaleX(-1)" } : undefined} role="img" aria-label={name}>
+    <div className="flex h-full w-full items-end justify-center" style={flip ? { transform: "scaleX(-1)" } : undefined} role="img" aria-label={name} data-standee={kind ?? "card"}>
       <div
         className={`duel-standee relative aspect-[3/4.4] h-[98%] w-auto max-w-none shrink-0 overflow-hidden rounded-2xl border-2 ${pose === "hit" ? "duel-standee-hit" : ""} ${pose === "attack" ? "duel-standee-attack" : ""} ${pose === "ko" ? "grayscale" : ""}`}
-        style={{ borderColor: color, boxShadow: `0 10px 28px -10px ${glow}, inset 0 0 0 1px rgb(255 255 255 / 0.12)` }}
+        style={{ borderColor: color, boxShadow: `0 10px 28px -10px ${glow}, inset 0 0 0 1px rgb(255 255 255 / 0.12)`, height: scale < 1 ? `${98 * scale}%` : undefined }}
       >
         {children ?? (src ? <img src={src} alt="" className="size-full object-cover object-top" draggable={false} /> : null)}
         {pose === "guard" && <span className="absolute inset-0 rounded-2xl border-4 border-[#4dd8ff]/70 shadow-[inset_0_0_24px_#4dd8ff88]" aria-hidden />}
@@ -47,6 +48,7 @@ export function Standee({ src, name, color, glow, pose, flip, children }: { src?
           {name}
         </span>
       </div>
+      {pose === "ko" && FX_HITSTOP && <KoDust glow={glow} />}
     </div>
   );
 }
@@ -63,6 +65,7 @@ export function Cutout({ src, name, glow, pose, flip, scale = 1, outfit, artKey 
   return (
     <div className="relative flex h-full w-full items-end justify-center" role="img" aria-label={name}>
       <span className="cut-shadow pointer-events-none absolute bottom-[1%] left-1/2 h-[9%] w-[78%] -translate-x-1/2 rounded-[50%]" style={{ background: `radial-gradient(closest-side, rgb(0 0 0 / 0.75), color-mix(in srgb, ${glow} 25%, transparent) 70%, transparent)` }} aria-hidden />
+      {pose === "ko" && FX_HITSTOP && <KoDust glow={glow} />}
       {dressed ? (
         <HeroFigure src={src} artKey={artKey ?? ""} outfit={outfit!} glow={glow} flip={flip} className={`cut-fig relative h-[96%] ${poseClass}`} style={{ height: scale < 1 ? `${96 * scale}%` : undefined }} />
       ) : (
@@ -75,6 +78,21 @@ export function Cutout({ src, name, glow, pose, flip, scale = 1, outfit, artKey 
         />
       )}
     </div>
+  );
+}
+
+/** A puff of dust where a fighter goes down (2026-11-16 night): soft, warm grey, a touch of their light, after the fall lands. */
+function KoDust({ glow }: { glow: string }) {
+  return (
+    <span className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4" data-ko-dust aria-hidden>
+      {([[-1, 0], [1, 0.06], [-0.4, 0.12], [0.5, 0.18]] as const).map(([dir, delay], i) => (
+        <span
+          key={i}
+          className="ko-dust"
+          style={{ "--dx": `${dir * 8}%`, "--dr": `${dir * 34}%`, "--glow": glow, animationDelay: `${0.4 + delay}s`, width: `${i < 2 ? 72 : 52}%` } as CSSProperties}
+        />
+      ))}
+    </span>
   );
 }
 
