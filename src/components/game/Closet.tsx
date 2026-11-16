@@ -5,7 +5,7 @@ import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
 import { hasArt } from "@/assets/art";
 import { ART_HEROES, SUIT_LOCKED, stageScale, suitOfKey } from "@/game/heroArt";
-import { outfitOf, PAINTED_SUIT, partKey, toneOf } from "@/game/outfit";
+import { anchorOf, outfitOf, PAINTED_SUIT, partKey, toneOf } from "@/game/outfit";
 import { presetById } from "@/game/presets";
 import { Check, Lock, X } from "lucide-react";
 import { FAMILY_COLOR } from "@/components/game/icons";
@@ -230,6 +230,12 @@ function SuitLines({ game, onAct }: { game: Game; onAct: (id: string, notice: st
 function PartNote({ game, slot }: { game: Game; slot: CostumeSlot }) {
   const id = game.wardrobe?.worn?.[slot];
   const key = id ? partKey(slot, id) : "";
-  if (!key || hasArt(key)) return null;
+  if (!key) return null;
+  if (hasArt(key)) {
+    if (slot !== "cape") return null;
+    const art = presetById(game.preset) ? "" : stageArtKey(capeTheme(game).cape, game.sex, game.age, game.suit, toneOf(game.look));
+    if (!anchorOf(art)?.cape) return null;
+    return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{fitById(id)?.name} is on. Your hero's painted cloak already covers the back, so the cape is named on the mirror instead of drawn over it.</p>;
+  }
   return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{fitById(id)?.name} is on and named on the mirror. Its painting on your hero is on the way.</p>;
 }

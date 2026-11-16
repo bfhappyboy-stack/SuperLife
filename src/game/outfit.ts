@@ -130,9 +130,10 @@ export function toneSuffix(tone: Tone): string {
   return `-s${TONES.indexOf(tone) + 1}`;
 }
 
+/** Anchors for a painting: a skin-tone variant has its own row (repaints frame a little differently), else its base's. */
 export function anchorOf(key: string): HeroAnchor | null {
-  const base = key.replace(/^cut-/, "").replace(/-s[1-4]$/, "");
-  return HERO_ANCHORS[base] ?? null;
+  const own = key.replace(/^cut-/, "");
+  return HERO_ANCHORS[own] ?? HERO_ANCHORS[own.replace(/-s[1-4]$/, "")] ?? null;
 }
 
 /** The tone a painting was painted in (variants say it in their name; base paintings in heroAnchors.ts). */

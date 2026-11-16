@@ -9,6 +9,7 @@ import { useArt } from "@/components/game/Scene";
 import { anchorOf, toneKeys, type Outfit, type PartLayer } from "@/game/outfit";
 import type { Tone } from "@/game/portraits";
 import type { HeroAnchor } from "@/game/heroAnchors";
+import { PART_FRAMES } from "@/game/partFrames";
 import type { Pose } from "@/components/game/Figure";
 import { hasArt } from "@/assets/art";
 import { mysteryKey, stageKeys, suitKeys, type Suit } from "@/game/heroArt";
@@ -141,25 +142,71 @@ export function HeroFigure({ src, artKey, outfit, glow, flip, className = "", st
 
 /**
  * One painted part. A layer painted for this exact figure (`cut-<hero>-part-<slot>-<kind>`, full frame, registered to
- * the cutout) wins; otherwise a generic painted part (`part-<slot>-<kind>`) placed on the painting's anchors. Nothing
- * shows until a painting exists.
+ * the cutout) wins; otherwise a generic painted part (`part-<slot>-<kind>`) fitted to the painting's anchors:
+ * - capes behind the hero, the cape's measured shoulder band laid on the hero's measured shoulders (a touch wider),
+ *   capped so the hem stops at the ankles;
+ * - a belt or buckle across the waist, a badge or brand on the chest, a sash from one shoulder across to the other hip.
+ * Nothing shows until a painting exists.
  */
 function PartArt({ layer, artKey, anchor }: { layer: PartLayer; artKey: string; anchor: HeroAnchor | null }) {
   const own = artKey ? `cut-${artKey.replace(/-s[1-4]$/, "")}-${layer.key}` : "";
   const ownArt = useArt(own && hasArt(own) ? own : "");
   const generic = useArt(!ownArt && hasArt(layer.key) ? layer.key : "");
   if (ownArt) return <img src={ownArt} alt="" draggable={false} className="pointer-events-none absolute inset-0 block size-full" data-part={own} />;
-  if (!generic) return null;
-  const a = anchor ?? { top: 0, bottom: 1, neck: 0.15, shoulder: 0.2, sl: 0.3, sr: 0.7, hx: 0.5 };
-  const span = Math.max(0.2, a.sr - a.sl);
-  const place: Record<PartLayer["anchor"], CSSProperties> = {
-    // Generic capes are painted with the shoulder line at 10% height across the middle 40% of the canvas (IMAGES.md).
-    back: { left: `${(a.sl - span * 0.75) * 100}%`, width: `${span * 250}%`, top: `${a.shoulder * 100}%`, transform: "translateY(-10%)" },
-    chest: { left: `${a.hx * 100}%`, width: `${span * 34}%`, top: `${(a.shoulder + (a.bottom - a.top) * 0.07) * 100}%`, transform: "translate(-50%, -50%)" },
-    waist: { left: `${a.hx * 100}%`, width: `${span * 80}%`, top: `${(a.top + (a.bottom - a.top) * 0.43) * 100}%`, transform: "translate(-50%, -50%)" },
-    face: { display: "none" },
-    hands: { display: "none" },
-    feet: { display: "none" },
+  if (!generic || !anchor) return null;
+  const place = partPlace(layer.key, anchor);
+  if (!place) return null;
+  return <img src={generic} alt="" draggable={false} className="pointer-events-none absolute block max-w-none" style={place} data-part={layer.key} />;
+}
+
+const pct = (n: number) => `${Math.round(n * 10000) / 100}%`;
+
+/** Where a generic part sits in a hero cutout's box (all fractions of that box), or null for parts with no generic fit. */
+function partFit(key: string, a: HeroAnchor): { left: number; top: number; width: number; height: number; rotate?: number } | null {
+  const f = PART_FRAMES[key];
+  if (!f) return null;
+  const aspect = f.h / f.w; // part height per unit width (px)
+  // Box height per unit part width, in box-height fractions: a part w wide (box fraction) is w * ar * aspect tall.
+  const tall = (w: number) => w * a.ar * aspect;
+  if (key.startsWith("part-cape-")) {
+    const band = f.band ?? 0.07;
+    const bandW = Math.max(0.2, (f.sr ?? 0.75) - (f.sl ?? 0.25));
+    let width = (a.sw * 1.1) / bandW;
+    const room = (a.bottom - a.sy) * 0.97;
+    if (tall(width) * (1 - band) > room) width *= room / (tall(width) * (1 - band));
+    const height = tall(width);
+    const mid = ((f.sl ?? 0.25) + (f.sr ?? 0.75)) / 2;
+    return { left: a.cx - mid * width, top: a.sy - band * height - 0.004, width, height };
+  }
+  if (key === "part-emblem-belt" || key === "part-emblem-buckle") {
+    const width = a.ww * (key === "part-emblem-belt" ? 1.1 : 1.0);
+    const height = tall(width);
+    return { left: a.wx - width / 2, top: a.wy - height / 2, width, height };
+  }
+  if (key === "part-emblem-badge" || key === "part-emblem-brand") {
+    const width = a.sw * (key === "part-emblem-badge" ? 0.24 : 0.3);
+    const height = tall(width);
+    return { left: a.cx - width / 2, top: a.cy - height / 2, width, height };
+  }
+  if (key === "part-emblem-sash") {
+    // From the shoulder line down to just past the belt; the painted strip runs corner to corner.
+    const height = a.wy - a.sy + 0.05;
+    const width = height / (a.ar * aspect);
+    return { left: a.cx - width / 2, top: a.sy - 0.005, width, height };
+  }
+  return null;
+}
+
+function partPlace(key: string, a: HeroAnchor): CSSProperties | null {
+  const fit = partFit(key, a);
+  if (!fit) return null;
+  // Front pieces pick up the painting's light a little: a soft contact shadow and slightly lowered brightness.
+  const front = !key.startsWith("part-cape-");
+  return {
+    left: pct(fit.left),
+    top: pct(fit.top),
+    width: pct(fit.width),
+    height: pct(fit.height),
+    filter: front ? "brightness(0.86) saturate(0.92) drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.55))" : "brightness(0.9) drop-shadow(0 2px 4px rgb(0 0 0 / 0.5))",
   };
-  return <img src={generic} alt="" draggable={false} className="pointer-events-none absolute block h-auto max-w-none" style={{ ...place[layer.anchor], mixBlendMode: layer.anchor === "chest" ? "normal" : undefined }} data-part={layer.key} />;
 }
