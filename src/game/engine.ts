@@ -3045,6 +3045,15 @@ function actCore(game: Game, id: string): Game {
   if (id.startsWith("buy-fit|") || id.startsWith("wear-fit|") || id.startsWith("clear-fit|")) {
     return fitAct(d, id);
   }
+  if (id.startsWith("suit-line|")) {
+    // The Closet's suit line picker (2026-11-16): which of your two painted costumes you wear. Free, any time.
+    const line = id.slice(10);
+    if (line !== "a" && line !== "b") return game;
+    if (d.suit === line) return game;
+    d.suit = line;
+    d.card = { ...d.card, banner: [`Suit line ${line.toUpperCase()} is on.`] };
+    return d;
+  }
   if (id.startsWith("focus|")) {
     const powerId = id.slice(6);
     if (!(d.unlockedPowers ?? []).includes(powerId)) return game;
