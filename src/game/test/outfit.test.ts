@@ -92,3 +92,27 @@ test("skin tone: variants are tried closest first, and the base painting counts 
   assert.deepEqual(toneKeys("mystery-ice-f", "light").slice(0, 2), ["mystery-ice-f", "mystery-ice-f-s1"], "a light life keeps the painting it has");
   assert.deepEqual(toneKeys("mystery-ice-f", null), ["mystery-ice-f"]);
 });
+
+test("skin-tone variants keep their suit line, and the portrait picker honours a life's own face feature", async () => {
+  const { suitOfKey } = await import("../heroArt.ts");
+  assert.equal(suitOfKey("mystery-fire-m-b-s4"), "b");
+  assert.equal(suitOfKey("mystery-fire-m-b-teen-s2"), "b");
+  assert.equal(suitOfKey("mystery-fire-m-s3"), "a");
+  const { pickPortrait, PORTRAITS, FEATURE } = await import("../portraits.ts");
+  // Random NPC rolls (no feature) pick exactly as before.
+  for (let seed = 1; seed < 400; seed += 7) {
+    const look = { skin: seed % 12, hair: seed % 14 };
+    assert.equal(pickPortrait(seed, 30, "female", look).id, pickPortrait(seed, 30, "female", look, false, undefined).id);
+  }
+  // A fair red-haired woman who picked freckles gets the freckled painting.
+  assert.equal(pickPortrait(5, 30, "female", { skin: 0, hair: 2 }, false, FEATURE.freckles).id, "adult-6");
+  // Painted glasses count against a life that didn't pick them (skin tone still matters more), and for one that did.
+  const glasses = PORTRAITS.filter((p) => p.marks?.includes(FEATURE.glasses)).map((p) => p.id);
+  assert.ok(glasses.includes("older-8"));
+  const boy = { skin: 0, hair: 1 }; // fair, brown hair: child-7 (painted glasses) is the closest match
+  const seeds = Array.from({ length: 60 }, (_, i) => i + 1);
+  const withGlasses = (feature: number | undefined) => seeds.filter((seed) => pickPortrait(seed, 9, "male", boy, false, feature).id === "child-7").length;
+  assert.equal(withGlasses(undefined), 60);
+  assert.equal(withGlasses(FEATURE.glasses), 60);
+  assert.ok(withGlasses(FEATURE.clear) < 45);
+});

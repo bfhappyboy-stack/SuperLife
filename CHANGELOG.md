@@ -15,6 +15,13 @@ Built on `main` (4f67c05, PR #8). Typechecked, linted (no new problems; the one 
 - **Switches:** `OUTFIT_ON`, `PART_LAYERS` in `outfit.ts`. No save change (`game.suit` already existed).
 - **Tests:** +6 (`outfit.test.ts`: the wardrobe drives the painting, gentler light colourways, part layers and anchors, the suit line action, anchors for every cutout, the skin-tone lookup).
 
+### Increment 2: your creator look on the painted characters
+
+- **Skin tone picks the painting:** every painted drawing of a life's hero (Closet, duel, event scene, gift card, Arena cards and the saved-lives art) now asks for that character's skin-tone painting first (`cut-mystery-<fam>-<sex>[-b][-teen]-s1..4`: light, medium, brown, dark), then the closest tone painted, then the original (`toneKeys` in `outfit.ts`; each existing painting's own tone is recorded in `heroAnchors.ts`). The paintings are on the image list; the lookup is live, so each one shows the moment it lands. The suit line still wins over tone (B in the closest tone before A in your exact tone).
+- **Face features on your portrait:** a life's own creator pick (never a random NPC roll, so nobody else's face moves) now prefers a portrait with it painted in (the freckled and spectacled portraits are tagged) and keeps painted glasses off faces that didn't pick them. Freckles and a healed cheek scar are laid on softly when the portrait doesn't have them (`FaceMarks` in `PhotoFace.tsx`, multiplied into the paint so they take the skin's own light; `FACE_MARKS` switch). Glasses and eye colour are painted-only (image list).
+- **Tests:** +1 (tone-suffixed keys keep their suit line; the portrait picker honours a life's face feature and leaves NPC picks alone).
+
+
 ## 2026-11-16 (pacing): every option up to 3 times a year, BitLife style (`devbot/2026-11-16-pacing`)
 
 Built on `devbot/2026-11-15-villain` (587ff47; itself on `main` b6ed50b), so merge the villain PR first or this one alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (365 pass), built and loaded at 390×844 before push.
