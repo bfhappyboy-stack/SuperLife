@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { ageUp, choose, createGame, dismissReveal, resolveMini } from "../engine.ts";
 import { playStep, routineOptions, setAutoFights, setPace, setRoutine, stepLabel, stepMonths, stepOf } from "../flow.ts";
 import { fastForward, monthPlan, dismissSkip } from "../skip.ts";
+import { PACING } from "../pacing.ts";
 import type { Game } from "../types.ts";
 
 const BASE = { name: "Ava Reyes", cityId: "metro", upbringing: "normal", portrait: 11, sex: "female", face: "loud", drive: "protector", giftId: "fire-control", seed: 7 } as const;
@@ -35,7 +36,17 @@ function settle(g: Game, seen: string[] = []): Game {
   return g;
 }
 
-test("pace: a year per tap as a kid, a season as a teen, a year again from 18; you can pin month, season or year", () => {
+test("year pacing: Age up is a whole year at every age; you can still pin month or season", () => {
+  for (const age of [3, 8, 13, 16, 17, 18, 40]) assert.equal(stepOf({ age }), "year");
+  assert.equal(stepOf({ age: 15, pace: "season" }), "season");
+  assert.equal(stepOf({ age: 15, pace: "month" }), "month");
+  assert.equal(stepMonths({ age: 16, month: 4 }), 8, "to the next birthday");
+  assert.equal(stepLabel(at(29, 0)).title, "Age up to 30");
+});
+
+test("pace (old monthly pacing): a year per tap as a kid, a season as a teen, a year again from 18; you can pin month, season or year", () => {
+  PACING.year = false;
+  try {
   assert.equal(stepOf({ age: 8 }), "year");
   assert.equal(stepOf({ age: 12 }), "year");
   assert.equal(stepOf({ age: 13 }), "season");
@@ -51,6 +62,9 @@ test("pace: a year per tap as a kid, a season as a teen, a year again from 18; y
   const g = at(30, 10);
   assert.match(stepLabel(g).title, /age 31/, "a season that crosses a birthday stops at it");
   assert.equal(setPace(g, "month").pace, "month");
+  } finally {
+    PACING.year = true;
+  }
 });
 
 test("routine: up to three everyday actions, your order comes first in the month plan", () => {

@@ -4,6 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { act, actionsFor, ageUp, choose, createGame, freshen, resolveMini } from "../engine.ts";
 import { buildChapter, CHAPTER_PHASES, chapterIndexForAge, migrateChapters, phaseForAge, validChapterText } from "../chapters.ts";
+import { CAP_LINE } from "../engine.ts";
+import { PACING } from "../pacing.ts";
 import type { Game } from "../types.ts";
 
 const BASE = { name: "Ava Reyes", cityId: "stacks", upbringing: "street", portrait: 11, sex: "female", face: "secret", drive: "protector", giftId: "fire-control", seed: 7 } as const;
@@ -141,7 +143,7 @@ test("health hitting zero is a hospital stay first, not a funeral", () => {
   assert.equal(again.phase, "dead");
 });
 
-test("heavy shift is once a month", () => {
+test("heavy shift: once a month on the old monthly pacing, three times a year on year pacing", () => {
   let g = createGame({ ...BASE } as never);
   g = liveTo(g, 20);
   while (g.phase === "choice" || g.phase === "mini") g = step(g);
@@ -149,11 +151,28 @@ test("heavy shift is once a month", () => {
   while (g.phase !== "live") g = step(g);
   g.majorsLeft = 3;
   delete g.flags.shifted;
-  const once = act(g, "shift");
-  if (once === g) return; // no job at this seed; nothing to check
-  const shift = actionsFor(once).find((a) => a.id === "shift");
-  assert.ok(shift?.disabled, "second shift in the same month is disabled");
-  assert.equal(act(once, "shift"), once);
+  PACING.year = false;
+  try {
+    const once = act(g, "shift");
+    if (once === g) return; // no job at this seed; nothing to check
+    const shift = actionsFor(once).find((a) => a.id === "shift");
+    assert.ok(shift?.disabled, "second shift in the same month is disabled");
+    assert.equal(act(once, "shift"), once);
+  } finally {
+    PACING.year = true;
+  }
+  // Year pacing (2026-11-16): three shifts this year, then the option locks until you age up.
+  let y = act(g, "shift");
+  if (y === g) return;
+  y = act(y, "shift");
+  y = act(y, "shift");
+  assert.equal(y.yearUses?.shift, 3);
+  const row = actionsFor(y).find((a) => a.id === "shift");
+  assert.equal(row?.disabled, CAP_LINE, "a fourth shift this year is locked");
+  assert.equal(row?.uses, 3);
+  const fourth = act(y, "shift");
+  assert.equal(fourth.stats.money, y.stats.money, "no pay for a fourth shift");
+  assert.deepEqual(fourth.card.banner, [CAP_LINE]);
 });
 
 test("a careful life lasts many decades", () => {
