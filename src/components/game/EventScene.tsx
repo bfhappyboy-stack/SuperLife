@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import { hasArt } from "@/assets/art";
 import { Cutout, stageArtKey } from "@/components/game/heroArt";
-import { outfitOf } from "@/game/outfit";
+import { outfitOf, toneOf } from "@/game/outfit";
 import { FAMILY_COLOR } from "@/components/game/icons";
 import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
@@ -31,7 +31,7 @@ export function EventScene({ game, prompt, eventId }: { game: Game; prompt: stri
   const legendKey = legend && hasArt(legend.art) ? legend.art : "";
   const legendArt = useArt(legendKey);
   const family = capeTheme(game).cape;
-  const cutKey = legend ? "" : stageArtKey(family, game.sex, game.age, game.suit);
+  const cutKey = legend ? "" : stageArtKey(family, game.sex, game.age, game.suit, toneOf(game.look));
   const cut = useArt(cutKey ? `cut-${cutKey}` : "");
   const city = useArt(game.cityId);
   const glow = legend?.color ?? (family ? FAMILY_COLOR[family] : "#e6b34d");

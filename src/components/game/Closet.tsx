@@ -5,7 +5,7 @@ import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
 import { hasArt } from "@/assets/art";
 import { ART_HEROES, SUIT_LOCKED, stageScale, suitOfKey } from "@/game/heroArt";
-import { outfitOf, PAINTED_SUIT, partKey } from "@/game/outfit";
+import { outfitOf, PAINTED_SUIT, partKey, toneOf } from "@/game/outfit";
 import { presetById } from "@/game/presets";
 import { Check, Lock, X } from "lucide-react";
 import { FAMILY_COLOR } from "@/components/game/icons";
@@ -150,7 +150,7 @@ function Mirror({ game, aura }: { game: Game; aura?: string }) {
   const legend = presetById(game.preset);
   const legendArt = useArt(legend && hasArt(legend.art) ? legend.art : "");
   const family = capeTheme(game).cape;
-  const key = legend ? "" : stageArtKey(family, game.sex, game.age, game.suit);
+  const key = legend ? "" : stageArtKey(family, game.sex, game.age, game.suit, toneOf(game.look));
   const cut = useArt(key ? `cut-${key}` : "");
   const city = useArt(game.cityId);
   const glow = legend?.color ?? aura ?? "#e6b34d";
@@ -188,11 +188,11 @@ function Mirror({ game, aura }: { game: Game; aura?: string }) {
 function SuitLines({ game, onAct }: { game: Game; onAct: (id: string, notice: string) => void }) {
   const family = capeTheme(game).cape;
   const legend = presetById(game.preset);
-  const keyA = legend ? "" : stageArtKey(family, game.sex, game.age, "a");
-  const keyB = legend ? "" : stageArtKey(family, game.sex, game.age, "b");
+  const keyA = legend ? "" : stageArtKey(family, game.sex, game.age, "a", toneOf(game.look));
+  const keyB = legend ? "" : stageArtKey(family, game.sex, game.age, "b", toneOf(game.look));
   const artA = useArt(keyA ? `cut-${keyA}` : "");
   const artB = useArt(keyB ? `cut-${keyB}` : "");
-  const base = keyA.replace(/-teen$/, "");
+  const base = keyA.replace(/-s[1-4]$/, "").replace(/-teen$/, "");
   if (!keyA || !keyB || suitOfKey(keyB) !== "b" || SUIT_LOCKED.includes(base)) return null;
   const wearing = game.suit === "b" ? "b" : "a";
   const glow = family ? FAMILY_COLOR[family] : "#e6b34d";

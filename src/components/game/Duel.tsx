@@ -7,7 +7,7 @@ import { kitFor } from "@/components/game/duelKit";
 import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
 import { Cutout, Standee, familyOfPower, mysteryArtKey, stageArtKey } from "@/components/game/heroArt";
-import { outfitOf } from "@/game/outfit";
+import { outfitOf, toneOf } from "@/game/outfit";
 import { stageScale } from "@/game/heroArt";
 import { streetCutKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
@@ -117,9 +117,9 @@ const GIMMICK_COLOR: Record<GimmickKind, string> = {
 
 export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
   const legendArt = useArt(hero?.legend?.art ?? "");
-  const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit);
+  const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit, toneOf(hero?.look));
   const mysteryArt = useArt(mysteryKey);
-  const teenKey = hero?.legend ? "" : stageArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit);
+  const teenKey = hero?.legend ? "" : stageArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit, toneOf(hero?.look));
   const mysteryCut = useArt(teenKey ? `cut-${teenKey}` : "");
   const stageArt = useArt(hero?.city ?? "");
   const board = spec.duel;
