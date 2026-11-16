@@ -3049,8 +3049,11 @@ function actCore(game: Game, id: string): Game {
     // The Closet's suit line picker (2026-11-16): which of your two painted costumes you wear. Free, any time.
     const line = id.slice(10);
     if (line !== "a" && line !== "b") return game;
-    if (d.suit === line) return game;
+    // A line the player picks is kept for good (2026-11-16 pm); before that the skin tone may choose (outfit.ts `wornLine`),
+    // so picking the stored line still counts as a pick.
+    if (d.suit === line && d.suitPicked) return game;
     d.suit = line;
+    d.suitPicked = true;
     d.card = { ...d.card, banner: [`Suit line ${line.toUpperCase()} is on.`] };
     return d;
   }

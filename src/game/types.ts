@@ -519,6 +519,9 @@ export interface Game {
   preset?: string | null;
   /** Which suit line this life's Mystery hero wears (heroArt.ts `Suit`), picked once from the life seed. Old saves migrate. */
   suit?: "a" | "b";
+  /** True once the player picked a suit line in the Closet (2026-11-16 pm). Until then the line painted closest to the
+   * creator skin tone is worn (outfit.ts `wornLine`). Missing on old saves = not picked. */
+  suitPicked?: boolean;
   /** The mentor who found you at 15 (mentors.ts). Missing before 15 and on old saves until their next birthday. */
   mentor?: MentorState | null;
   /** The power you're slowly training toward (2026-11-10 eve): a base to wake, or a braid. One at a time. */

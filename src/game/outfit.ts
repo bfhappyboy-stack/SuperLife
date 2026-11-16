@@ -187,3 +187,47 @@ export function toneKeys(key: string, tone: Tone | null): string[] {
   rows.sort((a, b) => a.d - b.d || Number(b.base) - Number(a.base) || a.i - b.i);
   return rows.map((r) => r.key);
 }
+
+/* ---------- Skin tone picks the suit line (2026-11-16 pm) ---------- */
+
+/**
+ * Owner (2026-11-16): creator picks must show on the painted hero. Each suit line is painted in only some skin tones
+ * (suit A has tone repaints, suit B and the teens one tone each so far), and the line was rolled at birth, so a dark
+ * skinned life could be drawn in a light skinned B painting while its A painting in their own tone sat unused. Until
+ * the player picks a line themselves in the Closet (`Game.suitPicked`), the life wears the line painted closest to its
+ * creator skin tone (ties keep the rolled line). A line picked in the Closet always wins. Off = the rolled line, as before.
+ */
+export const TONE_PICKS_LINE = true;
+
+/** How many tone steps the painting `key` is from the wanted tone (0 = painted in it), or null when unknown. */
+export function toneGap(key: string, tone: Tone | null): number | null {
+  if (!key || !tone) return null;
+  const native = nativeTone(key.replace(/^cut-/, ""));
+  if (!native) return null;
+  return Math.abs(TONES.indexOf(native) - TONES.indexOf(tone));
+}
+
+/** The best painting of one suit line (no fallback to the other line) for a tone, or "". `has` takes `cut-` keys. */
+function lineBest(grownKey: string, line: Suit, tone: Tone, has: (key: string) => boolean): string {
+  const base = line === "b" ? `${grownKey}-b` : grownKey;
+  return toneKeys(base, tone).find((k) => has(`cut-${k}`)) ?? "";
+}
+
+/**
+ * The suit line a life is drawn in. `grownKey` is the adult suit-A key (`mystery-storm-m`, from `mysteryKey(.., 30)`),
+ * so a teen wears the same line they'll grow into. `has` takes `cut-` keys (the asset table).
+ */
+export function wornLine(
+  life: { suit?: Suit | null; suitPicked?: boolean | null; look?: { skin?: Look["skin"] } | null },
+  grownKey: string,
+  has: (key: string) => boolean,
+): Suit {
+  const rolled: Suit = life.suit === "b" ? "b" : "a";
+  const tone = toneOf(life.look);
+  if (!TONE_PICKS_LINE || life.suitPicked || !tone || !grownKey || SUIT_LOCKED.includes(grownKey)) return rolled;
+  const other: Suit = rolled === "a" ? "b" : "a";
+  const mine = toneGap(lineBest(grownKey, rolled, tone, has), tone);
+  const theirs = toneGap(lineBest(grownKey, other, tone, has), tone);
+  if (theirs === null) return rolled;
+  return mine === null || theirs < mine ? other : rolled;
+}
