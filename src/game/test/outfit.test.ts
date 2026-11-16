@@ -77,7 +77,8 @@ test("every painted hero cutout has anchors, with the neck under the head and th
       }
     }
   }
-  assert.equal(Object.keys(HERO_ANCHORS).length, 70);
+  // 70 original paintings plus their skin-tone repaints (`-s1..4`).
+  assert.equal(Object.keys(HERO_ANCHORS).filter((k) => !/-s[1-4]$/.test(k)).length, 70);
 });
 
 test("skin tone: variants are tried closest first, and the base painting counts at the tone it was painted in", () => {
@@ -115,4 +116,40 @@ test("skin-tone variants keep their suit line, and the portrait picker honours a
   assert.equal(withGlasses(undefined), 60);
   assert.equal(withGlasses(FEATURE.glasses), 60);
   assert.ok(withGlasses(FEATURE.clear) < 45);
+});
+
+test("painted skin-tone variants and parts are registered, anchored and picked by the tone lookup", async () => {
+  const { readFileSync, existsSync } = await import("node:fs");
+  const index = readFileSync(new URL("../../assets/art/index.ts", import.meta.url), "utf8");
+  const has = (key: string) => index.includes(`"${key}":`);
+  const { PART_FRAMES } = await import("../partFrames.ts");
+  // Every tone variant on disk has its own anchor row with its tone in the name.
+  const variants = Object.keys(HERO_ANCHORS).filter((k) => /-s[1-4]$/.test(k));
+  assert.ok(variants.length >= 52, `tone rows: ${variants.length}`);
+  for (const k of variants) {
+    assert.ok(has(`cut-${k}`), `art for ${k}`);
+    assert.ok(existsSync(new URL(`../../assets/art/cut-${k}.ts`, import.meta.url)));
+    assert.equal(nativeTone(k), ["light", "medium", "brown", "dark"][Number(k.slice(-1)) - 1]);
+    assert.equal(anchorOf(`cut-${k}`), HERO_ANCHORS[k]);
+  }
+  // Fit fields are sane everywhere (fractions of the cutout box).
+  for (const [k, a] of Object.entries(HERO_ANCHORS)) {
+    assert.ok(a.cx > 0.15 && a.cx < 0.85 && a.sw > 0.2 && a.sw < 1 && a.sy < a.cy && a.cy < a.wy && a.wy < a.bottom && a.ar > 0.2 && a.ar < 1, k);
+  }
+  // The lookup takes a painted variant first, and the original painting stands for its own tone.
+  const pick = (key: string, tone: Parameters<typeof toneKeys>[1]) => toneKeys(key, tone).find((k) => has(`cut-${k}`));
+  assert.equal(pick("mystery-fire-m", "dark"), "mystery-fire-m-s4");
+  assert.equal(pick("mystery-fire-m", "medium"), "mystery-fire-m");
+  assert.equal(pick("mystery-ice-f", "light"), "mystery-ice-f");
+  assert.equal(pick("mystery-arcane-f", "brown"), "mystery-arcane-f-s2"); // no s3 painted: nearest tone, lighter first
+  assert.equal(pick("mystery-storm-m", "light"), "mystery-storm-m-s2"); // s1 held back (chalk-white repaint)
+  // Every cape and mark in the shop has a painted, measured part.
+  for (const kind of ["short", "long", "coat", "banner", "tatter"]) {
+    const f = PART_FRAMES[`part-cape-${kind}`];
+    assert.ok(f && has(`part-cape-${kind}`) && f.sl! < f.sr! && f.band! > f.collar!, kind);
+  }
+  for (const kind of ["badge", "belt", "buckle", "brand", "sash"]) assert.ok(PART_FRAMES[`part-emblem-${kind}`] && has(`part-emblem-${kind}`), kind);
+  const g = adult();
+  g.wardrobe = { owned: ["long-cape", "utility-belt"], worn: { cape: "long-cape", emblem: "utility-belt" } } as Game["wardrobe"];
+  assert.deepEqual(outfitOf(g).layers.map((l) => [l.key, l.behind]), [["part-cape-long", true], ["part-emblem-belt", false]]);
 });

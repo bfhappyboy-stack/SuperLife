@@ -21,6 +21,14 @@ Built on `main` (4f67c05, PR #8). Typechecked, linted (no new problems; the one 
 - **Face features on your portrait:** a life's own creator pick (never a random NPC roll, so nobody else's face moves) now prefers a portrait with it painted in (the freckled and spectacled portraits are tagged) and keeps painted glasses off faces that didn't pick them. Freckles and a healed cheek scar are laid on softly when the portrait doesn't have them (`FaceMarks` in `PhotoFace.tsx`, multiplied into the paint so they take the skin's own light; `FACE_MARKS` switch). Glasses and eye colour are painted-only (image list).
 - **Tests:** +1 (tone-suffixed keys keep their suit line; the portrait picker honours a life's face feature and leaves NPC picks alone).
 
+### Increment 3: the paintings land (skin tones, capes, marks)
+
+- **52 skin-tone repaints** of the adult suit-A heroes (`cut-mystery-<fam>-<sex>-s1..4`), cut out with the usual importer. Your creator skin now picks the matching painting in the Closet, fights, event scene, gift card and Arena; the original painting still stands for its own tone. Not imported: `arcane-f-s3` (not painted; brown falls back to medium) and `storm-m-s1` (the repaint came out chalk-white; light falls back to medium). B and teen lines still use their original paintings.
+- **Each repaint has its own anchors** (`heroAnchors.ts`), since repaints frame a little differently, and every row gained part-fit fields: shoulder line, shoulder centre and width, waist line, chest height and the cutout's aspect (`/workspace/pt1116suits/fit.py`; measured on the alpha mask when it reads as shoulders, else heroic proportions).
+- **10 painted parts:** capes (short, long, trench coat, banner, tattered wing) and marks (cloth badge, utility belt, champion buckle, fear brand, relic sash). `import-cutouts.py --keep-frame` cuts them out and trims them but keeps their own scale, and measures each cape's collar and shoulder band (`partFrames.ts`). Capes hang behind the hero with their measured shoulder band on the hero's shoulders (so the wide short cape sits like the others) and stop at the ankles; belt and buckle sit across the waist; badge and brand on the chest; the sash runs from shoulder to the opposite hip. Wearing a piece shows it on the painted hero in the Closet, fights and everywhere the cutout appears; taking it off removes it. Heroes painted in their own cloak or long coat (arcane, veil, mind B, storm B, life-f B) keep it, and the cape slot says so.
+- **Tests:** +1 (every repaint registered and anchored with its tone; the lookup picks repaints and falls back as above; every shop cape and mark has a measured painting; a worn cape and belt become the right layers).
+
+
 
 ## 2026-11-16 (pacing): every option up to 3 times a year, BitLife style (`devbot/2026-11-16-pacing`)
 
