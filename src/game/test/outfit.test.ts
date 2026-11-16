@@ -1,0 +1,94 @@
+// The painted hero wears the Closet (2026-11-16 suits pass). Run: npm run test:game
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { act, createGame } from "../engine.ts";
+import { anchorOf, nativeTone, OUTFIT_ON, outfitOf, PAINTED_SUIT, partKey, toneKeys, toneOf } from "../outfit.ts";
+import { HERO_ANCHORS } from "../heroAnchors.ts";
+import { ART_FAMILIES } from "../heroArt.ts";
+import type { Game } from "../types.ts";
+
+const BASE = { name: "Ava Reyes", cityId: "metro", upbringing: "normal", portrait: 11, sex: "female", face: "loud", drive: "protector", giftId: "fire-control", seed: 7 } as const;
+
+function adult(): Game {
+  const g = createGame({ ...BASE } as never);
+  g.age = 27;
+  g.phase = "live";
+  g.pending = null;
+  g.stats.money = 50_000;
+  g.stats.fame = 60;
+  g.stats.karma = 0;
+  return g;
+}
+
+test("the root cause: wearing a suit piece now changes what the painting shows", () => {
+  assert.ok(OUTFIT_ON);
+  let g = adult();
+  assert.equal(outfitOf(g).tint, null, "a new life wears its suit as painted");
+  g = act(g, "buy-fit|training-suit");
+  assert.equal(g.wardrobe.worn.chest, "training-suit");
+  const o = outfitOf(g);
+  assert.equal(o.tint, "#1f3a4a", "the Training suit recolours the painted suit");
+  assert.equal(o.rim, "#3cb8b0", "its trim is the rim light");
+  assert.ok(o.strength > 0.5 && o.strength <= 1);
+  assert.deepEqual(o.worn.map((w) => w.name), ["Training suit"]);
+  g = act(g, `wear-fit|${PAINTED_SUIT}`);
+  assert.equal(outfitOf(g).tint, null, "back to the painted colours");
+});
+
+test("light colourways are laid on more gently than dark ones", () => {
+  const ivory = outfitOf({ wardrobe: { owned: [], worn: { chest: "ceremonial-plate" } } });
+  const navy = outfitOf({ wardrobe: { owned: [], worn: { chest: "patrol-mesh" } } });
+  assert.ok(ivory.strength < navy.strength);
+});
+
+test("every other slot maps to a painted part layer, named on the mirror; bare pieces add nothing", () => {
+  const o = outfitOf({ wardrobe: { owned: [], worn: { cape: "long-cape", cowl: "full-cowl", gloves: "gauntlets", boots: "rocket-boots", emblem: "utility-belt" } } });
+  assert.deepEqual(o.layers.map((l) => l.key).sort(), ["part-boots-rocket", "part-cape-long", "part-cowl-cowl", "part-emblem-belt", "part-gloves-gauntlet"]);
+  assert.equal(o.layers.find((l) => l.slot === "cape")?.behind, true, "a cape hangs behind the figure");
+  assert.equal(o.layers.find((l) => l.slot === "emblem")?.anchor, "waist", "a belt sits at the waist");
+  assert.equal(outfitOf({ wardrobe: { owned: [], worn: { emblem: "cloth-badge" } } }).layers[0]?.anchor, "chest");
+  assert.equal(o.worn.length, 5);
+  const bare = outfitOf({ wardrobe: { owned: [], worn: { cape: "no-cape", cowl: "bare-head", gloves: "bare-hands", boots: "sneakers", emblem: "no-mark", chest: PAINTED_SUIT } } });
+  assert.equal(bare.layers.length, 0);
+  assert.equal(bare.worn.length, 0);
+  assert.equal(partKey("cape", "no-cape"), "");
+});
+
+test("the suit line picker switches the painting (A and B), free, and the suit stays chosen", () => {
+  let g = adult();
+  const start = g.suit;
+  const other = start === "a" ? "b" : "a";
+  g = act(g, `suit-line|${other}`);
+  assert.equal(g.suit, other);
+  assert.equal(outfitOf(g).line, other);
+  assert.match(g.card.banner?.[0] ?? "", new RegExp(`Suit line ${other.toUpperCase()} is on`));
+  assert.equal(g.majorsLeft, adult().majorsLeft, "costs no time");
+  assert.equal(act(g, `suit-line|${other}`), g, "already on");
+  assert.equal(act(g, "suit-line|z"), g, "nonsense is ignored");
+});
+
+test("every painted hero cutout has anchors, with the neck under the head and the shoulders under the neck", () => {
+  for (const fam of ART_FAMILIES) {
+    for (const sex of ["f", "m"]) {
+      for (const suffix of ["", "-teen"]) {
+        const a = anchorOf(`cut-mystery-${fam}-${sex}${suffix}`);
+        assert.ok(a, `${fam}-${sex}${suffix}`);
+        assert.ok(a!.top < a!.neck && a!.neck < a!.shoulder && a!.shoulder < 0.4 && a!.sl < a!.sr);
+      }
+    }
+  }
+  assert.equal(Object.keys(HERO_ANCHORS).length, 70);
+});
+
+test("skin tone: variants are tried closest first, and the base painting counts at the tone it was painted in", () => {
+  assert.equal(toneOf({ skin: 4 }), "dark");
+  assert.equal(toneOf({ skin: 0 }), "light");
+  assert.equal(nativeTone("mystery-storm-m"), "dark");
+  assert.equal(nativeTone("mystery-ice-f-s3"), "brown");
+  const keys = toneKeys("mystery-ice-f", "dark");
+  assert.equal(keys[0], "mystery-ice-f-s4", "the dark variant first");
+  assert.equal(keys[1], "mystery-ice-f-s3");
+  assert.ok(keys.indexOf("mystery-ice-f") > keys.indexOf("mystery-ice-f-s2") - 1, "the light base painting is a far fallback");
+  assert.deepEqual(toneKeys("mystery-ice-f", "light").slice(0, 2), ["mystery-ice-f", "mystery-ice-f-s1"], "a light life keeps the painting it has");
+  assert.deepEqual(toneKeys("mystery-ice-f", null), ["mystery-ice-f"]);
+});

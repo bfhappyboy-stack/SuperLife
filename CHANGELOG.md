@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-16 (suits): the painted hero wears the Closet (`devbot/2026-11-16-suits`)
+
+Built on `main` (4f67c05, PR #8). Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: the "it says it's on but nothing changes" bug
+
+- **Root cause:** since the painted art pass (2026-11-14) the Closet mirror, the duel stage, the "Your call" scene and the gift card all draw the painted cutout picked by power family, sex, age and the life's suit line (`stageArtKey(..., game.suit)`), and nothing read `game.wardrobe`. Buying or wearing a piece updated the save, the buffs and the "Wearing" chip, but only the retired paper doll (`Figure`, `ART_HEROES` off) ever drew it. The suit line itself (A/B) was fixed at birth with no way to pick it.
+- **Fix:** new `src/game/outfit.ts` turns the wardrobe into what a painting can show, and every painted drawing of your hero uses it (Closet, duel, event scene, gift card) through `HeroFigure` / `Cutout` in `heroArt.tsx`:
+  - **Suit line picker** in the Closet's Suit tab: your two painted costumes side by side, the worn one ringed in gold ("Wearing A/B"); tapping the other switches the painting everywhere (`suit-line|a|b`, free; hidden when there's no B painting or the suit is locked, like the male speedster's).
+  - **Colourways:** the worn Suit piece recolours the painted suit with an SVG filter (luminance-preserving colour blend on the darker cloth, a soft lift so black suits take it, glows and highlights keep their paint), masked off above the neck by per-painting anchors so face, hair and mask stay as painted. "As painted" (the old street jacket row) keeps the original colours. The piece's trim is the thin rim light.
+  - **Parts** (cape, mask, hands, boots, mark) map to painted overlay layers (`part-<slot>-<kind>`, or a layer painted for one figure, `cut-<hero>-part-<slot>-<kind>`), placed on per-painting anchors (`src/game/heroAnchors.ts`, derived from each cutout's alpha mask). They show as soon as their paintings exist; until then the mirror caption names everything you wear ("Suit line B · Second skin · Full cowl · Long cape") and the slot says the painting is on the way. No code-drawn capes.
+  - The mirror is taller (h-72) so the change reads at a glance.
+- **Switches:** `OUTFIT_ON`, `PART_LAYERS` in `outfit.ts`. No save change (`game.suit` already existed).
+- **Tests:** +6 (`outfit.test.ts`: the wardrobe drives the painting, gentler light colourways, part layers and anchors, the suit line action, anchors for every cutout, the skin-tone lookup).
+
 ## 2026-11-16 (pacing): every option up to 3 times a year, BitLife style (`devbot/2026-11-16-pacing`)
 
 Built on `devbot/2026-11-15-villain` (587ff47; itself on `main` b6ed50b), so merge the villain PR first or this one alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (365 pass), built and loaded at 390×844 before push.

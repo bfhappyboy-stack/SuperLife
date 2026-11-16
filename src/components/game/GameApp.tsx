@@ -22,7 +22,8 @@ import { UseCount } from "@/components/game/UseCount";
 import { autoResolveOdds } from "@/game/skip";
 import { borrowAmounts, borrowBlock, canTalkMoney, lendAmounts, loanLine, openLoan, temperOf, termFor, trustOf } from "@/game/ties";
 import { CityScene, TitleArt, useArt } from "@/components/game/Scene";
-import { stageArtKey } from "@/components/game/heroArt";
+import { HeroFigure, stageArtKey } from "@/components/game/heroArt";
+import { outfitOf } from "@/game/outfit";
 import { stageScale } from "@/game/heroArt";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
@@ -465,12 +466,13 @@ function Life({ game }: { game: Game }) {
                 ) : giftCut ? (
                   <>
                     <span className="pointer-events-none absolute right-2 bottom-2 -z-10 h-5 w-32 rounded-[50%] bg-black/60 blur-md" aria-hidden />
-                    <img
+                    <HeroFigure
                       src={giftCut}
-                      alt=""
-                      draggable={false}
-                      className="cut-breathe pointer-events-none absolute right-0 bottom-0 -z-10 h-[15rem] w-auto max-w-none"
-                      style={{ height: `${15 * stageScale(game.age)}rem`, filter: `drop-shadow(0 0 1.5px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 85%, white)) drop-shadow(0 0 12px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 45%, transparent))` }}
+                      artKey={giftKey}
+                      outfit={outfitOf(game)}
+                      glow={family ? FAMILY_COLOR[family] : "#e6b34d"}
+                      className="cut-breathe pointer-events-none absolute right-0 bottom-0 -z-10 h-[15rem]"
+                      style={{ height: `${15 * stageScale(game.age)}rem` }}
                     />
                   </>
                 ) : null}
