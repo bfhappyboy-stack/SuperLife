@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-16 night pass
+
+- **Done:** kids 7-12, lives with no power family and online Arena opponents stand as their painted portrait instead of the paper doll or the drawn silhouette (`PORTRAIT_STANDEES`); hit-stop on big hits and K.O. dust (`FX_HITSTOP`).
+- **Still drawn with art on:** the creator and the Closet only fall back to the paper doll with `PAINTED_FACES` / `ART_HEROES` off. The foe-side doll in duels is unreachable with art on (every villain has a street cutout, every hero foe a suit).
+- **Next for art:** a real painted kid set (7-12, full body in street clothes) would replace the portrait cards; per-hero mask/glove/boot layers (still "buffs only"). The image lists in `/workspace/img-requests-1116am.md` and `-1116pm.md` still come first.
+- **Next for juice:** hit-stop and dust for the Arena fight cards (they use their own card, not the shared cutout).
+
 ## From the 2026-11-16 pm pass
 
 - **Images, in order:** storm-m-s1 redo, arcane-f-s3, glasses variants (`/workspace/img-requests-1116am.md` sections 1-2); then 54 teen suit-A skin-tone repaints and the 102 suit-B ones (`/workspace/img-requests-1116pm.md`). All wire in with no code change.
