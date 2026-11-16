@@ -20,6 +20,8 @@ import { SealedGift } from "@/components/game/SealedGift";
 import { MovePicker, StreetSix } from "@/components/game/MovePicker";
 import { kitFor } from "@/game/kits";
 import { useGame } from "@/game/store";
+import { PACING, USES_PER_YEAR, hasTime, lessonLine, usesOf } from "@/game/pacing";
+import { UseCount } from "@/components/game/UseCount";
 import type { AiHero, Game } from "@/game/types";
 
 export function PowerLab({
@@ -41,7 +43,7 @@ export function PowerLab({
   const [right, setRight] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const preview = left && right ? mix(left, right, unlocked) : null;
-  const moves = game.majorsLeft > 0;
+  const moves = hasTime(game);
   const heroes = mergeHeroes(game.heroes);
   const met = heroes.filter((hero) => hero.met);
   const unmet = heroes.filter((hero) => !hero.met);
@@ -144,7 +146,7 @@ export function PowerLab({
             moves={moves}
             room={library(game)}
             training={game.training ?? null}
-            blockText={preview?.ok && left && right && !unlocked.includes(preview.power.id) ? (braidBlock(game, left, right, preview.power.id) ?? (game.flags.powerLesson ? "One power lesson a month. Come back next month." : null)) : null}
+            blockText={preview?.ok && left && right && !unlocked.includes(preview.power.id) ? (braidBlock(game, left, right, preview.power.id) ?? lessonLine(game, "One power lesson a month. Come back next month.")) : null}
             onPick={pick}
             onMix={() => left && right && attempt(left, right)}
           />
@@ -282,7 +284,7 @@ function TrainerCircle({
               {offers.length > 0 && (
                 <div className="mt-2 flex flex-col gap-2">
                   {offers.map((power) => {
-                    const block = awakenBlock(game, power.id) ?? (game.flags.powerLesson ? "One power lesson a month." : null);
+                    const block = awakenBlock(game, power.id) ?? lessonLine(game, "One power lesson a month.");
                     const ready = moves && hero.relationship >= HERO_AWAKEN_BOND && !block;
                     const going = game.training?.id === power.id ? game.training : null;
                     return (
@@ -837,26 +839,29 @@ function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct:
   const wake = mentorAwaken(game);
   const wakeBlock = wake ? awakenBlock(game, wake.id) : "No power left to wake";
   const going = game.training ?? null;
-  const lessonUsed = game.flags.powerLesson ? "Power lesson done this month" : null;
-  const done = !!game.flags.tutored;
-  const why = done ? "Lesson done this month" : !moves ? "No moves left this month" : null;
+  const lessonUsed = lessonLine(game, "Power lesson done this month");
+  // Year pacing: each kind of lesson up to 3 times a year (the power-lesson pool on top); before, one session a month.
+  const done = !PACING.year && !!game.flags.tutored;
+  const spent = PACING.year ? "No free time left this year" : "No moves left this month";
+  const capped = (id: string) => (PACING.year && usesOf(game, id) >= USES_PER_YEAR ? `Done ${USES_PER_YEAR} times this year` : null);
+  const whyOf = (id: string) => (done ? "Lesson done this month" : capped(id) ?? (!moves ? spent : null));
   const lessons: { id: string; icon: LucideIcon; title: string; detail: string; off: string | null }[] = [
     {
       id: "tutor|braid",
       icon: Zap,
       title: braid ? `Guided braid` : "Guided braid",
       detail: braid ? `${braid.left.name} + ${braid.right.name}.${going?.id === braid.result.id ? ` ${Math.floor(going.progress)}/${going.need} lessons.` : " Months of lessons."}` : "No recipe in your hands yet.",
-      off: why ?? lessonUsed ?? (!braid ? "Nothing to braid" : braidBlock(game, braid.left.id, braid.right.id, braid.result.id)),
+      off: whyOf("tutor|braid") ?? lessonUsed ?? (!braid ? "Nothing to braid" : braidBlock(game, braid.left.id, braid.right.id, braid.result.id)),
     },
     {
       id: "tutor|awaken",
       icon: Star,
       title: wake ? `Wake ${wake.name}` : "Wake a power",
       detail: wake && going?.id === wake.id ? `${Math.floor(going.progress)}/${going.need} lessons. Keep going.` : "Rare. Slow. Many months of lessons.",
-      off: why ?? lessonUsed ?? (state.bond < MENTOR_AWAKEN_BOND ? `Bond ${MENTOR_AWAKEN_BOND} first` : wakeBlock),
+      off: whyOf("tutor|awaken") ?? lessonUsed ?? (state.bond < MENTOR_AWAKEN_BOND ? `Bond ${MENTOR_AWAKEN_BOND} first` : wakeBlock),
     },
-    { id: "tutor|drill", icon: Dumbbell, title: focus ? `Drill ${focus.name}` : "Drill", detail: "Better gains than drilling alone.", off: why ?? (game.stats.health < 12 ? "Too gassed" : null) },
-    { id: "tutor|study", icon: BookOpen, title: "Study night", detail: recipe ? "Learn a new recipe for your book. +Mind." : "Theory and tea. +Mind.", off: why },
+    { id: "tutor|drill", icon: Dumbbell, title: focus ? `Drill ${focus.name}` : "Drill", detail: "Better gains than drilling alone.", off: whyOf("tutor|drill") ?? (game.stats.health < 12 ? "Too gassed" : null) },
+    { id: "tutor|study", icon: BookOpen, title: "Study night", detail: recipe ? "Learn a new recipe for your book. +Mind." : "Theory and tea. +Mind.", off: whyOf("tutor|study") },
   ];
   return (
     <section className="card relative overflow-hidden px-4 py-3" style={{ borderColor: `${mentor.color}88` }} aria-label={`Mentor ${mentor.name}`}>
@@ -907,6 +912,7 @@ function MentorCard({ game, moves, onAct }: { game: Game; moves: boolean; onAct:
             >
               <Icon className="size-4" style={{ color: mentor.color }} aria-hidden />
               <span className="text-[13px] leading-tight font-extrabold text-fg">{row.title}</span>
+              <UseCount uses={usesOf(game, row.id)} />
               <span className="line-clamp-4 text-[11px] leading-snug text-muted">{row.off ?? row.detail}</span>
             </button>
           );

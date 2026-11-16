@@ -7,7 +7,7 @@
  * their minis a little under your own average, skips the fights and stunts you would pick yourself, and
  * lets ordinary weeks pass quietly (fewer small events, good and bad).
  */
-import { act, actionsFor, ageUp, choose, focusId, isChatter, resolveMini } from "./engine";
+import { act, actionsFor, ageUp, asRoutine, choose, focusId, isChatter, resolveMini } from "./engine";
 import { getPower } from "./combo";
 import { econOf } from "./economy";
 import { masteryLevel, powerRank } from "./mastery";
@@ -37,7 +37,7 @@ export function habitsOf(g: Game): Habits {
 /** Record a manual action (only when it actually did something). Recent actions weigh more. */
 export function noteAct(before: Game, after: Game, id: string): Game {
   if (after === before || after.phase === "dead") return after;
-  const moved = after.majorsLeft !== before.majorsLeft || after.phase !== before.phase;
+  const moved = after.majorsLeft !== before.majorsLeft || (after.yearDebt ?? 0) !== (before.yearDebt ?? 0) || after.phase !== before.phase;
   if (!moved) return after;
   const key = id.startsWith("time:") ? id : id.split("|")[0]!;
   if (!(ROUTINE as readonly string[]).includes(key) && !key.startsWith("time:")) return after;
@@ -104,6 +104,11 @@ export const SKIP_REPEAT_COST = 1.6;
 
 /** The plan for this month: everyday actions you can do now, your recent habits first. */
 export function monthPlan(g: Game, used: Record<string, number> = {}): { id: string; label: string }[] {
+  // The routine's view: monthly blocks and gates, not your yearly counts (pacing.ts).
+  return asRoutine(() => monthPlanInner(g, used));
+}
+
+function monthPlanInner(g: Game, used: Record<string, number> = {}): { id: string; label: string }[] {
   const h = habitsOf(g);
   const rows = actionsFor(g)
     .filter((a) => !a.disabled && ((ROUTINE as readonly string[]).includes(a.id) || a.id.startsWith("time:")))
@@ -205,6 +210,11 @@ export function stopFor(before: Game, after: Game, first: boolean): { kind: Skip
 
 /** Spend this month's moves on your everyday plan. Stops (returns a stop) if something needs you. */
 export function playMonth(g: Game, did: Map<string, { label: string; count: number }> = new Map(), ratio?: number): { g: Game; stop: ReturnType<typeof stopFor> } {
+  // Routine work: monthly blocks, no per-option counting (pacing.ts).
+  return asRoutine(() => playMonthInner(g, did, ratio));
+}
+
+function playMonthInner(g: Game, did: Map<string, { label: string; count: number }> = new Map(), ratio?: number): { g: Game; stop: ReturnType<typeof stopFor> } {
   let cur = g;
   // Rest is free once a month; take it when worn down, like a careful player would.
   if (cur.stats.health < 70 && !cur.flags.rested) {
@@ -214,7 +224,7 @@ export function playMonth(g: Game, did: Map<string, { label: string; count: numb
   const tried = new Set<string>();
   const used: Record<string, number> = {};
   for (let guard = 0; guard < 8 && cur.majorsLeft > 0 && liveish(cur); guard++) {
-    const plan = monthPlan(cur, used).filter((row) => !tried.has(row.id));
+    const plan = monthPlanInner(cur, used).filter((row) => !tried.has(row.id));
     const next = plan[0];
     if (!next) break;
     const n = tryAction(cur, next.id, ratio);
@@ -258,6 +268,11 @@ function tasteOf(before: Game, after: Game): number {
  * anything that matters (fights, tagged minis, canon, cases) so the skip still stops for those.
  */
 export function settleSmall(g: Game): { g: Game; line: string } | null {
+  // Routine work: monthly blocks, no per-option counting (pacing.ts).
+  return asRoutine(() => settleSmallInner(g));
+}
+
+function settleSmallInner(g: Game): { g: Game; line: string } | null {
   if (g.phase === "mini" && g.minigame) {
     if (g.minigame.kind === "duel" || g.minigame.tag) return null;
     const n = resolveMini(g, autoRatio(g));
@@ -347,6 +362,11 @@ export function autoResolveFight(g: Game): Game {
 }
 
 export function settleAdult(g: Game): { g: Game; line: string; fight?: boolean } | null {
+  // Routine work: monthly blocks, no per-option counting (pacing.ts).
+  return asRoutine(() => settleAdultInner(g));
+}
+
+function settleAdultInner(g: Game): { g: Game; line: string; fight?: boolean } | null {
   if (g.phase !== "choice" || !g.pending) return null;
   const id = g.pending.id;
   if (id.startsWith("canon|") || /case|arc(?!h)/.test(id) || BIG_EVENTS.has(id) || id.startsWith("grief-") || id.startsWith("slip-")) return null;
@@ -393,6 +413,11 @@ export function settleAdult(g: Game): { g: Game; line: string; fight?: boolean }
 }
 
 export function fastForward(game: Game, span: SkipSpan, opts: { settle?: boolean | "adult" } = {}): Game {
+  // Routine work: monthly blocks, no per-option counting (pacing.ts).
+  return asRoutine(() => fastForwardInner(game, span, opts));
+}
+
+function fastForwardInner(game: Game, span: SkipSpan, opts: { settle?: boolean | "adult" } = {}): Game {
   if (game.phase !== "live" || game.reveal) return game;
   const start = structuredClone(game);
   start.skipReport = null;

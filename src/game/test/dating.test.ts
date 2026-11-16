@@ -1,7 +1,7 @@
 // Dating (Priority 0a, 2026-11-11): meet, flirt, ask out, stages, break up. Run: npm run test:game
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { act, actionsFor, ageUp, createGame } from "../engine.ts";
+import { act, actionsFor, ageUp, CAP_LINE, createGame } from "../engine.ts";
 import { ASK_AT, flirtChance, livesWithPartner, oddsLabel, PLACES, splitCost, stageOf, tasteOf } from "../dating.ts";
 import { livingCosts, livingOf } from "../economy.ts";
 import type { Game, Person } from "../types.ts";
@@ -62,7 +62,7 @@ test("meet: no meeting while partnered; two crushes at most; a job for work", ()
   assert.ok(!ids(p).some((id) => id.startsWith("love|meet|")));
 });
 
-test("flirt: odds depend on the stat and their taste; a hit raises interest, a miss lowers it; once a month", () => {
+test("flirt: odds depend on the stat and their taste; a hit raises interest, a miss lowers it; three times a year per person", () => {
   const g = at(25);
   const p = withCrush(g);
   const taste = tasteOf(p);
@@ -82,8 +82,17 @@ test("flirt: odds depend on the stat and their taste; a hit raises interest, a m
     const after = n.relationships.find((r) => r.id === c.id)!;
     if (after.closeness > 30) hits++;
     else if (after.closeness < 30) misses++;
-    assert.equal(act(n, `love|flirt|${c.id}|bold`), n, "once a month per person");
-    assert.equal(n.majorsLeft, 3, "flirting is free time");
+    // Year pacing (2026-11-16): up to three flirts a year with the same person, whatever the line.
+    const two = act(n, `love|flirt|${c.id}|bold`);
+    if (!two.relationships.find((r) => r.id === c.id)?.alive) continue;
+    assert.notEqual(two, n, "a second flirt this year");
+    const three = act(two, `love|flirt|${c.id}|sweet`);
+    if (!three.relationships.find((r) => r.id === c.id)?.alive) continue;
+    assert.equal(three.yearUses?.[`love|flirt|${c.id}`], 3);
+    const four = act(three, `love|flirt|${c.id}|wit`);
+    assert.deepEqual(four.relationships, three.relationships, "three a year per person");
+    assert.deepEqual(four.card.banner, [CAP_LINE]);
+    assert.equal(three.majorsLeft, 3, "flirting is free time");
   }
   assert.ok(hits > 0 && misses > 0, `both outcomes happen (${hits} / ${misses})`);
 });

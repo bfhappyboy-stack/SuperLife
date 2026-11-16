@@ -7,6 +7,7 @@ import { useState } from "react";
 import { buzz } from "@/components/game/haptics";
 import { ROUTINE_MAX, routineOptions } from "@/game/flow";
 import { monthPlan } from "@/game/skip";
+import { PACING } from "@/game/pacing";
 import { useGame } from "@/game/store";
 import type { Game } from "@/game/types";
 
@@ -17,7 +18,8 @@ export function RoutineCard({ game }: { game: Game }) {
   const label = (id: string) => options.find((o) => o.id === id)?.label ?? id;
   const pinned = (game.routine ?? []).filter((id) => options.some((o) => o.id === id));
   // With nothing pinned, show what Play will lean on (your habits).
-  const auto = pinned.length ? [] : monthPlan(game).filter((r) => !r.id.startsWith("time:")).slice(0, ROUTINE_MAX).map((r) => r.id);
+  // Year pacing: the routine plays the months ahead, so show a fresh month's plan even when this one is spent.
+  const auto = pinned.length ? [] : monthPlan(PACING.year ? { ...game, majorsLeft: 3 } : game).filter((r) => !r.id.startsWith("time:")).slice(0, ROUTINE_MAX).map((r) => r.id);
   const toggle = (id: string) => {
     buzz("tap");
     const cur = game.routine ?? [];

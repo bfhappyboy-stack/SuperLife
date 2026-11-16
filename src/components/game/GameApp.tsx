@@ -17,6 +17,8 @@ import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
 import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
 import { RoutineCard } from "@/components/game/Routine";
 import { FLOW_ON, stepLabel } from "@/game/flow";
+import { PACING, USES_PER_YEAR, blocksLeft, hasTime } from "@/game/pacing";
+import { UseCount } from "@/components/game/UseCount";
 import { autoResolveOdds } from "@/game/skip";
 import { borrowAmounts, borrowBlock, canTalkMoney, lendAmounts, loanLine, openLoan, temperOf, termFor, trustOf } from "@/game/ties";
 import { CityScene, TitleArt, useArt } from "@/components/game/Scene";
@@ -237,7 +239,7 @@ function Life({ game }: { game: Game }) {
     .map((row) => row.action)
     .filter((action) => !sealedPanel || !(action.id === "sealed" || action.id === "guessed" || action.id.startsWith("guess|")));
   const sections = useMemo(() => group(visible), [visible]);
-  const elsewhere = game.majorsLeft > 0 ? DESKS.filter((item) => item.id !== desk && placed.some((row) => row.desk === item.id && !row.action.disabled)) : [];
+  const elsewhere = hasTime(game) ? DESKS.filter((item) => item.id !== desk && placed.some((row) => row.desk === item.id && !row.action.disabled)) : [];
   const team = teamById(game.teamId);
   const school = schoolById(game.schoolId);
   const job = jobById(game.jobId);
@@ -410,7 +412,7 @@ function Life({ game }: { game: Game }) {
               {choosing && game.card.money && <MoneyLine report={game.card.money} />}
             </article>
             )}
-            {choosing && game.pending && <EventScene game={game} prompt={game.pending.prompt} />}
+            {choosing && game.pending && <EventScene game={game} prompt={game.pending.prompt} eventId={game.pending.id} />}
             {!choosing && desk === "life" && game.card.money && (
               <MoneyReport
                 key={`${game.age}-${game.month}`}
@@ -530,7 +532,7 @@ function Life({ game }: { game: Game }) {
                 )}
                 {sections.length === 0 && !(desk === "gift" && (activeShelf === "Book" || activeShelf === "Teachers" || activeShelf === "Moves")) && !(desk === "cases" && activeShelf === "Files") && (
                   <div className="card px-4 py-4">
-                    <p className="text-sm text-muted">{game.majorsLeft <= 0 && game.phase === "live" ? FLOW_ON ? "Free time's spent. Tap Play: your routine carries on." : "Out of moves this month. Tap Next month, or Skip to fast-forward a season or a year." : EMPTY[desk]}</p>
+                    <p className="text-sm text-muted">{!hasTime(game) && game.phase === "live" ? PACING.year ? "No free time left this year. Age up when you're ready." : FLOW_ON ? "Free time's spent. Tap Play: your routine carries on." : "Out of moves this month. Tap Next month, or Skip to fast-forward a season or a year." : EMPTY[desk]}</p>
                     {elsewhere.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         <p className="t-label w-full text-fg">Things you can do right now</p>
@@ -565,12 +567,18 @@ function Life({ game }: { game: Game }) {
                       <Play className="size-4 fill-current" aria-hidden />
                       {stepLabel(game).title}
                     </span>
+                    {PACING.year ? (
+                      <span className="flex items-center gap-1 text-[10px] font-extrabold tracking-[0.14em] opacity-85" aria-label={`Every option up to ${USES_PER_YEAR} times a year. ${blocksLeft(game)} blocks of free time left this year; your routine fills the rest`}>
+                        <span className="uppercase">{`${USES_PER_YEAR}× each a year · ${blocksLeft(game)} free`}</span>
+                      </span>
+                    ) : (
                     <span className="flex items-center gap-1 text-[10px] font-extrabold tracking-[0.14em] opacity-85" aria-label={`${game.majorsLeft} blocks of free time left this month; your routine fills the rest`}>
                       {[0, 1, 2].map((i) => (
                         <span key={i} className={`inline-block size-1.5 rounded-full ${i < game.majorsLeft ? "bg-white" : "bg-white/25"}`} />
                       ))}
                       <span className="ml-1 uppercase">{game.majorsLeft > 0 ? `${game.majorsLeft} free · then routine` : `${stepLabel(game).sub} · your routine`}</span>
                     </span>
+                    )}
                   </button>
                 ) : (
                 <button
@@ -953,6 +961,7 @@ function ActionRow({ action, file, onPress }: { action: ActionItem; file?: boole
         <span className="flex items-center gap-1.5 font-bold text-fg">
           {action.label}
           {action.accent && !action.disabled && <span className="rounded-full bg-gold px-1.5 py-px text-[9px] font-black tracking-wider text-paper-ink">NEW</span>}
+          <UseCount uses={action.uses} cap={action.cap} className="ml-auto" />
         </span>
         <span className="line-clamp-2 text-[13px] leading-snug text-muted">{action.disabled ?? action.detail}</span>
       </span>

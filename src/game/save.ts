@@ -12,6 +12,7 @@ import { resolveLook } from "./look";
 import { STARTER_IDS } from "./powers.catalog";
 import { presetById } from "./presets";
 import { asDifficulty, DEFAULT_DIFFICULTY } from "./difficulty";
+import { migratePacing } from "./pacing";
 import type { Game } from "./types";
 
 /** The original single save. Kept untouched after migration as a backup. */
@@ -123,6 +124,7 @@ function migrate(game: Game): Game {
   }
   migrateChapters(next);
   migrateAutoFights(next);
+  migratePacing(next);
   ensureSuit(next);
   ensureTies(next);
   ensureMarket(next);
