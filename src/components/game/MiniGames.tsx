@@ -5,12 +5,14 @@
  * All of them render inside MiniFrame, are touch-first with 56px+ targets, and score 0–1.
  */
 import { Baby, ChevronLeft, ChevronRight, Flame, PersonStanding, User, Weight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniFrame, Pips } from "@/components/game/MiniKit";
+import { RESCUE_FACES } from "@/components/game/miniStageState";
+import { PhotoFace } from "@/components/game/PhotoFace";
 import { clampDifficulty, seeded, skinColor, useFinish, useIntro, type Mark } from "@/components/game/miniUtil";
-import { chaseCourse, chaseScore, pressRounds, pressScore, type Tone } from "@/game/minis";
+import { chaseCourse, chaseScore, pressRounds, pressScore, rescueFace, type Tone } from "@/game/minis";
 import type { MinigameSpec } from "@/game/types";
 
 type Props = { spec: MinigameSpec; onDone: (ratio: number) => void };
@@ -164,6 +166,17 @@ export function Hack({ spec, onDone }: Props) {
 /* Rescue: window triage                                               */
 /* ------------------------------------------------------------------ */
 
+function RescueFace({ gameSeed, spawn, fallback }: { gameSeed: number; spawn: Spawn; fallback: ReactNode }) {
+  const face = rescueFace(gameSeed, spawn.id, spawn.icon);
+  return (
+    <span className="anim-pop relative block aspect-square w-[72%] max-w-[76px]" data-rescue-face>
+      <PhotoFace seed={face.seed} age={face.age} sex={face.sex} className="size-full !rounded-full shadow-[0_6px_14px_-6px_rgb(0_0_0/0.8)]" fallback={<span className="grid size-full place-items-center">{fallback}</span>} />
+      {/* Warm window light falling on them from inside the room. */}
+      <span className="pointer-events-none absolute inset-0 rounded-full" style={{ background: "radial-gradient(70% 60% at 50% 15%, rgb(255 214 140 / .28), transparent 70%)", boxShadow: "inset 0 0 0 2px rgb(255 236 190 / .55)" }} aria-hidden />
+    </span>
+  );
+}
+
 type Spawn = { id: number; cell: number; at: number; life: number; hazard: boolean; icon: number };
 
 export function Rescue({ spec, onDone }: Props) {
@@ -249,7 +262,7 @@ export function Rescue({ spec, onDone }: Props) {
       }
     >
       {/* A building facade: three floors of windows. */}
-      <div className="absolute inset-x-5 top-14 bottom-4 rounded-t-[1.4rem] border border-white/10 bg-gradient-to-b from-[#2a2f3f] to-[#161a24] p-3 shadow-[inset_0_2px_0_rgba(255,255,255,.06)]">
+      <div className={`absolute inset-x-5 top-14 bottom-4 rounded-t-[1.4rem] border border-white/10 p-3 shadow-[inset_0_2px_0_rgba(255,255,255,.06)] ${RESCUE_FACES ? "bg-[linear-gradient(180deg,rgb(34_39_54/.78),rgb(18_22_31/.9))] backdrop-blur-[2px]" : "bg-gradient-to-b from-[#2a2f3f] to-[#161a24]"}`}>
         <div className="grid h-full grid-cols-3 grid-rows-3 gap-2.5">
           {Array.from({ length: 9 }, (_, cell) => {
             const spawn = live.find((s) => s.cell === cell);
@@ -271,7 +284,9 @@ export function Rescue({ spec, onDone }: Props) {
                   background: spawn
                     ? spawn.hazard
                       ? "radial-gradient(circle at 50% 70%, #ff8a3d, #a8300f 70%)"
-                      : "linear-gradient(180deg, #ffe7a8, #f0b85a)"
+                      : RESCUE_FACES
+                        ? "radial-gradient(90% 70% at 50% 38%, #ffe6ad, #f0b45a 55%, #b8692a 100%)"
+                        : "linear-gradient(180deg, #ffe7a8, #f0b85a)"
                     : "linear-gradient(180deg, #1d2333, #0f131c)",
                   boxShadow: spawn ? `0 0 18px -2px ${spawn.hazard ? "#ff6a2b" : "#ffcf4d"}` : "inset 0 2px 6px rgba(0,0,0,.6)",
                 }}
@@ -280,11 +295,16 @@ export function Rescue({ spec, onDone }: Props) {
                   <>
                     {!spawn.hazard && (
                       <span
-                        className="absolute top-1/2 left-1/2 aspect-square w-[78%] max-w-[84px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-                        style={{ background: `conic-gradient(${left > 0.35 ? "#3dba8c" : "#ef5d52"} ${left * 360}deg, rgba(0,0,0,.18) 0)`, mask: "radial-gradient(circle, transparent 58%, #000 60%)", WebkitMask: "radial-gradient(circle, transparent 58%, #000 60%)" }}
+                        className={`absolute top-1/2 left-1/2 aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full ${RESCUE_FACES ? "w-[90%] max-w-[96px]" : "w-[78%] max-w-[84px]"}`}
+                        style={{ background: `conic-gradient(${left > 0.35 ? "#3dba8c" : "#ef5d52"} ${left * 360}deg, rgba(0,0,0,.18) 0)`, mask: RESCUE_FACES ? "radial-gradient(closest-side, transparent 82%, #000 84%)" : "radial-gradient(circle, transparent 58%, #000 60%)", WebkitMask: RESCUE_FACES ? "radial-gradient(closest-side, transparent 82%, #000 84%)" : "radial-gradient(circle, transparent 58%, #000 60%)" }}
                       />
                     )}
-                    <Icon className={`anim-pop size-8 ${spawn.hazard ? "text-[#ffe0a0]" : "text-[#3a2410]"}`} style={spawn.hazard ? { filter: "drop-shadow(0 0 8px #ffb347)" } : undefined} />
+                    {RESCUE_FACES && !spawn.hazard ? (
+                      // A painted person at the window, lit from inside, inside the countdown ring; the glyph shows until the sheet loads.
+                      <RescueFace gameSeed={spec.seed ?? 5} spawn={spawn} fallback={<Icon className="anim-pop size-8 text-[#3a2410]" />} />
+                    ) : (
+                      <Icon className={`anim-pop size-8 ${spawn.hazard ? "text-[#ffe0a0]" : "text-[#3a2410]"}`} style={spawn.hazard ? { filter: "drop-shadow(0 0 8px #ffb347)" } : undefined} />
+                    )}
                   </>
                 )}
                 {!spawn && done && taken[done.id] === "saved" && <HitBurst color="#3dba8c" size={56} count={7} seed={done.id} />}
@@ -471,6 +491,7 @@ export function Hold({ spec, onDone }: Props) {
     <MiniFrame
       spec={spec}
       kind="hold"
+      stageSide="right"
       intro={go}
       result={result}
       note={go ? (view.ok ? "Steady. Keep it there." : view.level > view.center ? "Too high. Ease off." : "Too low. Push.") : undefined}
