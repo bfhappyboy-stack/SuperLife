@@ -165,6 +165,11 @@
 @keyframes duel-shake { 0%, 100% { translate: 0 0; } 15% { translate: -7px 2px; } 35% { translate: 6px -2px; } 55% { translate: -4px 1px; } 75% { translate: 2px 0; } }
 @keyframes duel-hurt { 0% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes duel-shield { 0% { opacity: 0; transform: scale(.7); } 100% { opacity: 1; transform: scale(1); } }
+/* Hit-stop (2026-11-17 am): on a big hit the struck card flashes white and the whole exchange (lunge, float, shake, red
+   flash, screen quake) holds that frame for ~65-95 ms, then plays on. Same beat as story duels (FX_HITSTOP). */
+.fx-hitstop .duel-card, .fx-hitstop .duel-hurt, .fx-hitstop .fx-lunge, .fx-hitstop .anim-float { animation-play-state: paused !important; }
+.fx-hitstop .duel-card[data-pose="hit"] { filter: brightness(2.3) saturate(.35); transition: none; }
 @media (prefers-reduced-motion: reduce) {
+  .fx-hitstop .duel-card[data-pose="hit"] { filter: none; }
   .duel-card, .duel-card[data-pose="hit"], .duel-hurt, .duel-shield { animation: none; }
 }

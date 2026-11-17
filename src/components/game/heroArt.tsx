@@ -82,7 +82,7 @@ export function Cutout({ src, name, glow, pose, flip, scale = 1, outfit, artKey 
 }
 
 /** A puff of dust where a fighter goes down (2026-11-16 night): soft, warm grey, a touch of their light, after the fall lands. */
-function KoDust({ glow }: { glow: string }) {
+export function KoDust({ glow }: { glow: string }) {
   return (
     <span className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4" data-ko-dust aria-hidden>
       {([[-1, 0], [1, 0.06], [-0.4, 0.12], [0.5, 0.18]] as const).map(([dir, delay], i) => (

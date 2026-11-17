@@ -13,7 +13,7 @@ import "./arena.css";
 import { Figure, type Pose } from "@/components/game/Figure";
 import { LifeHeroArt } from "@/components/game/LifeHeroArt";
 import { toneOf } from "@/game/outfit";
-import { Standee, mysteryArtKey } from "@/components/game/heroArt";
+import { KoDust, Standee, mysteryArtKey } from "@/components/game/heroArt";
 import { PortraitPoster } from "@/components/game/PortraitStandee";
 import { lifePortraitSeed, PORTRAIT_STANDEES } from "@/game/heroArt";
 import { lifeLine } from "@/components/game/lifeLine";
@@ -23,7 +23,7 @@ import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { VillainArt, type VillainCrop } from "@/components/game/VillainArt";
 import { hasVillainArt } from "@/components/game/villainArt.data";
 import { useArt } from "@/components/game/Scene";
-import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, FX_HITSTOP, HITSTOP_CRIT_MS, HITSTOP_MS, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS } from "@/game/elements";
 import { answerOf, BREATH, keyOf } from "@/game/duel";
 import {
@@ -713,6 +713,9 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
   const [lunge, setLunge] = useState<{ key: number; side: Side } | null>(null);
   const [impact, setImpact] = useState<Impact | null>(null);
   const [quake, setQuake] = useState<number | null>(null);
+  const [stop, setStop] = useState(0);
+  // K.O. beat (2026-11-17 am): the loser's fall and dust play on the open stage before the round-over card darkens it.
+  const [koCard, setKoCard] = useState(bout.done);
   const [line, setLine] = useState<string>("");
   const [ko, setKo] = useState<null | "ko" | "time" | "double">(bout.done ? (bout.end ?? "ko") : null);
   const [intro, setIntro] = useState(bout.turn === 0);
@@ -773,6 +776,11 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
     const pose: Pose = amount > 0 ? (guarded ? "guard" : "hit") : "guard";
     setPoses((p) => (on === 0 ? [pose, p[1]] : [p[0], pose]));
     if (big) setQuake(key);
+    // Hit-stop (2026-11-17 am): the struck card holds its impact frame for a beat, as in story duels; a hit that won the edge holds longer.
+    if (big && FX_HITSTOP && amount > 0) {
+      setStop(key);
+      later(win ? HITSTOP_CRIT_MS : HITSTOP_MS, () => setStop((k) => (k === key ? 0 : k)));
+    }
   }
 
   function play(move: DuelMove) {
@@ -868,6 +876,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
       later(T.rest, () => {
         setPoses([b.fighters[0].hp > 0 ? "idle" : "ko", b.fighters[1].hp > 0 ? "idle" : "ko"]);
         setKo(b.end ?? "ko");
+        later(FX_HITSTOP ? KO_BEAT_MS : 0, () => setKoCard(true));
         buzz([40, 30, 80]);
       });
       later(T.rest + 200, () => setBusy(false));
@@ -897,7 +906,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
         <HpCard f={fb} hp={shown[1]} max={them.maxHp} lead={hud.leader === 1 && !hud.done} hot={impact?.on === 1 ? impact.key : 0} extra={them} right />
       </div>
 
-      <div key={quake ?? "still"} className={`scene-arena relative min-h-[176px] max-h-[300px] flex-1 overflow-hidden rounded-[1.25rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+      <div key={quake ?? "still"} className={`scene-arena relative min-h-[176px] max-h-[300px] flex-1 overflow-hidden rounded-[1.25rem] border border-white/10 ${quake ? "fx-quake" : ""} ${stop ? "fx-hitstop" : ""}`} data-hitstop={stop ? "on" : undefined}>
         {city && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-30 saturate-[.6]" />}
         <div className="absolute inset-0" style={{ background: `radial-gradient(45% 55% at 22% 92%, color-mix(in srgb, ${fa.color} 38%, transparent), transparent 70%), radial-gradient(45% 55% at 78% 92%, color-mix(in srgb, ${fb.color} 38%, transparent), transparent 70%)` }} />
         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
@@ -1019,7 +1028,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
         <RotateCcw className="size-4" aria-hidden /> Catch a breath · +3 energy{answer === "guard" ? " · counters" : ""}
       </button>
 
-      {roundOver && <RoundOver match={match} ko={ko!} net={net} onNext={() => (net ? net.ready() : onRoundDone(nextRound(match)))} onSkip={() => (net ? net.ready() : onRoundDone(finish(nextRound(match))))} />}
+      {roundOver && koCard && <RoundOver match={match} ko={ko!} net={net} onNext={() => (net ? net.ready() : onRoundDone(nextRound(match)))} onSkip={() => (net ? net.ready() : onRoundDone(finish(nextRound(match))))} />}
       {quitAsk && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 px-6" role="dialog" aria-label="Leave the match?">
           <div className="card-glass w-full px-4 py-4 text-center">
@@ -1116,9 +1125,13 @@ function DuelCard({ f, side, lunging, pose, hitKey }: { f: ArenaFighter; side: S
         {pose === "guard" && <span className="duel-shield" aria-hidden />}
       </div>
       </div>
+      {pose === "ko" && FX_HITSTOP && <KoDust glow={`color-mix(in srgb, ${accentOf(f)} 35%, #c9c0ad)`} />}
     </div>
   );
 }
+
+/** How long the fall and the K.O. dust get on the open stage before the round-over card comes up (FX_HITSTOP on). */
+const KO_BEAT_MS = 950;
 
 /** The metal-cast K.O. title fills (same as the Duel result card, 2026-11-15 am). */
 const KO_GOLD = "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)";
