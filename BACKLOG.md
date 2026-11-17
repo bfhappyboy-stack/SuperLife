@@ -1,11 +1,17 @@
 # SuperLife — Backlog
 
+## From the 2026-11-17 am pass
+
+- **Done:** Arena fight cards get the hit-stop, the white impact frame and K.O. dust, and the K.O. card waits a beat so the fall is seen (`FX_HITSTOP`).
+- **Next for juice:** Arena round transitions (round 2/3 slam-in).
+- **Images still come first:** `/workspace/img-requests-1116am.md`, then `-1116pm.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE` (a life that never picked a suit line wears the line painted in its skin tone)?
+
 ## From the 2026-11-16 night pass
 
 - **Done:** kids 7-12, lives with no power family and online Arena opponents stand as their painted portrait instead of the paper doll or the drawn silhouette (`PORTRAIT_STANDEES`); hit-stop on big hits and K.O. dust (`FX_HITSTOP`).
 - **Still drawn with art on:** the creator and the Closet only fall back to the paper doll with `PAINTED_FACES` / `ART_HEROES` off. The foe-side doll in duels is unreachable with art on (every villain has a street cutout, every hero foe a suit).
 - **Next for art:** a real painted kid set (7-12, full body in street clothes) would replace the portrait cards; per-hero mask/glove/boot layers (still "buffs only"). The image lists in `/workspace/img-requests-1116am.md` and `-1116pm.md` still come first.
-- **Next for juice:** hit-stop and dust for the Arena fight cards (they use their own card, not the shared cutout).
 
 ## From the 2026-11-16 pm pass
 

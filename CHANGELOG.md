@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-17 (am): Arena hits land like story duels (`devbot/2026-11-17-am`)
+
+Built on `origin/devbot/2026-11-16-night` (f91db5c, which carries the unmerged pm, am and suits work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (382), built and loaded at 390×844 before push. Shots: `/workspace/shots-1117am/`.
+
+### Increment 1: hit-stop and K.O. dust on the Arena fight cards
+
+- **The gap:** last night's hit-stop and K.O. dust only reached story duels. Arena fights use their own tilted fighter cards, so a big Arena hit flowed straight through, and the loser's fall was hidden: the dark round-over card (K.O.! title) came up the same instant the card fell, so nothing of the fall or dust could be seen.
+- **Fix:** on a big Arena hit (the ones that already shake the screen) the struck card flashes white and the whole exchange holds that frame for 65 ms (95 ms when the hit won the edge), then the recoil, the red flash and the shake play. When a fighter goes down, their card tips and greys on the open stage and kicks up a soft puff of warm dust; about a second later the K.O.! card comes up as before. Measured at 390×844: holds of 89–104 ms including frame timing. Reduced motion turns the flash, freeze and dust off.
+- **Code:** `land()` and a `koCard` beat (`KO_BEAT_MS` 950) in `Battle` (`Arena.tsx`); `KoDust` exported from `heroArt.tsx` and drawn under the falling `DuelCard`; CSS `.fx-hitstop .duel-card…` in `arena.css`. Same switch as story duels: `FX_HITSTOP` off = no freeze, no dust and the round-over card comes up at once. No rules, payouts or saves change; online rounds get the same beat.
+
 ## 2026-11-16 (night): no more paper dolls on the stage, and hits that land (`devbot/2026-11-16-night`)
 
 Built on `origin/devbot/2026-11-16-pm` (e3a1fde, which carries the unmerged suits and am work), so merge this one PR alone. Each increment typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (382), built and loaded at 390×844 before push. Shots: `/workspace/pt1116night/shots/`.

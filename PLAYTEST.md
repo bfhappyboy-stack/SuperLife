@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-17 am): Arena hit feel
+
+**Played:** three scripted Arena drafts at 390×844 (Hulk, Superman, Thor against the AI's random draft), round 1 played to a K.O. each time (`/workspace/pt1117am/arena-fight.mjs`). Before = the night branch (port 8122), after = this branch (port 8123).
+
+**Before/after:** `/workspace/shots-1117am/before-after-arena-ko.png` (left: before, the K.O. card covers the fall; then after at ~0.25 s, ~0.5 s and ~1.5 s); hit-stop frames `after-arena-hitstop-0.png`, `-1.png`.
+
+**Findings:**
+- **Arena hits had no weight (fixed):** big hits now freeze on a white impact frame for 89–104 ms (measured), then shake. Turns don't feel slower.
+- **The K.O. was invisible (fixed):** before, the dark round-over card came up the instant the loser fell, so the fall and dust never showed. Now Hulk's card tips over grey on the open stage with a warm dust puff at its feet, and the K.O.! card follows about a second later. The first try tinted the dust in the fighter's colour (a green smear under Hulk); it is now mostly warm grey with a hint of their light.
+- No console errors, no sideways scroll.
+
 ## Night pass (2026-11-16 night): kids and faceless lives on the stage, hit feel
 
 **Played:** duels against Rent at 390×844 from crafted saves (`/workspace/pt1116night/saves/`): fire (m) at 10 (the power is in, no suit yet) and the same life at 24 played to a K.O.; the Arena draft and pick sheet with that saved life, once with its power family stripped (a temporary local edit, not committed) to stand in for an online opponent, whose snapshot never carries a family. Before = `PORTRAIT_STANDEES` off (same as the pm branch), after = on (port 8122).
