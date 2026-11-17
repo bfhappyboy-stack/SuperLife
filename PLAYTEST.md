@@ -1,5 +1,17 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-17 night): case-file villains and press reporters
+
+**Checked** at 390×844 with the adult fire (m) save (Cases → Files) and the press minigame save (`mini-adult-fire-m-press`), using `/workspace/pt1117pm/tap.mjs`. Before = the pm branch (port 8124), after = this branch (port 8125).
+
+**Before/after:** `/workspace/shots-1117night/before-after-cases.png`, `/workspace/shots-1117night/before-after-press.png` (singles: `before-*.png` / `after-*.png`).
+
+**Findings:**
+- **Icon tile on case rows (fixed):** "The Kiln Ledger" row now shows Cinder Mallory as a painted fire villain's face (cropped from `cut-street-fire`) in the case's red tint; the crop lands on the head at 36 px.
+- **Letter tile for reporters (fixed):** Mina (School paper) now shows a painted 9-year-old girl's portrait with a green ring instead of a green "Ma" tile; layout, timer and lines are unchanged.
+- **Still open:** case villains who share a power share a face (Encore and Second Skin, Frost Warden and Undertow) until the named `case-*` portraits are painted.
+- No console errors, no sideways scroll.
+
 ## Afternoon pass (2026-11-17 pm): minigames on a painted stage
 
 **Surveyed** every desk and shelf, the event screens and every minigame kind at 390×844 with an adult fire (m) life (`/workspace/pt1117pm/survey/`). Desks, People, Cases and "Your call" already read as painted; the skill minigames didn't. **Played** each kind from crafted mini saves (`/workspace/pt1117pm/saves/mini-*.json`): fire (m) 24 for all seven, fire (m) 10 (kid), a powerless 24 and a God Mode Batman life; a strike game was played to its result and a rescue played out (7 people tapped), both returned to the year with no errors. Before = the am branch code, after = this branch (port 8124).

@@ -1,5 +1,11 @@
 # SuperLife — Backlog
 
+## From the 2026-11-17 night pass
+
+- **Done:** Cases file rows show the villain's painted face (`CASE_FACES`); press reporters show painted faces (`PRESS_FACES`).
+- **Next for art:** the chase runner (a drawn orange token on a drawn road) is still the last drawn minigame piece; named case-villain portraits (`/workspace/img-requests-1117night.md`, 10 images, after the 1116am/pm lists).
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
 ## From the 2026-11-17 pm pass
 
 - **Done:** the skill minigames stand on a painted stage with you in it (`MINI_STAGE`); rescue windows show painted people (`RESCUE_FACES`).

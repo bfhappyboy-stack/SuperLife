@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-17 (night): painted villain faces on case files, painted reporters (`devbot/2026-11-17-night`)
+
+Built on `origin/devbot/2026-11-17-pm` (b2eeed2, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1117night/`.
+
+### Increment 1: case files show the villain, the press shows the reporter
+
+- **The gap (pm BACKLOG):** the Cases file rows and the open-case card showed an element icon tile where the villain should be, and the Press minigame showed the reporter as a coloured initials tile ("Ma"). Both were the last flat placeholders next to painted art.
+- **Fix:** each case row now shows its villain's painted face: the head and shoulders cropped from the painted street-villain cutout for that villain's power (the same figure you fight), framed in the case's tint. A named `case-<arc id>` painting takes over automatically once imported (10 prompts in `/workspace/img-requests-1117night.md`). Each of the six reporters has a fixed painted face from the portrait sheets (seed, age and sex per reporter; Mina is 9, Hal Brenner is 61), ringed in their colour. Painted art only; the icon and the letter tile come back while art loads or if missing.
+- **Code:** `CaseFace` + `CASE_FACES` in `src/components/game/PowerLab.tsx`; `PRESS_FACES` + `REPORTER_FACE` in `src/components/game/miniStageState.ts`, used by the Press game in `MiniGames.tsx`. No rules, scores or saves change.
+
 ## 2026-11-17 (pm): minigames on a painted stage (`devbot/2026-11-17-pm`)
 
 Built on `origin/devbot/2026-11-17-am` (1ccef68, which carries the unmerged night, pm, am and suits work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 before push. Shots: `/workspace/shots-1117pm/`.
