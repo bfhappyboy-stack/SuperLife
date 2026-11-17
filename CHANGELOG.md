@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-17 (pm): minigames on a painted stage (`devbot/2026-11-17-pm`)
+
+Built on `origin/devbot/2026-11-17-am` (1ccef68, which carries the unmerged night, pm, am and suits work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 before push. Shots: `/workspace/shots-1117pm/`.
+
+### Increment 1: the skill minigames get a painted stage with you in it
+
+- **The gap:** a UI survey at 390×844 (every desk and shelf, the event screens, every minigame kind) found the skill minigames were the crudest thing left. Strike, read, crack, rescue, press, hold and chase each played on a flat dark gradient box, often 300+ px of empty navy, and a life plays them hundreds of times (PLAYTEST 2026-10-31: 400–900 a life). The duel and the "Your call" scene were already painted; the minigames sat between them looking unfinished.
+- **Fix:** the arena is now a lit film still: your city's painting graded for night, the game's colour pooling low, and you standing in it off to one side, pushed back into the dark so the game on top stays readable. That's your painted suit cutout from 13 (suit line, tone and Closet layers included), a God Mode legend's painting (feathered on every edge), or, for a kid under 13 or a powerless life, your painted face (creator picks included). The hold meter sits left, so in hold you stand right. Painted art only, nothing drawn. The layer never takes a tap and is simply absent when an image is missing.
+- **Code:** `MiniBackdrop` in `src/components/game/MiniStage.tsx`; `MINI_STAGE`, `MiniHeroContext`, `miniFigureKind` in `miniStageState.ts`. `Minigame` passes the hero it already had for duels down through context; `MiniFrame` (`MiniKit.tsx`) and the two arenas in `Minigame.tsx` (strike, read) draw it under the game (`isolate` + z -1); `MiniFrame` takes a `stageSide`. Switch: `MINI_STAGE` off = the flat box. No rules, scores or saves change.
+
+### Increment 2: painted people at the rescue windows
+
+- **The gap:** the rescue game's people were drawn glyphs (a stick person and a baby face) on flat yellow pills.
+- **Fix:** each lit window now shows a painted person (a grown-up, an older neighbour or a little kid, in the same mix as the old glyphs) in a round frame lit warm from inside the room, with the countdown ring around them. The facade lets the painted city show through a little. The same game seed always puts the same faces in the same windows; the layout's random stream is untouched, so timings and scores are exactly as before. The glyph shows until the face sheet loads.
+- **Code:** `rescueFace` in `src/game/minis.ts`; `RescueFace` in `MiniGames.tsx`; switch `RESCUE_FACES` in `miniStageState.ts` (off = the glyphs).
+- **Tests:** +2 (`rescue-faces.test.ts`: faces are stable per seed and spawn; each glyph's age band holds, both sexes appear, faces vary).
+
 ## 2026-11-17 (am): Arena hits land like story duels (`devbot/2026-11-17-am`)
 
 Built on `origin/devbot/2026-11-16-night` (f91db5c, which carries the unmerged pm, am and suits work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (382), built and loaded at 390×844 before push. Shots: `/workspace/shots-1117am/`.

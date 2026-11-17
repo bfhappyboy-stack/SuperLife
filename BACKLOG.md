@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-17 pm pass
+
+- **Done:** the skill minigames stand on a painted stage with you in it (`MINI_STAGE`); rescue windows show painted people (`RESCUE_FACES`).
+- **Next for art:** the chase runner is still a drawn orange token on a drawn road (a painted top-down or back view of you would fix it); the press reporter's avatar is a letter tile (a painted reporter face from the adult sheet would do); the Cases file rows show an icon tile where the villain's painted portrait could stand.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, then `-1116pm.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
 ## From the 2026-11-17 am pass
 
 - **Done:** Arena fight cards get the hit-stop, the white impact frame and K.O. dust, and the K.O. card waits a beat so the fall is seen (`FX_HITSTOP`).

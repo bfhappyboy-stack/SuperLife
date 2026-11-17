@@ -1,5 +1,17 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-17 pm): minigames on a painted stage
+
+**Surveyed** every desk and shelf, the event screens and every minigame kind at 390×844 with an adult fire (m) life (`/workspace/pt1117pm/survey/`). Desks, People, Cases and "Your call" already read as painted; the skill minigames didn't. **Played** each kind from crafted mini saves (`/workspace/pt1117pm/saves/mini-*.json`): fire (m) 24 for all seven, fire (m) 10 (kid), a powerless 24 and a God Mode Batman life; a strike game was played to its result and a rescue played out (7 people tapped), both returned to the year with no errors. Before = the am branch code, after = this branch (port 8124).
+
+**Before/after:** `/workspace/shots-1117pm/before-after-mini-stage.png` (pairs: strike adult, hold kid, rescue), `before-after-mini-crack.png`; every kind in `before-mini-*.png` / `after-mini-*.png`, rescue faces `after-rescue-adult.png`, `after-rescue-kid.png`.
+
+**Findings:**
+- **Flat minigame boxes (fixed):** all seven games played on an empty dark gradient. They now stand on your city's painting with you in it: the fire hero's cutout at the left edge, the 10-year-old's painted face (glasses and all) on the right in hold, Batman's painting feathered in, the powerless life's face. The ball, rings, buttons and text all stay clear and readable; nothing moved.
+- **Drawn rescue people (fixed):** the stick-person and baby glyphs are now painted faces in warm window light with the countdown ring around them. One sample frame had three kids in four windows; that's the old glyph mix (one in three a kid), just a run of luck.
+- **First try fixes:** the Batman painting showed a hard edge where its sky ended (now feathered on every edge); the kid's face first sat over the hold weight (now smaller and higher); a ring mask measured from the corner hid the countdown ring (now measured from the side).
+- No console errors, no sideways scroll.
+
 ## Morning pass (2026-11-17 am): Arena hit feel
 
 **Played:** three scripted Arena drafts at 390×844 (Hulk, Superman, Thor against the AI's random draft), round 1 played to a K.O. each time (`/workspace/pt1117am/arena-fight.mjs`). Before = the night branch (port 8122), after = this branch (port 8123).
