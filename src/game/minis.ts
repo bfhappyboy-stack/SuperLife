@@ -300,3 +300,17 @@ export function pressRounds(seed: number, count: number): PressRound[] {
 export function pressScore(reporter: Reporter, tone: Tone): number {
   return tone === reporter.wants[0] ? 1 : tone === reporter.wants[1] ? 0.5 : 0;
 }
+
+/**
+ * Who is waiting at a rescue window: a stable painted face per spawn (same seed, same faces), with the age band
+ * following the old glyph (0 grown-up, 1 an older neighbour, 2 a little kid). Never touches the layout's random stream.
+ */
+export function rescueFace(gameSeed: number, spawnId: number, icon: number): { seed: number; age: number; sex: "male" | "female" } {
+  let h = (Math.imul(gameSeed + 1, 0x9e3779b1) ^ Math.imul(spawnId + 7, 0x85ebca6b)) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x7feb352d) >>> 0;
+  h = Math.imul(h ^ (h >>> 15), 0x846ca68b) >>> 0;
+  const seed = (h ^ (h >>> 16)) >>> 0;
+  const ages = [[24, 52], [64, 82], [4, 9]][icon % 3]!;
+  const age = ages[0]! + (seed % (ages[1]! - ages[0]! + 1));
+  return { seed, age, sex: (seed >>> 5) % 2 ? "female" : "male" };
+}
