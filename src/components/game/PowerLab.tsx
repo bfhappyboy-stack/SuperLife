@@ -17,6 +17,8 @@ import { dossier, homeArc, talkBrief } from "@/game/origin";
 import { hasGift } from "@/game/theme";
 import { AWAKEN_LESSONS, HERO_AWAKEN_BOND, MENTOR_AWAKEN_BOND, awakenBlock, braidBlock, library, type LibraryState } from "@/game/library";
 import { SealedGift } from "@/components/game/SealedGift";
+import { useArt } from "@/components/game/Scene";
+import { streetCutKey } from "@/game/heroArt";
 import { MovePicker, StreetSix } from "@/components/game/MovePicker";
 import { kitFor } from "@/game/kits";
 import { useGame } from "@/game/store";
@@ -457,6 +459,39 @@ function caseTint(arc: ArcDef): string {
   return ELEMENTS[elementOfLegacy(boss?.foePower)].color;
 }
 
+/**
+ * Case file rows show the case villain's painted face (2026-11-17 night): the arc villains have no named painting, so
+ * this crops the head and shoulders out of the painted street-villain cutout for their power (the same figure that
+ * stands opposite you in their fights), framed in the case tint. A named `case-<arc id>` painting replaces the crop once
+ * imported (requests: /workspace/img-requests-1117night.md). Off, or while the painting loads, = the element icon.
+ */
+export const CASE_FACES = true;
+
+function CaseFace({ arc, tint, size, icon }: { arc: ArcDef; tint: string; size: string; icon: string }) {
+  const power = arc.steps[arc.steps.length - 1]?.foePower;
+  // A named painting of this case's villain (`case-<arc id>`, square head-and-shoulders) wins when one is imported.
+  const named = useArt(CASE_FACES ? `case-${arc.id}` : "");
+  const street = useArt(CASE_FACES && !named ? streetCutKey(power) : "");
+  const src = named ?? street;
+  if (src) {
+    return (
+      <span className={`relative block ${size} shrink-0 overflow-hidden rounded-xl bg-[#141a26]`} style={{ boxShadow: `inset 0 0 0 1.5px ${tint}aa`, backgroundImage: `radial-gradient(80% 80% at 50% 30%, ${tint}55, transparent 75%)` }} data-case-face={arc.id}>
+        {named ? (
+          <img src={src} alt={arc.villain} draggable={false} decoding="async" className="block size-full object-cover object-top" />
+        ) : (
+          <img src={src} alt={arc.villain} draggable={false} decoding="async" className="absolute top-[4%] left-1/2 block w-[250%] max-w-none -translate-x-1/2" />
+        )}
+        <span className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.12),inset_0_-10px_14px_-10px_rgb(0_0_0/0.6)]" aria-hidden />
+      </span>
+    );
+  }
+  return (
+    <span className={`ico-tile ${size} shrink-0`} style={{ "--tile": tint } as React.CSSProperties}>
+      <ElementIcon element={elementOfLegacy(power)} className={icon} style={{ color: "currentColor" }} />
+    </span>
+  );
+}
+
 export function CaseFile({ game }: { game: Game }) {
   const current = currentCase(game);
   const open = availableArcs(game);
@@ -484,9 +519,7 @@ export function CaseFile({ game }: { game: Game }) {
               const local = homeArc(game.cityId, arc.id);
               return (
                 <li key={arc.id} className="flex items-center gap-3 rounded-xl border px-3 py-2" style={{ borderColor: `${tint}55`, backgroundImage: `linear-gradient(100deg, ${tint}1f, transparent 60%)` }}>
-                  <span className="ico-tile size-9 shrink-0" style={{ "--tile": tint } as React.CSSProperties}>
-                    <ElementIcon element={elementOfLegacy(arc.steps[arc.steps.length - 1]?.foePower)} className="size-4.5" style={{ color: "currentColor" }} />
-                  </span>
+                  <CaseFace arc={arc} tint={tint} size="size-9" icon="size-4.5" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold text-fg">{arc.title}</span>
                     <span className="block truncate text-xs text-muted">
@@ -512,9 +545,7 @@ export function CaseFile({ game }: { game: Game }) {
   return (
     <section className="card relative overflow-hidden px-4 py-3" style={{ borderColor: `${tint}80`, backgroundImage: `radial-gradient(120% 70% at 100% 0%, ${tint}2e, transparent 60%)` }}>
       <div className="flex items-start gap-3">
-        <span className="ico-tile size-12 shrink-0" style={{ "--tile": tint } as React.CSSProperties}>
-          <ElementIcon element={elementOfLegacy(arc.steps[arc.steps.length - 1]?.foePower)} className="size-6" style={{ color: "currentColor" }} />
-        </span>
+        <CaseFace arc={arc} tint={tint} size="size-12" icon="size-6" />
         <div className="min-w-0 flex-1">
           <p className="t-label text-[10px] text-muted">
             CASE FILE{arc.era ? ` · ${arc.era.toUpperCase()}` : ""} · {cleared} CLOSED

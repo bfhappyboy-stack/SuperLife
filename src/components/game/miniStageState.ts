@@ -20,3 +20,19 @@ export function miniFigureKind(hero: DuelHero | undefined): string {
 
 /** Rescue windows show painted people (PhotoFace) instead of the drawn person/baby glyphs. Off = the glyphs. */
 export const RESCUE_FACES = true;
+
+/**
+ * Press reporters show a painted face (PhotoFace, from the portrait sheets) instead of a coloured initials tile
+ * (2026-11-17 night). Off = the letter tile.
+ */
+export const PRESS_FACES = true;
+
+/** Who each reporter looks like on the painted sheets: a fixed seed, age and sex per reporter id. */
+export const REPORTER_FACE: Record<string, { seed: number; age: number; sex: "male" | "female" }> = {
+  tabloid: { seed: 4101, age: 34, sex: "female" },
+  anchor: { seed: 4217, age: 52, sex: "female" },
+  blogger: { seed: 4339, age: 19, sex: "male" },
+  critic: { seed: 4451, age: 61, sex: "male" },
+  kid: { seed: 4567, age: 9, sex: "female" },
+  rival: { seed: 4673, age: 42, sex: "male" },
+};

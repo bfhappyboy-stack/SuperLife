@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniFrame, Pips } from "@/components/game/MiniKit";
-import { RESCUE_FACES } from "@/components/game/miniStageState";
+import { PRESS_FACES, REPORTER_FACE, RESCUE_FACES } from "@/components/game/miniStageState";
 import { PhotoFace } from "@/components/game/PhotoFace";
 import { clampDifficulty, seeded, skinColor, useFinish, useIntro, type Mark } from "@/components/game/miniUtil";
 import { chaseCourse, chaseScore, pressRounds, pressScore, rescueFace, type Tone } from "@/game/minis";
@@ -422,9 +422,15 @@ export function Press({ spec, onDone }: Props) {
         {/* Camera flashes */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-16 opacity-60" style={{ background: "radial-gradient(4px 4px at 12% 40%, #fff, transparent), radial-gradient(3px 3px at 78% 30%, #fff, transparent), radial-gradient(5px 5px at 55% 60%, #fff, transparent)" }} />
         <div key={`r${round}`} className="anim-rise flex items-center gap-3">
-          <span className="grid size-14 shrink-0 place-items-center rounded-2xl font-display text-2xl text-paper-ink shadow-lg" style={{ background: current.reporter.color }}>
-            {initials}
-          </span>
+          {PRESS_FACES && REPORTER_FACE[current.reporter.id] ? (
+            <span className="block size-14 shrink-0 overflow-hidden rounded-2xl" style={{ boxShadow: `0 0 0 2px ${current.reporter.color}, 0 10px 18px -8px rgb(0 0 0 / 0.8)` }} data-reporter={current.reporter.id}>
+              <PhotoFace {...REPORTER_FACE[current.reporter.id]!} className="size-full !rounded-2xl" fallback={<span className="grid size-full place-items-center font-display text-2xl text-paper-ink" style={{ background: current.reporter.color }}>{initials}</span>} />
+            </span>
+          ) : (
+            <span className="grid size-14 shrink-0 place-items-center rounded-2xl font-display text-2xl text-paper-ink shadow-lg" style={{ background: current.reporter.color }}>
+              {initials}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-extrabold text-fg">{current.reporter.name}</p>
             <p className="truncate text-xs font-semibold text-muted">{current.reporter.outlet}</p>
