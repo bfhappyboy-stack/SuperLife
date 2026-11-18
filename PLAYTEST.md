@@ -1,5 +1,17 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-18 am): the chase runner
+
+**Checked** at 390×844 with the chase saves (`mini-adult-fire-m-chase`, `mini-kid-fire-m-chase`, `mini-powerless-m-chase`, `mini-choice-legend-chase`) using `/workspace/pt1117pm/tap.mjs`. Before = the night branch (port 8126), after = this branch (port 8125).
+
+**Before/after:** `/workspace/shots-1118am/before-after-chase.png` (before adult, after adult, kid 10, Batman legend); singles `before-chase-adult-fire-m.png`, `after-chase-*.png`.
+
+**Findings:**
+- **Drawn runner token (fixed):** the fire (m) 24-year-old now runs as his painted suit cutout in the lane; the 10-year-old and the powerless life show their painted faces in a lit ring; Batman shows his painting cropped to the head.
+- **Double hero (fixed):** the side figure no longer stands in the chase backdrop, so you appear once.
+- **First try fix:** the legend crop showed the whole painting (tiny figure, lots of sky) in the ring; now zoomed to head and shoulders.
+- The spark burst still plays over the runner on a pickup (unchanged). No console errors, no sideways scroll.
+
 ## Night pass (2026-11-17 night): case-file villains and press reporters
 
 **Checked** at 390×844 with the adult fire (m) save (Cases → Files) and the press minigame save (`mini-adult-fire-m-press`), using `/workspace/pt1117pm/tap.mjs`. Before = the pm branch (port 8124), after = this branch (port 8125).

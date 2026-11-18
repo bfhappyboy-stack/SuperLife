@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-18 (am): you run the chase, painted (`devbot/2026-11-18-am`)
+
+Built on `origin/devbot/2026-11-17-night` (4398ea4, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118am/`.
+
+### Increment 1: the chase runner is you
+
+- **The gap (night BACKLOG):** the chase runner was a drawn orange token with a stick-person icon on the road, the last drawn piece in the minigames, while your painted figure stood off to the side of the same screen.
+- **Fix:** the runner in your lane is now you, painted: your suit cutout from 13 (suit line, tone and Closet layers included, breathing and flinching when you hit a wreck), or before the suit and for powerless lives your painted face in a lit ring in the chase colour, or a God Mode legend's painting cropped to head and shoulders in the same ring. A soft lane glow sits under your feet. The side figure steps out of the backdrop for this game, so you are on screen once; the painted city stays. The token comes back while art loads or if an image is missing. Lanes, rows, timing and scores are untouched.
+- **Code:** `ChaseRunner` in `src/components/game/MiniStage.tsx`; `MiniBackdrop` takes `figure` and `MiniFrame` (`MiniKit.tsx`) takes `stageFigure`; `Chase` in `MiniGames.tsx`. Switch: `CHASE_RUNNER` in `miniStageState.ts` (off = the token and the side figure). No rules, scores or saves change.
+
 ## 2026-11-17 (night): painted villain faces on case files, painted reporters (`devbot/2026-11-17-night`)
 
 Built on `origin/devbot/2026-11-17-pm` (b2eeed2, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1117night/`.

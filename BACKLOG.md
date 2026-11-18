@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-18 am pass
+
+- **Done:** the chase runner is your painted figure (cutout, face ring or legend ring) instead of the drawn token (`CHASE_RUNNER`).
+- **Next for art:** the chase wrecks and sparks are still flat striped blocks and glowing dots (painted props, e.g. a crashed car or a barrier, would finish it); kids' minigame heads (`MiniHead`) use an icon tile; a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
 ## From the 2026-11-17 night pass
 
 - **Done:** Cases file rows show the villain's painted face (`CASE_FACES`); press reporters show painted faces (`PRESS_FACES`).
