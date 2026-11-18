@@ -6,6 +6,7 @@ import type React from "react";
 import type { ReactNode } from "react";
 import { HitBurst } from "@/components/game/Vfx";
 import { MiniBackdrop } from "@/components/game/MiniStage";
+import { MINI_EMBLEM } from "@/components/game/miniStageState";
 import { clampDifficulty, gradeOf, KIND_ICON, skinColor, type Mark } from "@/components/game/miniUtil";
 import { MINI_KINDS, type SkillKind } from "@/game/minis";
 import type { MinigameSpec } from "@/game/types";
@@ -30,9 +31,17 @@ export function MiniHead({ spec, kind }: { spec: MinigameSpec; kind: SkillKind }
   const difficulty = clampDifficulty(spec.difficulty);
   return (
     <div className="anim-rise flex items-start gap-3">
-        <span className="ico-tile mt-0.5 size-11 shrink-0" style={{ "--tile": def.color } as React.CSSProperties}>
-          <Icon className="size-5" />
-        </span>
+        {MINI_EMBLEM ? (
+          <span className="mini-emblem mt-0.5 size-12 shrink-0" style={{ "--tile": def.color } as React.CSSProperties} aria-hidden="true">
+            <span className="mini-emblem-core">
+              <Icon className="mini-emblem-icon size-[22px]" strokeWidth={2.25} />
+            </span>
+          </span>
+        ) : (
+          <span className="ico-tile mt-0.5 size-11 shrink-0" style={{ "--tile": def.color } as React.CSSProperties}>
+            <Icon className="size-5" />
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <p className="t-label flex items-center gap-2" style={{ color: def.color }}>
             {def.name}

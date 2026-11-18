@@ -32,6 +32,13 @@ export const CHASE_RUNNER = true;
  */
 export const CHASE_PROPS = true;
 
+/**
+ * Minigame headers wear a lit emblem (2026-11-18 night): a dark beveled badge in the kind's colour with a rim light,
+ * a top sheen, an inner ring, a soft glow and an embossed icon, so the header sits next to the painted art instead of
+ * the flat app-style icon tile. Non-character graphic. Off = the flat ico-tile.
+ */
+export const MINI_EMBLEM = true;
+
 /** Rescue windows show painted people (PhotoFace) instead of the drawn person/baby glyphs. Off = the glyphs. */
 export const RESCUE_FACES = true;
 
