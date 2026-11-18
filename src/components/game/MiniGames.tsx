@@ -5,11 +5,12 @@
  * All of them render inside MiniFrame, are touch-first with 56px+ targets, and score 0–1.
  */
 import { Baby, ChevronLeft, ChevronRight, Flame, PersonStanding, User, Weight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniFrame, Pips } from "@/components/game/MiniKit";
-import { PRESS_FACES, REPORTER_FACE, RESCUE_FACES } from "@/components/game/miniStageState";
+import { ChaseRunner } from "@/components/game/MiniStage";
+import { CHASE_RUNNER, MiniHeroContext, PRESS_FACES, REPORTER_FACE, RESCUE_FACES } from "@/components/game/miniStageState";
 import { PhotoFace } from "@/components/game/PhotoFace";
 import { clampDifficulty, seeded, skinColor, useFinish, useIntro, type Mark } from "@/components/game/miniUtil";
 import { chaseCourse, chaseScore, pressRounds, pressScore, rescueFace, type Tone } from "@/game/minis";
@@ -593,6 +594,9 @@ export function Chase({ spec, onDone }: Props) {
   const [shake, setShake] = useState(0);
   const [pop, setPop] = useState<{ id: number; good: boolean } | null>(null);
   const swipe = useRef<number | null>(null);
+  const hurtAt = useRef(-9);
+  const miniHero = useContext(MiniHeroContext);
+  const painted = CHASE_RUNNER && !!miniHero;
 
   useFrame(go && result == null, (dt) => {
     elapsed.current += dt;
@@ -602,6 +606,7 @@ export function Chase({ spec, onDone }: Props) {
       const row = course.rows[next.current]!;
       if (row.walls.includes(lane.current)) {
         hits.current += 1;
+        hurtAt.current = t;
         buzz("miss");
         setShake((n) => n + 1);
         setPop({ id: next.current, good: false });
@@ -646,6 +651,7 @@ export function Chase({ spec, onDone }: Props) {
     <MiniFrame
       spec={spec}
       kind="chase"
+      stageFigure={!painted}
       intro={go}
       result={result}
       shake={shake}
@@ -766,18 +772,26 @@ export function Chase({ spec, onDone }: Props) {
                 ) : null}
               </div>
             ))}
-            {/* Runner */}
+            {/* Runner: you, painted (ChaseRunner), or the drawn token while art loads / with CHASE_RUNNER off */}
             <div
-              className="absolute h-[17%] aspect-[3/5] transition-[left] duration-100 ease-out"
+              className={`absolute ${painted ? "h-[27%] aspect-[1/2]" : "h-[17%] aspect-[3/5]"} transition-[left] duration-100 ease-out`}
               style={{ left: laneX(view.lane), top: `${RUNNER_Y * 100}%`, transform: `translate(-50%, -88%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
             >
-              <div className="absolute inset-x-[15%] bottom-0 h-2 rounded-full bg-black/60 blur-[2px]" />
-              <div
-                className="absolute inset-0 grid place-items-center rounded-[40%] border-2 border-white/80"
-                style={{ background: `radial-gradient(circle at 50% 35%, #fff, ${color} 55%, color-mix(in srgb, ${color} 40%, black))`, boxShadow: `0 0 26px ${color}` }}
-              >
-                <PersonStanding className="size-3/4 text-black/75" strokeWidth={2.4} />
-              </div>
+              <ChaseRunner
+                color={color}
+                hurt={t - hurtAt.current < 0.3}
+                fallback={
+                  <>
+                    <div className="absolute inset-x-[15%] bottom-0 h-2 rounded-full bg-black/60 blur-[2px]" />
+                    <div
+                      className="absolute inset-0 grid place-items-center rounded-[40%] border-2 border-white/80"
+                      style={{ background: `radial-gradient(circle at 50% 35%, #fff, ${color} 55%, color-mix(in srgb, ${color} 40%, black))`, boxShadow: `0 0 26px ${color}` }}
+                    >
+                      <PersonStanding className="size-3/4 text-black/75" strokeWidth={2.4} />
+                    </div>
+                  </>
+                }
+              />
               {pop ? (
                 <span key={pop.id} className="absolute inset-0">
                   <HitBurst color={pop.good ? color : "#ff5d5d"} size={64} count={pop.good ? 8 : 6} seed={pop.id} />

@@ -6,9 +6,9 @@
  * Painted art only; nothing here is drawn. The layer sits under the game (z -1 inside an isolated arena), never takes
  * a tap, and when an image is missing it simply isn't there. `MINI_STAGE` off brings the flat box back.
  */
-import { useContext } from "react";
+import { useContext, type ReactNode } from "react";
 import { Cutout } from "@/components/game/heroArt";
-import { MINI_STAGE, MiniHeroContext, miniFigureKind } from "@/components/game/miniStageState";
+import { CHASE_RUNNER, MINI_STAGE, MiniHeroContext, miniFigureKind } from "@/components/game/miniStageState";
 import { PhotoFace } from "@/components/game/PhotoFace";
 import { useArt } from "@/components/game/Scene";
 import { stageScale } from "@/game/heroArt";
@@ -20,9 +20,9 @@ import { outfitOf } from "@/game/outfit";
  * figure paint above the arena's own gradient but below every game element. `side` keeps the figure clear of where the
  * game draws most (the hold meter sits left, so the figure stands right there).
  */
-export function MiniBackdrop({ accent, side = "left" }: { accent: string; side?: "left" | "right" }) {
+export function MiniBackdrop({ accent, side = "left", figure: showFigure = true }: { accent: string; side?: "left" | "right"; figure?: boolean }) {
   const hero = useContext(MiniHeroContext);
-  const figure = MINI_STAGE ? miniFigureKind(hero) : "";
+  const figure = MINI_STAGE && showFigure ? miniFigureKind(hero) : "";
   const city = useArt(MINI_STAGE ? (hero?.city ?? "") : "");
   const legendArt = useArt(figure === "legend" ? (hero?.legend?.art ?? "") : "");
   const cut = useArt(figure.startsWith("cut-") ? figure : "");
@@ -56,5 +56,44 @@ export function MiniBackdrop({ accent, side = "left" }: { accent: string; side?:
       {/* Keep the very middle a touch darker, where the game draws its pieces. */}
       <span className="absolute inset-0" style={{ background: "radial-gradient(48% 46% at 50% 52%, rgb(11 15 24 / .35), transparent 80%)" }} />
     </div>
+  );
+}
+
+/**
+ * The chase runner (2026-11-18 am): you, painted, standing in your lane, in place of the drawn orange token. Your suit
+ * cutout from 13 (suit line, tone and Closet layers), a legend's painting cropped to head and shoulders in a lit ring, or
+ * before the suit your painted face in the same ring. Lit from below in the chase colour, with a lane glow at the feet;
+ * a wreck makes you flinch (`hurt`). Shows `fallback` (the token) while art loads, with no hero, or with `CHASE_RUNNER` off.
+ */
+export function ChaseRunner({ color, hurt, fallback }: { color: string; hurt: boolean; fallback: ReactNode }) {
+  const hero = useContext(MiniHeroContext);
+  const figure = CHASE_RUNNER ? miniFigureKind(hero) : "";
+  const legendArt = useArt(figure === "legend" ? (hero?.legend?.art ?? "") : "");
+  const cut = useArt(figure.startsWith("cut-") ? figure : "");
+  if (!hero || !figure) return <>{fallback}</>;
+  const glow = hero.legend?.color ?? hero.aura ?? color;
+  const ring = (child: ReactNode) => (
+    <span
+      className={`absolute inset-x-[2%] bottom-[6%] block aspect-square overflow-hidden rounded-full border-2 ${hurt ? "cut-hit" : "cut-breathe"}`}
+      style={{ borderColor: `color-mix(in srgb, ${color} 75%, white)`, boxShadow: `0 0 22px -2px ${color}, inset 0 -10px 18px -8px ${color}`, background: "#0b0f18" }}
+    >
+      {child}
+    </span>
+  );
+  let body: ReactNode = null;
+  if (figure.startsWith("cut-") && cut) {
+    body = <Cutout src={cut} name="You" glow={glow} pose={hurt ? "hit" : "idle"} scale={stageScale(hero.age)} outfit={outfitOf({ wardrobe: hero.wardrobe, suit: hero.suit })} artKey={figure.slice(4)} />;
+  } else if (figure === "legend" && legendArt) {
+    body = ring(<img src={legendArt} alt="" draggable={false} className="size-full origin-[50%_22%] scale-[1.8] object-cover object-[50%_15%]" />);
+  } else if (figure === "face") {
+    body = ring(<PhotoFace seed={hero.seed} age={hero.age} sex={hero.sex ?? "male"} look={resolveLook(hero.seed, hero.look)} feature={typeof hero.look?.feature === "number" ? hero.look.feature : null} eyes={typeof hero.look?.eyes === "number" ? hero.look.eyes : null} className="size-full !rounded-none" fallback={<span className="block size-full" />} />);
+  }
+  if (!body) return <>{fallback}</>;
+  return (
+    <span className="absolute inset-0 block" data-chase-runner={figure} role="img" aria-label="You">
+      {/* Lane glow under your feet, in the chase colour. */}
+      <span className="absolute -inset-x-[35%] bottom-[-4%] block h-[16%] rounded-[50%]" style={{ background: `radial-gradient(closest-side, color-mix(in srgb, ${color} 55%, transparent), transparent)` }} aria-hidden />
+      {body}
+    </span>
   );
 }

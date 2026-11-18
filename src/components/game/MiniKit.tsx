@@ -61,6 +61,7 @@ export function MiniFrame({
   footer,
   shake = 0,
   stageSide = "left",
+  stageFigure = true,
 }: {
   spec: MinigameSpec;
   kind: SkillKind;
@@ -74,6 +75,8 @@ export function MiniFrame({
   shake?: number;
   /** Which side of the arena your painted figure stands on (MiniStage.tsx); away from where the game draws most. */
   stageSide?: "left" | "right";
+  /** Off when the game itself shows you (the chase runner), so the backdrop keeps only the city. */
+  stageFigure?: boolean;
 }) {
   const def = MINI_KINDS[kind];
   const accent = skinColor(spec, kind);
@@ -88,7 +91,7 @@ export function MiniFrame({
         className={`scene-arena relative isolate min-h-0 flex-1 overflow-hidden rounded-[1.6rem] border border-white/10 ${shake ? "anim-shake" : ""}`}
         style={{ boxShadow: `inset 0 0 60px -20px ${accent}, 0 18px 40px -24px rgba(0,0,0,.8)` }}
       >
-        <MiniBackdrop accent={accent} side={stageSide} />
+        <MiniBackdrop accent={accent} side={stageSide} figure={stageFigure} />
         <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(90% 60% at 50% 100%, color-mix(in srgb, ${accent} 22%, transparent), transparent 70%)` }} />
         {hud && <div className="absolute inset-x-3 top-3 z-20 flex items-center justify-between gap-2">{hud}</div>}
         {children}

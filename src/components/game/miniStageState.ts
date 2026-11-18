@@ -18,6 +18,13 @@ export function miniFigureKind(hero: DuelHero | undefined): string {
   return key ? `cut-${key}` : "face";
 }
 
+/**
+ * The chase runner is you, painted (2026-11-18 am): your suit cutout from 13, a legend's painting, or your painted face
+ * before the suit, standing in the lane instead of the drawn orange token. The side figure steps out of the backdrop
+ * so you are not on screen twice. Off = the token.
+ */
+export const CHASE_RUNNER = true;
+
 /** Rescue windows show painted people (PhotoFace) instead of the drawn person/baby glyphs. Off = the glyphs. */
 export const RESCUE_FACES = true;
 
