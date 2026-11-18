@@ -10,7 +10,8 @@ import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniFrame, Pips } from "@/components/game/MiniKit";
 import { ChaseRunner } from "@/components/game/MiniStage";
-import { CHASE_RUNNER, MiniHeroContext, PRESS_FACES, REPORTER_FACE, RESCUE_FACES } from "@/components/game/miniStageState";
+import { ChaseSpark, ChaseWreck, wreckVariant } from "@/components/game/ChaseProps";
+import { CHASE_PROPS, CHASE_RUNNER, MiniHeroContext, PRESS_FACES, REPORTER_FACE, RESCUE_FACES } from "@/components/game/miniStageState";
 import { PhotoFace } from "@/components/game/PhotoFace";
 import { clampDifficulty, seeded, skinColor, useFinish, useIntro, type Mark } from "@/components/game/miniUtil";
 import { chaseCourse, chaseScore, pressRounds, pressScore, rescueFace, type Tone } from "@/game/minis";
@@ -744,22 +745,52 @@ export function Chase({ spec, onDone }: Props) {
                 }}
               />
             ))}
+            {/* Asphalt grain and speed streaks along the shoulders (CHASE_PROPS) */}
+            {CHASE_PROPS ? (
+              <>
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-t-3xl opacity-50"
+                  style={{
+                    backgroundImage: "radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px), radial-gradient(rgba(0,0,0,.35) 1px, transparent 1.6px)",
+                    backgroundSize: "9px 9px, 13px 13px",
+                    backgroundPositionY: `${(t * 260) % 9}px, ${(t * 260) % 13}px`,
+                  }}
+                />
+                {[3, 97, 18, 82].map((x, k) => (
+                  <div
+                    key={x}
+                    className="pointer-events-none absolute top-0 bottom-0 w-px"
+                    style={{
+                      left: `${x}%`,
+                      opacity: k < 2 ? 0.5 : 0.18,
+                      backgroundImage: `linear-gradient(180deg, transparent 0 55%, color-mix(in srgb, ${color} 70%, white) 80%, transparent 100%)`,
+                      backgroundSize: `100% ${k < 2 ? 140 : 210}px`,
+                      backgroundPositionY: `${(t * (k < 2 ? 520 : 430)) % (k < 2 ? 140 : 210)}px`,
+                    }}
+                  />
+                ))}
+              </>
+            ) : null}
             {/* Wrecks and sparks */}
             {visible.map(({ row, i, y }) => (
-              <div key={i}>
+              <div key={i} className={CHASE_PROPS ? "pointer-events-none absolute inset-0" : undefined} style={CHASE_PROPS ? { transformStyle: "preserve-3d" } : undefined}>
                 {row.walls.map((w) => (
                   <div
                     key={`w${w}`}
-                    className="absolute h-[15%] w-[26%]"
+                    className={`absolute ${CHASE_PROPS ? "h-[15%] w-[31%]" : "h-[15%] w-[26%]"}`}
                     style={{ left: laneX(w), top: `${y * 100}%`, transform: `translate(-50%, -100%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
                   >
-                    <div
-                      className="h-full w-full rounded-lg border-2 border-black/60"
-                      style={{
-                        background: "repeating-linear-gradient(-45deg, #ffcf4d 0 10px, #1a1a1a 10px 20px)",
-                        boxShadow: "0 6px 0 #0006, 0 0 18px -4px #ff8a3d",
-                      }}
-                    />
+                    {CHASE_PROPS ? (
+                      <ChaseWreck variant={wreckVariant(i, w)} color={color} />
+                    ) : (
+                      <div
+                        className="h-full w-full rounded-lg border-2 border-black/60"
+                        style={{
+                          background: "repeating-linear-gradient(-45deg, #ffcf4d 0 10px, #1a1a1a 10px 20px)",
+                          boxShadow: "0 6px 0 #0006, 0 0 18px -4px #ff8a3d",
+                        }}
+                      />
+                    )}
                   </div>
                 ))}
                 {row.spark != null && !taken.current.has(i) ? (
@@ -767,7 +798,11 @@ export function Chase({ spec, onDone }: Props) {
                     className="absolute h-[9%] aspect-square"
                     style={{ left: laneX(row.spark), top: `${y * 100}%`, transform: `translate(-50%, -110%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
                   >
-                    <div className="anim-glow h-full w-full rounded-full" style={{ background: "radial-gradient(circle, #fff 0 20%, #ffcf4d 42%, rgba(255,160,40,.35) 62%, transparent 72%)", boxShadow: "0 0 22px #ffb84d" }} />
+                    {CHASE_PROPS ? (
+                      <ChaseSpark />
+                    ) : (
+                      <div className="anim-glow h-full w-full rounded-full" style={{ background: "radial-gradient(circle, #fff 0 20%, #ffcf4d 42%, rgba(255,160,40,.35) 62%, transparent 72%)", boxShadow: "0 0 22px #ffb84d" }} />
+                    )}
                   </div>
                 ) : null}
               </div>

@@ -25,6 +25,13 @@ export function miniFigureKind(hero: DuelHero | undefined): string {
  */
 export const CHASE_RUNNER = true;
 
+/**
+ * The chase road gets lit set pieces (2026-11-18 pm): the wrecks are a concrete barrier, a crashed car or a girder pile
+ * with shadows and hazard lights, the sparks are energy shards with a motion streak, and the asphalt carries grain and
+ * speed streaks (ChaseProps.tsx). Off = the striped blocks and glowing dots.
+ */
+export const CHASE_PROPS = true;
+
 /** Rescue windows show painted people (PhotoFace) instead of the drawn person/baby glyphs. Off = the glyphs. */
 export const RESCUE_FACES = true;
 
