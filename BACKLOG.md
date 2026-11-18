@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-18 pm pass
+
+- **Done:** the chase wrecks (barrier, crashed car, girder pile) and sparks (energy shards) are lit set pieces with shadows and motion streaks, and the road has grain and speed streaks (`CHASE_PROPS`).
+- **Next for art:** the minigame header icon tile (`MiniHead`, the flat `ico-tile` with a line icon) could become a refined lit badge; a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
 ## From the 2026-11-18 am pass
 
 - **Done:** the chase runner is your painted figure (cutout, face ring or legend ring) instead of the drawn token (`CHASE_RUNNER`).

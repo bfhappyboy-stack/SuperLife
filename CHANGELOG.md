@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-18 (pm): a lit chase road (`devbot/2026-11-18-pm`)
+
+Built on `origin/devbot/2026-11-18-am` (6c16673, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118pm/`.
+
+### Increment 1: wrecks, sparks and asphalt that look like a set
+
+- **The gap (am BACKLOG):** with you running the chase as your painted figure, the things on the road were still flat yellow-black striped blocks and plain glowing dots on a flat road.
+- **Fix:** each wreck is now a lit set piece standing up off the road with a contact shadow: a concrete barrier (lit top cap, reflective hazard band, chips, two blinking amber lamps), a crashed car seen from behind (dented bumper, red taillights with one flickering, cracked rear glass catching the chase colour, smoke from the hood) or a pile of crossed girders and concrete slabs with rebar, an ember glow and rising embers. Which wreck stands where is fixed by row and lane, so a replay looks the same. Each spark is a spinning energy shard with a gold halo, a pulse ring, a glow pool on the road and a motion streak trailing up the road. The asphalt gets a fine moving grain and faint speed streaks along the shoulders. Non-character graphics only (SVG); lanes, rows, timing, hit rules and scores are untouched.
+- **Code:** `ChaseWreck`, `ChaseSpark`, `wreckVariant` in the new `src/components/game/ChaseProps.tsx`; `Chase` in `MiniGames.tsx` (each row's wrapper keeps 3D so the props stand upright). Switch: `CHASE_PROPS` in `miniStageState.ts` (on; off = the striped blocks and dots). No rules, scores or saves change.
+
 ## 2026-11-18 (am): you run the chase, painted (`devbot/2026-11-18-am`)
 
 Built on `origin/devbot/2026-11-17-night` (4398ea4, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118am/`.

@@ -1,5 +1,17 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-18 pm): the chase road props
+
+**Checked** at 390×844 with the chase saves (`mini-adult-fire-m-chase`, `mini-choice-legend-chase`) using `/workspace/pt1117pm/tap.mjs`. Before = the am branch (port 8128), after = this branch (port 8127).
+
+**Before/after:** `/workspace/shots-1118pm/before-after-chase-props.png` (before at the start, after at the start, after 0.9 s in, the legend save); singles `before-adult-0.png`, `before-mini-choice-legend-chase.png`, `after-adult-0.png`, `after-adult-900.png`, `after-mini-choice-legend-chase.png`.
+
+**Findings:**
+- **Flat striped blocks (fixed):** wrecks are now a lit concrete barrier, a crashed car with taillights and smoke, or a girder pile with embers, each with a shadow on the road.
+- **Glowing dots (fixed):** sparks are spinning gold shards with a halo, pulse ring, glow pool and a streak up the road.
+- **First try fix:** the props rendered squashed flat onto the road because each row's wrapper flattened 3D; the wrapper now keeps 3D (and fills the road so sizes still measure against it), so the props stand upright like the runner.
+- Far props are small (by perspective) but read as cars/barriers once mid-road. No console errors, no sideways scroll.
+
 ## Morning pass (2026-11-18 am): the chase runner
 
 **Checked** at 390×844 with the chase saves (`mini-adult-fire-m-chase`, `mini-kid-fire-m-chase`, `mini-powerless-m-chase`, `mini-choice-legend-chase`) using `/workspace/pt1117pm/tap.mjs`. Before = the night branch (port 8126), after = this branch (port 8125).
