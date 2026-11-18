@@ -1,5 +1,15 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-18 night): the minigame header emblem
+
+**Checked** at 390×844 (2x) with headless Chrome: the app loads with no console errors, and all seven kinds' headers (chase, strike, read, crack, rescue, press, hold) were rendered over the running app by `scratch/head.tsx` (`scratch/shoot.mjs`). Before = `MINI_EMBLEM` off, after = on.
+
+**Before/after:** `/workspace/shots-1118night/before-after-mini-emblem.png` (left before, right after); singles `before-heads.png`, `after-heads.png`, `before-head-zoom.png`, `after-head-zoom.png`, `before-app.png`, `after-app.png`.
+
+**Findings:**
+- **Flat glossy tile (fixed):** each header now has a dark beveled badge with a coloured rim light, inner ring and glowing icon; it reads as part of the night-city art, and each kind's colour still tells the games apart.
+- **Layout:** title, difficulty pips and subtitle stay where they were; nothing truncates at 390 px.
+
 ## Afternoon pass (2026-11-18 pm): the chase road props
 
 **Checked** at 390×844 with the chase saves (`mini-adult-fire-m-chase`, `mini-choice-legend-chase`) using `/workspace/pt1117pm/tap.mjs`. Before = the am branch (port 8128), after = this branch (port 8127).

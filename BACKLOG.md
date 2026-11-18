@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-18 night pass
+
+- **Done:** minigame headers wear a lit emblem (dark beveled badge, rim light, inner ring, glowing icon) instead of the flat icon tile (`MINI_EMBLEM`).
+- **Next for art:** the same emblem could replace the other flat `ico-tile`s (menus, activity rows) for one consistent badge style; a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
 ## From the 2026-11-18 pm pass
 
 - **Done:** the chase wrecks (barrier, crashed car, girder pile) and sparks (energy shards) are lit set pieces with shadows and motion streaks, and the road has grain and speed streaks (`CHASE_PROPS`).

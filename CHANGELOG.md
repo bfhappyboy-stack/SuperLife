@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-18 (night): a lit emblem on minigame headers (`devbot/2026-11-18-night`)
+
+Built on `origin/devbot/2026-11-18-pm` (a0103e9, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118night/`.
+
+### Increment 1: the header badge
+
+- **The gap (pm BACKLOG):** every minigame header (`MiniHead`) led with a flat, bright app-style icon tile, the last glossy-toy element above the painted stage.
+- **Fix:** the tile is now a lit emblem: a dark beveled badge with a rim light graded in the kind's colour (bright top-left and bottom-right edges, darker sides), a coloured underglow inside, an inner keyline ring, a soft top sheen, an outer glow and an embossed icon tinted in the kind's colour with a drop shadow. Non-character graphic (CSS); no faces. Same size slot (48 px), so the title layout does not move.
+- **Code:** `MiniHead` in `MiniKit.tsx`; `.mini-emblem`, `.mini-emblem-core`, `.mini-emblem-icon` in `src/styles.css`. Switch: `MINI_EMBLEM` in `miniStageState.ts` (on; off = the flat `ico-tile`). No rules, scores or saves change; old saves load.
+
 ## 2026-11-18 (pm): a lit chase road (`devbot/2026-11-18-pm`)
 
 Built on `origin/devbot/2026-11-18-am` (6c16673, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118pm/`.
