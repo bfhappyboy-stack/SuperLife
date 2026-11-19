@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-19 (am): lit emblems on activity rows (`devbot/2026-11-19-am`)
+
+Built on `origin/devbot/2026-11-18-night` (95cb58a, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1119am/`.
+
+### Increment 1: the activity row badge
+
+- **The gap (night BACKLOG):** every activity row on the Today/City/Become/Shadow lists (and the other desks that use `ActionRow`) led with the flat, bright glossy `ico-tile`, the same toy-like tile the minigame headers lost last pass.
+- **Fix:** the row icon now sits in the same lit emblem as the minigame headers: a dark beveled badge with a rim light in the group's colour, a coloured underglow, an inner keyline ring, a top sheen, an outer glow and an embossed tinted icon. Locked rows keep a cold grey emblem with the lock. Same 40 px slot, so row text does not move. Non-character graphic (CSS); no faces.
+- **Code:** `IconTile` in `icons.tsx` takes `lit` (reuses `.mini-emblem` / `.mini-emblem-core`); `ActionRow` in `GameApp.tsx` passes `lit={ACTION_EMBLEM}`; `.act-emblem` rules in `src/styles.css`. Switch: `ACTION_EMBLEM` in `icons.tsx` (on; off = the flat `ico-tile`). Other `IconTile` users (gift card, Market, MoneyHub) are unchanged. No rules, scores or saves change; old saves load.
+
 ## 2026-11-18 (night): a lit emblem on minigame headers (`devbot/2026-11-18-night`)
 
 Built on `origin/devbot/2026-11-18-pm` (a0103e9, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118night/`.

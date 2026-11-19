@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-19 am): activity row emblems
+
+**Checked** at 390×844 with headless Chrome and the adult fire (m) save (`/workspace/pt1117pm/tap.mjs`, City/Become/Shadow lists scrolled to the rows). Before = the night branch build, after = this branch (`vite preview`).
+
+**Before/after:** `/workspace/shots-1119am/before-after-action-emblem.png` (left before, right after), zoom `before-after-action-emblem-rows-zoom.png`; singles `before-city-rows.png`, `after-city-rows.png`, `after-become-rows.png`, `after-shadow-rows.png`, `after-app.png`.
+
+**Findings:**
+- **Flat glossy tiles (fixed):** "Walk Metro City", "Find Adspace" and "Leave for another city" now lead with dark beveled badges with a gold rim and glowing icon instead of bright orange app tiles; they match the minigame header emblems.
+- **Locked rows:** "Found an evil crew" shows a cold grey emblem with the lock, still clearly unavailable.
+- **Layout:** same 40 px slot; titles, NEW tags, use counts and chevrons stay put. No console errors, no sideways scroll.
+
 ## Night pass (2026-11-18 night): the minigame header emblem
 
 **Checked** at 390×844 (2x) with headless Chrome: the app loads with no console errors, and all seven kinds' headers (chase, strike, read, crack, rescue, press, hold) were rendered over the running app by `scratch/head.tsx` (`scratch/shoot.mjs`). Before = `MINI_EMBLEM` off, after = on.
