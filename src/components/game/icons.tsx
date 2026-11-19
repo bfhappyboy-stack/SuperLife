@@ -112,7 +112,21 @@ export function actionIcon(id: string, section: string): LucideIcon {
   return Star;
 }
 
-export function IconTile({ color, size = "size-10", children, className = "" }: { color: string; size?: string; children: ReactNode; className?: string }) {
+/**
+ * Activity menu rows wear the lit emblem (2026-11-19 am): the same dark beveled badge as the minigame headers
+ * (rim light in the group's colour, inner ring, top sheen, glow, embossed icon) instead of the flat glossy tile.
+ * Non-character graphic. Off = the flat ico-tile.
+ */
+export const ACTION_EMBLEM = true;
+
+export function IconTile({ color, size = "size-10", children, className = "", lit = false }: { color: string; size?: string; children: ReactNode; className?: string; lit?: boolean }) {
+  if (lit) {
+    return (
+      <span className={`mini-emblem act-emblem ${size} ${className}`} style={{ "--tile": color } as CSSProperties}>
+        <span className="mini-emblem-core">{children}</span>
+      </span>
+    );
+  }
   return (
     <span className={`ico-tile ${size} ${className}`} style={{ "--tile": color } as CSSProperties}>
       {children}

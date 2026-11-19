@@ -257,6 +257,16 @@
     filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.7)) drop-shadow(0 0 6px color-mix(in srgb, var(--tile, var(--color-gold)) 85%, transparent));
   }
 
+  /* Activity row emblem (ACTION_EMBLEM): reuses .mini-emblem; the passed icon gets the embossed tint and glow. */
+  .act-emblem { border-radius: 0.85rem; }
+  .act-emblem .mini-emblem-core { border-radius: calc(0.85rem - 2px); }
+  .act-emblem .mini-emblem-core::before { inset: 3px; border-radius: 0.55rem; }
+  .act-emblem .mini-emblem-core > svg {
+    position: relative; z-index: 1;
+    color: color-mix(in srgb, var(--tile, var(--color-gold)) 45%, white);
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.7)) drop-shadow(0 0 5px color-mix(in srgb, var(--tile, var(--color-gold)) 80%, transparent));
+  }
+
   /* ---------- Backdrops ---------- */
   .scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
   .scene img, .scene svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

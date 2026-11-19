@@ -11,7 +11,7 @@ import { ArenaScreen } from "@/components/game/Arena";
 import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
 import { EVENT_SCENE, EventScene } from "@/components/game/EventScene";
-import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
+import { ACTION_EMBLEM, actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
 import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
 import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
@@ -957,7 +957,7 @@ function ActionRow({ action, file, onPress }: { action: ActionItem; file?: boole
       data-act={action.id}
       className={`card group flex min-h-14 items-center gap-3 px-3 py-2.5 text-left disabled:opacity-50 ${action.accent && !action.disabled ? "!border-gold/70 shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-gold)_30%,transparent),0_8px_24px_-12px_var(--color-gold)]" : ""}`}
     >
-      <IconTile color={action.disabled ? "#4b5366" : GROUP_COLOR[action.group]} size="size-10">
+      <IconTile color={action.disabled ? "#4b5366" : GROUP_COLOR[action.group]} size="size-10" lit={ACTION_EMBLEM}>
         {action.disabled ? <Lock className="size-4" /> : <Icon className="size-5" />}
       </IconTile>
       <span className="min-w-0 flex-1">
