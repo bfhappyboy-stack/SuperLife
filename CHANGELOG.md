@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-20 (night): the round slam (`devbot/2026-11-20-night`)
+
+Built on `origin/devbot/2026-11-19-am` (180225d, which carries all the pushed unmerged devbot work), so merge this one PR alone. It does **not** include the unpushed 2026-11-19 pm commit (`TILE_EMBLEM`, 08bb3c8); the two touch different files apart from these docs. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (386), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1120night/`.
+
+### Increment 1: rounds 2 and 3 land like escalation
+
+- **The gap (BACKLOG, 2026-11-17 am "next for juice"):** the Arena round intro was identical every round apart from the small "ROUND n" in the banner, so a 1-1 decider looked exactly like the opener and nothing said what was at stake.
+- **Fix:** each round intro now slams in a big metal-cast "ROUND n" title across the split (it drops in from 3x with a blur, overshoots and settles), hitting at the same beat as the VS stamp with a shock ring, a horizontal lens streak, a white impact frame and a camera kick on the painted fighters. Under it a skewed plate names what the round decides, from your side, with one plain line: "First blood" (round 1), "Match point" (gold, you lead 1-0), "Must win" (red, you trail 0-1, with a red heartbeat glow on the screen edges), "Decider" (gold, 1-1), "Final round" / "All square" after drawn rounds, and "For pride" when round 3 is played after the match is settled. Works the same in online matches (they share `RoundIntro`). Everything lands by about 1.2 s inside the existing 2.6 s intro, and tapping still starts the fight at once. Non-character graphics only (CSS); the painted fighters are untouched. Reduced motion shows the title and plate still, with no flash, ring or shake.
+- **Code:** pure `roundStakes` (+ `RoundStakes` type) in `src/game/arena.ts`; `RoundSlam` + `ROUND_SLAM` in `src/components/game/Arena.tsx`; `.round-slam-*` rules in `src/components/game/arena.css`; new `src/game/test/stakes.test.ts` (+2 tests). Switch: `ROUND_SLAM` in `Arena.tsx` (on; off = the intro as it was). No rules, scores or saves change; old saves and saved Arena matches load.
+
 ## 2026-11-19 (am): lit emblems on activity rows (`devbot/2026-11-19-am`)
 
 Built on `origin/devbot/2026-11-18-night` (95cb58a, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1119am/`.

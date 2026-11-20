@@ -1,5 +1,15 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-20 night): the round slam
+
+**Checked** at 390×844 (2x) with headless Chrome: a scripted vs-computer Arena match (draft, order, then rounds 1-3, "Play round 3 anyway" when settled) with `/workspace/shots-1120night/arena-rounds.mjs`; every intro frame was frozen at 0.66 s (impact) and 1.6 s (settled) by pausing the page's animations. Before = `origin/devbot/2026-11-19-am` (port 8201), after = this branch (port 8202). Matches are random, so the fighters differ between before and after.
+
+**Before/after:** `/workspace/shots-1120night/ba-round3.png` (1-1 decider, left before, right after), `ba-round2.png` (round 2), `ba-round1.png`; singles `after-intro-r2-450.png` ("Must win", red edge glow), `after-intro-r3-660.png` (impact frame), `before-intro-r*-1600.png`, `after-intro-r*-1600.png`.
+
+**Findings:**
+- **Round 2/3 looked like round 1 (fixed):** the round now reads from across the room: big gold "ROUND 3" with a "DECIDER" plate and "Winner takes the match."; trailing 0-1 shows red "MUST WIN" and "Lose this and it's over." with a red heartbeat glow on the edges.
+- **Readability:** the title sits on the fighters' chests below the faces; names, passives, VS and "Tap to fight" stay clear. No console errors, no sideways scroll (scroll width 390) on any intro, the battle or the results.
+
 ## Morning pass (2026-11-19 am): activity row emblems
 
 **Checked** at 390×844 with headless Chrome and the adult fire (m) save (`/workspace/pt1117pm/tap.mjs`, City/Become/Shadow lists scrolled to the rows). Before = the night branch build, after = this branch (`vite preview`).

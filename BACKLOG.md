@@ -1,5 +1,14 @@
 # SuperLife — Backlog
 
+## From the 2026-11-20 night pass
+
+- **Done:** Arena round intros slam in a metal "ROUND n" title with a shock ring, impact flash and camera kick, and name the stakes ("Match point", "Must win", "Decider", "For pride") (`ROUND_SLAM`). Closes the 2026-11-17 am "Arena round transitions" item.
+- **Not in this branch:** the 2026-11-19 pm `TILE_EMBLEM` commit (08bb3c8) is still local and unpushed, waiting on the owner.
+- **Next for juice:** the same stakes plate could sit on the duel's "Your call" crime scenes and on the Arena results ("Swept 2-0", "Comeback"); a low drum/sting `sfx` on the slam if the sound pass happens.
+- **Next for art:** Power Lab and the create screen still have flat `ico-tile`s (after `TILE_EMBLEM` lands); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`? Push the 2026-11-19 pm `TILE_EMBLEM` commit?
+
 ## From the 2026-11-19 am pass
 
 - **Done:** activity rows (`ActionRow`) wear the lit emblem instead of the flat `ico-tile` (`ACTION_EMBLEM`).
