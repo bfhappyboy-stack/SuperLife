@@ -28,7 +28,7 @@ import { ELEMENTS } from "@/game/elements";
 import { answerOf, BREATH, keyOf } from "@/game/duel";
 import {
   aiDraft, aiFollow, aiLead, aiOrder, arenaRefusal, DRAFT_ORDER, draftPick, draftTurn, energyCap, feintCost, fighterOf,
-  finish, hashSeed, matchTurn, moveByKey, newMatch, nextRound, registerFighter, rngNext, roundsWon, setOrder, STYLES, taken, tellOf,
+  finish, hashSeed, matchTurn, moveByKey, newMatch, nextRound, registerFighter, rngNext, roundStakes, roundsWon, setOrder, STYLES, taken, tellOf,
   type AiLevel, type ArenaAction, type ArenaMatch, type BoutState, type Side, type Tell, type TurnLog,
 } from "@/game/arena";
 import { ARENA_ROSTER, type ArenaFighter, type PassiveKind } from "@/game/arena.roster";
@@ -637,6 +637,40 @@ export function RoundTracker({ match, compact = false }: { match: ArenaMatch; co
   );
 }
 
+/**
+ * Round slam (2026-11-20 night): every round intro lands a big metal "ROUND n" title on a shock ring, a white impact
+ * frame and a camera kick, then names what the round decides ("Match point", "Must win", "Decider"), so rounds 2 and 3
+ * feel like escalation instead of a repeat of round 1. Off = the intro as it was (banner title and VS only).
+ */
+export const ROUND_SLAM = true;
+const SLAM_FILL: Record<"gold" | "red" | "steel", string> = {
+  gold: "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)",
+  red: "linear-gradient(180deg, #ffe1dd 0%, #ff5a4f 50%, #8a1f18 100%)",
+  steel: "linear-gradient(180deg, #ffffff 0%, #e3ebf6 44%, #7f8ca3 100%)",
+};
+const SLAM_TONE: Record<"gold" | "red" | "steel", string> = { gold: "#ffcf4d", red: "#ff5a4f", steel: "#9fcfff" };
+
+function RoundSlam({ match }: { match: ArenaMatch }) {
+  const stakes = roundStakes(match);
+  const tone = SLAM_TONE[stakes.tone];
+  const n = Math.min(match.round + 1, 3);
+  return (
+    <>
+      <span className="round-slam-edge pointer-events-none absolute inset-0 z-[5]" data-tone={stakes.tone} style={{ "--ko": tone } as React.CSSProperties} aria-hidden />
+      <div className="pointer-events-none absolute inset-x-0 top-[39%] z-10 flex flex-col items-center" data-round-slam={stakes.key} style={{ "--ko": tone } as React.CSSProperties}>
+        <span className="round-slam-ring" aria-hidden />
+        <span className="round-slam-streak" aria-hidden />
+        <span className="round-slam-title relative">
+          <span className="ko-title font-display text-[4.25rem] leading-none whitespace-nowrap" style={{ backgroundImage: SLAM_FILL[stakes.tone] }}>ROUND {n}</span>
+        </span>
+        <span className="round-slam-tag t-label relative mt-2">{stakes.label}</span>
+        <span className="round-slam-line relative mt-1.5 px-6 text-center text-xs font-bold">{stakes.line}</span>
+      </div>
+      <span className="round-slam-flash pointer-events-none absolute inset-0 z-20" aria-hidden />
+    </>
+  );
+}
+
 export function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => void }) {
   const rival = useContext(RivalName);
   const bout = match.bout!;
@@ -652,11 +686,12 @@ export function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => voi
   const [w0, w1] = roundsWon(match);
   return (
     <button type="button" onClick={onGo} className="arena-root relative flex h-full min-h-0 w-full flex-col overflow-hidden text-left" aria-label="Start the round">
-      <div className="arena-split">
+      <div className={`arena-split ${ROUND_SLAM ? "round-slam-shake" : ""}`}>
         <div className="l"><FighterArt f={fa} focus="50% 14%" figW="92%" figTop="15%" crop="tall" /><span className="absolute inset-0" style={{ background: `linear-gradient(90deg, transparent 40%, ${fa.color}33), linear-gradient(0deg, #0c1019 8%, transparent 50%)` }} /></div>
         <div className="r"><FighterArt f={fb} focus="50% 14%" figW="92%" figTop="15%" crop="tall" /><span className="absolute inset-0" style={{ background: `linear-gradient(270deg, transparent 40%, ${fb.color}33), linear-gradient(0deg, #0c1019 8%, transparent 50%)` }} /></div>
         <span className="arena-slash" />
       </div>
+      {ROUND_SLAM && <RoundSlam match={match} />}
       <div className="arena-banner relative mt-8 py-2">
         <RoundTracker match={match} />
         <p className="t-label mt-0.5 text-center text-[10px] text-muted">You {w0} · {w1} {rival}</p>
