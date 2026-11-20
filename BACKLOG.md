@@ -1,5 +1,12 @@
 # SuperLife — Backlog
 
+## From the 2026-11-19 pm pass
+
+- **Done:** chapter strip, gift card, Market and Money Hub tiles wear the lit emblem (`TILE_EMBLEM`).
+- **Next for art:** the last raw `ico-tile` spans (Power Lab `PowerLab.tsx`, the create screen element tile, `MiniKit`, the minigame result tile); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
 ## From the 2026-11-19 am pass
 
 - **Done:** activity rows (`ActionRow`) wear the lit emblem instead of the flat `ico-tile` (`ACTION_EMBLEM`).

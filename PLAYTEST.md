@@ -1,5 +1,15 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-19 pm): lit emblems on the last flat tiles
+
+**Checked** at 390×844 with headless Chrome and the adult fire (m) save (`/workspace/pt1117pm/tap.mjs`, Life and Work desks). Before = the am branch build, after = this branch (`vite preview`).
+
+**Before/after:** `/workspace/shots-1119pm/ba-life.png`, `ba-work.png` (left before, right after); singles `before-life.png`, `after-life.png`, `before-work.png`, `after-work.png`.
+
+**Findings:**
+- **Chapter strip ("Paid in Daylight")** and the Money Hub net worth / home tiles are now dark beveled badges with a rim light and glowing icon, matching the activity rows.
+- **Layout:** same slots; no console errors, no sideways scroll.
+
 ## Morning pass (2026-11-19 am): activity row emblems
 
 **Checked** at 390×844 with headless Chrome and the adult fire (m) save (`/workspace/pt1117pm/tap.mjs`, City/Become/Shadow lists scrolled to the rows). Before = the night branch build, after = this branch (`vite preview`).

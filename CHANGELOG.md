@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-19 pm — one badge style everywhere
+
+- **Lit emblems on the last flat tiles** (flag `TILE_EMBLEM`, on): the Today chapter strip, the Powers gift card, Market rows and the Money Hub (net worth, homes, markets, businesses, brands) now use the same dark beveled badge as the activity rows and minigame headers instead of the bright glossy app tile. Same slot sizes, no layout change. Flag off = the old flat `ico-tile`.
+
 ## 2026-11-19 (am): lit emblems on activity rows (`devbot/2026-11-19-am`)
 
 Built on `origin/devbot/2026-11-18-night` (95cb58a, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1119am/`.
