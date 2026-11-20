@@ -119,6 +119,12 @@ export function actionIcon(id: string, section: string): LucideIcon {
  */
 export const ACTION_EMBLEM = true;
 
+/**
+ * The remaining flat icon tiles (Market and Money Hub rows, the gift card, the chapter strip) wear the same lit emblem
+ * (2026-11-19 pm) so every badge in the game shares one style. Non-character graphic. Off = the flat ico-tile.
+ */
+export const TILE_EMBLEM = true;
+
 export function IconTile({ color, size = "size-10", children, className = "", lit = false }: { color: string; size?: string; children: ReactNode; className?: string; lit?: boolean }) {
   if (lit) {
     return (

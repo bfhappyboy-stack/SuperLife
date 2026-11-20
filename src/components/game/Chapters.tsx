@@ -1,6 +1,7 @@
 import type React from "react";
 import { ChevronRight, Lock, MousePointerClick, Sparkles, Target } from "lucide-react";
 import { ChapterArt } from "@/components/game/Scene";
+import { IconTile, TILE_EMBLEM } from "@/components/game/icons";
 import { phaseStyle } from "@/components/game/phaseStyle";
 import { useEffect, useMemo, useState } from "react";
 import { generateChapterText } from "@/game/chapter-ai";
@@ -25,9 +26,9 @@ export function ChapterStrip({ game }: { game: Game }) {
       className="card relative mt-3 flex min-h-14 w-full items-center gap-3 overflow-hidden px-3 py-2.5 text-left"
       style={{ borderColor: `${ps.accent}80`, backgroundImage: `linear-gradient(100deg, ${ps.accent}26, transparent 55%)` }}
     >
-      <span className="ico-tile size-10 shrink-0" style={{ "--tile": ps.accent } as React.CSSProperties}>
+      <IconTile color={ps.accent} size="size-10" className="shrink-0" lit={TILE_EMBLEM}>
         <Icon className="size-5" aria-hidden />
-      </span>
+      </IconTile>
       <span className="min-w-0 flex-1">
         <span className="t-label block truncate text-[10px] text-muted">
           {game.preset ? `${presetById(game.preset)?.earth.toUpperCase() ?? ""} · ` : ""}CHAPTER {chapter.index + 1} · {phaseForAge(chapter.startAge).name.toUpperCase()} · AGES {chapter.startAge}–{chapter.endAge}

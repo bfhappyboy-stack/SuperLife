@@ -11,7 +11,7 @@ import { ArenaScreen } from "@/components/game/Arena";
 import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
 import { EVENT_SCENE, EventScene } from "@/components/game/EventScene";
-import { ACTION_EMBLEM, actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
+import { ACTION_EMBLEM, actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON, TILE_EMBLEM } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
 import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
 import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
@@ -478,7 +478,7 @@ function Life({ game }: { game: Game }) {
                   </>
                 ) : null}
                 <div className="relative flex items-center gap-3">
-                  <IconTile color={family ? FAMILY_COLOR[family] : "#e6b34d"} size="size-12">
+                  <IconTile color={family ? FAMILY_COLOR[family] : "#e6b34d"} size="size-12" lit={TILE_EMBLEM}>
                     <FamilyGlyph family={family} className="size-7" />
                   </IconTile>
                   <div className="min-w-0">
