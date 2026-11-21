@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-21 am): the last flat badges
+
+**Checked** at 390×844 (2x) with headless Chrome and `/workspace/shots-1121am/scenes.mjs` (saves from `/workspace/pt1117pm/saves/`): the Pattern minigame (`mini-adult-fire-m-pattern`, idle and with a lit pad frozen by pausing the page clock right after a tap), the Power Lab Book shelf scrolled to "Braid book · locked" (`fire-m`, age 14), and the Arena lobby from the title screen. Before = the merged branch before this change (b70fcd5, port 8211), after = this branch (port 8212).
+
+**Before/after:** `/workspace/shots-1121am/ba-watch.png` (lit Star pad, left before, right after), `ba-arena.png`, `ba-braid.png`, `ba-pattern.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Pattern pads (fixed):** the five toy-bright glossy tiles are now dark lit badges in their colours; the lit pad flares with a white icon and a wide glow, so the "which one lit" read is stronger than before.
+- **Braid book lock and Arena lobby (fixed):** the flat tinted squares are lit badges; the online badge's radar ping still runs.
+- **Layout:** no text moved; no console errors, no sideways scroll (scroll width 390) on any screen. Old saves (fire-m, the minigame save) loaded.
+
 ## Night pass (2026-11-20 night): the round slam
 
 **Checked** at 390×844 (2x) with headless Chrome: a scripted vs-computer Arena match (draft, order, then rounds 1-3, "Play round 3 anyway" when settled) with `/workspace/shots-1120night/arena-rounds.mjs`; every intro frame was frozen at 0.66 s (impact) and 1.6 s (settled) by pausing the page's animations. Before = `origin/devbot/2026-11-19-am` (port 8201), after = this branch (port 8202). Matches are random, so the fighters differ between before and after.
@@ -9,6 +20,16 @@
 **Findings:**
 - **Round 2/3 looked like round 1 (fixed):** the round now reads from across the room: big gold "ROUND 3" with a "DECIDER" plate and "Winner takes the match."; trailing 0-1 shows red "MUST WIN" and "Lose this and it's over." with a red heartbeat glow on the edges.
 - **Readability:** the title sits on the fighters' chests below the faces; names, passives, VS and "Tap to fight" stay clear. No console errors, no sideways scroll (scroll width 390) on any intro, the battle or the results.
+
+## Afternoon pass (2026-11-19 pm): lit emblems on the last flat tiles
+
+**Checked** at 390×844 with headless Chrome and the adult fire (m) save (`/workspace/pt1117pm/tap.mjs`, Life and Work desks). Before = the am branch build, after = this branch (`vite preview`).
+
+**Before/after:** `/workspace/shots-1119pm/ba-life.png`, `ba-work.png` (left before, right after); singles `before-life.png`, `after-life.png`, `before-work.png`, `after-work.png`.
+
+**Findings:**
+- **Chapter strip ("Paid in Daylight")** and the Money Hub net worth / home tiles are now dark beveled badges with a rim light and glowing icon, matching the activity rows.
+- **Layout:** same slots; no console errors, no sideways scroll.
 
 ## Morning pass (2026-11-19 am): activity row emblems
 
