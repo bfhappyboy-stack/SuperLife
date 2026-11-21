@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Lock, Minus, TrendingUp, Wallet } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CAT_COLOR, CAT_ICON, IconTile } from "@/components/game/icons";
+import { CAT_COLOR, CAT_ICON, IconTile, TILE_EMBLEM } from "@/components/game/icons";
 import { money } from "@/game/format";
 import { assetYear, CAT_META, CAT_ORDER, holdings, isBlackMarketOpen, itemById, marketOf, sellValue, shelfOf, type MarketCat, type MarketItem } from "@/game/market";
 import { ECON_FLAGS } from "@/game/economy";
@@ -76,7 +76,7 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
       <div className="card overflow-hidden px-4 py-4">
         <div className="pointer-events-none absolute -top-16 -right-10 size-44 rounded-full opacity-40 blur-2xl" style={{ background: "radial-gradient(circle, var(--color-gold), transparent 70%)" }} />
         <div className="flex items-center gap-3">
-          <IconTile color="#5fe08f" size="size-11">
+          <IconTile color="#5fe08f" size="size-11" lit={TILE_EMBLEM}>
             <Wallet className="size-5" />
           </IconTile>
           <div className="min-w-0 flex-1">
@@ -135,7 +135,7 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
           return (
             <article key={item.id} className={`card px-3 py-3 ${gate ? "opacity-60" : ""}`}>
               <div className="flex gap-3">
-                <IconTile color={gate ? "#5b6478" : CAT_COLOR[item.cat]} size="size-12">
+                <IconTile color={gate ? "#5b6478" : CAT_COLOR[item.cat]} size="size-12" lit={TILE_EMBLEM}>
                   {gate ? <Lock className="size-5" /> : <Icon className="size-6" />}
                 </IconTile>
                 <div className="min-w-0 flex-1">
@@ -190,7 +190,7 @@ export function Market({ game, onAct }: { game: Game; onAct: (id: string) => voi
               const wear = item.edge && item.edge.uses < 100 ? (asset.uses ?? 0) / item.edge.uses : null;
               return (
                 <div key={asset.uid} className="card flex items-center gap-3 px-3 py-2.5">
-                  <IconTile color={CAT_COLOR[item.cat]} size="size-9">
+                  <IconTile color={CAT_COLOR[item.cat]} size="size-9" lit={TILE_EMBLEM}>
                     <Icon className="size-4" />
                   </IconTile>
                   <div className="min-w-0 flex-1">
