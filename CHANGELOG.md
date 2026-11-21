@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-21 (night): stakes plates on crime scenes and the Duel K.O. (`devbot/2026-11-21-night`)
+
+Built on `origin/devbot/2026-11-21-pm` (50c3a4a, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (392), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1121night/`.
+
+### Increment 1: one plate for every fight beat
+
+- **The gap (2026-11-21 pm BACKLOG):** the Arena now speaks in metal plates (round stakes, match verdict), but the "Your call" crime scenes said nothing about what kind of trouble it was, and the Duel K.O. card still had a small flat "🏆 VICTORY" label under the metal K.O. title.
+- **Fix:** a crime moment's "Your call" scene carries the same skewed metal plate as a lower-third caption on the film still, under the painted figures' feet: "ROOFTOP STANDOFF · They know where you live.", "MUGGING · It's happening now. Seconds to choose.", "THIEF ABOARD · Stuck between stations.", red for trouble happening now, steel for a dark offer ("DIRTY MONEY", "HIRED MUSCLE", "THE MASK"). Everyday moments get no plate. The Duel K.O. card swaps the flat label for the plate with a light streak, naming how the fight went: "Flawless" (took no damage), "By a whisker" (won on 15% HP or less), "Boss down", "Quick work" (3 turns or fewer), "Dominant" (outhit them 2 to 1), "Hard fought"; "Double K.O." / "Standoff" for draws; "Outclassed" (landed nothing), "So close" (they were on 15% or less), "Boss stands", "Beaten" for losses. The foe line ("Rent is on the floor.") stays under it. Non-character graphics (CSS); painted figures untouched, no faces drawn. Reduced motion: no slide-in or streak.
+- **Code:** pure `crimePlate`, `duelVerdict` in the new `src/game/verdicts.ts` (tests in `src/game/test/plates.test.ts`, +3); shared `StakePlate` in the new `src/components/game/StakePlate.tsx`; `.stake-plate-*` in `src/styles.css` (global, so it works outside the Arena chunk); `EventScene.tsx` (plate when the event has the `crime` tag); `Duel.tsx` `ResultCard` (the result now also records both sides' HP left, UI state only). Switch: `STAKE_PLATES` in `StakePlate.tsx` (on; off = no plate on the scene and the old flat K.O. label). No rules, rewards, duel maths or saves change; old saves load.
+
 ## 2026-11-21 (pm): the match verdict (`devbot/2026-11-21-pm`)
 
 Built on `origin/devbot/2026-11-21-am` (ba35826, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (389), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1121pm/`.

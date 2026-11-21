@@ -1,5 +1,13 @@
 # SuperLife — Backlog
 
+## From the 2026-11-21 night pass
+
+- **Done:** the stakes plate on "Your call" crime scenes ("Rooftop standoff", "Mugging", "Dirty money") and on the Duel K.O. card ("Flawless", "By a whisker", "So close") (`STAKE_PLATES`). Closes the 2026-11-21 pm "same plate on Your call and the Duel K.O." item.
+- **Next for juice:** the Arena round rows' "0% HP left vs 41%" could become two thin HP bars; the Duel K.O. card's Dealt/Taken/Turns tiles could take the metal digits; a plate could name non-crime "Your call" moments too (family, rivals) if wanted.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
 ## From the 2026-11-21 pm pass
 
 - **Done:** Arena results show a metal score, a verdict plate ("Clean sweep", "Comeback", "Slipped away"...) and lit W/L round medals (`MATCH_VERDICT`). Closes the "stakes plate on Arena results" half of the 2026-11-20 night item.

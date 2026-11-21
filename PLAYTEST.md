@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-21 night): stakes plates on crime scenes and the Duel K.O.
+
+**Checked** at 390×844 (2x) with headless Chrome and `/workspace/shots-1121night/shoot.mjs`: the "Your call" crime scene (`saves/crime.json`, `villain-roof`, painted street villain opposite you), an everyday "Your call" moment (`saves/choice-fire-m.json`, no plate expected) and a full Duel played out from Powers → Fight (`saves/fire-m-full.json`) to the K.O. card. Before = `origin/devbot/2026-11-21-pm` (port 8231), after = this branch (port 8232).
+
+**Before/after:** `/workspace/shots-1121night/ba-crime.png` (left before, right after), `ba-duel.png`, `ba-choice.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Crime scene said nothing (fixed):** "ROOFTOP STANDOFF · They know where you live." sits as a lower-third caption under the figures' feet, so both painted faces stay clear (a first try at the top of the scene covered the villain's head and was moved).
+- **Duel K.O. label was flat (fixed):** "HARD FOUGHT · Toe to toe, and you stood last." in the metal plate with a light streak replaces the small "VICTORY" label; the card still fits at 390×844 with Continue on screen.
+- **Everyday moment:** no plate, unchanged. No console errors, no sideways scroll (scroll width 390) on any screen; the old saves (Nov 15-17) loaded.
+
 ## Afternoon pass (2026-11-21 pm): the match verdict
 
 **Checked** at 390×844 (2x) with headless Chrome. One scripted vs-computer match (`/workspace/shots-1121pm/play.mjs`) gave a saved finished match; four variants of it (`save-swept`, `-comeback`, `-sweep` with round 3 unplayed, `-slipped`) were seeded into `superlife.arena.v1` and opened from the title's Arena button with `/workspace/shots-1121pm/results.mjs`, so before and after show the same fighters. Before = `origin/devbot/2026-11-21-am` (port 8221), after = this branch (port 8222).
