@@ -782,6 +782,31 @@
 .ko-spot { filter: blur(10px); mix-blend-mode: screen; }
 .ko-title { background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent; letter-spacing: 0.03em; filter: drop-shadow(0 3px 0 rgb(0 0 0 / 0.7)) drop-shadow(0 0 22px color-mix(in srgb, var(--ko, #ffcf4d) 55%, transparent)); }
 
+/* 2026-11-21 night: shared stakes plate (STAKE_PLATES in StakePlate.tsx): "Your call" crime scenes and the Duel K.O. card. */
+.stake-plate-tag {
+  padding: 0.3rem 0.9rem; font-size: 0.75rem; letter-spacing: 0.24em; color: var(--ko); white-space: nowrap;
+  background: linear-gradient(180deg, rgba(14,18,30,.94), rgba(6,8,14,.94));
+  border: 1.5px solid color-mix(in srgb, var(--ko) 75%, transparent); border-radius: 3px; transform: skewX(-10deg);
+  box-shadow: 0 0 18px -2px color-mix(in srgb, var(--ko) 55%, transparent), 0 6px 14px -6px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.12);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--ko) 60%, transparent);
+  animation: stake-plate-tag 360ms calc(var(--plate-delay, 0ms) + 0ms) cubic-bezier(.2,.9,.3,1.2) both;
+}
+.stake-plate-tag.is-compact { padding: 0.22rem 0.7rem; font-size: 0.66rem; letter-spacing: 0.2em; }
+@keyframes stake-plate-tag { from { opacity: 0; transform: skewX(-10deg) translateY(10px) scaleX(.6); } to { opacity: 1; transform: skewX(-10deg); } }
+.stake-plate-line { color: rgba(240,244,250,.92); text-shadow: 0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); animation: stake-plate-line 420ms calc(var(--plate-delay, 0ms) + 180ms) ease-out both; }
+@keyframes stake-plate-line { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.stake-plate-streak {
+  position: absolute; top: 0.85rem; left: -18%; right: -18%; height: 2px; margin-top: -1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ko) 70%, #fff) 30%, #fff 50%, color-mix(in srgb, var(--ko) 70%, #fff) 70%, transparent);
+  box-shadow: 0 0 16px 3px color-mix(in srgb, var(--ko) 70%, transparent); opacity: .35;
+  animation: stake-plate-streak 900ms calc(var(--plate-delay, 0ms) - 140ms) ease-out both;
+}
+@keyframes stake-plate-streak { 0% { opacity: 0; transform: scaleX(0); } 30% { opacity: 1; transform: scaleX(1); } 100% { opacity: .35; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .stake-plate-tag, .stake-plate-line { animation: none !important; }
+  .stake-plate-streak { animation: none !important; opacity: .35; }
+}
+
 /* "Your call" scene (2026-11-15 night): slow light sweep and drifting dust in the power colour. */
 .event-rays { filter: blur(4px); opacity: 0.22; mix-blend-mode: screen; animation: event-sway 14s ease-in-out infinite alternate; transform-origin: 85% 0%; }
 .event-mote { opacity: 0; animation: event-mote 11s linear infinite; }
