@@ -5,6 +5,7 @@ import { Duel, type DuelHero } from "@/components/game/Duel";
 import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniHead } from "@/components/game/MiniKit";
+import { IconTile, LAST_EMBLEM } from "@/components/game/icons";
 import { skinColor } from "@/components/game/miniUtil";
 import { Chase, Hack, Hold, Press, Rescue } from "@/components/game/MiniGames";
 import { MiniBackdrop } from "@/components/game/MiniStage";
@@ -325,9 +326,15 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
               className={`card flex min-h-16 flex-col items-center justify-center gap-1 text-sm font-bold text-fg disabled:opacity-50 ${called ? "!border-spark" : hot ? "!bg-panel-2" : ""}`}
               style={hot ? { borderColor: icon.color, boxShadow: `0 0 20px -4px ${icon.color}` } : undefined}
             >
-              <span className="ico-tile size-9" style={{ "--tile": icon.color } as React.CSSProperties}>
-                <Icon className="size-5" />
-              </span>
+              {LAST_EMBLEM ? (
+                <IconTile color={icon.color} size="size-10" lit hot={hot || called}>
+                  <Icon className="size-5" />
+                </IconTile>
+              ) : (
+                <span className="ico-tile size-9" style={{ "--tile": icon.color } as React.CSSProperties}>
+                  <Icon className="size-5" />
+                </span>
+              )}
               {icon.label}
             </button>
           );

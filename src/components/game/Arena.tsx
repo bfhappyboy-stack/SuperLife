@@ -23,6 +23,7 @@ import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { VillainArt, type VillainCrop } from "@/components/game/VillainArt";
 import { hasVillainArt } from "@/components/game/villainArt.data";
 import { useArt } from "@/components/game/Scene";
+import { IconTile, LAST_EMBLEM } from "@/components/game/icons";
 import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, FX_HITSTOP, HITSTOP_CRIT_MS, HITSTOP_MS, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS } from "@/game/elements";
 import { answerOf, BREATH, keyOf } from "@/game/duel";
@@ -261,7 +262,11 @@ function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiL
 
         <section className="card-glass mt-4 px-4 py-4">
           <div className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-xl bg-gold/15 text-gold"><Bot className="size-6" aria-hidden /></span>
+            {LAST_EMBLEM ? (
+              <IconTile color="var(--color-gold)" size="size-11" className="shrink-0" lit><Bot className="size-6" aria-hidden /></IconTile>
+            ) : (
+              <span className="grid size-11 place-items-center rounded-xl bg-gold/15 text-gold"><Bot className="size-6" aria-hidden /></span>
+            )}
             <div className="min-w-0 flex-1">
               <h2 className="t-label text-gold">Vs computer</h2>
               <p className="text-sm font-bold text-fg">Pick a rival's skill</p>
@@ -282,7 +287,11 @@ function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiL
         </section>
 
         <button type="button" onClick={onOnline} className="arena-online-card card-glass mt-3 flex w-full items-center gap-3 px-4 py-3 text-left">
-          <span className="arena-radar grid size-11 shrink-0 place-items-center rounded-xl bg-spark/15 text-spark"><Wifi className="size-6" aria-hidden /></span>
+          {LAST_EMBLEM ? (
+            <IconTile color="var(--color-spark)" size="size-11" className="arena-radar shrink-0" lit><Wifi className="size-6" aria-hidden /></IconTile>
+          ) : (
+            <span className="arena-radar grid size-11 shrink-0 place-items-center rounded-xl bg-spark/15 text-spark"><Wifi className="size-6" aria-hidden /></span>
+          )}
           <div className="min-w-0 flex-1">
             <h2 className="t-label flex items-center gap-2 text-spark">Vs a friend online <span className="rounded-full bg-spark px-1.5 py-px text-[9px] text-paper-ink">New</span></h2>
             <p className="text-sm font-bold text-fg">Make a room, send the code</p>
