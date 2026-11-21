@@ -19,6 +19,8 @@ import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST } from "@/game/battle";
 import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
+import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
+import { duelVerdict } from "@/game/verdicts";
 import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
 /** The player's look, so the duel draws the same hero as the closet. */
@@ -83,7 +85,7 @@ function hashName(name: string): number {
 type Side = "me" | "foe";
 interface Shot { key: number; from: Side; element: string; }
 interface Impact { key: number; on: Side; element: string; amount: number; big: boolean; crit: boolean }
-interface Result { ratio: number; dealt: number; taken: number; turns: number; best: { name: string; dealt: number } | null }
+interface Result { ratio: number; dealt: number; taken: number; turns: number; best: { name: string; dealt: number } | null; /** HP left at the end, 0..1 (STAKE_PLATES verdict). */ hp?: number; foeHp?: number }
 interface PhaseBanner { key: number; title: string; name: string; line: string; hint: string; color: string }
 interface BeatFx { key: number; word: string; sub?: string; color: string }
 interface StatusTag { key: number; on: Side; text: string; color: string }
@@ -248,7 +250,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
       if (next.foeHp <= 0 && next.playerHp > 0) setMePose("idle");
       if (next.playerHp <= 0 && next.foeHp > 0) setFoePose("idle");
     });
-    later(ms + 650, () => setResult({ ratio, ...stats.current }));
+    later(ms + 650, () => setResult({ ratio, ...stats.current, hp: Math.max(0, next.playerHp) / Math.max(1, maxP), foeHp: Math.max(0, next.foeHp) / Math.max(1, maxF) }));
   }
 
   function swing(move: DuelMove) {
@@ -832,6 +834,8 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
   const practiced = [...new Set(used)].map((id) => moves.find((m) => m.id === id)?.name).filter(Boolean) as string[];
   const tone = win ? "#ffcf4d" : draw ? "#c9ccd4" : "#ff5a4f";
   const Icon = win ? Trophy : draw ? Swords : Skull;
+  // Stakes plate (2026-11-21 night): how the fight went, in the Arena's metal plate ("Flawless", "By a whisker", "So close").
+  const verdict = duelVerdict({ ratio: result.ratio, dealt: result.dealt, taken: result.taken, turns: result.turns, hp: result.hp ?? (win ? 1 : 0), foeHp: result.foeHp ?? (win ? 0 : 1), boss });
   return (
     <div className="anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 pb-5 backdrop-blur-sm" role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] overflow-hidden" aria-hidden>
@@ -846,11 +850,18 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
         <span className={`ko-in font-display text-6xl leading-none ${FX_CINEMATIC ? "ko-title" : ""}`} style={FX_CINEMATIC ? { "--ko": tone, backgroundImage: win ? "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)" : draw ? "linear-gradient(180deg, #ffffff 0%, #c9ccd4 50%, #7d8494 100%)" : "linear-gradient(180deg, #ffe1dd 0%, #ff5a4f 50%, #8a1f18 100%)" } as React.CSSProperties : { color: tone, textShadow: `0 4px 0 rgba(0,0,0,.6), 0 0 30px ${tone}` }}>
           {win || !draw ? "K.O." : "DRAW"}
         </span>
-        <p className="t-label mt-2 flex items-center gap-1.5" style={{ color: tone }}>
-          <Icon className="size-4" aria-hidden />
-          {win ? (boss ? "Boss down" : "Victory") : draw ? "Both still standing" : "Defeated"}
-        </p>
-        <p className="mt-1 text-sm font-semibold text-muted">{win ? `${foeName} is on the floor.` : draw ? `You and ${foeName} call it.` : `${foeName} walks away.`}</p>
+        {STAKE_PLATES ? (
+          <>
+            <span className="sr-only">{win ? (boss ? "Boss down" : "Victory") : draw ? "Both still standing" : "Defeated"}</span>
+            <StakePlate plate={verdict} className="mt-3" delay={420} streak />
+          </>
+        ) : (
+          <p className="t-label mt-2 flex items-center gap-1.5" style={{ color: tone }}>
+            <Icon className="size-4" aria-hidden />
+            {win ? (boss ? "Boss down" : "Victory") : draw ? "Both still standing" : "Defeated"}
+          </p>
+        )}
+        <p className={`text-sm font-semibold text-muted ${STAKE_PLATES ? "mt-1.5" : "mt-1"}`}>{win ? `${foeName} is on the floor.` : draw ? `You and ${foeName} call it.` : `${foeName} walks away.`}</p>
       </div>
       <div className="relative mx-auto mt-3 flex h-[150px] w-full max-w-[300px] items-end justify-center gap-6">
         {FX_CINEMATIC && <span className="pointer-events-none absolute bottom-[-6px] left-1/2 h-[26px] w-[110%] -translate-x-1/2 rounded-[50%]" style={{ background: `radial-gradient(closest-side, color-mix(in srgb, ${tone} 38%, transparent), rgb(0 0 0 / 0.5) 60%, transparent)` }} aria-hidden />}
