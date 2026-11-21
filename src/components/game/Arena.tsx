@@ -29,7 +29,7 @@ import { ELEMENTS } from "@/game/elements";
 import { answerOf, BREATH, keyOf } from "@/game/duel";
 import {
   aiDraft, aiFollow, aiLead, aiOrder, arenaRefusal, DRAFT_ORDER, draftPick, draftTurn, energyCap, feintCost, fighterOf,
-  finish, hashSeed, matchTurn, moveByKey, newMatch, nextRound, registerFighter, rngNext, roundStakes, roundsWon, setOrder, STYLES, taken, tellOf,
+  finish, hashSeed, matchTurn, moveByKey, newMatch, nextRound, registerFighter, rngNext, matchVerdict, roundStakes, roundsWon, setOrder, STYLES, taken, tellOf,
   type AiLevel, type ArenaAction, type ArenaMatch, type BoutState, type Side, type Tell, type TurnLog,
 } from "@/game/arena";
 import { ARENA_ROSTER, type ArenaFighter, type PassiveKind } from "@/game/arena.roster";
@@ -1224,6 +1224,40 @@ function RoundOver({ match, ko, onNext, onSkip, net }: { match: ArenaMatch; ko: 
 
 // ─── Results ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Match verdict (2026-11-21 pm): the results score is cast in the same metal as the round slam, and a stakes plate
+ * under it names how the match went ("Clean sweep", "Comeback", "Slipped away"); each round's W/L is a lit medal
+ * instead of a flat dot. Off = the flat score digits and dots as before. No rules, purses or saves change.
+ */
+export const MATCH_VERDICT = true;
+
+function MatchVerdictPlate({ match, w0, w1 }: { match: ArenaMatch; w0: number; w1: number }) {
+  const v = matchVerdict(match);
+  const tone = SLAM_TONE[v.tone];
+  return (
+    <div className="relative mt-1 flex flex-col items-center" data-verdict={v.key} style={{ "--ko": tone } as React.CSSProperties}>
+      <span className="match-verdict-streak" aria-hidden />
+      <div className="match-verdict-score relative flex items-center justify-center gap-4" aria-label={`${w0} rounds to ${w1}`}>
+        <span className="ko-title font-display text-[3.4rem] leading-none" style={{ backgroundImage: SLAM_FILL.gold, "--ko": SLAM_TONE.gold } as React.CSSProperties}>{w0}</span>
+        <span className="arena-vs text-2xl" aria-hidden>–</span>
+        <span className="ko-title font-display text-[3.4rem] leading-none" style={{ backgroundImage: SLAM_FILL.red, "--ko": SLAM_TONE.red } as React.CSSProperties}>{w1}</span>
+      </div>
+      <span className="round-slam-tag match-verdict-tag t-label relative mt-2">{v.label}</span>
+      <span className="round-slam-line match-verdict-line relative mt-1.5 px-6 text-center text-xs font-bold">{v.line}</span>
+    </div>
+  );
+}
+
+/** A round's result as a lit medal (MATCH_VERDICT): gold W, red L, steel dash for a round not played or drawn. */
+function RoundMedal({ res }: { res: Side | null | undefined }) {
+  const tile = res === 0 ? "#e6b34d" : res === 1 ? "#ef5d52" : "#7f8ca3";
+  return (
+    <span className="mini-emblem round-medal size-8" data-res={res ?? "none"} style={{ "--tile": tile } as React.CSSProperties} aria-label={res === 0 ? "Won" : res === 1 ? "Lost" : "Not played"}>
+      <span className="mini-emblem-core"><span className="mini-emblem-icon font-display text-sm leading-none">{res === 0 ? "W" : res === 1 ? "L" : "–"}</span></span>
+    </span>
+  );
+}
+
 export function Results({ match, onRematch, onHub, onTitle, note, footer, purse }: { match: ArenaMatch; onRematch: () => void; onHub: () => void; onTitle: () => void; note?: React.ReactNode; footer?: React.ReactNode; purse?: { level: AiLevel; online?: boolean } }) {
   const won = match.winner === 0;
   const played = !!match.orders[0] && !!match.orders[1];
@@ -1235,11 +1269,11 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer, purse 
       <div className="relative min-h-0 flex-1 overflow-y-auto px-4 pt-8 pb-4">
         <p className="t-label text-center" style={{ color }}>{won ? "Match won" : "Match lost"}</p>
         <h1 className="arena-title ko-in mt-1 text-center text-[4.2rem]" style={won ? undefined : { background: "linear-gradient(180deg,#ffd9d6,#ef5d52 55%,#8a1f18)", WebkitBackgroundClip: "text", backgroundClip: "text" }}>{won ? "VICTORY" : "DEFEAT"}</h1>
-        <div className="mt-2 flex items-center justify-center gap-4">
+        {MATCH_VERDICT ? <MatchVerdictPlate match={match} w0={w0} w1={w1} /> : <div className="mt-2 flex items-center justify-center gap-4">
           <span className="font-display text-5xl text-gold">{w0}</span>
           <span className="arena-vs text-2xl">–</span>
           <span className="font-display text-5xl text-cape">{w1}</span>
-        </div>
+        </div>}
         {note}
         {purse && <PurseLine match={match} level={purse.level} online={purse.online} />}
         <ol className="mt-5 flex flex-col gap-2">
@@ -1257,7 +1291,7 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer, purse 
                   <span className="block text-[11px] font-bold text-muted">{res === undefined ? (note ? "Not played" : "Not played — match decided") : m ? `${Math.round(m[0] * 100)}% HP left vs ${Math.round(m[1] * 100)}%` : ""}</span>
                 </span>
                 <span className={`arena-card relative size-12 shrink-0 !rounded-lg ${res === 1 ? "" : "grayscale-[.7]"}`} style={{ "--c": b.color } as React.CSSProperties}><FighterArt f={b} focus="50% 10%" /></span>
-                <span className={`grid size-8 shrink-0 place-items-center rounded-full font-display text-sm ${res === 0 ? "bg-gold text-paper-ink" : res === 1 ? "bg-cape text-white" : "bg-white/10 text-muted"}`}>{res === 0 ? "W" : res === 1 ? "L" : "–"}</span>
+                {MATCH_VERDICT ? <RoundMedal res={res} /> : <span className={`grid size-8 shrink-0 place-items-center rounded-full font-display text-sm ${res === 0 ? "bg-gold text-paper-ink" : res === 1 ? "bg-cape text-white" : "bg-white/10 text-muted"}`}>{res === 0 ? "W" : res === 1 ? "L" : "–"}</span>}
               </li>
             );
           })}
@@ -1353,7 +1387,7 @@ function MvpCard({ match }: { match: ArenaMatch }) {
       <div className="min-w-0">
         <p className="t-label flex items-center gap-1 text-gold"><Medal className="size-3.5" aria-hidden /> MVP</p>
         <p className="t-display truncate text-fg">{f.name}</p>
-        <p className="text-xs font-semibold text-muted">Won round {best + 1} with {Math.round(score * 100)}% HP left.</p>
+        <p className="text-xs font-semibold text-muted">{Math.round(score * 100) < 1 ? `Won round ${best + 1} by a whisker.` : `Won round ${best + 1} with ${Math.round(score * 100)}% HP left.`}</p>
       </div>
     </section>
   );

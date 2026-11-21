@@ -219,3 +219,24 @@
   .round-slam-edge { opacity: 1; }
   .round-slam-ring, .round-slam-streak, .round-slam-flash { display: none; }
 }
+
+/* 2026-11-21 pm: match verdict on the results (MATCH_VERDICT in Arena.tsx). Lands after the VICTORY/DEFEAT title. */
+.match-verdict-score { animation: round-slam-in 480ms 380ms cubic-bezier(.2,.9,.3,1.15) both; }
+.match-verdict-streak {
+  position: absolute; top: 1.7rem; left: -10%; right: -10%; height: 2px; margin-top: -1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ko) 70%, #fff) 30%, #fff 50%, color-mix(in srgb, var(--ko) 70%, #fff) 70%, transparent);
+  box-shadow: 0 0 16px 3px color-mix(in srgb, var(--ko) 70%, transparent); opacity: .35;
+  animation: match-verdict-streak 900ms 620ms ease-out both;
+}
+@keyframes match-verdict-streak { 0% { opacity: 0; transform: scaleX(0); } 30% { opacity: 1; transform: scaleX(1); } 100% { opacity: .35; transform: none; } }
+.match-verdict-tag { animation-delay: 760ms; }
+.match-verdict-line { animation-delay: 920ms; }
+.round-medal { border-radius: 999px; }
+.round-medal .mini-emblem-core { border-radius: 999px; }
+.round-medal .mini-emblem-core::before { inset: 3px; border-radius: 999px; }
+.round-medal[data-res="none"] { opacity: .7; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.55); }
+.round-medal[data-res="0"] .mini-emblem-icon { color: #fff3cf; }
+@media (prefers-reduced-motion: reduce) {
+  .match-verdict-score { animation: none !important; }
+  .match-verdict-streak { animation: none !important; opacity: .35; }
+}
