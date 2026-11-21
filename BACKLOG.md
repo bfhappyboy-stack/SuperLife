@@ -1,10 +1,18 @@
 # SuperLife — Backlog
 
+## From the 2026-11-21 pm pass
+
+- **Done:** Arena results show a metal score, a verdict plate ("Clean sweep", "Comeback", "Slipped away"...) and lit W/L round medals (`MATCH_VERDICT`). Closes the "stakes plate on Arena results" half of the 2026-11-20 night item.
+- **Next for juice:** the same plate on the duel's "Your call" crime scenes (e.g. "Repeat offender", "Armed"), and on the Duel K.O. card; the round rows' "0% HP left vs 41%" could become two thin HP bars.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
 ## From the 2026-11-21 am pass
 
 - **Done:** the last flat badges (Pattern pads, Braid book lock, Arena lobby, case-file fallback, classic gift tile) wear the lit emblem; lit Pattern pads flare (`LAST_EMBLEM`). Closes the 2026-11-19 pm "last raw `ico-tile` spans" item; `rg "ico-tile" src` now only finds the flag-off fallbacks.
 - **Merged here:** the 2026-11-19 pm `TILE_EMBLEM` branch, so the "push it?" question is settled.
-- **Next for art/juice:** remaining flat tinted circles (the "Start a new life" plus on Lives, the Arena results trophy, the mentor ring in Power Lab) could take the same emblem; the stakes plate on "Your call" crime scenes and Arena results; a real painted kid set (7-12) would replace the face rings.
+- **Next for art/juice:** remaining flat tinted circles (the "Start a new life" plus on Lives, the Arena results trophy, the mentor ring in Power Lab) could take the same emblem; the stakes plate on "Your call" crime scenes and Arena results (results done 2026-11-21 pm); a real painted kid set (7-12) would replace the face rings.
 - **Dead path:** `GiftStep` in `CreateScreen.tsx` only shows for a mode the menus no longer make; remove it or wire it, owner's call.
 - **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
 

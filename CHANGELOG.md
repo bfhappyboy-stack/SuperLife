@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-21 (pm): the match verdict (`devbot/2026-11-21-pm`)
+
+Built on `origin/devbot/2026-11-21-am` (ba35826, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (389), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1121pm/`.
+
+### Increment 1: the Arena results tell the story of the match
+
+- **The gap (2026-11-20 night / 2026-11-21 am BACKLOG):** the round intros slam in with stakes, but the results screen fell flat after them: plain gold/red score digits, flat W/L dots, and no word on how the match went. A double K.O. MVP also read "Won round 2 with 0% HP left."
+- **Fix:** the score is cast in the same metal as the round slam (gold for you, red for them) and lands with a light streak; under it a stakes plate names the match: "Clean sweep", "Flawless" (3-0), "Comeback" (lost the opener), "Held on" (won the decider after being pegged back), "On points" (level rounds, HP decided), and for losses "Swept", "Slipped away", "Decider lost", with one plain line ("Lost the opener, took the next two."). Each round's W/L is a lit round medal (the same emblem as the badges) instead of a flat dot; an unplayed round is a dim steel dash. The MVP line says "by a whisker" instead of "0% HP left". Non-character graphics (CSS); no faces drawn.
+- **Code:** `matchVerdict` in `src/game/arena.ts` (pure, reads `results` and `winner`; tests in `src/game/test/verdict.test.ts`); `MatchVerdictPlate`, `RoundMedal` in `Arena.tsx` `Results` (used by vs-computer and online results); `.match-verdict-*`, `.round-medal` in `arena.css` (reduced motion: no slam). Switch: `MATCH_VERDICT` in `Arena.tsx` (on; off = the flat score and dots). No rules, purses or saves change; old saves and saved matches load.
+
 ## 2026-11-21 (am): the last flat badges (`devbot/2026-11-21-am`)
 
 Built on `origin/devbot/2026-11-20-night` (5a75aca) with `origin/devbot/2026-11-19-pm` (88487b8, `TILE_EMBLEM`) merged in (only the doc tops conflicted; both entries kept), so this branch carries all the unmerged devbot work: merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (386), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1121am/`.

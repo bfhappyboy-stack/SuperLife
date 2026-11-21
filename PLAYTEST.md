@@ -1,5 +1,15 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-21 pm): the match verdict
+
+**Checked** at 390×844 (2x) with headless Chrome. One scripted vs-computer match (`/workspace/shots-1121pm/play.mjs`) gave a saved finished match; four variants of it (`save-swept`, `-comeback`, `-sweep` with round 3 unplayed, `-slipped`) were seeded into `superlife.arena.v1` and opened from the title's Arena button with `/workspace/shots-1121pm/results.mjs`, so before and after show the same fighters. Before = `origin/devbot/2026-11-21-am` (port 8221), after = this branch (port 8222).
+
+**Before/after:** `/workspace/shots-1121pm/ba-comeback.png` (left before, right after), `ba-sweep.png`, `ba-swept.png`, `ba-slipped.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Results fell flat after the round slam (fixed):** the metal score and the plate ("COMEBACK · Lost the opener, took the next two.", "SWEPT · Not a round taken.", "CLEAN SWEEP", "SLIPPED AWAY") say how it went at a glance; the lit W/L medals match the rest of the badges.
+- **Layout:** rows, MVP and buttons all fit; "Not played — match decided" still sits on one line. No console errors, no sideways scroll (scroll width 390) on any variant; the saved finished match from before the change loaded.
+
 ## Morning pass (2026-11-21 am): the last flat badges
 
 **Checked** at 390×844 (2x) with headless Chrome and `/workspace/shots-1121am/scenes.mjs` (saves from `/workspace/pt1117pm/saves/`): the Pattern minigame (`mini-adult-fire-m-pattern`, idle and with a lit pad frozen by pausing the page clock right after a tap), the Power Lab Book shelf scrolled to "Braid book · locked" (`fire-m`, age 14), and the Arena lobby from the title screen. Before = the merged branch before this change (b70fcd5, port 8211), after = this branch (port 8212).
