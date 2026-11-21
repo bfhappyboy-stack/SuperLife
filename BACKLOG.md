@@ -1,5 +1,13 @@
 # SuperLife — Backlog
 
+## From the 2026-11-21 am pass
+
+- **Done:** the last flat badges (Pattern pads, Braid book lock, Arena lobby, case-file fallback, classic gift tile) wear the lit emblem; lit Pattern pads flare (`LAST_EMBLEM`). Closes the 2026-11-19 pm "last raw `ico-tile` spans" item; `rg "ico-tile" src` now only finds the flag-off fallbacks.
+- **Merged here:** the 2026-11-19 pm `TILE_EMBLEM` branch, so the "push it?" question is settled.
+- **Next for art/juice:** remaining flat tinted circles (the "Start a new life" plus on Lives, the Arena results trophy, the mentor ring in Power Lab) could take the same emblem; the stakes plate on "Your call" crime scenes and Arena results; a real painted kid set (7-12) would replace the face rings.
+- **Dead path:** `GiftStep` in `CreateScreen.tsx` only shows for a mode the menus no longer make; remove it or wire it, owner's call.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+
 ## From the 2026-11-20 night pass
 
 - **Done:** Arena round intros slam in a metal "ROUND n" title with a shock ring, impact flash and camera kick, and name the stakes ("Match point", "Must win", "Decider", "For pride") (`ROUND_SLAM`). Closes the 2026-11-17 am "Arena round transitions" item.
@@ -8,6 +16,13 @@
 - **Next for art:** Power Lab and the create screen still have flat `ico-tile`s (after `TILE_EMBLEM` lands); a real painted kid set (7-12) would replace the face rings.
 - **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
 - **Still for the owner:** keep `TONE_PICKS_LINE`? Push the 2026-11-19 pm `TILE_EMBLEM` commit?
+
+## From the 2026-11-19 pm pass
+
+- **Done:** chapter strip, gift card, Market and Money Hub tiles wear the lit emblem (`TILE_EMBLEM`).
+- **Next for art:** the last raw `ico-tile` spans (Power Lab `PowerLab.tsx`, the create screen element tile, `MiniKit`, the minigame result tile); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
 
 ## From the 2026-11-19 am pass
 

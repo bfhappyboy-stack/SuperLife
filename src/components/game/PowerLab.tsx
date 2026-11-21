@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Portrait } from "@/components/game/Portrait";
 import { Award, BookOpen, Check, Crown, Dumbbell, Eye, FastForward, Flame, GraduationCap, Leaf, Lock, MessageCircle, Search, Shield, Skull, Star, Swords, Wrench, Zap, type LucideIcon } from "lucide-react";
 import { ElementIcon } from "@/components/game/Vfx";
+import { IconTile, LAST_EMBLEM } from "@/components/game/icons";
 import { arcsCleared, availableArcs, currentCase, plotFor, type ArcDef, type ArcStep } from "@/game/arcs";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
 import { getPower, mix, possibleMixes, teachableBases, viewPowers } from "@/game/combo";
@@ -485,6 +486,13 @@ function CaseFace({ arc, tint, size, icon }: { arc: ArcDef; tint: string; size: 
       </span>
     );
   }
+  if (LAST_EMBLEM) {
+    return (
+      <IconTile color={tint} size={size} className="shrink-0" lit>
+        <ElementIcon element={elementOfLegacy(power)} className={icon} style={{ color: undefined }} />
+      </IconTile>
+    );
+  }
   return (
     <span className={`ico-tile ${size} shrink-0`} style={{ "--tile": tint } as React.CSSProperties}>
       <ElementIcon element={elementOfLegacy(power)} className={icon} style={{ color: "currentColor" }} />
@@ -818,9 +826,15 @@ function MixLocked({ game }: { game: Game }) {
     <section className="card relative overflow-hidden px-4 py-4" aria-label="Braid book locked">
       <div className="pointer-events-none absolute -top-10 -right-10 size-36 rounded-full bg-[#7cf0c8]/10 blur-2xl" aria-hidden />
       <div className="flex items-start gap-3">
-        <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[#7cf0c8]/50 bg-[#7cf0c8]/10 text-[#7cf0c8] shadow-[0_0_18px_rgba(124,240,200,0.25)]">
-          <Lock className="size-6" aria-hidden />
-        </span>
+        {LAST_EMBLEM ? (
+          <IconTile color="#7cf0c8" size="size-12" className="shrink-0" lit>
+            <Lock className="size-6" aria-hidden />
+          </IconTile>
+        ) : (
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[#7cf0c8]/50 bg-[#7cf0c8]/10 text-[#7cf0c8] shadow-[0_0_18px_rgba(124,240,200,0.25)]">
+            <Lock className="size-6" aria-hidden />
+          </span>
+        )}
         <div className="min-w-0">
           <h2 className="t-label text-[10px] text-[#7cf0c8]">BRAID BOOK · LOCKED</h2>
           <p className="t-display !text-[1.6rem] leading-none text-fg">Mixing unlocks at {MIX_AGE}</p>
