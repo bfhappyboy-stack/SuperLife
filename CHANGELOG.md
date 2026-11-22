@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-22 (pm): fight callouts in metal (`devbot/2026-11-22-pm`)
+
+Built on `origin/devbot/2026-11-22-am` (4474ebd, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (396), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122pm/`.
+
+### Increment 1: the last plain lines after a fight
+
+- **The gap (2026-11-22 am BACKLOG):** the K.O. title, plate and stat tiles are cast metal, but under them the Duel K.O. card still said "Best hit: Dive Kick for 11" in small grey text, and the Arena MVP card said "Won round 2 with 62% HP left." in a plain glass card.
+- **Fix:** the best hit is a skewed steel callout: a gold "BEST HIT" tag, the move name, a metal-cast gold number that counts up, and its share of everything you dealt ("18%"); it slides in after the stat tiles with a light glint. The MVP card is gold-rimmed with a warm inner glow and a slow glint, the "MVP" tag glows, and the line under the fighter's name is "ROUND 2 · HP LEFT" with metal-cast "62%" and a slanted gold HP bar (the same bar as the round rows) that fills as the card rises; a win on almost no HP reads "ROUND 2 · BY A WHISKER". Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: final numbers at once, no slide, glint or fill.
+- **Code:** pure `hitShare`, `mvpRound` in `src/game/verdicts.ts` (tests in `src/game/test/tally.test.ts`, +2; `MvpCard` now picks its round with `mvpRound`, same rule as before); `BestHit`, `MvpPlate` in `src/components/game/FightTally.tsx`; `.best-hit-*`, `.mvp-card-*`, `.hp-clash-track.is-solo` in `src/styles.css`; `Duel.tsx` `ResultCard`, `Arena.tsx` `MvpCard`. Switch: `FIGHT_CALLOUT` in `FightTally.tsx` (on; off = the old plain best-hit line and MVP card). No rules, rewards, duel maths or saves change; old saves and saved Arena matches load.
+
 ## 2026-11-22 (am): the fight tally in metal (`devbot/2026-11-22-am`)
 
 Built on `origin/devbot/2026-11-21-night` (4aef2ed, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (394), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122am/`.

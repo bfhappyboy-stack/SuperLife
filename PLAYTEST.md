@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-22 pm): fight callouts in metal
+
+**Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122pm/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card, and two saved finished Arena matches (`save-comeback`, `save-swept`, seeded into `superlife.arena.v1`, opened from the title's Arena button with `results.mjs`). Before = this branch before the change (`origin/devbot/2026-11-22-am`), after = this branch, same dev server (port 8251).
+
+**Before/after:** `/workspace/shots-1122pm/ba-duel.png` (left before, right after), `ba-comeback.png`, `ba-swept.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Best hit was grey text (fixed):** "BEST HIT · Dive Kick · 11 · 18%" sits in a skewed steel callout under the stat tiles; the card still fits at 390×844 with Continue on screen. (The duel is played live, so Taken differs by a point between runs.)
+- **MVP card was a plain glass card (fixed):** the comeback match shows Superman in a gold-rimmed card, "ROUND 2 · HP LEFT", metal "62%" and a gold bar filled to 62%. The swept match has no MVP card, as before.
+- No console errors, no sideways scroll (scroll width 390) on any screen; the Nov 15-17 saves and the saved Arena matches loaded.
+
 ## Morning pass (2026-11-22 am): the fight tally in metal
 
 **Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122am/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card, and three saved finished Arena matches (`save-comeback`, `-swept`, `-slipped`, seeded into `superlife.arena.v1`, opened from the title's Arena button with `results.mjs`). Before = `origin/devbot/2026-11-21-night` (port 8241), after = this branch (port 8242).

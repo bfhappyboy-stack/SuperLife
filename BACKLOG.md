@@ -1,5 +1,13 @@
 # SuperLife — Backlog
 
+## From the 2026-11-22 pm pass
+
+- **Done:** the Duel K.O. card's best hit is a steel callout with a gold number and its share of your damage; the Arena MVP card is gold-rimmed with a slanted gold HP bar (`FIGHT_CALLOUT`). Closes both remaining 2026-11-22 am "next for juice" items about the MVP line and the best-hit line.
+- **Next for juice:** the K.O. card's Rewards chips are still flat purple pills (could become small steel chips with the stat's colour); a plate could name non-crime "Your call" moments too (family, rivals) if wanted.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring fallback in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
 ## From the 2026-11-22 am pass
 
 - **Done:** the Duel K.O. card's Dealt / Taken / Turns tiles take metal digits that count up, with the leading side lit; Arena round rows show two HP bars instead of "0% HP left vs 41%" (`FIGHT_TALLY`). Closes both 2026-11-21 night "next for juice" items about tiles and round rows.
