@@ -21,7 +21,7 @@ import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST 
 import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
 import { duelVerdict, statLead } from "@/game/verdicts";
-import { FIGHT_TALLY, MetalStat } from "@/components/game/FightTally";
+import { BestHit, FIGHT_CALLOUT, FIGHT_TALLY, MetalStat } from "@/components/game/FightTally";
 import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
 /** The player's look, so the duel draws the same hero as the closet. */
@@ -888,7 +888,8 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
           </>
         )}
       </div>
-      {result.best && result.best.dealt > 0 && (
+      {result.best && result.best.dealt > 0 && FIGHT_CALLOUT && <BestHit name={result.best.name} dealt={result.best.dealt} total={result.dealt} delay={940} />}
+      {result.best && result.best.dealt > 0 && !FIGHT_CALLOUT && (
         <p className="relative mt-2 text-center text-xs font-semibold text-muted">
           Best hit: <span className="text-fg">{result.best.name}</span> for <span className="t-num text-gold">{result.best.dealt}</span>
         </p>

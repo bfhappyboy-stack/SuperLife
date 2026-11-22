@@ -85,3 +85,28 @@ export function hpPercent(hp: number | null | undefined): number {
   if (typeof hp !== "number" || !Number.isFinite(hp)) return 0;
   return Math.max(0, Math.min(100, Math.round(hp * 100)));
 }
+
+/**
+ * 2026-11-22 pm (FIGHT_CALLOUT): the best hit's share of everything you dealt, as a whole percent 0..100.
+ * Missing, negative or non-finite numbers read as 0; a hit bigger than the total (rounding) caps at 100.
+ */
+export function hitShare(hit: number | null | undefined, total: number | null | undefined): number {
+  const h = typeof hit === "number" && Number.isFinite(hit) ? Math.max(0, hit) : 0;
+  const t = typeof total === "number" && Number.isFinite(total) ? Math.max(0, total) : 0;
+  if (h <= 0 || t <= 0) return 0;
+  return Math.min(100, Math.round((h / t) * 100));
+}
+
+/** The Arena MVP: the round you won with the most HP left (index), or null if you won none. Ties keep the earlier round. */
+export function mvpRound(results: ReadonlyArray<0 | 1 | null | undefined>, margins: ReadonlyArray<readonly [number, number] | null | undefined>): { round: number; hp: number } | null {
+  let round = -1;
+  let hp = -1;
+  results.forEach((r, i) => {
+    const m = margins[i];
+    if (r === 0 && m && typeof m[0] === "number" && m[0] > hp) {
+      hp = m[0];
+      round = i;
+    }
+  });
+  return round < 0 ? null : { round, hp };
+}

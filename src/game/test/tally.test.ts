@@ -24,3 +24,26 @@ test("round HP is a whole percent clamped to 0..100, and missing margins read as
   assert.equal(hpPercent(null), 0);
   assert.equal(hpPercent(Number.NaN), 0);
 });
+
+// 2026-11-22 pm pass (FIGHT_CALLOUT): the best-hit callout's share and the Arena MVP pick.
+import { hitShare, mvpRound } from "../verdicts.ts";
+
+test("the best hit's share of your damage is a whole percent, capped, and empty fights read 0", () => {
+  assert.equal(hitShare(11, 62), 18);
+  assert.equal(hitShare(62, 62), 100);
+  assert.equal(hitShare(70, 62), 100, "rounding never shows more than all of it");
+  assert.equal(hitShare(0, 62), 0);
+  assert.equal(hitShare(11, 0), 0);
+  assert.equal(hitShare(-4, 20), 0);
+  assert.equal(hitShare(Number.NaN, 20), 0);
+  assert.equal(hitShare(undefined, null), 0);
+});
+
+test("the MVP is the round you won with the most HP left; none when you won none; ties keep the earlier round", () => {
+  assert.deepEqual(mvpRound([1, 0, 0], [[0, 0.41], [0.62, 0], [0.18, 0]]), { round: 1, hp: 0.62 });
+  assert.deepEqual(mvpRound([0, 0], [[0.3, 0], [0.3, 0]]), { round: 0, hp: 0.3 });
+  assert.deepEqual(mvpRound([0, 1], [[0, 0], [0, 0.5]]), { round: 0, hp: 0 }, "a double-K.O. tiebreak win still counts");
+  assert.equal(mvpRound([1, 1], [[0, 0.4], [0, 0.2]]), null);
+  assert.equal(mvpRound([0, null], []), null, "a win with no margin saved is skipped");
+  assert.equal(mvpRound([], []), null);
+});
