@@ -41,7 +41,8 @@ import { localDay, purseKey, PURSE_BASE, PURSE_DAILY, type PurseQuote } from "@/
 import { money } from "@/game/format";
 import type { DuelMove, MoveStyle } from "@/game/types";
 import { OnlineArena } from "@/components/game/OnlineArena";
-import { FIGHT_TALLY, HpClash } from "@/components/game/FightTally";
+import { FIGHT_CALLOUT, FIGHT_TALLY, HpClash, MvpPlate } from "@/components/game/FightTally";
+import { mvpRound } from "@/game/verdicts";
 
 type View = "hub" | "draft" | "order" | "reveal" | "intro" | "battle" | "results";
 
@@ -1371,17 +1372,23 @@ function PurseLine({ match, level, online }: { match: ArenaMatch; level: AiLevel
 
 /** Your best fighter: the round winner who kept the most HP. */
 function MvpCard({ match }: { match: ArenaMatch }) {
-  let best = -1;
-  let score = -1;
-  match.results.forEach((r, i) => {
-    const m = match.margins[i];
-    if (r === 0 && m && m[0] > score) {
-      score = m[0];
-      best = i;
-    }
-  });
-  if (best < 0 || !match.orders[0]) return null;
+  const mvp = mvpRound(match.results, match.margins);
+  if (!mvp || !match.orders[0]) return null;
+  const { round: best, hp: score } = mvp;
   const f = fighterOf(match.orders[0][best]!);
+  if (FIGHT_CALLOUT) {
+    return (
+      <section className="anim-rise mvp-card mt-3 flex items-center gap-3 overflow-hidden px-3 py-3" style={{ animationDelay: "400ms" }} aria-label={`MVP ${f.name}`}>
+        <span className="mvp-card-sheen" aria-hidden />
+        <span className="arena-card relative h-20 w-16 shrink-0" style={{ "--c": f.color } as React.CSSProperties}><FighterArt f={f} /></span>
+        <div className="relative min-w-0 flex-1">
+          <p className="mvp-card-tag t-label inline-flex items-center gap-1"><Medal className="size-3.5" aria-hidden /> MVP</p>
+          <p className="t-display truncate text-fg">{f.name}</p>
+          <MvpPlate round={best} hp={score} delay={560} />
+        </div>
+      </section>
+    );
+  }
   return (
     <section className="anim-rise card-glass mt-3 flex items-center gap-3 overflow-hidden px-3 py-3" style={{ animationDelay: "400ms" }}>
       <span className="arena-card relative h-20 w-16 shrink-0" style={{ "--c": f.color } as React.CSSProperties}><FighterArt f={f} /></span>

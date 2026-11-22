@@ -838,6 +838,39 @@
   .metal-stat-sheen::after { display: none; }
 }
 
+/* 2026-11-22 pm: fight callouts (FIGHT_CALLOUT in FightTally.tsx): the K.O. card's best hit and the Arena MVP plate. */
+.best-hit {
+  width: fit-content; border-radius: 8px; overflow: hidden; transform: skewX(-10deg);
+  background: linear-gradient(180deg, rgba(58,64,80,.92) 0%, rgba(22,26,36,.96) 50%, rgba(10,12,18,.98) 100%);
+  border: 1px solid rgba(190,205,228,.26);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -2px 0 rgba(0,0,0,.6), 0 8px 16px -10px rgba(0,0,0,.95);
+  animation: best-hit-in 380ms var(--hit-delay, 0ms) cubic-bezier(.2,.9,.3,1.2) both;
+}
+.best-hit > * { transform: skewX(10deg); }
+.best-hit > .best-hit-sheen { transform: none; }
+.best-hit-tag {
+  padding: .28rem .55rem; border-radius: 5px; font-size: .6rem; letter-spacing: .18em; color: #1a1205;
+  background: linear-gradient(180deg, #fff1b8, #f2bd4b 50%, #b8721e); box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 12px -2px rgba(255,207,77,.6);
+}
+.best-hit-sheen { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.best-hit-sheen::after { content: ""; position: absolute; top: -50%; bottom: -50%; left: -40%; width: 30%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); animation: metal-stat-glint 900ms calc(var(--hit-delay, 0ms) + 420ms) ease-out both; }
+@keyframes best-hit-in { from { opacity: 0; transform: skewX(-10deg) translateX(-14px); } to { opacity: 1; transform: skewX(-10deg); } }
+.mvp-card {
+  position: relative; border-radius: 20px;
+  background: linear-gradient(180deg, rgba(64,52,26,.55) 0%, rgba(20,20,28,.94) 42%, rgba(10,11,16,.97) 100%);
+  border: 1px solid rgba(255,207,77,.42);
+  box-shadow: inset 0 1px 0 rgba(255,236,170,.25), inset 0 0 28px -10px rgba(255,207,77,.45), 0 0 22px -8px rgba(255,207,77,.45), 0 10px 22px -12px rgba(0,0,0,.95);
+}
+.mvp-card-sheen { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.mvp-card-sheen::after { content: ""; position: absolute; top: -40%; bottom: -40%; left: -40%; width: 26%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,236,170,.16), transparent); animation: metal-stat-glint 1100ms 900ms ease-out both; }
+.mvp-card-tag { color: #ffd36a; text-shadow: 0 0 10px rgba(255,207,77,.6); }
+.hp-clash-track.is-solo { height: 7px; width: 100%; }
+.is-solo .hp-clash-fill { transform-origin: left center; background: linear-gradient(180deg, #fff1b8, #f2bd4b 45%, #a8661a); box-shadow: 0 0 8px rgba(255,207,77,.6); }
+@media (prefers-reduced-motion: reduce) {
+  .best-hit { animation: none !important; }
+  .best-hit-sheen::after, .mvp-card-sheen::after { display: none; }
+}
+
 /* "Your call" scene (2026-11-15 night): slow light sweep and drifting dust in the power colour. */
 .event-rays { filter: blur(4px); opacity: 0.22; mix-blend-mode: screen; animation: event-sway 14s ease-in-out infinite alternate; transform-origin: 85% 0%; }
 .event-mote { opacity: 0; animation: event-mote 11s linear infinite; }
