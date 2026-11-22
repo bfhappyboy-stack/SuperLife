@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-22 (am): the fight tally in metal (`devbot/2026-11-22-am`)
+
+Built on `origin/devbot/2026-11-21-night` (4aef2ed, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (394), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122am/`.
+
+### Increment 1: the numbers after a fight look like the fight
+
+- **The gap (2026-11-21 night BACKLOG):** the K.O. title and the stakes plates are cast metal, but the Duel K.O. card's Dealt / Taken / Turns tiles were plain flat cards with white digits, and each Arena results row said "0% HP left vs 41%" in small grey text.
+- **Fix:** the K.O. card's three tiles are beveled steel tiles with metal-cast digits that count up one after another as the card lands, with a light glint across each. The side that hit harder lights up: a gold Dealt tile when you outhit them, a red Taken tile when they outhit you, neither when it was level. Each Arena results row now shows two thin, slanted fighting-game HP bars meeting at a steel pin: yours in gold on the left, theirs in red on the right, each drained toward the middle, with the number at the outer end and "KO" for an empty bar; the loser's bar dims. The bars fill in as each row rises. Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: final numbers at once, no count, glint or fill.
+- **Code:** pure `statLead`, `hpPercent` in `src/game/verdicts.ts` (tests in `src/game/test/tally.test.ts`, +2); `MetalStat`, `HpClash` in the new `src/components/game/FightTally.tsx`; `.metal-stat-*`, `.hp-clash-*` in `src/styles.css`; `Duel.tsx` `ResultCard`, `Arena.tsx` `Results`. Switch: `FIGHT_TALLY` in `FightTally.tsx` (on; off = the old flat stat cards and the plain HP line). No rules, rewards, duel maths or saves change; old saves and saved Arena matches load.
+
 ## 2026-11-21 (night): stakes plates on crime scenes and the Duel K.O. (`devbot/2026-11-21-night`)
 
 Built on `origin/devbot/2026-11-21-pm` (50c3a4a, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (392), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1121night/`.

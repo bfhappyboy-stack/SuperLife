@@ -1,5 +1,13 @@
 # SuperLife — Backlog
 
+## From the 2026-11-22 am pass
+
+- **Done:** the Duel K.O. card's Dealt / Taken / Turns tiles take metal digits that count up, with the leading side lit; Arena round rows show two HP bars instead of "0% HP left vs 41%" (`FIGHT_TALLY`). Closes both 2026-11-21 night "next for juice" items about tiles and round rows.
+- **Next for juice:** a plate could name non-crime "Your call" moments too (family, rivals) if wanted; the Arena MVP card's "Won round 2 with 62% HP left." could take the same gold bar; the "Best hit" line on the K.O. card could become a small metal callout.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
 ## From the 2026-11-21 night pass
 
 - **Done:** the stakes plate on "Your call" crime scenes ("Rooftop standoff", "Mugging", "Dirty money") and on the Duel K.O. card ("Flawless", "By a whisker", "So close") (`STAKE_PLATES`). Closes the 2026-11-21 pm "same plate on Your call and the Duel K.O." item.

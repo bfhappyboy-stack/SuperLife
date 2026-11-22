@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-22 am): the fight tally in metal
+
+**Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122am/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card, and three saved finished Arena matches (`save-comeback`, `-swept`, `-slipped`, seeded into `superlife.arena.v1`, opened from the title's Arena button with `results.mjs`). Before = `origin/devbot/2026-11-21-night` (port 8241), after = this branch (port 8242).
+
+**Before/after:** `/workspace/shots-1122am/ba-duel.png` (left before, right after), `ba-comeback.png`, `ba-swept.png`, `ba-slipped.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **K.O. stat tiles were flat (fixed):** "62 DEALT" in gold metal with a lit underline (you outhit Rent 62 to 40), "40 TAKEN" and "6 TURNS" in steel; the card still fits at 390×844 with Continue on screen. (The duel is played live, so Taken differs by a point between runs.)
+- **Round rows read as small grey text (fixed):** each row shows the two HP bars meeting at a steel pin, "KO" on the empty side, the loser's bar dimmed; the comeback match reads KO/41, 62/KO, 18/KO at a glance. Names still truncate as before; medals unchanged.
+- No console errors, no sideways scroll (scroll width 390) on any screen; the Nov 15-17 saves and the saved Arena matches loaded.
+
 ## Night pass (2026-11-21 night): stakes plates on crime scenes and the Duel K.O.
 
 **Checked** at 390×844 (2x) with headless Chrome and `/workspace/shots-1121night/shoot.mjs`: the "Your call" crime scene (`saves/crime.json`, `villain-roof`, painted street villain opposite you), an everyday "Your call" moment (`saves/choice-fire-m.json`, no plate expected) and a full Duel played out from Powers → Fight (`saves/fire-m-full.json`) to the K.O. card. Before = `origin/devbot/2026-11-21-pm` (port 8231), after = this branch (port 8232).
