@@ -15,14 +15,14 @@ import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
 import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, FX_HITSTOP, HITSTOP_CRIT_MS, HITSTOP_MS, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
-import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST } from "@/game/battle";
 import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
 import { duelVerdict, statLead } from "@/game/verdicts";
-import { BestHit, FIGHT_CALLOUT, FIGHT_TALLY, MetalStat } from "@/components/game/FightTally";
-import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
+import { BestHit, FIGHT_CALLOUT, FIGHT_TALLY, MetalStat, REWARD_CHIPS, RewardChips } from "@/components/game/FightTally";
+import { practicedLabel, rewardChips } from "@/game/rewards";
+import type { BossGimmick, DuelBoard, DuelMove, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
 /** The player's look, so the duel draws the same hero as the closet. */
 export interface DuelHero {
@@ -800,32 +800,6 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, ultimate
   );
 }
 
-const EFFECT_LABEL: Record<Exclude<keyof Effects, "personId">, string> = {
-  health: "Health",
-  happiness: "Joy",
-  smarts: "Smarts",
-  looks: "Looks",
-  fame: "Fame",
-  money: "Cash",
-  reputation: "Rep",
-  parentBelief: "Family belief",
-  powerLevel: "Power",
-  closeness: "Bond",
-  karma: "Karma",
-};
-
-function rewardChips(effects: Effects): { label: string; value: string; good: boolean }[] {
-  const out: { label: string; value: string; good: boolean }[] = [];
-  for (const [key, label] of Object.entries(EFFECT_LABEL) as [Exclude<keyof Effects, "personId">, string][]) {
-    const value = effects[key];
-    if (typeof value !== "number" || value === 0) continue;
-    const sign = value > 0 ? "+" : "−";
-    const text = key === "money" ? `${sign}${money(Math.abs(value))}` : `${sign}${Math.abs(Math.round(value * 10) / 10)}`;
-    out.push({ label, value: text, good: value > 0 });
-  }
-  return out;
-}
-
 function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmick, onContinue }: { spec: MinigameSpec; result: Result; hero: React.ReactNode; foe: React.ReactNode; foeName: string; boss: boolean; used: string[]; moves: DuelMove[]; gimmick: BossGimmick | null; onContinue: () => void }) {
   const win = result.ratio >= 0.66;
   const draw = !win && result.ratio >= 0.33;
@@ -833,6 +807,7 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
   const text = win ? spec.winText : draw ? spec.partialText : spec.loseText;
   const chips = rewardChips(effects);
   const practiced = [...new Set(used)].map((id) => moves.find((m) => m.id === id)?.name).filter(Boolean) as string[];
+  const practicedText = practicedLabel(practiced);
   const tone = win ? "#ffcf4d" : draw ? "#c9ccd4" : "#ff5a4f";
   const Icon = win ? Trophy : draw ? Swords : Skull;
   // Stakes plate (2026-11-21 night): how the fight went, in the Arena's metal plate ("Flawless", "By a whisker", "So close").
@@ -896,6 +871,9 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
       )}
       <div className="card relative mt-3 px-3 py-2.5">
         <p className="t-label text-muted">Rewards</p>
+        {REWARD_CHIPS ? (
+          <RewardChips chips={chips} practiced={practicedText} delay={1080} />
+        ) : (
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {chips.length ? (
             chips.map((chip) => (
@@ -906,8 +884,9 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
           ) : (
             <span className="text-xs text-muted">Nothing but the lesson.</span>
           )}
-          {practiced.length > 0 && <span className="chip !py-0.5 text-xs font-bold text-gold">Move XP: {practiced.slice(0, 3).join(", ")}{practiced.length > 3 ? ` +${practiced.length - 3}` : ""}</span>}
+          {practicedText && <span className="chip !py-0.5 text-xs font-bold text-gold">Move XP: {practicedText}</span>}
         </div>
+        )}
         {text && <p className="mt-2 text-xs leading-snug text-fg/85">{text}</p>}
       </div>
       {gimmick && !win && (

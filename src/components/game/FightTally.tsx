@@ -7,7 +7,9 @@
  * `FIGHT_TALLY` off = the old flat stat cards and the plain HP text line.
  */
 import { useEffect, useState } from "react";
+import { Award, Brain, Coins, Dumbbell, Gem, Heart, HeartPulse, House, Scale, Smile, Star, Zap, type LucideIcon } from "lucide-react";
 import { hitShare, hpPercent } from "@/game/verdicts";
+import type { RewardChip, RewardKey } from "@/game/rewards";
 
 export const FIGHT_TALLY = true;
 /**
@@ -17,6 +19,12 @@ export const FIGHT_TALLY = true;
  * Off = the old plain text lines. Non-character graphics (CSS); painted fighters untouched, no faces drawn.
  */
 export const FIGHT_CALLOUT = true;
+/**
+ * 2026-11-22 night: the Duel K.O. card's Rewards row ("Joy +2", "Fame +3" as flat purple pills) as small skewed steel
+ * chips, each edged and iconed in its stat's colour with a metal-cast value; losses read in red and sit dimmer; the Move
+ * XP chip is gold. They pop in one after another after the best hit. Off = the old flat pills. Non-character graphics.
+ */
+export const REWARD_CHIPS = true;
 
 type Tone = "gold" | "red" | "steel";
 const TONE: Record<Tone, string> = { gold: "#ffcf4d", red: "#ff5a4f", steel: "#c9d6e8" };
@@ -105,6 +113,45 @@ export function MvpPlate({ round, hp, delay = 0 }: { round: number; hp: number; 
         )}
       </div>
       <span className="hp-clash-track is-solo mt-1 block" aria-hidden><span className="hp-clash-fill" style={{ width: `${Math.max(pct, 2)}%` }} /></span>
+    </div>
+  );
+}
+
+const REWARD_ICON: Record<RewardKey, LucideIcon> = {
+  health: HeartPulse,
+  happiness: Smile,
+  smarts: Brain,
+  looks: Gem,
+  fame: Star,
+  money: Coins,
+  reputation: Award,
+  parentBelief: House,
+  powerLevel: Zap,
+  closeness: Heart,
+  karma: Scale,
+};
+
+/** One steel reward chip: stat-coloured edge and icon, small label, metal-cast signed value. */
+function SteelChip({ icon: Icon, label, value, tone, good, delay }: { icon: LucideIcon; label: string; value: string; tone: string; good: boolean; delay: number }) {
+  return (
+    <span className={`reward-chip relative inline-flex items-center gap-1.5 py-1 pr-2.5 pl-2 ${good ? "" : "is-loss"}`} style={{ "--chip": good ? tone : "#ff5a4f", "--chip-delay": `${delay}ms` } as React.CSSProperties} aria-label={`${label} ${value}`}>
+      <span className="reward-chip-sheen" aria-hidden />
+      <Icon className="reward-chip-icon relative size-3.5 shrink-0" aria-hidden />
+      <span className="t-label relative text-[10px] text-muted" aria-hidden>{label}</span>
+      <span className="ko-title relative font-display text-[0.95rem] leading-none tabular-nums" style={{ backgroundImage: good ? `linear-gradient(180deg, #ffffff 0%, ${tone} 70%)` : FILL.red }} aria-hidden>{value}</span>
+    </span>
+  );
+}
+
+/** The Duel K.O. card's Rewards row in steel: one chip per stat change, then the gold Move XP chip. */
+export function RewardChips({ chips, practiced, delay = 0 }: { chips: RewardChip[]; practiced: string; delay?: number }) {
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1.5">
+      {chips.map((chip, i) => (
+        <SteelChip key={chip.key} icon={REWARD_ICON[chip.key]} label={chip.label} value={chip.value} tone={chip.tone} good={chip.good} delay={delay + i * 70} />
+      ))}
+      {!chips.length && <span className="text-xs text-muted">Nothing but the lesson.</span>}
+      {practiced && <SteelChip icon={Dumbbell} label="Move XP" value={practiced} tone={TONE.gold} good delay={delay + chips.length * 70} />}
     </div>
   );
 }
