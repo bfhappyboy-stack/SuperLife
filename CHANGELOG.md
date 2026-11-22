@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-22 (night): reward chips in steel (`devbot/2026-11-22-night`)
+
+Built on `origin/devbot/2026-11-22-pm` (ab5d6bf, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (400), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122night/`.
+
+### Increment 1: the Rewards row matches the metal above it
+
+- **The gap (2026-11-22 pm BACKLOG):** the K.O. title, plate, stat tiles and best-hit callout are all cast metal, but the Rewards row under them was still flat purple pills ("Joy +2", "Fame +3", "Move XP: Dive Kick"), every stat the same colour.
+- **Fix:** each reward is a small skewed steel chip with a lit edge and icon in its stat's colour (Joy orange, Fame gold, Rep violet, Power cyan, Cash green, Health red and so on), a small caps label and a metal-cast value. Losses read in red and sit a little dimmer, gains come first, and the Move XP chip is gold with the move names in metal. The chips pop in one after another right after the best hit, with a light glint. Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: no pop or glint.
+- **Code:** pure `rewardChips`, `practicedLabel`, `REWARD_LABEL`, `REWARD_TONE` in new `src/game/rewards.ts` (tests in `src/game/test/rewards.test.ts`, +4; the chip list moved out of `Duel.tsx`, same labels and values, now gains before losses); `RewardChips` in `src/components/game/FightTally.tsx`; `.reward-chip-*` in `src/styles.css`; `Duel.tsx` `ResultCard`. Switch: `REWARD_CHIPS` in `FightTally.tsx` (on; off = the old flat pills). No rules, rewards, duel maths or saves change; old saves load.
+
 ## 2026-11-22 (pm): fight callouts in metal (`devbot/2026-11-22-pm`)
 
 Built on `origin/devbot/2026-11-22-am` (4474ebd, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (396), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122pm/`.

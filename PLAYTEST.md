@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-22 night): reward chips in steel
+
+**Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122night/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card. Before = this branch before the change (`origin/devbot/2026-11-22-pm`), after = this branch, same dev server (port 8261).
+
+**Before/after:** `/workspace/shots-1122night/ba-duel.png` (left before, right after), `ba-rewards-zoom.png` (Rewards card, top before, bottom after); singles `before-duel.png` / `after-duel.png`.
+
+**Findings:**
+- **Rewards were flat purple pills (fixed):** "JOY +2", "FAME +3", "REP +2", "POWER +0.1" and the gold "MOVE XP Dive Kick" sit as steel chips edged in their stat colours, two rows, and the card still fits at 390×844 with Continue on screen. (The duel is played live, so Dealt/Taken differ by a few points between runs.)
+- **Not seen live:** a lost duel's red loss chips; the loss style is covered by the same component and the ordering by tests.
+- No console errors, no sideways scroll (scroll width 390); the Nov 15-17 save loaded.
+
 ## Afternoon pass (2026-11-22 pm): fight callouts in metal
 
 **Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122pm/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card, and two saved finished Arena matches (`save-comeback`, `save-swept`, seeded into `superlife.arena.v1`, opened from the title's Arena button with `results.mjs`). Before = this branch before the change (`origin/devbot/2026-11-22-am`), after = this branch, same dev server (port 8251).
