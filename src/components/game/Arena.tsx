@@ -41,6 +41,7 @@ import { localDay, purseKey, PURSE_BASE, PURSE_DAILY, type PurseQuote } from "@/
 import { money } from "@/game/format";
 import type { DuelMove, MoveStyle } from "@/game/types";
 import { OnlineArena } from "@/components/game/OnlineArena";
+import { FIGHT_TALLY, HpClash } from "@/components/game/FightTally";
 
 type View = "hub" | "draft" | "order" | "reveal" | "intro" | "battle" | "results";
 
@@ -1288,7 +1289,7 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer, purse 
                 <span className={`arena-card relative size-12 shrink-0 !rounded-lg ${res === 0 ? "" : "grayscale-[.7]"}`} style={{ "--c": a.color } as React.CSSProperties}><FighterArt f={a} focus="50% 10%" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-extrabold text-fg">{a.name} <span className="text-muted">vs</span> {b.name}</span>
-                  <span className="block text-[11px] font-bold text-muted">{res === undefined ? (note ? "Not played" : "Not played — match decided") : m ? `${Math.round(m[0] * 100)}% HP left vs ${Math.round(m[1] * 100)}%` : ""}</span>
+                  {FIGHT_TALLY && res !== undefined && m ? <HpClash mine={m[0]} theirs={m[1]} res={res} delay={r * 120} /> : <span className="block text-[11px] font-bold text-muted">{res === undefined ? (note ? "Not played" : "Not played — match decided") : m ? `${Math.round(m[0] * 100)}% HP left vs ${Math.round(m[1] * 100)}%` : ""}</span>}
                 </span>
                 <span className={`arena-card relative size-12 shrink-0 !rounded-lg ${res === 1 ? "" : "grayscale-[.7]"}`} style={{ "--c": b.color } as React.CSSProperties}><FighterArt f={b} focus="50% 10%" /></span>
                 {MATCH_VERDICT ? <RoundMedal res={res} /> : <span className={`grid size-8 shrink-0 place-items-center rounded-full font-display text-sm ${res === 0 ? "bg-gold text-paper-ink" : res === 1 ? "bg-cape text-white" : "bg-white/10 text-muted"}`}>{res === 0 ? "W" : res === 1 ? "L" : "–"}</span>}

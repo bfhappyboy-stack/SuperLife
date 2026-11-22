@@ -68,3 +68,20 @@ export function duelVerdict(o: DuelOutcome): Plate {
   if (o.boss) return { key: "boss-stands", label: "Boss stands", line: "Learn the pattern and go again.", tone: "red" };
   return { key: "beaten", label: "Beaten", line: `Outhit ${o.taken} to ${o.dealt}.`, tone: "red" };
 }
+
+/**
+ * Fight tally (2026-11-22 am, FIGHT_TALLY): which K.O. stat tile leads ("dealt" lit gold when you outhit them, "taken"
+ * lit red when they outhit you, "even" when it was level or nobody landed anything). Pure read of the duel's numbers.
+ */
+export type StatLead = "dealt" | "taken" | "even";
+export function statLead(dealt: number, taken: number): StatLead {
+  const d = Math.max(0, Math.round(dealt || 0));
+  const t = Math.max(0, Math.round(taken || 0));
+  return d > t ? "dealt" : t > d ? "taken" : "even";
+}
+
+/** HP left (0..1, possibly missing or out of range) as a whole percent 0..100 for the Arena round bars. */
+export function hpPercent(hp: number | null | undefined): number {
+  if (typeof hp !== "number" || !Number.isFinite(hp)) return 0;
+  return Math.max(0, Math.min(100, Math.round(hp * 100)));
+}

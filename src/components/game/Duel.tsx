@@ -20,7 +20,8 @@ import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST } from "@/game/battle";
 import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
-import { duelVerdict } from "@/game/verdicts";
+import { duelVerdict, statLead } from "@/game/verdicts";
+import { FIGHT_TALLY, MetalStat } from "@/components/game/FightTally";
 import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
 /** The player's look, so the duel draws the same hero as the closet. */
@@ -835,6 +836,8 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
   const tone = win ? "#ffcf4d" : draw ? "#c9ccd4" : "#ff5a4f";
   const Icon = win ? Trophy : draw ? Swords : Skull;
   // Stakes plate (2026-11-21 night): how the fight went, in the Arena's metal plate ("Flawless", "By a whisker", "So close").
+  // Fight tally (2026-11-22 am): the side that hit harder lights its metal stat tile.
+  const lead = statLead(result.dealt, result.taken);
   const verdict = duelVerdict({ ratio: result.ratio, dealt: result.dealt, taken: result.taken, turns: result.turns, hp: result.hp ?? (win ? 1 : 0), foeHp: result.foeHp ?? (win ? 0 : 1), boss });
   return (
     <div className="anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 pb-5 backdrop-blur-sm" role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
@@ -871,9 +874,19 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
         </div>
       </div>
       <div className="relative mt-3 grid grid-cols-3 gap-2 text-center">
-        <Stat label="Dealt" value={String(result.dealt)} />
-        <Stat label="Taken" value={String(result.taken)} />
-        <Stat label="Turns" value={String(result.turns)} />
+        {FIGHT_TALLY ? (
+          <>
+            <MetalStat label="Dealt" value={result.dealt} tone={lead === "dealt" ? "gold" : "steel"} lit={lead === "dealt"} delay={620} />
+            <MetalStat label="Taken" value={result.taken} tone={lead === "taken" ? "red" : "steel"} lit={lead === "taken"} delay={720} />
+            <MetalStat label="Turns" value={result.turns} delay={820} />
+          </>
+        ) : (
+          <>
+            <Stat label="Dealt" value={String(result.dealt)} />
+            <Stat label="Taken" value={String(result.taken)} />
+            <Stat label="Turns" value={String(result.turns)} />
+          </>
+        )}
       </div>
       {result.best && result.best.dealt > 0 && (
         <p className="relative mt-2 text-center text-xs font-semibold text-muted">
