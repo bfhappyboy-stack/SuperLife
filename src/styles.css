@@ -807,6 +807,37 @@
   .stake-plate-streak { animation: none !important; opacity: .35; }
 }
 
+/* 2026-11-22 am: fight tally (FIGHT_TALLY in FightTally.tsx): metal K.O. stat tiles and Arena round HP bars. */
+.metal-stat {
+  text-align: center; border-radius: 12px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(58,64,80,.92) 0%, rgba(22,26,36,.96) 46%, rgba(10,12,18,.98) 100%);
+  border: 1px solid rgba(190,205,228,.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -2px 0 rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.35), 0 8px 18px -10px rgba(0,0,0,.95);
+  animation: metal-stat-in 380ms var(--stat-delay, 0ms) cubic-bezier(.2,.9,.3,1.2) both;
+}
+.metal-stat::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: 0; height: 2px; border-radius: 2px; background: rgba(200,214,232,.18); }
+.metal-stat.is-lit { border-color: color-mix(in srgb, var(--ko) 70%, transparent); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 0 -2px 0 rgba(0,0,0,.6), inset 0 0 22px -6px color-mix(in srgb, var(--ko) 55%, transparent), 0 0 18px -4px color-mix(in srgb, var(--ko) 60%, transparent), 0 8px 18px -10px rgba(0,0,0,.95); }
+.metal-stat.is-lit::after { background: var(--ko); box-shadow: 0 0 10px 1px var(--ko); }
+.metal-stat.is-lit .t-label { color: color-mix(in srgb, var(--ko) 80%, #fff); }
+.metal-stat-sheen { position: absolute; inset: 0 0 52% 0; background: linear-gradient(180deg, rgba(255,255,255,.12), transparent); pointer-events: none; }
+.metal-stat-sheen::after { content: ""; position: absolute; top: -40%; bottom: -120%; left: -60%; width: 40%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); animation: metal-stat-glint 900ms calc(var(--stat-delay, 0ms) + 520ms) ease-out both; }
+@keyframes metal-stat-in { from { opacity: 0; transform: translateY(10px) scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes metal-stat-glint { from { left: -60%; } to { left: 130%; } }
+.hp-clash-track { position: relative; flex: 1 1 0; height: 6px; border-radius: 2px; overflow: hidden; display: flex; background: rgba(0,0,0,.55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.09), inset 0 1px 2px rgba(0,0,0,.8); transform: skewX(-14deg); }
+.hp-clash-track.is-mine { justify-content: flex-end; }
+.hp-clash-fill { display: block; height: 100%; transform-origin: left center; animation: hp-clash-fill 620ms calc(var(--clash-delay, 0ms) + 260ms) cubic-bezier(.2,.8,.3,1) both; }
+.is-mine .hp-clash-fill { transform-origin: right center; background: linear-gradient(180deg, #fff1b8, #f2bd4b 45%, #a8661a); box-shadow: 0 0 8px rgba(255,207,77,.55); }
+.is-theirs .hp-clash-fill { background: linear-gradient(180deg, #ffd0cb, #ef5d52 45%, #8a1f18); box-shadow: 0 0 8px rgba(255,90,79,.5); }
+.hp-clash[data-res="1"] .is-mine .hp-clash-fill, .hp-clash[data-res="0"] .is-theirs .hp-clash-fill { filter: saturate(.55) brightness(.8); box-shadow: none; }
+.hp-clash-pin { width: 4px; height: 10px; border-radius: 1px; background: linear-gradient(180deg, #e8eef8, #6d7688); box-shadow: 0 0 0 1px rgba(0,0,0,.6); transform: skewX(-14deg); }
+.hp-clash-num { min-width: 1.35rem; font-size: 10px; font-weight: 800; line-height: 1; text-align: center; }
+.hp-clash-num.is-ko { color: #8e97a8; letter-spacing: .06em; }
+@keyframes hp-clash-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .metal-stat, .hp-clash-fill { animation: none !important; }
+  .metal-stat-sheen::after { display: none; }
+}
+
 /* "Your call" scene (2026-11-15 night): slow light sweep and drifting dust in the power colour. */
 .event-rays { filter: blur(4px); opacity: 0.22; mix-blend-mode: screen; animation: event-sway 14s ease-in-out infinite alternate; transform-origin: 85% 0%; }
 .event-mote { opacity: 0; animation: event-mote 11s linear infinite; }
