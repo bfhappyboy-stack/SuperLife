@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Morning pass (2026-11-23 am): the next-time plate in red steel
+
+**Checked** at 390×844 (2x) with headless Chrome: a Duel from Powers → Fight (`/workspace/shots-1123am/shoot.mjs`, `saves/fire-m-full.json`), rigged for the shot only (after the fight is queued, an init script on reload turns it into a boss fight with Bane's "Back Breaker" or Stane's "Iron Monger Plating" gimmick and a near-empty hero, so it is lost) and played out to the K.O. card. Before = this branch with `NEXT_HINT_PLATE` off (the old card, same markup as `origin/devbot/2026-11-22-night`), after = on, same dev server (port 8271).
+
+**Before/after:** `/workspace/shots-1123am/ba-hint.png` (Back Breaker, left before, right after), `ba-armor.png` (Iron Monger Plating), `ba-hint-zoom.png` (bottom of the card, top before, bottom after); singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **The hint was a plain glass card (fixed):** "NEXT TIME" tag, lit gimmick badge and metal name on a red steel plate; tell and counter on two lines ("His plating soaks hits." / "Two trick moves crack it open."). Continue sits just under the fold on the tallest card, the dialog scrolls as before.
+- **Bug seen on the way (fixed):** with the taller plate, the best-hit callout was squashed to a sliver because it shrank inside the scrolling flex column; it and the plate are now `shrink-0`.
+- No console errors, no sideways scroll (scroll width 390); the Nov 15-17 save loaded.
+
 ## Night pass (2026-11-22 night): reward chips in steel
 
 **Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122night/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card. Before = this branch before the change (`origin/devbot/2026-11-22-pm`), after = this branch, same dev server (port 8261).

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-23 (am): the next-time plate in red steel (`devbot/2026-11-23-am`)
+
+Built on `origin/devbot/2026-11-22-night` (943bbc4, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (402), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1123am/`.
+
+### Increment 1: the hint under a lost boss fight matches the metal above it
+
+- **The gap (2026-11-22 night BACKLOG):** after a lost or drawn boss fight, everything on the K.O. card is cast metal (title, plate, tiles, best hit, reward chips) except the "Next time, Back Breaker: Every third turn he winds up the Back Breaker. Guard." card at the bottom, which was still a plain glass card with one run-on line.
+- **Fix:** it is a red steel plate with a lit red edge: a skewed red "NEXT TIME" tag, the gimmick's icon on a small steel badge lit in its colour, and the gimmick's name in metal type; under that the tell ("Every third turn he winds up the Back Breaker.") in muted text and the counter ("Guard.") in bold behind a red rule, so the one thing to do next time is what you read. It slides in last, after the reward chips, with a light glint. Same words as before, nothing added or dropped. Also: the best-hit callout and the plate no longer get squashed when the K.O. card runs taller than the screen (they were shrinking inside the scrolling column). Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: no slide or glint.
+- **Code:** pure `hintParts` in `src/game/verdicts.ts` (tests in new `src/game/test/nexthint.test.ts`, +2: the split, and every canon-villain and power gimmick hint gives a counter and rebuilds exactly); `NextHintPlate` in `src/components/game/FightTally.tsx`; `.next-hint-*` in `src/styles.css`; `Duel.tsx` `ResultCard`. Switch: `NEXT_HINT_PLATE` in `FightTally.tsx` (on; off = the old glass card). No rules, rewards, duel maths or saves change; old saves load.
+
 ## 2026-11-22 (night): reward chips in steel (`devbot/2026-11-22-night`)
 
 Built on `origin/devbot/2026-11-22-pm` (ab5d6bf, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (400), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122night/`.
