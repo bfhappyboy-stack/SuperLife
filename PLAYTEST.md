@@ -1,5 +1,15 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Night pass (2026-11-23 night): the boss twist in steel
+
+**Checked** at 390×844 (2x) with headless Chrome: a Duel from Powers → Fight (`/workspace/shots-1123night/shoot.mjs`, `saves/fire-m-full.json`), rigged for the shot only (the queued street fight becomes a boss fight with Bane's "Back Breaker" or Stane's "Iron Monger Plating"; `AT=0.55` leaves it waiting, `AT=1` makes it live from the start) and shot at the first turn. Before = `origin/devbot/2026-11-23-pm` (port 8290), after = this branch (port 8291).
+
+**Before/after:** `/workspace/shots-1123night/ba-live.png` (Back Breaker live, left before, right after), `ba-armed.png` (waiting, "AT 55%"), `ba-armor.png` (Iron Monger Plating live); `ba-*-zoom.png` (the strip only, top before, bottom after); singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **The strip was a glass pill (fixed):** steel plate, metal name, skewed tag (steel while waiting, red / blue when live), charge pips kept on the right. Same height as before, the stage and moves don't move.
+- No console errors, no sideways scroll (scroll width 390); the Nov 15-17 save loaded.
+
 ## Afternoon pass (2026-11-23 pm): Continue docked on the K.O. card
 
 **Checked** at 390×844 (2x) with headless Chrome: a Duel from Powers → Fight (`/workspace/shots-1123pm/shoot.mjs`, `saves/fire-m-full.json`), rigged for the shot only as in the am pass (Bane's "Back Breaker" / Stane's "Iron Monger Plating" boss gimmick and a near-empty hero, so it is lost: the tallest card) and, with `NORIG=1`, an ordinary won street fight (a card that fits). Before = `origin/devbot/2026-11-23-am` (port 8280), after = this branch (port 8281). The script logs Continue's position, the dialog's scroll and the dock's "more below" state.

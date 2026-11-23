@@ -1,5 +1,13 @@
 # SuperLife — Backlog
 
+## From the 2026-11-23 night pass
+
+- **Done:** the in-fight boss twist strip ("Back Breaker · LIVE") is a steel plate with a skewed tag: steel while armed, lit in the twist's colour once live, gold for phase 3 (`GIMMICK_PLATE`). Closes the "in-fight gimmick strip is still a glass pill" item.
+- **Next for juice:** the "They coil for a strike" tell box under the stage is still a pale glass card (could become a dark steel caption that matches); a plate could name non-crime "Your call" moments too (family, rivals) if wanted.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring fallback in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
 ## From the 2026-11-23 pm pass
 
 - **Done:** the Duel K.O. card's Continue is docked to the bottom of the card, always on screen with its margin, and the card opens at the K.O. title with a steel "More below" tab when it runs taller than the screen (`CONTINUE_DOCK`). Closes the 2026-11-23 am "Continue sits just below the fold on the tallest card" item.

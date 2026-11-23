@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-23 (night): the boss twist in steel (`devbot/2026-11-23-night`)
+
+Built on `origin/devbot/2026-11-23-pm` (c72ae7a, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (406), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1123night/`.
+
+### Increment 1: the in-fight twist strip matches the K.O. metal
+
+- **The gap (2026-11-23 am/pm BACKLOG):** during a boss fight the twist strip above the stage ("Back Breaker · LIVE", "Iron Monger Plating · LIVE") was still a tinted glass pill with a round flat tag, while everything after the fight is cast steel.
+- **Fix:** the strip is a steel plate. Its icon sits on the same skewed steel badge as the next-time plate, lit in the twist's colour; the twist's name is in metal type; the tag is a skewed chip: steel "AT 55%" while it waits, lit in the twist's colour once LIVE (red for Back Breaker, blue for the plating), gold for PHASE 3. Once live the plate takes a lit rail in the twist's colour, a coloured face and a slow glow, and a glint sweeps across when it goes live or hits phase 3. The "P3 at 25%" marker and the charge pips stay. Same words as the old pill. Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: no glow or glint.
+- **Code:** pure `gimmickTag` in `src/game/verdicts.ts` (tests in new `src/game/test/gimmickplate.test.ts`, +2); `GimmickPlate` in `src/components/game/FightTally.tsx`; `.gimmick-plate*` in `src/styles.css`; `Duel.tsx` `GimmickStrip`. Switch: `GIMMICK_PLATE` in `FightTally.tsx` (on; off = the old glass pill). No rules, duel maths or saves change; old saves load.
+
 ## 2026-11-23 (pm): Continue docked on the K.O. card (`devbot/2026-11-23-pm`)
 
 Built on `origin/devbot/2026-11-23-am` (6b06461, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (404), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1123pm/`.
