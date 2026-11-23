@@ -133,3 +133,15 @@ export function moreBelow(scrollTop: number, scrollHeight: number, clientHeight:
   if (![scrollTop, scrollHeight, clientHeight].every(Number.isFinite) || clientHeight <= 0) return false;
   return scrollHeight - clientHeight - Math.max(0, scrollTop) > slack;
 }
+
+/**
+ * Gimmick plate (2026-11-23 night, GIMMICK_PLATE): the in-fight boss-twist strip's tag, as one pure read so the steel
+ * plate and the old glass pill say the same thing. "live" / "phase3" once it is running, "once" for a revive that has
+ * not fired, otherwise "armed" with the health it starts at ("At 55%"). Same words as the old pill. No rules change.
+ */
+export function gimmickTag(gimmick: { kind: string; at?: number } | null | undefined, live: boolean, third = false): { label: string; tone: "live" | "phase3" | "once" | "armed" } {
+  if (live) return third ? { label: "Phase 3", tone: "phase3" } : { label: "Live", tone: "live" };
+  if (gimmick?.kind === "revive") return { label: "Once", tone: "once" };
+  const at = typeof gimmick?.at === "number" && Number.isFinite(gimmick.at) ? gimmick.at : 0.55;
+  return { label: `At ${Math.round(Math.min(1, Math.max(0, at)) * 100)}%`, tone: "armed" };
+}

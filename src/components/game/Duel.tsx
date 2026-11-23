@@ -20,7 +20,7 @@ import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST 
 import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
 import { duelVerdict, statLead } from "@/game/verdicts";
-import { BestHit, CONTINUE_DOCK, ContinueDock, FIGHT_CALLOUT, FIGHT_TALLY, MetalStat, NEXT_HINT_PLATE, NextHintPlate, REWARD_CHIPS, RewardChips } from "@/components/game/FightTally";
+import { BestHit, CONTINUE_DOCK, ContinueDock, FIGHT_CALLOUT, FIGHT_TALLY, GIMMICK_PLATE, GimmickPlate, MetalStat, NEXT_HINT_PLATE, NextHintPlate, REWARD_CHIPS, RewardChips } from "@/components/game/FightTally";
 import { practicedLabel, rewardChips } from "@/game/rewards";
 import type { BossGimmick, DuelBoard, DuelMove, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
@@ -658,6 +658,21 @@ function GimmickStrip({ gimmick, live, status, state, next, third }: { gimmick: 
   const Icon = GIMMICK_ICON[gimmick.kind];
   const color = GIMMICK_COLOR[gimmick.kind];
   const waiting = !live && gimmick.kind !== "revive";
+  const pips = live && gimmick.kind === "charge" && (
+    <span className="relative flex shrink-0 gap-1" aria-label={state.charge === 0 ? "Charging now" : `Charges in ${state.charge}`}>
+      {[2, 1, 0].map((n) => (
+        <span key={n} className="size-2 rounded-full" style={{ background: state.charge <= n ? color : "rgb(255 255 255 / 0.15)", boxShadow: state.charge <= n ? `0 0 6px ${color}` : undefined }} />
+      ))}
+    </span>
+  );
+  if (GIMMICK_PLATE) {
+    return (
+      <GimmickPlate name={gimmick.name} line={live && status ? status : gimmick.hint} icon={Icon} color={color} live={live} third={third} kind={gimmick.kind} at={gimmick.at} next={next}>
+        {pips}
+        {waiting && <span className="sr-only">Starts when they drop to {Math.round((gimmick.at ?? 0.55) * 100)}% health.</span>}
+      </GimmickPlate>
+    );
+  }
   return (
     <div
       className={`relative flex items-center gap-2 overflow-hidden rounded-2xl border px-2 py-1 ${live ? "duel-gimmick-live" : ""}`}

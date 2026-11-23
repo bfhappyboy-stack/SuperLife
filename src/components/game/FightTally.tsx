@@ -8,7 +8,7 @@
  */
 import { useEffect, useState, type RefObject } from "react";
 import { Award, Brain, ChevronDown, Coins, Dumbbell, Gem, Heart, HeartPulse, House, Scale, Smile, Star, Zap, type LucideIcon } from "lucide-react";
-import { hintParts, hitShare, hpPercent, moreBelow } from "@/game/verdicts";
+import { gimmickTag, hintParts, hitShare, hpPercent, moreBelow } from "@/game/verdicts";
 import type { RewardChip, RewardKey } from "@/game/rewards";
 
 export const FIGHT_TALLY = true;
@@ -186,6 +186,40 @@ export function NextHintPlate({ name, hint, icon: Icon, color, delay = 0 }: { na
         {tell && <p className="text-[11px] leading-snug text-muted">{tell}</p>}
         {counter && <p className="next-hint-counter mt-1 pl-2 text-xs leading-snug font-bold text-fg">{counter}</p>}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 2026-11-23 night: the in-fight boss-twist strip ("Back Breaker · Live" above the stage, a tinted glass pill) as a
+ * steel plate: a lit rail and icon badge in the twist's colour, its name in metal type, a skewed tag (steel "At 55%"
+ * while armed, lit in the twist's colour once Live, gold for Phase 3), and a sheen that sweeps once when it goes live.
+ * Same words as the old pill. Off = the old glass pill. Non-character graphics (CSS); painted fighters untouched.
+ */
+export const GIMMICK_PLATE = true;
+
+/** The in-fight boss twist as a steel plate (`GIMMICK_PLATE`). `children` = extra right-side bits (the charge pips). */
+export function GimmickPlate({ name, line, icon: Icon, color, live, third = false, kind, at, next, children }: { name: string; line: string; icon: LucideIcon; color: string; live: boolean; third?: boolean; kind: string; at?: number; next?: number | null; children?: React.ReactNode }) {
+  const tag = gimmickTag({ kind, at }, live, third);
+  return (
+    <div className={`gimmick-plate relative flex shrink-0 items-center gap-2 px-2.5 py-1 ${live ? "is-live" : ""}`} data-tone={tag.tone} style={{ "--gim": color } as React.CSSProperties}>
+      {live && <span key={tag.tone} className="gimmick-plate-sheen" aria-hidden />}
+      <span className="next-hint-icon relative grid size-7 shrink-0 place-items-center" style={{ "--hint": color } as React.CSSProperties}>
+        <Icon className="size-4" aria-hidden />
+      </span>
+      <span className="relative min-w-0 flex-1">
+        <span className="flex items-center gap-1.5">
+          <span className="ko-title min-w-0 truncate font-display text-[0.95rem] leading-tight" style={{ backgroundImage: FILL.steel }}>{name}</span>
+          <span className="gimmick-plate-tag t-label shrink-0">{tag.label}</span>
+          {next != null && (
+            <span className="gimmick-plate-next t-label shrink-0" title={`A second twist starts at ${Math.round(next * 100)}% health`}>
+              P3 at {Math.round(next * 100)}%
+            </span>
+          )}
+        </span>
+        <span className="block truncate text-[11px] leading-snug font-semibold text-muted">{line}</span>
+      </span>
+      {children}
     </div>
   );
 }
