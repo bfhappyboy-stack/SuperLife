@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-23 (pm): Continue docked on the K.O. card (`devbot/2026-11-23-pm`)
+
+Built on `origin/devbot/2026-11-23-am` (6b06461, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (404), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1123pm/`.
+
+### Increment 1: Continue is always on screen, with room to breathe
+
+- **The gap (2026-11-23 am PLAYTEST):** on the tallest Duel K.O. card (a lost boss fight: rewards plus the next-time plate) the card runs about 25px taller than the screen. Continue was autofocused, so opening the card jumped the scroll down to it: the K.O. title was nudged up, and Continue sat flush on the bottom edge with no margin (on taller cards it would sit under the fold).
+- **Fix:** Continue rides in a dock pinned to the bottom of the K.O. card with its normal 20px breathing room (more on phones with a home-bar safe area). The card now opens at the K.O. title; whatever is left scrolls under a dark fade with a thin steel line, and a small steel "MORE BELOW ⌄" tab sits at the right of the dock until you scroll to the end. When the card fits (most wins) nothing looks different: same button, same place (checked: Continue at 776-824px before and after). Focus still lands on Continue, without the scroll jump. Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: no fade-in or nudge.
+- **Code:** pure `moreBelow` in `src/game/verdicts.ts` (tests in new `src/game/test/continuedock.test.ts`, +2); `ContinueDock` in `src/components/game/FightTally.tsx` (scroll + ResizeObserver check); `.continue-dock*` in `src/styles.css`; `Duel.tsx` `ResultCard`. Switch: `CONTINUE_DOCK` in `FightTally.tsx` (on; off = the old in-flow autofocused button). No rules, rewards, duel maths or saves change; old saves load.
+
 ## 2026-11-23 (am): the next-time plate in red steel (`devbot/2026-11-23-am`)
 
 Built on `origin/devbot/2026-11-22-night` (943bbc4, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (402), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1123am/`.

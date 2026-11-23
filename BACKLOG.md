@@ -1,5 +1,13 @@
 # SuperLife — Backlog
 
+## From the 2026-11-23 pm pass
+
+- **Done:** the Duel K.O. card's Continue is docked to the bottom of the card, always on screen with its margin, and the card opens at the K.O. title with a steel "More below" tab when it runs taller than the screen (`CONTINUE_DOCK`). Closes the 2026-11-23 am "Continue sits just below the fold on the tallest card" item.
+- **Next for juice:** the Arena match results and other tall overlays could use the same dock if any of them overflow at 390×844 (not seen yet); the in-fight gimmick strip (the "Back Breaker · Live" bar above the moves) is still a glass pill; a plate could name non-crime "Your call" moments too (family, rivals) if wanted.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring fallback in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
 ## From the 2026-11-23 am pass
 
 - **Done:** the "Next time, <gimmick>" hint under a lost boss fight is a red steel plate: red NEXT TIME tag, the gimmick's lit icon, its name in metal, the tell muted and the counter bold behind a red rule (`NEXT_HINT_PLATE`). Closes the 2026-11-22 night "plain glass hint card" item. The best-hit callout no longer squashes when the K.O. card scrolls.

@@ -1,5 +1,16 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-23 pm): Continue docked on the K.O. card
+
+**Checked** at 390×844 (2x) with headless Chrome: a Duel from Powers → Fight (`/workspace/shots-1123pm/shoot.mjs`, `saves/fire-m-full.json`), rigged for the shot only as in the am pass (Bane's "Back Breaker" / Stane's "Iron Monger Plating" boss gimmick and a near-empty hero, so it is lost: the tallest card) and, with `NORIG=1`, an ordinary won street fight (a card that fits). Before = `origin/devbot/2026-11-23-am` (port 8280), after = this branch (port 8281). The script logs Continue's position, the dialog's scroll and the dock's "more below" state.
+
+**Before/after:** `/workspace/shots-1123pm/ba-hint.png` (Back Breaker, left before, right after), `ba-hint-zoom.png` (bottom of the screen, top before, bottom after), `ba-armor.png` (Iron Monger Plating), `ba-win.png` (a card that fits: no change), `after-hint-vs-scrolled.png` (after, opened vs scrolled to the end); singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Continue flush on the edge (fixed):** before, the card (762px of content in a 737px dialog) opened scrolled by 5px to the autofocused Continue, which sat at 796-844px, touching the bottom edge. After, the card opens at scroll 0 with the K.O. title in place, Continue docked at 776-824px (its 20px margin), the "MORE BELOW" tab showing; scrolled to the end (25px) the tab goes and the whole next-time plate reads clear above Continue.
+- **Card that fits:** Continue at 776-824px before and after, no tab, no fade (`data-more` 0).
+- No console errors, no sideways scroll (scroll width 390); the Nov 15-17 save loaded.
+
 ## Morning pass (2026-11-23 am): the next-time plate in red steel
 
 **Checked** at 390×844 (2x) with headless Chrome: a Duel from Powers → Fight (`/workspace/shots-1123am/shoot.mjs`, `saves/fire-m-full.json`), rigged for the shot only (after the fight is queued, an init script on reload turns it into a boss fight with Bane's "Back Breaker" or Stane's "Iron Monger Plating" gimmick and a near-empty hero, so it is lost) and played out to the K.O. card. Before = this branch with `NEXT_HINT_PLATE` off (the old card, same markup as `origin/devbot/2026-11-22-night`), after = on, same dev server (port 8271).
