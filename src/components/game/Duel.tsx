@@ -20,7 +20,7 @@ import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST 
 import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
 import { duelVerdict, statLead } from "@/game/verdicts";
-import { BestHit, FIGHT_CALLOUT, FIGHT_TALLY, MetalStat, NEXT_HINT_PLATE, NextHintPlate, REWARD_CHIPS, RewardChips } from "@/components/game/FightTally";
+import { BestHit, CONTINUE_DOCK, ContinueDock, FIGHT_CALLOUT, FIGHT_TALLY, MetalStat, NEXT_HINT_PLATE, NextHintPlate, REWARD_CHIPS, RewardChips } from "@/components/game/FightTally";
 import { practicedLabel, rewardChips } from "@/game/rewards";
 import type { BossGimmick, DuelBoard, DuelMove, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
@@ -813,9 +813,11 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
   // Stakes plate (2026-11-21 night): how the fight went, in the Arena's metal plate ("Flawless", "By a whisker", "So close").
   // Fight tally (2026-11-22 am): the side that hit harder lights its metal stat tile.
   const lead = statLead(result.dealt, result.taken);
+  // Continue dock (2026-11-23 pm): the scrolling card, so the docked Continue knows when card is left under the fold.
+  const cardRef = useRef<HTMLDivElement>(null);
   const verdict = duelVerdict({ ratio: result.ratio, dealt: result.dealt, taken: result.taken, turns: result.turns, hp: result.hp ?? (win ? 1 : 0), foeHp: result.foeHp ?? (win ? 0 : 1), boss });
   return (
-    <div className="anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 pb-5 backdrop-blur-sm" role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
+    <div ref={cardRef} className={`anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 backdrop-blur-sm ${CONTINUE_DOCK ? "pb-0" : "pb-5"}`} role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] overflow-hidden" aria-hidden>
         {FX_CINEMATIC ? (
           // 2026-11-15 am: soft volumetric light from above instead of flat comic wedges (shared with the Arena since pm).
@@ -901,10 +903,16 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
           </p>
         </div>
       )}
-      <div className="mb-auto" />
-      <button type="button" className="btn btn-primary mt-4 min-h-12 w-full shrink-0" onClick={onContinue} autoFocus>
-        Continue
-      </button>
+      {CONTINUE_DOCK ? (
+        <ContinueDock scroller={cardRef} onContinue={onContinue} />
+      ) : (
+        <>
+          <div className="mb-auto" />
+          <button type="button" className="btn btn-primary mt-4 min-h-12 w-full shrink-0" onClick={onContinue} autoFocus>
+            Continue
+          </button>
+        </>
+      )}
     </div>
   );
 }

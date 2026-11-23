@@ -6,9 +6,9 @@
  * Non-character graphics (CSS); painted fighters untouched, no faces. Reduced motion: final numbers, no count or fill.
  * `FIGHT_TALLY` off = the old flat stat cards and the plain HP text line.
  */
-import { useEffect, useState } from "react";
-import { Award, Brain, Coins, Dumbbell, Gem, Heart, HeartPulse, House, Scale, Smile, Star, Zap, type LucideIcon } from "lucide-react";
-import { hintParts, hitShare, hpPercent } from "@/game/verdicts";
+import { useEffect, useState, type RefObject } from "react";
+import { Award, Brain, ChevronDown, Coins, Dumbbell, Gem, Heart, HeartPulse, House, Scale, Smile, Star, Zap, type LucideIcon } from "lucide-react";
+import { hintParts, hitShare, hpPercent, moreBelow } from "@/game/verdicts";
 import type { RewardChip, RewardKey } from "@/game/rewards";
 
 export const FIGHT_TALLY = true;
@@ -32,6 +32,14 @@ export const REWARD_CHIPS = true;
  * Off = the old glass card. Non-character graphics (CSS); painted fighters untouched, no faces drawn.
  */
 export const NEXT_HINT_PLATE = true;
+/**
+ * 2026-11-23 pm: on a tall Duel K.O. card (a lost boss fight with rewards and the next-time plate) Continue sat flush on
+ * the bottom edge or just under the fold, and opening the card jumped it to Continue, clipping the K.O. title. Now
+ * Continue rides in a dock pinned to the bottom of the card with its normal breathing room (and the phone's safe area):
+ * the card opens at the K.O. title, the rest scrolls under a dark fade, and a small steel "More below" tab shows while
+ * card is left under the fold. Off = the old in-flow button with autofocus. Non-character graphics (CSS); no faces.
+ */
+export const CONTINUE_DOCK = true;
 
 type Tone = "gold" | "red" | "steel";
 const TONE: Record<Tone, string> = { gold: "#ffcf4d", red: "#ff5a4f", steel: "#c9d6e8" };
@@ -178,6 +186,45 @@ export function NextHintPlate({ name, hint, icon: Icon, color, delay = 0 }: { na
         {tell && <p className="text-[11px] leading-snug text-muted">{tell}</p>}
         {counter && <p className="next-hint-counter mt-1 pl-2 text-xs leading-snug font-bold text-fg">{counter}</p>}
       </div>
+    </div>
+  );
+}
+
+/** The Duel K.O. card's Continue, pinned to the bottom of its scrolling card (`CONTINUE_DOCK`). */
+export function ContinueDock({ scroller, onContinue, label = "Continue" }: { scroller: RefObject<HTMLElement | null>; onContinue: () => void; label?: string }) {
+  const [more, setMore] = useState(false);
+  const [button, setButton] = useState<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const check = () => setMore(moreBelow(el.scrollTop, el.scrollHeight, el.clientHeight));
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(check);
+    ro?.observe(el);
+    for (const child of Array.from(el.children)) ro?.observe(child);
+    // The card's pieces slide in over ~1.6s; check again once they have landed.
+    const late = window.setTimeout(check, 1800);
+    return () => {
+      el.removeEventListener("scroll", check);
+      ro?.disconnect();
+      window.clearTimeout(late);
+    };
+  }, [scroller]);
+  // Focus without scrolling, so the card opens at the K.O. title instead of jumping down to Continue.
+  useEffect(() => {
+    button?.focus({ preventScroll: true });
+  }, [button]);
+  return (
+    <div className={`continue-dock sticky bottom-0 z-10 -mx-5 mt-auto shrink-0 px-5 pt-4 ${more ? "is-stuck" : ""}`} data-more={more ? "1" : "0"}>
+      {more && (
+        <span className="continue-dock-more t-label pointer-events-none absolute top-[-9px] right-6 flex items-center gap-1 px-2.5 py-1 text-[10px]" aria-hidden>
+          More below <ChevronDown className="size-3" />
+        </span>
+      )}
+      <button ref={setButton} type="button" className="btn btn-primary min-h-12 w-full" onClick={onContinue}>
+        {label}
+      </button>
     </div>
   );
 }

@@ -124,3 +124,12 @@ export function hintParts(hint: string | null | undefined): { tell: string; coun
   const counter = sentences.pop() as string;
   return { tell: sentences.join(" "), counter };
 }
+
+/**
+ * Continue dock (2026-11-23 pm, CONTINUE_DOCK): is there still card to read under the docked Continue button?
+ * True when the scrolling K.O. card has more than `slack` px left below what is on screen. Pure read; no rules change.
+ */
+export function moreBelow(scrollTop: number, scrollHeight: number, clientHeight: number, slack = 8): boolean {
+  if (![scrollTop, scrollHeight, clientHeight].every(Number.isFinite) || clientHeight <= 0) return false;
+  return scrollHeight - clientHeight - Math.max(0, scrollTop) > slack;
+}
