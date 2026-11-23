@@ -20,7 +20,7 @@ import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST 
 import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
 import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
 import { duelVerdict, statLead } from "@/game/verdicts";
-import { BestHit, FIGHT_CALLOUT, FIGHT_TALLY, MetalStat, REWARD_CHIPS, RewardChips } from "@/components/game/FightTally";
+import { BestHit, FIGHT_CALLOUT, FIGHT_TALLY, MetalStat, NEXT_HINT_PLATE, NextHintPlate, REWARD_CHIPS, RewardChips } from "@/components/game/FightTally";
 import { practicedLabel, rewardChips } from "@/game/rewards";
 import type { BossGimmick, DuelBoard, DuelMove, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
@@ -889,7 +889,8 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
         )}
         {text && <p className="mt-2 text-xs leading-snug text-fg/85">{text}</p>}
       </div>
-      {gimmick && !win && (
+      {gimmick && !win && NEXT_HINT_PLATE && <NextHintPlate name={gimmick.name} hint={gimmick.hint} icon={GIMMICK_ICON[gimmick.kind]} color={GIMMICK_COLOR[gimmick.kind]} delay={1320} />}
+      {gimmick && !win && !NEXT_HINT_PLATE && (
         <div className="card relative mt-2 flex items-start gap-2 px-3 py-2" style={{ borderColor: `color-mix(in srgb, ${GIMMICK_COLOR[gimmick.kind]} 45%, transparent)` }}>
           {(() => {
             const Icon = GIMMICK_ICON[gimmick.kind];

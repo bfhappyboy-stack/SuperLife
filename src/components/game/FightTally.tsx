@@ -8,7 +8,7 @@
  */
 import { useEffect, useState } from "react";
 import { Award, Brain, Coins, Dumbbell, Gem, Heart, HeartPulse, House, Scale, Smile, Star, Zap, type LucideIcon } from "lucide-react";
-import { hitShare, hpPercent } from "@/game/verdicts";
+import { hintParts, hitShare, hpPercent } from "@/game/verdicts";
 import type { RewardChip, RewardKey } from "@/game/rewards";
 
 export const FIGHT_TALLY = true;
@@ -25,6 +25,13 @@ export const FIGHT_CALLOUT = true;
  * XP chip is gold. They pop in one after another after the best hit. Off = the old flat pills. Non-character graphics.
  */
 export const REWARD_CHIPS = true;
+/**
+ * 2026-11-23 am: the "Next time, <gimmick>: <hint>" card under a lost boss fight (a plain glass card) as a red steel
+ * plate: a skewed red "NEXT TIME" tag, the gimmick's icon lit in its colour, the gimmick's name in metal type, then the
+ * tell (muted) and the counter (bright, red-lit rule). It slides in last, after the rewards. Same words as before.
+ * Off = the old glass card. Non-character graphics (CSS); painted fighters untouched, no faces drawn.
+ */
+export const NEXT_HINT_PLATE = true;
 
 type Tone = "gold" | "red" | "steel";
 const TONE: Record<Tone, string> = { gold: "#ffcf4d", red: "#ff5a4f", steel: "#c9d6e8" };
@@ -88,7 +95,7 @@ export function BestHit({ name, dealt, total, delay = 0 }: { name: string; dealt
   const shown = useCountUp(value, delay, 520);
   const share = hitShare(dealt, total);
   return (
-    <div className="best-hit relative mx-auto mt-2.5 flex max-w-full items-center gap-2.5 py-1 pr-3 pl-1" style={{ "--hit-delay": `${delay}ms` } as React.CSSProperties} aria-label={`Best hit: ${name} for ${value}${share ? `, ${share}% of your damage` : ""}`}>
+    <div className="best-hit relative mx-auto mt-2.5 flex shrink-0 max-w-full items-center gap-2.5 py-1 pr-3 pl-1" style={{ "--hit-delay": `${delay}ms` } as React.CSSProperties} aria-label={`Best hit: ${name} for ${value}${share ? `, ${share}% of your damage` : ""}`}>
       <span className="best-hit-sheen" aria-hidden />
       <span className="best-hit-tag t-label relative shrink-0" aria-hidden>Best hit</span>
       <span className="relative min-w-0 truncate text-[13px] font-extrabold text-fg" aria-hidden>{name}</span>
@@ -152,6 +159,25 @@ export function RewardChips({ chips, practiced, delay = 0 }: { chips: RewardChip
       ))}
       {!chips.length && <span className="text-xs text-muted">Nothing but the lesson.</span>}
       {practiced && <SteelChip icon={Dumbbell} label="Move XP" value={practiced} tone={TONE.gold} good delay={delay + chips.length * 70} />}
+    </div>
+  );
+}
+
+/** Under a lost boss fight: what the gimmick was and how to answer it, as a red steel plate. */
+export function NextHintPlate({ name, hint, icon: Icon, color, delay = 0 }: { name: string; hint: string; icon: LucideIcon; color: string; delay?: number }) {
+  const { tell, counter } = hintParts(hint);
+  return (
+    <div className="next-hint relative mt-2.5 shrink-0 px-3 pt-2 pb-2.5" style={{ "--hint": color, "--hint-delay": `${delay}ms` } as React.CSSProperties} role="note" aria-label={`Next time, ${name}: ${hint}`}>
+      <span className="next-hint-sheen" aria-hidden />
+      <div className="relative flex items-center gap-2" aria-hidden>
+        <span className="next-hint-tag t-label shrink-0">Next time</span>
+        <span className="next-hint-icon grid size-6 shrink-0 place-items-center"><Icon className="size-3.5" /></span>
+        <span className="ko-title min-w-0 truncate font-display text-[1.05rem] leading-tight" style={{ backgroundImage: FILL.steel }}>{name}</span>
+      </div>
+      <div className="relative mt-1.5" aria-hidden>
+        {tell && <p className="text-[11px] leading-snug text-muted">{tell}</p>}
+        {counter && <p className="next-hint-counter mt-1 pl-2 text-xs leading-snug font-bold text-fg">{counter}</p>}
+      </div>
     </div>
   );
 }

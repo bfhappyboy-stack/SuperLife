@@ -110,3 +110,17 @@ export function mvpRound(results: ReadonlyArray<0 | 1 | null | undefined>, margi
   });
   return round < 0 ? null : { round, hp };
 }
+
+/**
+ * 2026-11-23 am (NEXT_HINT_PLATE): the "Next time, <gimmick>" hint under a lost boss fight, split into the tell (what
+ * they do) and the counter (what to do about it, the hint's last sentence), so the red steel plate can light the
+ * counter. One-sentence hints are all counter. Same text as before, nothing added or dropped. Pure read.
+ */
+export function hintParts(hint: string | null | undefined): { tell: string; counter: string } {
+  const text = typeof hint === "string" ? hint.trim().replace(/\s+/g, " ") : "";
+  if (!text) return { tell: "", counter: "" };
+  const sentences = text.split(/(?<=[.!?])\s+(?=\S)/);
+  if (sentences.length < 2) return { tell: "", counter: text };
+  const counter = sentences.pop() as string;
+  return { tell: sentences.join(" "), counter };
+}
