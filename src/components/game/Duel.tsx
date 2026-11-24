@@ -7,17 +7,22 @@ import { kitFor } from "@/components/game/duelKit";
 import { useArt } from "@/components/game/Scene";
 import { VillainArt } from "@/components/game/VillainArt";
 import { Cutout, Standee, familyOfPower, mysteryArtKey, stageArtKey } from "@/components/game/heroArt";
-import { stageScale } from "@/game/heroArt";
+import { outfitOf, toneOf } from "@/game/outfit";
+import { PORTRAIT_STANDEES, stageScale, standeeScale } from "@/game/heroArt";
+import { PortraitPoster } from "@/components/game/PortraitStandee";
 import { streetCutKey } from "@/game/heroArt";
 import type { CapeFamily } from "@/game/theme";
 import { villainArtFor } from "@/components/game/villainArt.data";
-import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, FX_HITSTOP, HITSTOP_CRIT_MS, HITSTOP_MS, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS, elementOfLegacy } from "@/game/elements";
-import { money } from "@/game/format";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { canUltimate, habitOf, hasStatus, STATUSES, statusOfMove, ULTIMATE_COST } from "@/game/battle";
 import { activeGimmick, answerOf, BREATH, canBurst, duelRatio, gimmickStatus, interruptReady, PHASE3_AT, keyOf, playTurn, startDuel, type DuelState, type Edge } from "@/game/duel";
-import type { BossGimmick, DuelBoard, DuelMove, Effects, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
+import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
+import { duelVerdict, statLead } from "@/game/verdicts";
+import { BestHit, CONTINUE_DOCK, ContinueDock, FIGHT_CALLOUT, FIGHT_TALLY, GIMMICK_PLATE, GimmickPlate, MetalStat, NEXT_HINT_PLATE, NextHintPlate, REWARD_CHIPS, RewardChips } from "@/components/game/FightTally";
+import { practicedLabel, rewardChips } from "@/game/rewards";
+import type { BossGimmick, DuelBoard, DuelMove, GimmickKind, Look, MinigameSpec, MoveStyle, Sex, Wardrobe } from "@/game/types";
 
 /** The player's look, so the duel draws the same hero as the closet. */
 export interface DuelHero {
@@ -81,7 +86,7 @@ function hashName(name: string): number {
 type Side = "me" | "foe";
 interface Shot { key: number; from: Side; element: string; }
 interface Impact { key: number; on: Side; element: string; amount: number; big: boolean; crit: boolean }
-interface Result { ratio: number; dealt: number; taken: number; turns: number; best: { name: string; dealt: number } | null }
+interface Result { ratio: number; dealt: number; taken: number; turns: number; best: { name: string; dealt: number } | null; /** HP left at the end, 0..1 (STAKE_PLATES verdict). */ hp?: number; foeHp?: number }
 interface PhaseBanner { key: number; title: string; name: string; line: string; hint: string; color: string }
 interface BeatFx { key: number; word: string; sub?: string; color: string }
 interface StatusTag { key: number; on: Side; text: string; color: string }
@@ -116,9 +121,9 @@ const GIMMICK_COLOR: Record<GimmickKind, string> = {
 
 export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
   const legendArt = useArt(hero?.legend?.art ?? "");
-  const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit);
+  const mysteryKey = hero?.legend ? "" : mysteryArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit, toneOf(hero?.look));
   const mysteryArt = useArt(mysteryKey);
-  const teenKey = hero?.legend ? "" : stageArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit);
+  const teenKey = hero?.legend ? "" : stageArtKey(hero?.family, hero?.sex, hero?.age ?? 24, hero?.suit, toneOf(hero?.look));
   const mysteryCut = useArt(teenKey ? `cut-${teenKey}` : "");
   const stageArt = useArt(hero?.city ?? "");
   const board = spec.duel;
@@ -141,6 +146,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const [shot, setShot] = useState<Shot | null>(null);
   const [lunge, setLunge] = useState<{ key: number; side: Side } | null>(null);
   const [impact, setImpact] = useState<Impact | null>(null);
+  const [stop, setStop] = useState(0);
   const [heal, setHeal] = useState<{ key: number; amount: number } | null>(null);
   const [quake, setQuake] = useState<{ key: number; color: string } | null>(null);
   const [banner, setBanner] = useState<PhaseBanner | null>(null);
@@ -210,6 +216,11 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
     setShot(null);
     (on === "me" ? setMePose : setFoePose)(amount > 0 ? (guarded ? "guard" : "hit") : "guard");
     if (big) setQuake({ key, color: on === "foe" ? "#ffffff" : "#ff3b30" });
+    // Hit-stop: the struck frame holds for a beat before the recoil and shake play.
+    if (big && FX_HITSTOP && amount > 0) {
+      setStop(key);
+      later(crit ? HITSTOP_CRIT_MS : HITSTOP_MS, () => setStop((k) => (k === key ? 0 : k)));
+    }
   }
 
   function showPhase(kind: "phase" | "revive" | "phase3") {
@@ -240,7 +251,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
       if (next.foeHp <= 0 && next.playerHp > 0) setMePose("idle");
       if (next.playerHp <= 0 && next.foeHp > 0) setFoePose("idle");
     });
-    later(ms + 650, () => setResult({ ratio, ...stats.current }));
+    later(ms + 650, () => setResult({ ratio, ...stats.current, hp: Math.max(0, next.playerHp) / Math.max(1, maxP), foeHp: Math.max(0, next.foeHp) / Math.max(1, maxF) }));
   }
 
   function swing(move: DuelMove) {
@@ -350,9 +361,14 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
   const heroFigure = hero?.legend && legendArt ? (
     <Standee src={legendArt} name={hero.legend.name} color={hero.legend.color} glow={heroAura} pose={mePose} />
   ) : mysteryCut ? (
-    <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} scale={stageScale(hero?.age ?? 24)} />
+    <Cutout src={mysteryCut} name="You" glow={heroAura} pose={mePose} scale={stageScale(hero?.age ?? 24)} outfit={hero ? outfitOf({ wardrobe: hero.wardrobe, suit: hero.suit }) : null} artKey={teenKey} />
   ) : mysteryArt ? (
     <Standee src={mysteryArt} name="You" color={heroAura} glow={heroAura} pose={mePose} />
+  ) : PORTRAIT_STANDEES && hero ? (
+    // No suit painting fits (under 13, powerless, no power family): your painted portrait in a lit fighter card.
+    <Standee name="You" color={heroAura} glow={heroAura} pose={mePose} scale={standeeScale(hero.age)} kind="portrait">
+      <PortraitPoster seed={hero.seed} age={hero.age} sex={hero.sex ?? "male"} look={hero.look} accent={heroAura} city={hero.city} mine />
+    </Standee>
   ) : (
     <Figure
       seed={hero?.seed ?? 11}
@@ -448,7 +464,7 @@ export function Duel({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (rati
       </div>
       {gimmick && <GimmickStrip gimmick={gimmick} live={live} status={status} state={hud} next={fight.phase3 && hud.phase === 2 ? (fight.phase3.at ?? PHASE3_AT) : null} third={hud.phase === 3} />}
 
-      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[184px]" : "h-[226px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+      <div key={quake?.key ?? "still"} className={`scene-arena relative ${gimmick ? "h-[184px]" : "h-[226px]"} shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 ${quake ? "fx-quake" : ""} ${stop ? "fx-hitstop" : ""}`} data-hitstop={stop ? "on" : undefined}>
         {stageArt && (
           <>
             <img src={stageArt} alt="" className="anim-fade absolute inset-0 size-full object-cover object-[50%_62%] opacity-70 saturate-[0.85]" draggable={false} aria-hidden />
@@ -642,6 +658,21 @@ function GimmickStrip({ gimmick, live, status, state, next, third }: { gimmick: 
   const Icon = GIMMICK_ICON[gimmick.kind];
   const color = GIMMICK_COLOR[gimmick.kind];
   const waiting = !live && gimmick.kind !== "revive";
+  const pips = live && gimmick.kind === "charge" && (
+    <span className="relative flex shrink-0 gap-1" aria-label={state.charge === 0 ? "Charging now" : `Charges in ${state.charge}`}>
+      {[2, 1, 0].map((n) => (
+        <span key={n} className="size-2 rounded-full" style={{ background: state.charge <= n ? color : "rgb(255 255 255 / 0.15)", boxShadow: state.charge <= n ? `0 0 6px ${color}` : undefined }} />
+      ))}
+    </span>
+  );
+  if (GIMMICK_PLATE) {
+    return (
+      <GimmickPlate name={gimmick.name} line={live && status ? status : gimmick.hint} icon={Icon} color={color} live={live} third={third} kind={gimmick.kind} at={gimmick.at} next={next}>
+        {pips}
+        {waiting && <span className="sr-only">Starts when they drop to {Math.round((gimmick.at ?? 0.55) * 100)}% health.</span>}
+      </GimmickPlate>
+    );
+  }
   return (
     <div
       className={`relative flex items-center gap-2 overflow-hidden rounded-2xl border px-2 py-1 ${live ? "duel-gimmick-live" : ""}`}
@@ -784,32 +815,6 @@ function MoveCard({ move, cooling, energy, picked, answers, tag, burst, ultimate
   );
 }
 
-const EFFECT_LABEL: Record<Exclude<keyof Effects, "personId">, string> = {
-  health: "Health",
-  happiness: "Joy",
-  smarts: "Smarts",
-  looks: "Looks",
-  fame: "Fame",
-  money: "Cash",
-  reputation: "Rep",
-  parentBelief: "Family belief",
-  powerLevel: "Power",
-  closeness: "Bond",
-  karma: "Karma",
-};
-
-function rewardChips(effects: Effects): { label: string; value: string; good: boolean }[] {
-  const out: { label: string; value: string; good: boolean }[] = [];
-  for (const [key, label] of Object.entries(EFFECT_LABEL) as [Exclude<keyof Effects, "personId">, string][]) {
-    const value = effects[key];
-    if (typeof value !== "number" || value === 0) continue;
-    const sign = value > 0 ? "+" : "−";
-    const text = key === "money" ? `${sign}${money(Math.abs(value))}` : `${sign}${Math.abs(Math.round(value * 10) / 10)}`;
-    out.push({ label, value: text, good: value > 0 });
-  }
-  return out;
-}
-
 function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmick, onContinue }: { spec: MinigameSpec; result: Result; hero: React.ReactNode; foe: React.ReactNode; foeName: string; boss: boolean; used: string[]; moves: DuelMove[]; gimmick: BossGimmick | null; onContinue: () => void }) {
   const win = result.ratio >= 0.66;
   const draw = !win && result.ratio >= 0.33;
@@ -817,10 +822,17 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
   const text = win ? spec.winText : draw ? spec.partialText : spec.loseText;
   const chips = rewardChips(effects);
   const practiced = [...new Set(used)].map((id) => moves.find((m) => m.id === id)?.name).filter(Boolean) as string[];
+  const practicedText = practicedLabel(practiced);
   const tone = win ? "#ffcf4d" : draw ? "#c9ccd4" : "#ff5a4f";
   const Icon = win ? Trophy : draw ? Swords : Skull;
+  // Stakes plate (2026-11-21 night): how the fight went, in the Arena's metal plate ("Flawless", "By a whisker", "So close").
+  // Fight tally (2026-11-22 am): the side that hit harder lights its metal stat tile.
+  const lead = statLead(result.dealt, result.taken);
+  // Continue dock (2026-11-23 pm): the scrolling card, so the docked Continue knows when card is left under the fold.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const verdict = duelVerdict({ ratio: result.ratio, dealt: result.dealt, taken: result.taken, turns: result.turns, hp: result.hp ?? (win ? 1 : 0), foeHp: result.foeHp ?? (win ? 0 : 1), boss });
   return (
-    <div className="anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 pb-5 backdrop-blur-sm" role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
+    <div ref={cardRef} className={`anim-fade absolute inset-0 z-30 flex flex-col overflow-y-auto bg-ink/92 px-5 pt-6 backdrop-blur-sm ${CONTINUE_DOCK ? "pb-0" : "pb-5"}`} role="dialog" aria-label={win ? "Victory" : draw ? "Draw" : "Defeat"}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[360px] overflow-hidden" aria-hidden>
         {FX_CINEMATIC ? (
           // 2026-11-15 am: soft volumetric light from above instead of flat comic wedges (shared with the Arena since pm).
@@ -833,11 +845,18 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
         <span className={`ko-in font-display text-6xl leading-none ${FX_CINEMATIC ? "ko-title" : ""}`} style={FX_CINEMATIC ? { "--ko": tone, backgroundImage: win ? "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)" : draw ? "linear-gradient(180deg, #ffffff 0%, #c9ccd4 50%, #7d8494 100%)" : "linear-gradient(180deg, #ffe1dd 0%, #ff5a4f 50%, #8a1f18 100%)" } as React.CSSProperties : { color: tone, textShadow: `0 4px 0 rgba(0,0,0,.6), 0 0 30px ${tone}` }}>
           {win || !draw ? "K.O." : "DRAW"}
         </span>
-        <p className="t-label mt-2 flex items-center gap-1.5" style={{ color: tone }}>
-          <Icon className="size-4" aria-hidden />
-          {win ? (boss ? "Boss down" : "Victory") : draw ? "Both still standing" : "Defeated"}
-        </p>
-        <p className="mt-1 text-sm font-semibold text-muted">{win ? `${foeName} is on the floor.` : draw ? `You and ${foeName} call it.` : `${foeName} walks away.`}</p>
+        {STAKE_PLATES ? (
+          <>
+            <span className="sr-only">{win ? (boss ? "Boss down" : "Victory") : draw ? "Both still standing" : "Defeated"}</span>
+            <StakePlate plate={verdict} className="mt-3" delay={420} streak />
+          </>
+        ) : (
+          <p className="t-label mt-2 flex items-center gap-1.5" style={{ color: tone }}>
+            <Icon className="size-4" aria-hidden />
+            {win ? (boss ? "Boss down" : "Victory") : draw ? "Both still standing" : "Defeated"}
+          </p>
+        )}
+        <p className={`text-sm font-semibold text-muted ${STAKE_PLATES ? "mt-1.5" : "mt-1"}`}>{win ? `${foeName} is on the floor.` : draw ? `You and ${foeName} call it.` : `${foeName} walks away.`}</p>
       </div>
       <div className="relative mx-auto mt-3 flex h-[150px] w-full max-w-[300px] items-end justify-center gap-6">
         {FX_CINEMATIC && <span className="pointer-events-none absolute bottom-[-6px] left-1/2 h-[26px] w-[110%] -translate-x-1/2 rounded-[50%]" style={{ background: `radial-gradient(closest-side, color-mix(in srgb, ${tone} 38%, transparent), rgb(0 0 0 / 0.5) 60%, transparent)` }} aria-hidden />}
@@ -847,17 +866,31 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
         </div>
       </div>
       <div className="relative mt-3 grid grid-cols-3 gap-2 text-center">
-        <Stat label="Dealt" value={String(result.dealt)} />
-        <Stat label="Taken" value={String(result.taken)} />
-        <Stat label="Turns" value={String(result.turns)} />
+        {FIGHT_TALLY ? (
+          <>
+            <MetalStat label="Dealt" value={result.dealt} tone={lead === "dealt" ? "gold" : "steel"} lit={lead === "dealt"} delay={620} />
+            <MetalStat label="Taken" value={result.taken} tone={lead === "taken" ? "red" : "steel"} lit={lead === "taken"} delay={720} />
+            <MetalStat label="Turns" value={result.turns} delay={820} />
+          </>
+        ) : (
+          <>
+            <Stat label="Dealt" value={String(result.dealt)} />
+            <Stat label="Taken" value={String(result.taken)} />
+            <Stat label="Turns" value={String(result.turns)} />
+          </>
+        )}
       </div>
-      {result.best && result.best.dealt > 0 && (
+      {result.best && result.best.dealt > 0 && FIGHT_CALLOUT && <BestHit name={result.best.name} dealt={result.best.dealt} total={result.dealt} delay={940} />}
+      {result.best && result.best.dealt > 0 && !FIGHT_CALLOUT && (
         <p className="relative mt-2 text-center text-xs font-semibold text-muted">
           Best hit: <span className="text-fg">{result.best.name}</span> for <span className="t-num text-gold">{result.best.dealt}</span>
         </p>
       )}
       <div className="card relative mt-3 px-3 py-2.5">
         <p className="t-label text-muted">Rewards</p>
+        {REWARD_CHIPS ? (
+          <RewardChips chips={chips} practiced={practicedText} delay={1080} />
+        ) : (
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {chips.length ? (
             chips.map((chip) => (
@@ -868,11 +901,13 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
           ) : (
             <span className="text-xs text-muted">Nothing but the lesson.</span>
           )}
-          {practiced.length > 0 && <span className="chip !py-0.5 text-xs font-bold text-gold">Move XP: {practiced.slice(0, 3).join(", ")}{practiced.length > 3 ? ` +${practiced.length - 3}` : ""}</span>}
+          {practicedText && <span className="chip !py-0.5 text-xs font-bold text-gold">Move XP: {practicedText}</span>}
         </div>
+        )}
         {text && <p className="mt-2 text-xs leading-snug text-fg/85">{text}</p>}
       </div>
-      {gimmick && !win && (
+      {gimmick && !win && NEXT_HINT_PLATE && <NextHintPlate name={gimmick.name} hint={gimmick.hint} icon={GIMMICK_ICON[gimmick.kind]} color={GIMMICK_COLOR[gimmick.kind]} delay={1320} />}
+      {gimmick && !win && !NEXT_HINT_PLATE && (
         <div className="card relative mt-2 flex items-start gap-2 px-3 py-2" style={{ borderColor: `color-mix(in srgb, ${GIMMICK_COLOR[gimmick.kind]} 45%, transparent)` }}>
           {(() => {
             const Icon = GIMMICK_ICON[gimmick.kind];
@@ -883,10 +918,16 @@ function ResultCard({ spec, result, hero, foe, foeName, boss, used, moves, gimmi
           </p>
         </div>
       )}
-      <div className="mb-auto" />
-      <button type="button" className="btn btn-primary mt-4 min-h-12 w-full shrink-0" onClick={onContinue} autoFocus>
-        Continue
-      </button>
+      {CONTINUE_DOCK ? (
+        <ContinueDock scroller={cardRef} onContinue={onContinue} />
+      ) : (
+        <>
+          <div className="mb-auto" />
+          <button type="button" className="btn btn-primary mt-4 min-h-12 w-full shrink-0" onClick={onContinue} autoFocus>
+            Continue
+          </button>
+        </>
+      )}
     </div>
   );
 }

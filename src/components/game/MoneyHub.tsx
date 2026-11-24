@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { buzz } from "@/components/game/haptics";
-import { IconTile } from "@/components/game/icons";
+import { IconTile, TILE_EMBLEM } from "@/components/game/icons";
 import {
   annualWage, districtOf, districtsOf, districtViews, ECON_FLAGS, econOf, fmt, fmtPrice, goodById, goodViews, HOME_MODS, homeById, homePrice, HOMES,
   homeGate, homeUpkeep, homeValue, HOUSING_AGE, letIncome, livingOf, marketCity, marketRent, maxBuy, MIN_DEPOSIT, netWorth, portfolioValue, quoteHome,
@@ -259,7 +259,7 @@ export function MoneyHub({ game, onAct }: { game: Game; onAct: (id: string) => v
       <div className="card overflow-hidden px-4 py-3.5">
         <div className="pointer-events-none absolute -top-16 -right-10 size-44 rounded-full opacity-40 blur-2xl" style={{ background: "radial-gradient(circle, var(--color-gold), transparent 70%)" }} />
         <div className="flex items-center gap-3">
-          <IconTile color="#5fe08f" size="size-11">
+          <IconTile color="#5fe08f" size="size-11" lit={TILE_EMBLEM}>
             <Wallet className="size-5" />
           </IconTile>
           <div className="min-w-0 flex-1">
@@ -349,7 +349,7 @@ function HomeTab({ game, e, run }: { game: Game; e: EconState; run: (id: string)
           {(() => {
             const Icon = live.homeId ? (HOME_ICON[live.homeId] ?? Home) : live.kind === "couch" ? Sofa : Home;
             return (
-              <IconTile color={live.homeId ? (HOME_COLOR[live.homeId] ?? "#8b95ad") : live.kind === "couch" ? "#ff5d6c" : "#8b95ad"} size="size-12">
+              <IconTile color={live.homeId ? (HOME_COLOR[live.homeId] ?? "#8b95ad") : live.kind === "couch" ? "#ff5d6c" : "#8b95ad"} size="size-12" lit={TILE_EMBLEM}>
                 <Icon className="size-6" />
               </IconTile>
             );
@@ -465,7 +465,7 @@ function HomeTab({ game, e, run }: { game: Game; e: EconState; run: (id: string)
             return (
               <article key={def.id} className={`card px-3 py-3 ${gate ? "opacity-60" : ""}`}>
                 <div className="flex gap-3">
-                  <IconTile color={gate ? "#5b6478" : (HOME_COLOR[def.id] ?? "#8b95ad")} size="size-12">
+                  <IconTile color={gate ? "#5b6478" : (HOME_COLOR[def.id] ?? "#8b95ad")} size="size-12" lit={TILE_EMBLEM}>
                     {gate ? <Lock className="size-5" /> : <Icon className="size-6" />}
                   </IconTile>
                   <div className="min-w-0 flex-1">
@@ -582,7 +582,7 @@ function OwnedCard({ game, e, h, run, confirm, setConfirm, mods, setMods }: { ga
   return (
     <article className={`card px-3 py-3 ${living ? "!border-gold/60" : ""}`}>
       <div className="flex gap-3">
-        <IconTile color={HOME_COLOR[h.homeId] ?? "#8b95ad"} size="size-12">
+        <IconTile color={HOME_COLOR[h.homeId] ?? "#8b95ad"} size="size-12" lit={TILE_EMBLEM}>
           <Icon className="size-6" />
         </IconTile>
         <div className="min-w-0 flex-1">
@@ -697,7 +697,7 @@ function MarketsTab({ game, e, run }: { game: Game; e: EconState; run: (id: stri
     <div className="flex flex-col gap-3">
       <article className="card px-4 py-3">
         <div className="flex items-center gap-3">
-          <IconTile color="#ffd76a" size="size-10">
+          <IconTile color="#ffd76a" size="size-10" lit={TILE_EMBLEM}>
             <TrendingUp className="size-5" />
           </IconTile>
           <div className="min-w-0 flex-1">
@@ -778,7 +778,7 @@ function MarketRow({ game, e, v, open, onToggle, run, tradable }: { game: Game; 
   return (
     <article className={`card overflow-hidden ${open ? "!border-gold/50" : ""}`}>
       <button type="button" onClick={onToggle} aria-expanded={open} className="flex min-h-16 w-full items-center gap-3 px-3 py-2.5 text-left">
-        <IconTile color={v.chg1 >= 0 ? UP : DOWN} size="size-10">
+        <IconTile color={v.chg1 >= 0 ? UP : DOWN} size="size-10" lit={TILE_EMBLEM}>
           <Icon className="size-5" />
         </IconTile>
         <div className="min-w-0 flex-1">
@@ -904,7 +904,7 @@ function BusinessTab({ game, e, run }: { game: Game; e: EconState; run: (id: str
           return (
             <article key={def.id} className={`card px-3 py-3 ${locked ? "opacity-60" : ""}`}>
               <div className="flex gap-3">
-                <IconTile color={locked ? "#5b6478" : (BIZ_COLOR[def.id] ?? "#8b95ad")} size="size-12">
+                <IconTile color={locked ? "#5b6478" : (BIZ_COLOR[def.id] ?? "#8b95ad")} size="size-12" lit={TILE_EMBLEM}>
                   {locked ? <Lock className="size-5" /> : <Icon className="size-6" />}
                 </IconTile>
                 <div className="min-w-0 flex-1">
@@ -957,7 +957,7 @@ function BizCard({ game, e, b, run, confirm, setConfirm, open, setOpen }: { game
   return (
     <article className={`card px-3 py-3 ${def.empire ? "!border-gold/50" : ""}`}>
       <div className="flex gap-3">
-        <IconTile color={BIZ_COLOR[b.kind] ?? "#8b95ad"} size="size-12">
+        <IconTile color={BIZ_COLOR[b.kind] ?? "#8b95ad"} size="size-12" lit={TILE_EMBLEM}>
           <Icon className="size-6" />
         </IconTile>
         <div className="min-w-0 flex-1">
@@ -1260,7 +1260,7 @@ function ChainCard({ game, e, brand, run, confirm, setConfirm, open, setOpen }: 
   return (
     <article className="card overflow-hidden px-3 py-3 !border-gold/40">
       <div className="flex items-center gap-3">
-        <IconTile color={BIZ_COLOR[brand.kind] ?? "#8b95ad"} size="size-12">
+        <IconTile color={BIZ_COLOR[brand.kind] ?? "#8b95ad"} size="size-12" lit={TILE_EMBLEM}>
           <Icon className="size-6" />
         </IconTile>
         <div className="min-w-0 flex-1">

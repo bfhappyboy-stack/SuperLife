@@ -2,12 +2,18 @@
  * Poster art for a saved mystery life in the Arena (2026-11-10 am): a backlit hero silhouette with a rim light in
  * their power's colour, glowing lenses, their family emblem on the chest, a cape and the city behind them.
  * Replaces the paper doll for custom heroes; legends use their painted portraits. Pure SVG, seeded, no assets.
+ * 2026-11-16 night: with a `face` (the saved life) and `PORTRAIT_STANDEES` on, a life with no suit painting gets its
+ * painted portrait poster instead, so the SVG silhouette is only the art-off fallback.
  */
 import { useId } from "react";
 import { FAMILY_PATH } from "@/components/game/icons";
 import { mysteryArtKey } from "@/components/game/heroArt";
 import { useArt } from "@/components/game/Scene";
 import type { CapeFamily } from "@/game/theme";
+import type { Tone } from "@/game/portraits";
+import { PortraitPoster } from "@/components/game/PortraitStandee";
+import { lifePortraitSeed, PORTRAIT_STANDEES } from "@/game/heroArt";
+import type { Look, Sex } from "@/game/types";
 
 function rng(seed: number) {
   let s = (seed >>> 0) || 1;
@@ -24,11 +30,13 @@ const FEMALE =
 const HAIR_F = "M101 86C99 66 111 58 120 58 132 58 142 66 140 88 146 104 148 124 142 140 136 128 138 108 134 96 128 104 112 104 106 96 102 108 104 128 98 140 92 124 96 104 101 86Z";
 const HAIR_M = "M102 88C100 70 110 62 121 62 133 62 141 71 138 90 134 80 128 76 120 77 112 77 106 80 102 88Z";
 
-export function LifeHeroArt({ seed, sex, family, suit, accent, className = "" }: { seed: number; sex: "male" | "female"; family: CapeFamily | null; suit?: "a" | "b"; accent: string; className?: string }) {
+export function LifeHeroArt({ seed, sex, family, suit, tone, accent, className = "", face, head = false }: { seed: number; sex: "male" | "female"; family: CapeFamily | null; suit?: "a" | "b"; tone?: Tone | null; accent: string; className?: string; face?: { age: number; look?: Partial<Look> | null; sex?: Sex } | null; head?: boolean }) {
   const id = useId().replace(/:/g, "");
   // 2026-11-11 art pass: the painted Mystery card for this family replaces the silhouette when it exists.
-  const painted = useArt(mysteryArtKey(family, sex, 30, suit));
+  const painted = useArt(mysteryArtKey(family, sex, 30, suit, tone));
   if (painted) return <img src={painted} alt="" className={`anim-fade absolute inset-0 block size-full object-cover object-top ${className}`} draggable={false} />;
+  // 2026-11-16 night: a saved life with no suit painting (powerless, no power family) is their painted portrait, not a drawn silhouette.
+  if (face && PORTRAIT_STANDEES) return <PortraitPoster seed={lifePortraitSeed(seed)} age={face.age} sex={face.sex ?? sex} look={face.look} accent={accent} head={head} mine />;
   const r = rng(seed);
   const body = sex === "female" ? FEMALE : MALE;
   // A skyline of eleven towers with a few lit windows, the same every time for this hero.

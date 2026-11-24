@@ -77,7 +77,7 @@ export function stageKeys(family: CapeFamily | null | undefined, sex: Sex | unde
 
 /** Which suit line a resolved art key shows: "b" for `<key>-b` and the teen `<key>-b-teen`, else "a" (the Closet caption). */
 export function suitOfKey(key: string): Suit {
-  return /-b(-teen)?$/.test(key) ? "b" : "a";
+  return /-b(-teen)?(-s[1-4])?$/.test(key) ? "b" : "a";
 }
 
 /** How tall a teen stands next to a grown fighter: 13 → 0.86, 14 → 0.9, 15 → 0.94, 16+ → 1. */
@@ -129,4 +129,25 @@ export function crimeVillainKey(eventId: string, age = 0, month = 0): { key: str
   for (const ch of `${eventId}|${age}|${month}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
   const power = pool[h % pool.length];
   return { key: streetCutKey(power === "street" ? null : power), power: power === "street" ? null : power };
+}
+
+/**
+ * Painted portrait standees (2026-11-16 night). Where no suit painting fits (a kid under 13 with a fresh power, a
+ * powerless life, a saved life with no power family in the Arena), the stage used to fall back to the drawn paper doll
+ * (a toy-like SVG) or a drawn silhouette poster. They now stand in as their own painted portrait in a lit fighter card,
+ * the same face the Closet, the header and the "Your call" scene show. Off = the doll and the silhouette come back.
+ */
+export const PORTRAIT_STANDEES = true;
+
+/** The seed a saved Arena life was snapshotted with is `portrait * 7919 + slot` (arena.lives.ts); this gets the face back. */
+export const LIFE_SEED_MUL = 7919;
+export function lifePortraitSeed(seed: number | null | undefined): number {
+  const s = Math.abs(Math.trunc(seed ?? 0));
+  return Math.floor(s / LIFE_SEED_MUL) || s || 1;
+}
+
+/** How tall a portrait standee stands next to a grown fighter: a 7-year-old 0.74, 12 → 0.84, 13+ as the suit (`stageScale`). */
+export function standeeScale(age: number): number {
+  if (age >= TEEN_STAGE_AGE) return stageScale(age);
+  return Math.min(0.84, Math.max(0.74, 0.74 + (age - 7) * 0.02));
 }

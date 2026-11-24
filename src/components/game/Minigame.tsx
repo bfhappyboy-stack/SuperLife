@@ -5,8 +5,11 @@ import { Duel, type DuelHero } from "@/components/game/Duel";
 import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniHead } from "@/components/game/MiniKit";
+import { IconTile, LAST_EMBLEM } from "@/components/game/icons";
 import { skinColor } from "@/components/game/miniUtil";
 import { Chase, Hack, Hold, Press, Rescue } from "@/components/game/MiniGames";
+import { MiniBackdrop } from "@/components/game/MiniStage";
+import { MiniHeroContext } from "@/components/game/miniStageState";
 import type { MinigameSpec } from "@/game/types";
 
 const ICONS = [
@@ -21,6 +24,11 @@ type Grade = "perfect" | "good" | "miss";
 
 export function Minigame({ spec, onDone, hero }: { spec: MinigameSpec; onDone: (ratio: number, used?: string[]) => void; hero?: DuelHero }) {
   if (spec.kind === "duel" && spec.duel) return <Duel spec={spec} onDone={onDone} hero={hero} />;
+  // Skill minigames stand on a painted stage with you in it (MiniStage.tsx); the hero rides down through context.
+  return <MiniHeroContext.Provider value={hero}>{skillGame(spec, onDone)}</MiniHeroContext.Provider>;
+}
+
+function skillGame(spec: MinigameSpec, onDone: (ratio: number, used?: string[]) => void) {
   if (spec.kind === "pattern") return <Pattern spec={spec} onDone={onDone} />;
   if (spec.kind === "hack") return <Hack spec={spec} onDone={onDone} />;
   if (spec.kind === "rescue") return <Rescue spec={spec} onDone={onDone} />;
@@ -155,7 +163,8 @@ function Timing({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number) 
           />
         ))}
       </div>
-      <div className={`scene-arena relative min-h-32 flex-1 overflow-hidden rounded-[1.6rem] border border-white/10 ${flash === "miss" ? "anim-shake" : ""}`} style={{ boxShadow: `inset 0 0 60px -20px ${skinColor(spec, "timing")}` }} key={flash === "miss" ? `m${round}` : "track"}>
+      <div className={`scene-arena relative isolate min-h-32 flex-1 overflow-hidden rounded-[1.6rem] border border-white/10 ${flash === "miss" ? "anim-shake" : ""}`} style={{ boxShadow: `inset 0 0 60px -20px ${skinColor(spec, "timing")}` }} key={flash === "miss" ? `m${round}` : "track"}>
+        <MiniBackdrop accent={skinColor(spec, "timing")} />
         <div className="absolute inset-x-4 top-1/2 h-3 -translate-y-1/2 rounded-full bg-black/50 shadow-[inset_0_1px_2px_rgba(0,0,0,.7)]" />
         <div className="absolute inset-x-4 top-1/2 h-28 -translate-y-1/2">
           <div className="absolute top-3 bottom-3 rounded-2xl border border-gold/50 bg-gold/20 shadow-[0_0_24px_-4px_var(--color-gold)]" style={{ left: `${(0.5 - zone / 2) * 100}%`, width: `${zone * 100}%` }} />
@@ -290,7 +299,8 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
           );
         })}
       </div>
-      <div className="scene-arena relative flex min-h-28 flex-1 items-center justify-center overflow-hidden rounded-[1.6rem] border border-white/10" style={{ boxShadow: `inset 0 0 60px -20px ${skinColor(spec, "pattern")}` }}>
+      <div className="scene-arena relative isolate flex min-h-28 flex-1 items-center justify-center overflow-hidden rounded-[1.6rem] border border-white/10" style={{ boxShadow: `inset 0 0 60px -20px ${skinColor(spec, "pattern")}` }}>
+        <MiniBackdrop accent={skinColor(spec, "pattern")} />
         {StageIcon && stage ? (
           <span key={`${lit}-${shown}-${cursor}`} className="anim-pop relative grid size-20 place-items-center rounded-3xl" style={{ background: `radial-gradient(circle, ${stage.color}55, transparent 70%)` }}>
             <StageIcon className="size-12" style={{ color: stage.color, filter: `drop-shadow(0 0 12px ${stage.color})` }} />
@@ -316,9 +326,15 @@ function Pattern({ spec, onDone }: { spec: MinigameSpec; onDone: (ratio: number)
               className={`card flex min-h-16 flex-col items-center justify-center gap-1 text-sm font-bold text-fg disabled:opacity-50 ${called ? "!border-spark" : hot ? "!bg-panel-2" : ""}`}
               style={hot ? { borderColor: icon.color, boxShadow: `0 0 20px -4px ${icon.color}` } : undefined}
             >
-              <span className="ico-tile size-9" style={{ "--tile": icon.color } as React.CSSProperties}>
-                <Icon className="size-5" />
-              </span>
+              {LAST_EMBLEM ? (
+                <IconTile color={icon.color} size="size-10" lit hot={hot || called}>
+                  <Icon className="size-5" />
+                </IconTile>
+              ) : (
+                <span className="ico-tile size-9" style={{ "--tile": icon.color } as React.CSSProperties}>
+                  <Icon className="size-5" />
+                </span>
+              )}
               {icon.label}
             </button>
           );

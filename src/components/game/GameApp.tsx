@@ -11,7 +11,7 @@ import { ArenaScreen } from "@/components/game/Arena";
 import { GodScreen, ModeSelect, RevealOverlay } from "@/components/game/Legends";
 import { Closet } from "@/components/game/Closet";
 import { EVENT_SCENE, EventScene } from "@/components/game/EventScene";
-import { actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON } from "@/components/game/icons";
+import { ACTION_EMBLEM, actionIcon, FamilyGlyph, FAMILY_COLOR, IconTile, STAT_COLOR, STAT_ICON, TAB_ICON, TILE_EMBLEM } from "@/components/game/icons";
 import { Market } from "@/components/game/Market";
 import { CashTicker, MoneyLine, MoneyReport } from "./MoneyReport";
 import { MoneyHub, NewsTicker } from "@/components/game/MoneyHub";
@@ -22,7 +22,9 @@ import { UseCount } from "@/components/game/UseCount";
 import { autoResolveOdds } from "@/game/skip";
 import { borrowAmounts, borrowBlock, canTalkMoney, lendAmounts, loanLine, openLoan, temperOf, termFor, trustOf } from "@/game/ties";
 import { CityScene, TitleArt, useArt } from "@/components/game/Scene";
-import { stageArtKey } from "@/components/game/heroArt";
+import { HeroFigure, stageArtKey } from "@/components/game/heroArt";
+import { lifeLine } from "@/components/game/lifeLine";
+import { outfitOf, toneOf } from "@/game/outfit";
 import { stageScale } from "@/game/heroArt";
 import { Portrait } from "@/components/game/Portrait";
 import { HeroChat, PowerLab, CaseFile } from "@/components/game/PowerLab";
@@ -260,7 +262,7 @@ function Life({ game }: { game: Game }) {
   // The gift card shows who you are in the suit: a legend's painting, or your painted Mystery cutout (13+, smaller as a teen).
   const giftLegend = presetById(game.preset);
   const giftLegendArt = useArt(giftLegend && hasArt(giftLegend.art) ? giftLegend.art : "");
-  const giftKey = giftLegend ? "" : stageArtKey(family, game.sex, game.age, game.suit);
+  const giftKey = giftLegend ? "" : stageArtKey(family, game.sex, game.age, lifeLine(game, family, game.sex), toneOf(game.look));
   const giftCut = useArt(giftKey ? `cut-${giftKey}` : "");
   const showTabs = !choosing && game.phase !== "mini";
   // Chapter goals: Go jumps to the tab and shelf, then the matching button pulses.
@@ -356,7 +358,7 @@ function Life({ game }: { game: Game }) {
       {game.phase === "mini" && game.minigame ? (
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           {game.minigame.kind === "duel" && game.minigame.duel && <FightChoice key={`fc-${game.minigame.title}-${game.age}-${game.month ?? 0}-${game.missions}`} game={game} />}
-          <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ legend: (() => { const l = presetById(game.preset); return l && hasArt(l.art) ? { art: l.art, color: l.color, name: l.hero } : undefined; })(), seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })(), family: capeTheme(game).cape, suit: game.suit, city: game.cityId }} />
+          <Minigame key={`${game.minigame.title}-${game.age}-${game.missions}`} spec={game.minigame} onDone={finishMini} hero={{ legend: (() => { const l = presetById(game.preset); return l && hasArt(l.art) ? { art: l.art, color: l.color, name: l.hero } : undefined; })(), seed: game.portrait, age: game.age, sex: game.sex, look: game.look, wardrobe: game.wardrobe, aura: (() => { const family = capeTheme(game).cape; return family ? FAMILY_COLOR[family] : undefined; })(), family: capeTheme(game).cape, suit: lifeLine(game, capeTheme(game).cape, game.sex), city: game.cityId }} />
         </div>
       ) : (
         <>
@@ -465,17 +467,18 @@ function Life({ game }: { game: Game }) {
                 ) : giftCut ? (
                   <>
                     <span className="pointer-events-none absolute right-2 bottom-2 -z-10 h-5 w-32 rounded-[50%] bg-black/60 blur-md" aria-hidden />
-                    <img
+                    <HeroFigure
                       src={giftCut}
-                      alt=""
-                      draggable={false}
-                      className="cut-breathe pointer-events-none absolute right-0 bottom-0 -z-10 h-[15rem] w-auto max-w-none"
-                      style={{ height: `${15 * stageScale(game.age)}rem`, filter: `drop-shadow(0 0 1.5px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 85%, white)) drop-shadow(0 0 12px color-mix(in srgb, ${family ? FAMILY_COLOR[family] : "#e6b34d"} 45%, transparent))` }}
+                      artKey={giftKey}
+                      outfit={outfitOf(game)}
+                      glow={family ? FAMILY_COLOR[family] : "#e6b34d"}
+                      className="cut-breathe pointer-events-none absolute right-0 bottom-0 -z-10 h-[15rem]"
+                      style={{ height: `${15 * stageScale(game.age)}rem` }}
                     />
                   </>
                 ) : null}
                 <div className="relative flex items-center gap-3">
-                  <IconTile color={family ? FAMILY_COLOR[family] : "#e6b34d"} size="size-12">
+                  <IconTile color={family ? FAMILY_COLOR[family] : "#e6b34d"} size="size-12" lit={TILE_EMBLEM}>
                     <FamilyGlyph family={family} className="size-7" />
                   </IconTile>
                   <div className="min-w-0">
@@ -954,7 +957,7 @@ function ActionRow({ action, file, onPress }: { action: ActionItem; file?: boole
       data-act={action.id}
       className={`card group flex min-h-14 items-center gap-3 px-3 py-2.5 text-left disabled:opacity-50 ${action.accent && !action.disabled ? "!border-gold/70 shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-gold)_30%,transparent),0_8px_24px_-12px_var(--color-gold)]" : ""}`}
     >
-      <IconTile color={action.disabled ? "#4b5366" : GROUP_COLOR[action.group]} size="size-10">
+      <IconTile color={action.disabled ? "#4b5366" : GROUP_COLOR[action.group]} size="size-10" lit={ACTION_EMBLEM}>
         {action.disabled ? <Lock className="size-4" /> : <Icon className="size-5" />}
       </IconTile>
       <span className="min-w-0 flex-1">

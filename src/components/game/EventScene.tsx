@@ -4,16 +4,21 @@
  * and drifting dust in your power colour, and you in it (your painted suit cutout from 13, a legend's painting, or
  * your painted portrait before the suit). When the moment names someone close to you, their painted portrait stands
  * opposite you; a crime event with nobody named gets a painted street villain there instead. Painted art only; nothing here is drawn. `EVENT_SCENE` off brings the empty gap back.
+ * Since 2026-11-21 night a crime moment also carries the Arena's stakes plate up top ("Rooftop standoff", "Mugging"; `STAKE_PLATES`).
  */
 import { useEffect, useRef, useState } from "react";
 import { hasArt } from "@/assets/art";
 import { Cutout, stageArtKey } from "@/components/game/heroArt";
+import { lifeLine } from "@/components/game/lifeLine";
+import { outfitOf, toneOf } from "@/game/outfit";
 import { FAMILY_COLOR } from "@/components/game/icons";
 import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
 import { firstName } from "@/game/format";
 import { crimeVillainKey, familyOfPower, namedIn, stageScale } from "@/game/heroArt";
 import { eventHasTag } from "@/game/events";
+import { STAKE_PLATES, StakePlate } from "@/components/game/StakePlate";
+import { crimePlate } from "@/game/verdicts";
 import { presetById } from "@/game/presets";
 import { capeTheme } from "@/game/theme";
 import type { Game, PersonRole } from "@/game/types";
@@ -30,7 +35,7 @@ export function EventScene({ game, prompt, eventId }: { game: Game; prompt: stri
   const legendKey = legend && hasArt(legend.art) ? legend.art : "";
   const legendArt = useArt(legendKey);
   const family = capeTheme(game).cape;
-  const cutKey = legend ? "" : stageArtKey(family, game.sex, game.age, game.suit);
+  const cutKey = legend ? "" : stageArtKey(family, game.sex, game.age, lifeLine(game, family, game.sex), toneOf(game.look));
   const cut = useArt(cutKey ? `cut-${cutKey}` : "");
   const city = useArt(game.cityId);
   const glow = legend?.color ?? (family ? FAMILY_COLOR[family] : "#e6b34d");
@@ -51,6 +56,8 @@ export function EventScene({ game, prompt, eventId }: { game: Game; prompt: stri
     return () => watch.disconnect();
   }, []);
   if (!EVENT_SCENE) return null;
+  // Stakes plate (2026-11-21 night): a crime moment names what kind of trouble it is, in the Arena's metal plate.
+  const plate = STAKE_PLATES ? crimePlate(eventId) : null;
   const heroX = other || villainArt ? "30%" : "50%";
   return (
     <div ref={box} className={`event-scene anim-fade relative mt-3 min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10 bg-[#0b0f18] shadow-[0_18px_40px_-18px_rgb(0_0_0/0.9)] [container-type:size] ${room ? "" : "invisible"}`} data-room={room ? "1" : "0"} data-scene={legendKey ? "legend" : cutKey ? `cut-${cutKey}` : "portrait"} aria-hidden>
@@ -71,7 +78,7 @@ export function EventScene({ game, prompt, eventId }: { game: Game; prompt: stri
       ) : cutKey ? (
         cut && (
           <span className="absolute top-3 bottom-0 block w-[70%] -translate-x-1/2" style={{ left: heroX }}>
-            <Cutout src={cut} name={game.name} glow={glow} pose="idle" scale={stageScale(game.age)} />
+            <Cutout src={cut} name={game.name} glow={glow} pose="idle" scale={stageScale(game.age)} outfit={outfitOf(game)} artKey={cutKey} />
           </span>
         )
       ) : (
@@ -96,6 +103,11 @@ export function EventScene({ game, prompt, eventId }: { game: Game; prompt: stri
             {firstName(other.name)}
             <span className="block text-[9px] font-bold tracking-[0.16em] text-gold">{ROLE_LINE[other.role]}</span>
           </span>
+        </span>
+      )}
+      {plate && (
+        <span className="pointer-events-none absolute inset-x-0 bottom-[4%] z-10 block">
+          <StakePlate plate={plate} compact delay={260} />
         </span>
       )}
       {/* Letterbox edge and a thin inner rim, so it reads as a framed film still rather than a hole in the page. */}

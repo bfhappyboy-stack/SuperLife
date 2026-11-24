@@ -29,7 +29,7 @@ export function isMonthGate(key: string): boolean {
  * Ids that are settings, answers or story steps, not options: never counted, never capped. A case's next step
  * still costs free time, but a story isn't something you "do 3 times a year".
  */
-const FREE_PREFIX = ["equip|", "slot|", "buy-fit|", "wear-fit|", "clear-fit|", "focus|", "set-save|", "set-load|", "tie|", "routine|", "pace|", "mask|", "canon|", "guess|", "arc-start|"];
+const FREE_PREFIX = ["equip|", "slot|", "buy-fit|", "wear-fit|", "clear-fit|", "suit-line|", "focus|", "set-save|", "set-load|", "tie|", "routine|", "pace|", "mask|", "canon|", "guess|", "arc-start|"];
 const FREE_IDS = new Set(["arc-step", "arc-drop"]);
 
 /**

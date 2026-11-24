@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Figure } from "@/components/game/Figure";
 import { Cutout, stageArtKey } from "@/components/game/heroArt";
+import { lifeLine } from "@/components/game/lifeLine";
 import { Portrait } from "@/components/game/Portrait";
 import { useArt } from "@/components/game/Scene";
 import { hasArt } from "@/assets/art";
-import { ART_HEROES, stageScale, suitOfKey } from "@/game/heroArt";
+import { ART_HEROES, SUIT_LOCKED, stageScale, suitOfKey } from "@/game/heroArt";
+import { anchorOf, CLOAK_CAPES, outfitOf, PAINTED_SUIT, partKey, nativeTone, partShows, toneGap, toneOf } from "@/game/outfit";
 import { presetById } from "@/game/presets";
 import { Check, Lock, X } from "lucide-react";
 import { FAMILY_COLOR } from "@/components/game/icons";
@@ -12,6 +14,8 @@ import { capeTheme } from "@/game/theme";
 import { buffLine, costumeMods, fitBlock, fitById, fitsIn, modsLine, SLOT_LABEL, SLOTS } from "@/game/costume";
 import { money } from "@/game/format";
 import type { CostumeSlot, Game } from "@/game/types";
+
+const UNPAINTED_NOUN: Record<CostumeSlot, string> = { cowl: "masks", chest: "suits", cape: "capes", gloves: "gloves", boots: "boots", emblem: "marks" };
 
 export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: string) => void; onClose: () => void }) {
   const [slot, setSlot] = useState<CostumeSlot>("chest");
@@ -22,6 +26,10 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
   const rows = fitsIn(slot);
   const family = capeTheme(game).cape;
   const aura = family ? FAMILY_COLOR[family] : undefined;
+  // The painted hero on the mirror, so each piece can say honestly whether the painting shows it.
+  const heroKey = ART_HEROES && !presetById(game.preset) ? stageArtKey(family, game.sex, game.age, lifeLine(game, family, game.sex), toneOf(game.look)) : "";
+  const unpainted = (id: string) => !!heroKey && slot !== "chest" && !partShows(slot, id, heroKey, hasArt);
+  const slotUnpainted = !!heroKey && slot !== "chest" && rows.some((item) => partKey(slot, item.id)) && rows.every((item) => !partKey(slot, item.id) || unpainted(item.id));
 
   function buy(id: string) {
     const item = fitById(id);
@@ -64,7 +72,7 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
         </button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto pb-24">
-        <div className="relative mx-4 mt-3 h-56 shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 shadow-[0_18px_40px_-20px_rgba(0,0,0,.8)]">
+        <div className="relative mx-4 mt-3 h-72 shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 shadow-[0_18px_40px_-20px_rgba(0,0,0,.8)]">
           {ART_HEROES ? <Mirror game={game} aura={aura} /> : <Figure seed={game.portrait} age={Math.max(game.age, 16)} sex={game.sex} look={game.look} wardrobe={game.wardrobe} mood={game.stats.happiness} aura={aura} className="absolute inset-0 h-full w-full" />}
         </div>
         <p className="px-4 pt-3 text-sm font-bold text-gold">{summary === "No stat change. It just looks like you." ? "Street clothes. The shop is where the suit starts earning." : summary}</p>
@@ -92,7 +100,16 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
           );
         })}
       </div>
+      {slot === "chest" && heroKey && <ToneNote heroKey={heroKey} game={game} />}
+      {slot === "chest" && <SuitLines game={game} onAct={(id, line) => { if (id) onAct(id); setNotice(line); }} />}
+      {slot !== "chest" && ART_HEROES && <PartNote game={game} slot={slot} />}
       <div className="mt-3 flex flex-col gap-2 px-4">
+        {slot === "chest" && ART_HEROES && <p className="t-label text-[10px] text-muted">Colourway · recolours your painted suit</p>}
+        {slotUnpainted && (
+          <p className="t-label text-[10px] text-muted" data-slot-unpainted={slot}>
+            Buffs only for now · painted {UNPAINTED_NOUN[slot]} for your hero are on the way
+          </p>
+        )}
         {rows.map((item) => {
           const owned = game.wardrobe?.owned?.includes(item.id) ?? false;
           const on = wornId === item.id;
@@ -118,14 +135,15 @@ export function Closet({ game, onAct, onClose }: { game: Game; onAct: (id: strin
                   <path d="M2 20 L30 12 V16 L2 24 Z" fill={item.trim} />
                   <rect x="2" y="2" width="28" height="28" rx="9" fill={`url(#sw-${item.id})`} stroke="rgba(255,255,255,.25)" />
                 </svg>
-                <span className="min-w-0 flex-1">{item.name}</span>
+                <span className="min-w-0 flex-1">{ART_HEROES && item.id === PAINTED_SUIT ? "As painted" : item.name}</span>
                 <span className={`chip shrink-0 !min-h-7 text-xs ${on ? "!bg-gold !text-paper-ink" : "text-gold"}`}>
                   {on ? <Check className="size-3" /> : block ? <Lock className="size-3" /> : null}
                   {on ? "Wearing" : owned ? "Owned" : item.cost ? money(item.cost) : "Free"}
                 </span>
               </span>
-              <span className="mt-1 block text-sm text-muted">{item.detail}</span>
+              <span className="mt-1 block text-sm text-muted">{ART_HEROES && item.id === PAINTED_SUIT ? "Your suit in its own colours, exactly as painted." : item.detail}</span>
               <span className="mt-1 block text-xs text-gold">{buffLine(item)}</span>
+              {!slotUnpainted && unpainted(item.id) && <span className="mt-1 block text-xs text-muted" data-unpainted={item.id}>Buffs only for now: not painted on your hero yet.</span>}
               {block && <span className="mt-1 block text-xs text-muted">{block}</span>}
             </button>
           );
@@ -146,20 +164,23 @@ function Mirror({ game, aura }: { game: Game; aura?: string }) {
   const legend = presetById(game.preset);
   const legendArt = useArt(legend && hasArt(legend.art) ? legend.art : "");
   const family = capeTheme(game).cape;
-  const key = legend ? "" : stageArtKey(family, game.sex, game.age, game.suit);
+  const key = legend ? "" : stageArtKey(family, game.sex, game.age, lifeLine(game, family, game.sex), toneOf(game.look));
   const cut = useArt(key ? `cut-${key}` : "");
   const city = useArt(game.cityId);
   const glow = legend?.color ?? aura ?? "#e6b34d";
-  const caption = legend ? legend.hero : key ? (suitOfKey(key) === "b" ? "Suit line B" : "Your suit") : game.age < 13 ? "The suit waits for the power" : "No suit fits a power you don't have yet";
+  const outfit = outfitOf(game);
+  const line = key ? (suitOfKey(key) === "b" ? "Suit line B" : "Suit line A") : "";
+  const wornLine = outfit.worn.map((w) => w.name).join(" · ");
+  const caption = legend ? legend.hero : key ? (wornLine ? `${line} · ${wornLine}` : line) : game.age < 13 ? "The suit waits for the power" : "No suit fits a power you don't have yet";
   return (
-    <div className="absolute inset-0 bg-[#0b0f18]" data-mirror={legend ? "legend" : key ? `cut-${key}` : "portrait"}>
+    <div className="absolute inset-0 bg-[#0b0f18]" data-mirror={legend ? "legend" : key ? `cut-${key}` : "portrait"} data-tint={outfit.tint ?? ""}>
       {city && <img src={city} alt="" draggable={false} className="anim-fade absolute inset-0 size-full object-cover opacity-45 saturate-[.7]" />}
       <span className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(60% 70% at 50% 62%, color-mix(in srgb, ${glow} 30%, transparent), transparent 70%), linear-gradient(180deg, rgb(11 15 24 / .35), rgb(11 15 24 / .2) 55%, rgb(11 15 24 / .92))` }} aria-hidden />
       {legend && legendArt ? (
         <img src={legendArt} alt="" draggable={false} className="anim-fade absolute inset-0 size-full object-cover object-top" />
       ) : key && cut ? (
-        <span className="absolute inset-x-0 top-2 bottom-0 block">
-          <Cutout src={cut} name={game.name} glow={glow} pose="idle" scale={stageScale(game.age)} />
+        <span className="absolute inset-x-0 top-2 bottom-6 block">
+          <Cutout key={`${key}|${outfit.tint ?? ""}`} src={cut} name={game.name} glow={glow} pose="idle" scale={stageScale(game.age)} outfit={outfit} artKey={key} />
         </span>
       ) : !key && !legend ? (
         <span className="absolute inset-0 grid place-items-center pb-5">
@@ -168,7 +189,89 @@ function Mirror({ game, aura }: { game: Game; aura?: string }) {
           </span>
         </span>
       ) : null}
-      <span className="t-label absolute inset-x-0 bottom-2 text-center text-[10px] tracking-[0.2em] text-fg/80 uppercase">{caption}</span>
+      <span className="t-label absolute inset-x-2 bottom-2 truncate text-center text-[10px] tracking-[0.2em] text-fg/80 uppercase" data-caption>{caption}</span>
     </div>
+  );
+}
+
+/**
+ * Suit line picker (2026-11-16, owner: "when you buy and try to select the other suit options it ... doesn't actually
+ * change"): your two painted costumes side by side, the one you wear ringed in gold. Tapping the other one switches the
+ * painting everywhere you're drawn. Hidden when there's no second painting for this hero, or the suit is locked.
+ */
+function SuitLines({ game, onAct }: { game: Game; onAct: (id: string, notice: string) => void }) {
+  const family = capeTheme(game).cape;
+  const legend = presetById(game.preset);
+  const keyA = legend ? "" : stageArtKey(family, game.sex, game.age, "a", toneOf(game.look));
+  const keyB = legend ? "" : stageArtKey(family, game.sex, game.age, "b", toneOf(game.look));
+  const artA = useArt(keyA ? `cut-${keyA}` : "");
+  const artB = useArt(keyB ? `cut-${keyB}` : "");
+  const base = keyA.replace(/-s[1-4]$/, "").replace(/-teen$/, "");
+  if (!keyA || !keyB || suitOfKey(keyB) !== "b" || SUIT_LOCKED.includes(base)) return null;
+  const wearing = lifeLine(game, family, game.sex);
+  const glow = family ? FAMILY_COLOR[family] : "#e6b34d";
+  return (
+    <div className="mt-3 px-4" data-suit-lines>
+      <p className="t-label mb-1.5 text-[10px] text-muted">Suit line · your two painted costumes</p>
+      <div className="grid grid-cols-2 gap-2">
+        {(["a", "b"] as const).map((line) => {
+          const on = wearing === line;
+          const art = line === "a" ? artA : artB;
+          return (
+            <button
+              key={line}
+              type="button"
+              aria-pressed={on}
+              data-line={line}
+              onClick={() => (on ? onAct("", `Suit line ${line.toUpperCase()} is already on.`) : onAct(`suit-line|${line}`, `Suit line ${line.toUpperCase()} is on.`))}
+              className={`card relative flex h-36 items-end justify-center overflow-hidden px-2 pb-2 ${on ? "!border-gold !bg-panel-2 shadow-[0_0_22px_-6px_var(--color-gold)]" : ""}`}
+            >
+              <span className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(60% 70% at 50% 70%, color-mix(in srgb, ${glow} ${on ? 30 : 14}%, transparent), transparent 72%)` }} aria-hidden />
+              {art && <img src={art} alt="" draggable={false} className={`pointer-events-none absolute inset-x-0 top-1 mx-auto h-[82%] w-auto ${on ? "" : "opacity-70 saturate-[.8]"}`} />}
+              <span className={`chip relative !min-h-7 text-xs ${on ? "!bg-gold !text-paper-ink" : "text-gold"}`}>
+                {on ? <Check className="size-3" /> : null}
+                {on ? `Wearing ${line.toUpperCase()}` : `Suit ${line.toUpperCase()}`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Say plainly what the painting does with the worn piece: a cape on a hero painted in their own cloak is worn behind it;
+ * a piece with no painting for this hero yet is on (buffs and all) and named on the mirror, but not drawn.
+ */
+function PartNote({ game, slot }: { game: Game; slot: CostumeSlot }) {
+  const id = game.wardrobe?.worn?.[slot];
+  const key = id ? partKey(slot, id) : "";
+  if (!key) return null;
+  const art = presetById(game.preset) ? "" : stageArtKey(capeTheme(game).cape, game.sex, game.age, lifeLine(game, capeTheme(game).cape, game.sex), toneOf(game.look));
+  if (!art) return null;
+  const name = fitById(id)?.name;
+  if (partShows(slot, id, art, hasArt)) {
+    if (slot !== "cape" || !anchorOf(art)?.cape || !CLOAK_CAPES) return null;
+    return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{name} is on, worn behind your hero's painted cloak so its edges and hem show.</p>;
+  }
+  return <p className="px-4 pt-2 text-xs text-muted" data-part-note={key}>{name} is on: the buffs count now, and the mirror names it. Your painted hero doesn't show it yet; that painting is on the way.</p>;
+}
+
+/**
+ * Say plainly when the painting isn't in your creator skin tone yet (2026-11-16 pm): suit B and the teen suits are each
+ * painted in one tone so far, and a few suit A tones are still missing. The closest painted tone is shown meanwhile.
+ */
+function ToneNote({ heroKey, game }: { heroKey: string; game: Game }) {
+  const tone = toneOf(game.look);
+  const gap = toneGap(heroKey, tone);
+  const painted = nativeTone(heroKey);
+  if (!tone || !gap || !painted) return null;
+  const line = suitOfKey(heroKey) === "b" ? "Suit B" : "Suit A";
+  const what = heroKey.includes("-teen") ? `Your teen ${line.slice(5)} suit` : line;
+  return (
+    <p className="px-4 pt-2 text-xs text-muted" data-tone-note={tone}>
+      {what} is painted in {painted} skin so far. Your {tone} skin tone painting is on the way.
+    </p>
   );
 }

@@ -5,12 +5,16 @@
  * All of them render inside MiniFrame, are touch-first with 56px+ targets, and score 0–1.
  */
 import { Baby, ChevronLeft, ChevronRight, Flame, PersonStanding, User, Weight } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HitBurst } from "@/components/game/Vfx";
 import { buzz } from "@/components/game/haptics";
 import { MiniFrame, Pips } from "@/components/game/MiniKit";
+import { ChaseRunner } from "@/components/game/MiniStage";
+import { ChaseSpark, ChaseWreck, wreckVariant } from "@/components/game/ChaseProps";
+import { CHASE_PROPS, CHASE_RUNNER, MiniHeroContext, PRESS_FACES, REPORTER_FACE, RESCUE_FACES } from "@/components/game/miniStageState";
+import { PhotoFace } from "@/components/game/PhotoFace";
 import { clampDifficulty, seeded, skinColor, useFinish, useIntro, type Mark } from "@/components/game/miniUtil";
-import { chaseCourse, chaseScore, pressRounds, pressScore, type Tone } from "@/game/minis";
+import { chaseCourse, chaseScore, pressRounds, pressScore, rescueFace, type Tone } from "@/game/minis";
 import type { MinigameSpec } from "@/game/types";
 
 type Props = { spec: MinigameSpec; onDone: (ratio: number) => void };
@@ -164,6 +168,17 @@ export function Hack({ spec, onDone }: Props) {
 /* Rescue: window triage                                               */
 /* ------------------------------------------------------------------ */
 
+function RescueFace({ gameSeed, spawn, fallback }: { gameSeed: number; spawn: Spawn; fallback: ReactNode }) {
+  const face = rescueFace(gameSeed, spawn.id, spawn.icon);
+  return (
+    <span className="anim-pop relative block aspect-square w-[72%] max-w-[76px]" data-rescue-face>
+      <PhotoFace seed={face.seed} age={face.age} sex={face.sex} className="size-full !rounded-full shadow-[0_6px_14px_-6px_rgb(0_0_0/0.8)]" fallback={<span className="grid size-full place-items-center">{fallback}</span>} />
+      {/* Warm window light falling on them from inside the room. */}
+      <span className="pointer-events-none absolute inset-0 rounded-full" style={{ background: "radial-gradient(70% 60% at 50% 15%, rgb(255 214 140 / .28), transparent 70%)", boxShadow: "inset 0 0 0 2px rgb(255 236 190 / .55)" }} aria-hidden />
+    </span>
+  );
+}
+
 type Spawn = { id: number; cell: number; at: number; life: number; hazard: boolean; icon: number };
 
 export function Rescue({ spec, onDone }: Props) {
@@ -249,7 +264,7 @@ export function Rescue({ spec, onDone }: Props) {
       }
     >
       {/* A building facade: three floors of windows. */}
-      <div className="absolute inset-x-5 top-14 bottom-4 rounded-t-[1.4rem] border border-white/10 bg-gradient-to-b from-[#2a2f3f] to-[#161a24] p-3 shadow-[inset_0_2px_0_rgba(255,255,255,.06)]">
+      <div className={`absolute inset-x-5 top-14 bottom-4 rounded-t-[1.4rem] border border-white/10 p-3 shadow-[inset_0_2px_0_rgba(255,255,255,.06)] ${RESCUE_FACES ? "bg-[linear-gradient(180deg,rgb(34_39_54/.78),rgb(18_22_31/.9))] backdrop-blur-[2px]" : "bg-gradient-to-b from-[#2a2f3f] to-[#161a24]"}`}>
         <div className="grid h-full grid-cols-3 grid-rows-3 gap-2.5">
           {Array.from({ length: 9 }, (_, cell) => {
             const spawn = live.find((s) => s.cell === cell);
@@ -271,7 +286,9 @@ export function Rescue({ spec, onDone }: Props) {
                   background: spawn
                     ? spawn.hazard
                       ? "radial-gradient(circle at 50% 70%, #ff8a3d, #a8300f 70%)"
-                      : "linear-gradient(180deg, #ffe7a8, #f0b85a)"
+                      : RESCUE_FACES
+                        ? "radial-gradient(90% 70% at 50% 38%, #ffe6ad, #f0b45a 55%, #b8692a 100%)"
+                        : "linear-gradient(180deg, #ffe7a8, #f0b85a)"
                     : "linear-gradient(180deg, #1d2333, #0f131c)",
                   boxShadow: spawn ? `0 0 18px -2px ${spawn.hazard ? "#ff6a2b" : "#ffcf4d"}` : "inset 0 2px 6px rgba(0,0,0,.6)",
                 }}
@@ -280,11 +297,16 @@ export function Rescue({ spec, onDone }: Props) {
                   <>
                     {!spawn.hazard && (
                       <span
-                        className="absolute top-1/2 left-1/2 aspect-square w-[78%] max-w-[84px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-                        style={{ background: `conic-gradient(${left > 0.35 ? "#3dba8c" : "#ef5d52"} ${left * 360}deg, rgba(0,0,0,.18) 0)`, mask: "radial-gradient(circle, transparent 58%, #000 60%)", WebkitMask: "radial-gradient(circle, transparent 58%, #000 60%)" }}
+                        className={`absolute top-1/2 left-1/2 aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full ${RESCUE_FACES ? "w-[90%] max-w-[96px]" : "w-[78%] max-w-[84px]"}`}
+                        style={{ background: `conic-gradient(${left > 0.35 ? "#3dba8c" : "#ef5d52"} ${left * 360}deg, rgba(0,0,0,.18) 0)`, mask: RESCUE_FACES ? "radial-gradient(closest-side, transparent 82%, #000 84%)" : "radial-gradient(circle, transparent 58%, #000 60%)", WebkitMask: RESCUE_FACES ? "radial-gradient(closest-side, transparent 82%, #000 84%)" : "radial-gradient(circle, transparent 58%, #000 60%)" }}
                       />
                     )}
-                    <Icon className={`anim-pop size-8 ${spawn.hazard ? "text-[#ffe0a0]" : "text-[#3a2410]"}`} style={spawn.hazard ? { filter: "drop-shadow(0 0 8px #ffb347)" } : undefined} />
+                    {RESCUE_FACES && !spawn.hazard ? (
+                      // A painted person at the window, lit from inside, inside the countdown ring; the glyph shows until the sheet loads.
+                      <RescueFace gameSeed={spec.seed ?? 5} spawn={spawn} fallback={<Icon className="anim-pop size-8 text-[#3a2410]" />} />
+                    ) : (
+                      <Icon className={`anim-pop size-8 ${spawn.hazard ? "text-[#ffe0a0]" : "text-[#3a2410]"}`} style={spawn.hazard ? { filter: "drop-shadow(0 0 8px #ffb347)" } : undefined} />
+                    )}
                   </>
                 )}
                 {!spawn && done && taken[done.id] === "saved" && <HitBurst color="#3dba8c" size={56} count={7} seed={done.id} />}
@@ -402,9 +424,15 @@ export function Press({ spec, onDone }: Props) {
         {/* Camera flashes */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-16 opacity-60" style={{ background: "radial-gradient(4px 4px at 12% 40%, #fff, transparent), radial-gradient(3px 3px at 78% 30%, #fff, transparent), radial-gradient(5px 5px at 55% 60%, #fff, transparent)" }} />
         <div key={`r${round}`} className="anim-rise flex items-center gap-3">
-          <span className="grid size-14 shrink-0 place-items-center rounded-2xl font-display text-2xl text-paper-ink shadow-lg" style={{ background: current.reporter.color }}>
-            {initials}
-          </span>
+          {PRESS_FACES && REPORTER_FACE[current.reporter.id] ? (
+            <span className="block size-14 shrink-0 overflow-hidden rounded-2xl" style={{ boxShadow: `0 0 0 2px ${current.reporter.color}, 0 10px 18px -8px rgb(0 0 0 / 0.8)` }} data-reporter={current.reporter.id}>
+              <PhotoFace {...REPORTER_FACE[current.reporter.id]!} className="size-full !rounded-2xl" fallback={<span className="grid size-full place-items-center font-display text-2xl text-paper-ink" style={{ background: current.reporter.color }}>{initials}</span>} />
+            </span>
+          ) : (
+            <span className="grid size-14 shrink-0 place-items-center rounded-2xl font-display text-2xl text-paper-ink shadow-lg" style={{ background: current.reporter.color }}>
+              {initials}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-extrabold text-fg">{current.reporter.name}</p>
             <p className="truncate text-xs font-semibold text-muted">{current.reporter.outlet}</p>
@@ -471,6 +499,7 @@ export function Hold({ spec, onDone }: Props) {
     <MiniFrame
       spec={spec}
       kind="hold"
+      stageSide="right"
       intro={go}
       result={result}
       note={go ? (view.ok ? "Steady. Keep it there." : view.level > view.center ? "Too high. Ease off." : "Too low. Push.") : undefined}
@@ -566,6 +595,9 @@ export function Chase({ spec, onDone }: Props) {
   const [shake, setShake] = useState(0);
   const [pop, setPop] = useState<{ id: number; good: boolean } | null>(null);
   const swipe = useRef<number | null>(null);
+  const hurtAt = useRef(-9);
+  const miniHero = useContext(MiniHeroContext);
+  const painted = CHASE_RUNNER && !!miniHero;
 
   useFrame(go && result == null, (dt) => {
     elapsed.current += dt;
@@ -575,6 +607,7 @@ export function Chase({ spec, onDone }: Props) {
       const row = course.rows[next.current]!;
       if (row.walls.includes(lane.current)) {
         hits.current += 1;
+        hurtAt.current = t;
         buzz("miss");
         setShake((n) => n + 1);
         setPop({ id: next.current, good: false });
@@ -619,6 +652,7 @@ export function Chase({ spec, onDone }: Props) {
     <MiniFrame
       spec={spec}
       kind="chase"
+      stageFigure={!painted}
       intro={go}
       result={result}
       shake={shake}
@@ -711,22 +745,52 @@ export function Chase({ spec, onDone }: Props) {
                 }}
               />
             ))}
+            {/* Asphalt grain and speed streaks along the shoulders (CHASE_PROPS) */}
+            {CHASE_PROPS ? (
+              <>
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-t-3xl opacity-50"
+                  style={{
+                    backgroundImage: "radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px), radial-gradient(rgba(0,0,0,.35) 1px, transparent 1.6px)",
+                    backgroundSize: "9px 9px, 13px 13px",
+                    backgroundPositionY: `${(t * 260) % 9}px, ${(t * 260) % 13}px`,
+                  }}
+                />
+                {[3, 97, 18, 82].map((x, k) => (
+                  <div
+                    key={x}
+                    className="pointer-events-none absolute top-0 bottom-0 w-px"
+                    style={{
+                      left: `${x}%`,
+                      opacity: k < 2 ? 0.5 : 0.18,
+                      backgroundImage: `linear-gradient(180deg, transparent 0 55%, color-mix(in srgb, ${color} 70%, white) 80%, transparent 100%)`,
+                      backgroundSize: `100% ${k < 2 ? 140 : 210}px`,
+                      backgroundPositionY: `${(t * (k < 2 ? 520 : 430)) % (k < 2 ? 140 : 210)}px`,
+                    }}
+                  />
+                ))}
+              </>
+            ) : null}
             {/* Wrecks and sparks */}
             {visible.map(({ row, i, y }) => (
-              <div key={i}>
+              <div key={i} className={CHASE_PROPS ? "pointer-events-none absolute inset-0" : undefined} style={CHASE_PROPS ? { transformStyle: "preserve-3d" } : undefined}>
                 {row.walls.map((w) => (
                   <div
                     key={`w${w}`}
-                    className="absolute h-[15%] w-[26%]"
+                    className={`absolute ${CHASE_PROPS ? "h-[15%] w-[31%]" : "h-[15%] w-[26%]"}`}
                     style={{ left: laneX(w), top: `${y * 100}%`, transform: `translate(-50%, -100%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
                   >
-                    <div
-                      className="h-full w-full rounded-lg border-2 border-black/60"
-                      style={{
-                        background: "repeating-linear-gradient(-45deg, #ffcf4d 0 10px, #1a1a1a 10px 20px)",
-                        boxShadow: "0 6px 0 #0006, 0 0 18px -4px #ff8a3d",
-                      }}
-                    />
+                    {CHASE_PROPS ? (
+                      <ChaseWreck variant={wreckVariant(i, w)} color={color} />
+                    ) : (
+                      <div
+                        className="h-full w-full rounded-lg border-2 border-black/60"
+                        style={{
+                          background: "repeating-linear-gradient(-45deg, #ffcf4d 0 10px, #1a1a1a 10px 20px)",
+                          boxShadow: "0 6px 0 #0006, 0 0 18px -4px #ff8a3d",
+                        }}
+                      />
+                    )}
                   </div>
                 ))}
                 {row.spark != null && !taken.current.has(i) ? (
@@ -734,23 +798,35 @@ export function Chase({ spec, onDone }: Props) {
                     className="absolute h-[9%] aspect-square"
                     style={{ left: laneX(row.spark), top: `${y * 100}%`, transform: `translate(-50%, -110%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
                   >
-                    <div className="anim-glow h-full w-full rounded-full" style={{ background: "radial-gradient(circle, #fff 0 20%, #ffcf4d 42%, rgba(255,160,40,.35) 62%, transparent 72%)", boxShadow: "0 0 22px #ffb84d" }} />
+                    {CHASE_PROPS ? (
+                      <ChaseSpark />
+                    ) : (
+                      <div className="anim-glow h-full w-full rounded-full" style={{ background: "radial-gradient(circle, #fff 0 20%, #ffcf4d 42%, rgba(255,160,40,.35) 62%, transparent 72%)", boxShadow: "0 0 22px #ffb84d" }} />
+                    )}
                   </div>
                 ) : null}
               </div>
             ))}
-            {/* Runner */}
+            {/* Runner: you, painted (ChaseRunner), or the drawn token while art loads / with CHASE_RUNNER off */}
             <div
-              className="absolute h-[17%] aspect-[3/5] transition-[left] duration-100 ease-out"
+              className={`absolute ${painted ? "h-[27%] aspect-[1/2]" : "h-[17%] aspect-[3/5]"} transition-[left] duration-100 ease-out`}
               style={{ left: laneX(view.lane), top: `${RUNNER_Y * 100}%`, transform: `translate(-50%, -88%) rotateX(-${TILT}deg)`, transformOrigin: "50% 100%" }}
             >
-              <div className="absolute inset-x-[15%] bottom-0 h-2 rounded-full bg-black/60 blur-[2px]" />
-              <div
-                className="absolute inset-0 grid place-items-center rounded-[40%] border-2 border-white/80"
-                style={{ background: `radial-gradient(circle at 50% 35%, #fff, ${color} 55%, color-mix(in srgb, ${color} 40%, black))`, boxShadow: `0 0 26px ${color}` }}
-              >
-                <PersonStanding className="size-3/4 text-black/75" strokeWidth={2.4} />
-              </div>
+              <ChaseRunner
+                color={color}
+                hurt={t - hurtAt.current < 0.3}
+                fallback={
+                  <>
+                    <div className="absolute inset-x-[15%] bottom-0 h-2 rounded-full bg-black/60 blur-[2px]" />
+                    <div
+                      className="absolute inset-0 grid place-items-center rounded-[40%] border-2 border-white/80"
+                      style={{ background: `radial-gradient(circle at 50% 35%, #fff, ${color} 55%, color-mix(in srgb, ${color} 40%, black))`, boxShadow: `0 0 26px ${color}` }}
+                    >
+                      <PersonStanding className="size-3/4 text-black/75" strokeWidth={2.4} />
+                    </div>
+                  </>
+                }
+              />
               {pop ? (
                 <span key={pop.id} className="absolute inset-0">
                   <HitBurst color={pop.good ? color : "#ff5d5d"} size={64} count={pop.good ? 8 : 6} seed={pop.id} />
