@@ -12,19 +12,24 @@ import {
 import "./arena.css";
 import { Figure, type Pose } from "@/components/game/Figure";
 import { LifeHeroArt } from "@/components/game/LifeHeroArt";
-import { Standee, mysteryArtKey } from "@/components/game/heroArt";
+import { toneOf } from "@/game/outfit";
+import { KoDust, Standee, mysteryArtKey } from "@/components/game/heroArt";
+import { PortraitPoster } from "@/components/game/PortraitStandee";
+import { lifePortraitSeed, PORTRAIT_STANDEES } from "@/game/heroArt";
+import { lifeLine } from "@/components/game/lifeLine";
 import { ComboPips, StatusIcon, StatusPills, StrikeBanner } from "@/components/game/BattleHud";
 import { hasStatus, INTERRUPT_MIN, STATUSES, statusOfMove } from "@/game/battle";
 import { BURST_COST, MOMENTUM_CAP } from "@/game/difficulty";
 import { VillainArt, type VillainCrop } from "@/components/game/VillainArt";
 import { hasVillainArt } from "@/components/game/villainArt.data";
 import { useArt } from "@/components/game/Scene";
-import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
+import { IconTile, LAST_EMBLEM } from "@/components/game/icons";
+import { DamageNumber, ElementBurst, ElementIcon, elementOf, FloatNumber, FX_CINEMATIC, FX_HITSTOP, HITSTOP_CRIT_MS, HITSTOP_MS, KoLight, Projectile, SideFlash } from "@/components/game/Vfx";
 import { ELEMENTS } from "@/game/elements";
 import { answerOf, BREATH, keyOf } from "@/game/duel";
 import {
   aiDraft, aiFollow, aiLead, aiOrder, arenaRefusal, DRAFT_ORDER, draftPick, draftTurn, energyCap, feintCost, fighterOf,
-  finish, hashSeed, matchTurn, moveByKey, newMatch, nextRound, registerFighter, rngNext, roundsWon, setOrder, STYLES, taken, tellOf,
+  finish, hashSeed, matchTurn, moveByKey, newMatch, nextRound, registerFighter, rngNext, matchVerdict, roundStakes, roundsWon, setOrder, STYLES, taken, tellOf,
   type AiLevel, type ArenaAction, type ArenaMatch, type BoutState, type Side, type Tell, type TurnLog,
 } from "@/game/arena";
 import { ARENA_ROSTER, type ArenaFighter, type PassiveKind } from "@/game/arena.roster";
@@ -36,6 +41,8 @@ import { localDay, purseKey, PURSE_BASE, PURSE_DAILY, type PurseQuote } from "@/
 import { money } from "@/game/format";
 import type { DuelMove, MoveStyle } from "@/game/types";
 import { OnlineArena } from "@/components/game/OnlineArena";
+import { FIGHT_CALLOUT, FIGHT_TALLY, HpClash, MvpPlate } from "@/components/game/FightTally";
+import { mvpRound } from "@/game/verdicts";
 
 type View = "hub" | "draft" | "order" | "reveal" | "intro" | "battle" | "results";
 
@@ -165,7 +172,7 @@ export function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%"
       ) : !f.custom && hasVillainArt(f.id) ? (
         <VillainArt id={f.id} color={f.color} crop={crop ?? (headCrop(focus) ? "head" : "card")} />
       ) : f.life ? (
-        <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} suit={f.life?.suit} accent={f.color} className={headCrop(focus) ? "life-head" : ""} />
+        <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} suit={f.life ? lifeLine(f.life, f.family, f.life.sex) : undefined} tone={toneOf(f.life?.look)} accent={f.color} className={headCrop(focus) ? "life-head" : ""} face={f.life} head={headCrop(focus)} />
       ) : (
         <>
           {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-40 saturate-50" />}
@@ -181,8 +188,14 @@ export function FighterArt({ f, className = "", focus = "50% 16%", figW = "120%"
 
 export function FighterFigure({ f, pose, label }: { f: ArenaFighter; pose: Pose; label?: string }) {
   // 2026-11-11 art pass: saved Mystery lives and hero-side fighters without a painting stand in as a painted card.
-  const painted = useArt(f.life || f.side === "hero" ? mysteryArtKey(f.family ?? null, f.life?.sex ?? f.sex, 30, f.life?.suit) : "");
+  const painted = useArt(f.life || f.side === "hero" ? mysteryArtKey(f.family ?? null, f.life?.sex ?? f.sex, 30, f.life ? lifeLine(f.life, f.family, f.life.sex) : undefined, toneOf(f.life?.look)) : "");
   if (painted) return <Standee src={painted} name={label ?? f.name} color={f.color} glow={f.color} pose={pose} />;
+  if (f.life && PORTRAIT_STANDEES)
+    return (
+      <Standee name={label ?? f.name} color={f.color} glow={f.color} pose={pose} kind="portrait">
+        <PortraitPoster seed={lifePortraitSeed(f.seed)} age={f.life.age} sex={f.life.sex} look={f.life.look} accent={f.color} mine />
+      </Standee>
+    );
   if (f.life) return <Figure seed={f.seed ?? 7} age={Math.max(18, f.life.age)} sex={f.life.sex} look={f.life.look} wardrobe={f.life.wardrobe} aura={f.color} bare pose={pose} label={label ?? f.name} />;
   return (
     <Figure
@@ -251,7 +264,11 @@ function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiL
 
         <section className="card-glass mt-4 px-4 py-4">
           <div className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-xl bg-gold/15 text-gold"><Bot className="size-6" aria-hidden /></span>
+            {LAST_EMBLEM ? (
+              <IconTile color="var(--color-gold)" size="size-11" className="shrink-0" lit><Bot className="size-6" aria-hidden /></IconTile>
+            ) : (
+              <span className="grid size-11 place-items-center rounded-xl bg-gold/15 text-gold"><Bot className="size-6" aria-hidden /></span>
+            )}
             <div className="min-w-0 flex-1">
               <h2 className="t-label text-gold">Vs computer</h2>
               <p className="text-sm font-bold text-fg">Pick a rival's skill</p>
@@ -272,7 +289,11 @@ function Hub({ level, setLevel, lives, onStart, onOnline, onBack }: { level: AiL
         </section>
 
         <button type="button" onClick={onOnline} className="arena-online-card card-glass mt-3 flex w-full items-center gap-3 px-4 py-3 text-left">
-          <span className="arena-radar grid size-11 shrink-0 place-items-center rounded-xl bg-spark/15 text-spark"><Wifi className="size-6" aria-hidden /></span>
+          {LAST_EMBLEM ? (
+            <IconTile color="var(--color-spark)" size="size-11" className="arena-radar shrink-0" lit><Wifi className="size-6" aria-hidden /></IconTile>
+          ) : (
+            <span className="arena-radar grid size-11 shrink-0 place-items-center rounded-xl bg-spark/15 text-spark"><Wifi className="size-6" aria-hidden /></span>
+          )}
           <div className="min-w-0 flex-1">
             <h2 className="t-label flex items-center gap-2 text-spark">Vs a friend online <span className="rounded-full bg-spark px-1.5 py-px text-[9px] text-paper-ink">New</span></h2>
             <p className="text-sm font-bold text-fg">Make a room, send the code</p>
@@ -627,6 +648,40 @@ export function RoundTracker({ match, compact = false }: { match: ArenaMatch; co
   );
 }
 
+/**
+ * Round slam (2026-11-20 night): every round intro lands a big metal "ROUND n" title on a shock ring, a white impact
+ * frame and a camera kick, then names what the round decides ("Match point", "Must win", "Decider"), so rounds 2 and 3
+ * feel like escalation instead of a repeat of round 1. Off = the intro as it was (banner title and VS only).
+ */
+export const ROUND_SLAM = true;
+const SLAM_FILL: Record<"gold" | "red" | "steel", string> = {
+  gold: "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)",
+  red: "linear-gradient(180deg, #ffe1dd 0%, #ff5a4f 50%, #8a1f18 100%)",
+  steel: "linear-gradient(180deg, #ffffff 0%, #e3ebf6 44%, #7f8ca3 100%)",
+};
+const SLAM_TONE: Record<"gold" | "red" | "steel", string> = { gold: "#ffcf4d", red: "#ff5a4f", steel: "#9fcfff" };
+
+function RoundSlam({ match }: { match: ArenaMatch }) {
+  const stakes = roundStakes(match);
+  const tone = SLAM_TONE[stakes.tone];
+  const n = Math.min(match.round + 1, 3);
+  return (
+    <>
+      <span className="round-slam-edge pointer-events-none absolute inset-0 z-[5]" data-tone={stakes.tone} style={{ "--ko": tone } as React.CSSProperties} aria-hidden />
+      <div className="pointer-events-none absolute inset-x-0 top-[39%] z-10 flex flex-col items-center" data-round-slam={stakes.key} style={{ "--ko": tone } as React.CSSProperties}>
+        <span className="round-slam-ring" aria-hidden />
+        <span className="round-slam-streak" aria-hidden />
+        <span className="round-slam-title relative">
+          <span className="ko-title font-display text-[4.25rem] leading-none whitespace-nowrap" style={{ backgroundImage: SLAM_FILL[stakes.tone] }}>ROUND {n}</span>
+        </span>
+        <span className="round-slam-tag t-label relative mt-2">{stakes.label}</span>
+        <span className="round-slam-line relative mt-1.5 px-6 text-center text-xs font-bold">{stakes.line}</span>
+      </div>
+      <span className="round-slam-flash pointer-events-none absolute inset-0 z-20" aria-hidden />
+    </>
+  );
+}
+
 export function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => void }) {
   const rival = useContext(RivalName);
   const bout = match.bout!;
@@ -642,11 +697,12 @@ export function RoundIntro({ match, onGo }: { match: ArenaMatch; onGo: () => voi
   const [w0, w1] = roundsWon(match);
   return (
     <button type="button" onClick={onGo} className="arena-root relative flex h-full min-h-0 w-full flex-col overflow-hidden text-left" aria-label="Start the round">
-      <div className="arena-split">
+      <div className={`arena-split ${ROUND_SLAM ? "round-slam-shake" : ""}`}>
         <div className="l"><FighterArt f={fa} focus="50% 14%" figW="92%" figTop="15%" crop="tall" /><span className="absolute inset-0" style={{ background: `linear-gradient(90deg, transparent 40%, ${fa.color}33), linear-gradient(0deg, #0c1019 8%, transparent 50%)` }} /></div>
         <div className="r"><FighterArt f={fb} focus="50% 14%" figW="92%" figTop="15%" crop="tall" /><span className="absolute inset-0" style={{ background: `linear-gradient(270deg, transparent 40%, ${fb.color}33), linear-gradient(0deg, #0c1019 8%, transparent 50%)` }} /></div>
         <span className="arena-slash" />
       </div>
+      {ROUND_SLAM && <RoundSlam match={match} />}
       <div className="arena-banner relative mt-8 py-2">
         <RoundTracker match={match} />
         <p className="t-label mt-0.5 text-center text-[10px] text-muted">You {w0} · {w1} {rival}</p>
@@ -703,6 +759,9 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
   const [lunge, setLunge] = useState<{ key: number; side: Side } | null>(null);
   const [impact, setImpact] = useState<Impact | null>(null);
   const [quake, setQuake] = useState<number | null>(null);
+  const [stop, setStop] = useState(0);
+  // K.O. beat (2026-11-17 am): the loser's fall and dust play on the open stage before the round-over card darkens it.
+  const [koCard, setKoCard] = useState(bout.done);
   const [line, setLine] = useState<string>("");
   const [ko, setKo] = useState<null | "ko" | "time" | "double">(bout.done ? (bout.end ?? "ko") : null);
   const [intro, setIntro] = useState(bout.turn === 0);
@@ -763,6 +822,11 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
     const pose: Pose = amount > 0 ? (guarded ? "guard" : "hit") : "guard";
     setPoses((p) => (on === 0 ? [pose, p[1]] : [p[0], pose]));
     if (big) setQuake(key);
+    // Hit-stop (2026-11-17 am): the struck card holds its impact frame for a beat, as in story duels; a hit that won the edge holds longer.
+    if (big && FX_HITSTOP && amount > 0) {
+      setStop(key);
+      later(win ? HITSTOP_CRIT_MS : HITSTOP_MS, () => setStop((k) => (k === key ? 0 : k)));
+    }
   }
 
   function play(move: DuelMove) {
@@ -858,6 +922,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
       later(T.rest, () => {
         setPoses([b.fighters[0].hp > 0 ? "idle" : "ko", b.fighters[1].hp > 0 ? "idle" : "ko"]);
         setKo(b.end ?? "ko");
+        later(FX_HITSTOP ? KO_BEAT_MS : 0, () => setKoCard(true));
         buzz([40, 30, 80]);
       });
       later(T.rest + 200, () => setBusy(false));
@@ -887,7 +952,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
         <HpCard f={fb} hp={shown[1]} max={them.maxHp} lead={hud.leader === 1 && !hud.done} hot={impact?.on === 1 ? impact.key : 0} extra={them} right />
       </div>
 
-      <div key={quake ?? "still"} className={`scene-arena relative min-h-[176px] max-h-[300px] flex-1 overflow-hidden rounded-[1.25rem] border border-white/10 ${quake ? "fx-quake" : ""}`}>
+      <div key={quake ?? "still"} className={`scene-arena relative min-h-[176px] max-h-[300px] flex-1 overflow-hidden rounded-[1.25rem] border border-white/10 ${quake ? "fx-quake" : ""} ${stop ? "fx-hitstop" : ""}`} data-hitstop={stop ? "on" : undefined}>
         {city && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-30 saturate-[.6]" />}
         <div className="absolute inset-0" style={{ background: `radial-gradient(45% 55% at 22% 92%, color-mix(in srgb, ${fa.color} 38%, transparent), transparent 70%), radial-gradient(45% 55% at 78% 92%, color-mix(in srgb, ${fb.color} 38%, transparent), transparent 70%)` }} />
         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
@@ -1009,7 +1074,7 @@ export function Battle({ match, level, onMatch, onRoundDone, onQuit, net }: { ma
         <RotateCcw className="size-4" aria-hidden /> Catch a breath · +3 energy{answer === "guard" ? " · counters" : ""}
       </button>
 
-      {roundOver && <RoundOver match={match} ko={ko!} net={net} onNext={() => (net ? net.ready() : onRoundDone(nextRound(match)))} onSkip={() => (net ? net.ready() : onRoundDone(finish(nextRound(match))))} />}
+      {roundOver && koCard && <RoundOver match={match} ko={ko!} net={net} onNext={() => (net ? net.ready() : onRoundDone(nextRound(match)))} onSkip={() => (net ? net.ready() : onRoundDone(finish(nextRound(match))))} />}
       {quitAsk && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 px-6" role="dialog" aria-label="Leave the match?">
           <div className="card-glass w-full px-4 py-4 text-center">
@@ -1086,7 +1151,7 @@ function DuelCard({ f, side, lunging, pose, hitKey }: { f: ArenaFighter; side: S
         ) : !f.custom && hasVillainArt(f.id) ? (
           <VillainArt id={f.id} color={f.color} />
         ) : f.life ? (
-          <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} suit={f.life?.suit} accent={f.color} />
+          <LifeHeroArt seed={f.seed ?? 7} sex={f.sex} family={f.family ?? null} suit={f.life ? lifeLine(f.life, f.family, f.life.sex) : undefined} tone={toneOf(f.life?.look)} accent={f.color} face={f.life} />
         ) : (
           <>
             {city && !f.custom && <img src={city} alt="" className="absolute inset-0 size-full object-cover opacity-55 saturate-[.7]" />}
@@ -1106,9 +1171,13 @@ function DuelCard({ f, side, lunging, pose, hitKey }: { f: ArenaFighter; side: S
         {pose === "guard" && <span className="duel-shield" aria-hidden />}
       </div>
       </div>
+      {pose === "ko" && FX_HITSTOP && <KoDust glow={`color-mix(in srgb, ${accentOf(f)} 35%, #c9c0ad)`} />}
     </div>
   );
 }
+
+/** How long the fall and the K.O. dust get on the open stage before the round-over card comes up (FX_HITSTOP on). */
+const KO_BEAT_MS = 950;
 
 /** The metal-cast K.O. title fills (same as the Duel result card, 2026-11-15 am). */
 const KO_GOLD = "linear-gradient(180deg, #fff8dc 0%, #ffd36a 42%, #c9781c 100%)";
@@ -1157,6 +1226,40 @@ function RoundOver({ match, ko, onNext, onSkip, net }: { match: ArenaMatch; ko: 
 
 // ─── Results ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Match verdict (2026-11-21 pm): the results score is cast in the same metal as the round slam, and a stakes plate
+ * under it names how the match went ("Clean sweep", "Comeback", "Slipped away"); each round's W/L is a lit medal
+ * instead of a flat dot. Off = the flat score digits and dots as before. No rules, purses or saves change.
+ */
+export const MATCH_VERDICT = true;
+
+function MatchVerdictPlate({ match, w0, w1 }: { match: ArenaMatch; w0: number; w1: number }) {
+  const v = matchVerdict(match);
+  const tone = SLAM_TONE[v.tone];
+  return (
+    <div className="relative mt-1 flex flex-col items-center" data-verdict={v.key} style={{ "--ko": tone } as React.CSSProperties}>
+      <span className="match-verdict-streak" aria-hidden />
+      <div className="match-verdict-score relative flex items-center justify-center gap-4" aria-label={`${w0} rounds to ${w1}`}>
+        <span className="ko-title font-display text-[3.4rem] leading-none" style={{ backgroundImage: SLAM_FILL.gold, "--ko": SLAM_TONE.gold } as React.CSSProperties}>{w0}</span>
+        <span className="arena-vs text-2xl" aria-hidden>–</span>
+        <span className="ko-title font-display text-[3.4rem] leading-none" style={{ backgroundImage: SLAM_FILL.red, "--ko": SLAM_TONE.red } as React.CSSProperties}>{w1}</span>
+      </div>
+      <span className="round-slam-tag match-verdict-tag t-label relative mt-2">{v.label}</span>
+      <span className="round-slam-line match-verdict-line relative mt-1.5 px-6 text-center text-xs font-bold">{v.line}</span>
+    </div>
+  );
+}
+
+/** A round's result as a lit medal (MATCH_VERDICT): gold W, red L, steel dash for a round not played or drawn. */
+function RoundMedal({ res }: { res: Side | null | undefined }) {
+  const tile = res === 0 ? "#e6b34d" : res === 1 ? "#ef5d52" : "#7f8ca3";
+  return (
+    <span className="mini-emblem round-medal size-8" data-res={res ?? "none"} style={{ "--tile": tile } as React.CSSProperties} aria-label={res === 0 ? "Won" : res === 1 ? "Lost" : "Not played"}>
+      <span className="mini-emblem-core"><span className="mini-emblem-icon font-display text-sm leading-none">{res === 0 ? "W" : res === 1 ? "L" : "–"}</span></span>
+    </span>
+  );
+}
+
 export function Results({ match, onRematch, onHub, onTitle, note, footer, purse }: { match: ArenaMatch; onRematch: () => void; onHub: () => void; onTitle: () => void; note?: React.ReactNode; footer?: React.ReactNode; purse?: { level: AiLevel; online?: boolean } }) {
   const won = match.winner === 0;
   const played = !!match.orders[0] && !!match.orders[1];
@@ -1168,11 +1271,11 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer, purse 
       <div className="relative min-h-0 flex-1 overflow-y-auto px-4 pt-8 pb-4">
         <p className="t-label text-center" style={{ color }}>{won ? "Match won" : "Match lost"}</p>
         <h1 className="arena-title ko-in mt-1 text-center text-[4.2rem]" style={won ? undefined : { background: "linear-gradient(180deg,#ffd9d6,#ef5d52 55%,#8a1f18)", WebkitBackgroundClip: "text", backgroundClip: "text" }}>{won ? "VICTORY" : "DEFEAT"}</h1>
-        <div className="mt-2 flex items-center justify-center gap-4">
+        {MATCH_VERDICT ? <MatchVerdictPlate match={match} w0={w0} w1={w1} /> : <div className="mt-2 flex items-center justify-center gap-4">
           <span className="font-display text-5xl text-gold">{w0}</span>
           <span className="arena-vs text-2xl">–</span>
           <span className="font-display text-5xl text-cape">{w1}</span>
-        </div>
+        </div>}
         {note}
         {purse && <PurseLine match={match} level={purse.level} online={purse.online} />}
         <ol className="mt-5 flex flex-col gap-2">
@@ -1187,10 +1290,10 @@ export function Results({ match, onRematch, onHub, onTitle, note, footer, purse 
                 <span className={`arena-card relative size-12 shrink-0 !rounded-lg ${res === 0 ? "" : "grayscale-[.7]"}`} style={{ "--c": a.color } as React.CSSProperties}><FighterArt f={a} focus="50% 10%" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-extrabold text-fg">{a.name} <span className="text-muted">vs</span> {b.name}</span>
-                  <span className="block text-[11px] font-bold text-muted">{res === undefined ? (note ? "Not played" : "Not played — match decided") : m ? `${Math.round(m[0] * 100)}% HP left vs ${Math.round(m[1] * 100)}%` : ""}</span>
+                  {FIGHT_TALLY && res !== undefined && m ? <HpClash mine={m[0]} theirs={m[1]} res={res} delay={r * 120} /> : <span className="block text-[11px] font-bold text-muted">{res === undefined ? (note ? "Not played" : "Not played — match decided") : m ? `${Math.round(m[0] * 100)}% HP left vs ${Math.round(m[1] * 100)}%` : ""}</span>}
                 </span>
                 <span className={`arena-card relative size-12 shrink-0 !rounded-lg ${res === 1 ? "" : "grayscale-[.7]"}`} style={{ "--c": b.color } as React.CSSProperties}><FighterArt f={b} focus="50% 10%" /></span>
-                <span className={`grid size-8 shrink-0 place-items-center rounded-full font-display text-sm ${res === 0 ? "bg-gold text-paper-ink" : res === 1 ? "bg-cape text-white" : "bg-white/10 text-muted"}`}>{res === 0 ? "W" : res === 1 ? "L" : "–"}</span>
+                {MATCH_VERDICT ? <RoundMedal res={res} /> : <span className={`grid size-8 shrink-0 place-items-center rounded-full font-display text-sm ${res === 0 ? "bg-gold text-paper-ink" : res === 1 ? "bg-cape text-white" : "bg-white/10 text-muted"}`}>{res === 0 ? "W" : res === 1 ? "L" : "–"}</span>}
               </li>
             );
           })}
@@ -1269,24 +1372,30 @@ function PurseLine({ match, level, online }: { match: ArenaMatch; level: AiLevel
 
 /** Your best fighter: the round winner who kept the most HP. */
 function MvpCard({ match }: { match: ArenaMatch }) {
-  let best = -1;
-  let score = -1;
-  match.results.forEach((r, i) => {
-    const m = match.margins[i];
-    if (r === 0 && m && m[0] > score) {
-      score = m[0];
-      best = i;
-    }
-  });
-  if (best < 0 || !match.orders[0]) return null;
+  const mvp = mvpRound(match.results, match.margins);
+  if (!mvp || !match.orders[0]) return null;
+  const { round: best, hp: score } = mvp;
   const f = fighterOf(match.orders[0][best]!);
+  if (FIGHT_CALLOUT) {
+    return (
+      <section className="anim-rise mvp-card mt-3 flex items-center gap-3 overflow-hidden px-3 py-3" style={{ animationDelay: "400ms" }} aria-label={`MVP ${f.name}`}>
+        <span className="mvp-card-sheen" aria-hidden />
+        <span className="arena-card relative h-20 w-16 shrink-0" style={{ "--c": f.color } as React.CSSProperties}><FighterArt f={f} /></span>
+        <div className="relative min-w-0 flex-1">
+          <p className="mvp-card-tag t-label inline-flex items-center gap-1"><Medal className="size-3.5" aria-hidden /> MVP</p>
+          <p className="t-display truncate text-fg">{f.name}</p>
+          <MvpPlate round={best} hp={score} delay={560} />
+        </div>
+      </section>
+    );
+  }
   return (
     <section className="anim-rise card-glass mt-3 flex items-center gap-3 overflow-hidden px-3 py-3" style={{ animationDelay: "400ms" }}>
       <span className="arena-card relative h-20 w-16 shrink-0" style={{ "--c": f.color } as React.CSSProperties}><FighterArt f={f} /></span>
       <div className="min-w-0">
         <p className="t-label flex items-center gap-1 text-gold"><Medal className="size-3.5" aria-hidden /> MVP</p>
         <p className="t-display truncate text-fg">{f.name}</p>
-        <p className="text-xs font-semibold text-muted">Won round {best + 1} with {Math.round(score * 100)}% HP left.</p>
+        <p className="text-xs font-semibold text-muted">{Math.round(score * 100) < 1 ? `Won round ${best + 1} by a whisker.` : `Won round ${best + 1} with ${Math.round(score * 100)}% HP left.`}</p>
       </div>
     </section>
   );

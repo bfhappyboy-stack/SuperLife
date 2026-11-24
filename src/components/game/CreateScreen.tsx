@@ -3,13 +3,16 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Figure } from "@/components/game/Figure";
 import { PAINTED_FACES, Portrait } from "@/components/game/Portrait";
 import { CityScene } from "@/components/game/Scene";
+import { hasArt, hasArtLike } from "@/assets/art";
+import { FEATURE, featureShows } from "@/game/portraits";
 import { ElementIcon } from "@/components/game/Vfx";
+import { IconTile, LAST_EMBLEM } from "@/components/game/icons";
 import { allPowers } from "@/game/combo";
 import { starterWardrobe } from "@/game/costume";
 import { CITIES, FEMALE_NAMES, LAST_NAMES, MALE_NAMES, UPBRINGINGS } from "@/game/data";
 import { elementOfPower, ELEMENTS } from "@/game/elements";
 import { money } from "@/game/format";
-import { BUILD_NAMES, FEATURE_NAMES, HAIR, HAIR_NAMES, resolveLook, SKIN, SKIN_NAMES, STYLE_NAMES } from "@/game/look";
+import { BUILD_NAMES, EYE_NAMES, EYE_PICK, FEATURE_NAMES, HAIR, HAIR_NAMES, resolveLook, SKIN, SKIN_NAMES, STYLE_NAMES } from "@/game/look";
 import { DRIVE_TRAITS, EARNED_TRAITS, FACE_TRAITS } from "@/game/origin";
 import { godPicks } from "@/game/engine";
 import { SealedOrb } from "@/components/game/Legends";
@@ -257,6 +260,12 @@ function LookStep(props: {
       <Chips title="Cut" names={STYLE_NAMES} value={look.style} onPick={(i) => onLook({ ...look, style: i })} />
       <Chips title="Build" names={BUILD_NAMES} value={look.build} onPick={(i) => onLook({ ...look, build: i })} />
       <Chips title="Face" names={FEATURE_NAMES} value={look.feature} onPick={(i) => onLook({ ...look, feature: i })} />
+      {look.feature === FEATURE.glasses && !featureShows(props.portrait || 1, 16, sex, look, hasArt) && (
+        <p className="mt-2 mb-6 px-1 text-xs text-muted" data-feature-note="glasses">
+          Glasses show on painted faces that wear them. This face's painted pair is on the way, so it reads clear for now.
+        </p>
+      )}
+      {EYE_PICK && hasArtLike("pv-", "-eyes-") && <Chips title="Eyes" names={EYE_NAMES} value={look.eyes ?? 0} onPick={(i) => onLook({ ...look, eyes: i || undefined })} />}
     </>
   );
 }
@@ -441,9 +450,15 @@ function GiftStep({ tier, giftId, onTier, onGift }: { tier: Tier; giftId: string
       ) : (
         <div className="card mt-3 overflow-hidden px-4 py-3.5" style={{ borderColor: `${ELEMENTS[el!].color}99`, backgroundImage: `linear-gradient(120deg, ${ELEMENTS[el!].color}22, transparent 60%)` } as CSSProperties}>
           <div className="flex items-center gap-3">
-            <span className="ico-tile size-12 shrink-0" style={{ "--tile": ELEMENTS[el!].color } as CSSProperties}>
-              <ElementIcon element={el ?? undefined} className="size-6" style={{ color: "#fff" }} />
-            </span>
+            {LAST_EMBLEM ? (
+              <IconTile color={ELEMENTS[el!].color} size="size-12" className="shrink-0" lit>
+                <ElementIcon element={el ?? undefined} className="size-6" style={{ color: undefined }} />
+              </IconTile>
+            ) : (
+              <span className="ico-tile size-12 shrink-0" style={{ "--tile": ELEMENTS[el!].color } as CSSProperties}>
+                <ElementIcon element={el ?? undefined} className="size-6" style={{ color: "#fff" }} />
+              </span>
+            )}
             <div className="min-w-0">
               <p className="t-label text-[10px] text-muted">{chosen.tierName} · {ELEMENTS[el!].label}</p>
               <p className="truncate text-lg font-extrabold text-fg">{chosen.name}</p>

@@ -1,5 +1,226 @@
 # SuperLife — Playtest (2026-10-31)
 
+## Afternoon pass (2026-11-23 pm): Continue docked on the K.O. card
+
+**Checked** at 390×844 (2x) with headless Chrome: a Duel from Powers → Fight (`/workspace/shots-1123pm/shoot.mjs`, `saves/fire-m-full.json`), rigged for the shot only as in the am pass (Bane's "Back Breaker" / Stane's "Iron Monger Plating" boss gimmick and a near-empty hero, so it is lost: the tallest card) and, with `NORIG=1`, an ordinary won street fight (a card that fits). Before = `origin/devbot/2026-11-23-am` (port 8280), after = this branch (port 8281). The script logs Continue's position, the dialog's scroll and the dock's "more below" state.
+
+**Before/after:** `/workspace/shots-1123pm/ba-hint.png` (Back Breaker, left before, right after), `ba-hint-zoom.png` (bottom of the screen, top before, bottom after), `ba-armor.png` (Iron Monger Plating), `ba-win.png` (a card that fits: no change), `after-hint-vs-scrolled.png` (after, opened vs scrolled to the end); singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Continue flush on the edge (fixed):** before, the card (762px of content in a 737px dialog) opened scrolled by 5px to the autofocused Continue, which sat at 796-844px, touching the bottom edge. After, the card opens at scroll 0 with the K.O. title in place, Continue docked at 776-824px (its 20px margin), the "MORE BELOW" tab showing; scrolled to the end (25px) the tab goes and the whole next-time plate reads clear above Continue.
+- **Card that fits:** Continue at 776-824px before and after, no tab, no fade (`data-more` 0).
+- No console errors, no sideways scroll (scroll width 390); the Nov 15-17 save loaded.
+
+## Morning pass (2026-11-23 am): the next-time plate in red steel
+
+**Checked** at 390×844 (2x) with headless Chrome: a Duel from Powers → Fight (`/workspace/shots-1123am/shoot.mjs`, `saves/fire-m-full.json`), rigged for the shot only (after the fight is queued, an init script on reload turns it into a boss fight with Bane's "Back Breaker" or Stane's "Iron Monger Plating" gimmick and a near-empty hero, so it is lost) and played out to the K.O. card. Before = this branch with `NEXT_HINT_PLATE` off (the old card, same markup as `origin/devbot/2026-11-22-night`), after = on, same dev server (port 8271).
+
+**Before/after:** `/workspace/shots-1123am/ba-hint.png` (Back Breaker, left before, right after), `ba-armor.png` (Iron Monger Plating), `ba-hint-zoom.png` (bottom of the card, top before, bottom after); singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **The hint was a plain glass card (fixed):** "NEXT TIME" tag, lit gimmick badge and metal name on a red steel plate; tell and counter on two lines ("His plating soaks hits." / "Two trick moves crack it open."). Continue sits just under the fold on the tallest card, the dialog scrolls as before.
+- **Bug seen on the way (fixed):** with the taller plate, the best-hit callout was squashed to a sliver because it shrank inside the scrolling flex column; it and the plate are now `shrink-0`.
+- No console errors, no sideways scroll (scroll width 390); the Nov 15-17 save loaded.
+
+## Night pass (2026-11-22 night): reward chips in steel
+
+**Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122night/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card. Before = this branch before the change (`origin/devbot/2026-11-22-pm`), after = this branch, same dev server (port 8261).
+
+**Before/after:** `/workspace/shots-1122night/ba-duel.png` (left before, right after), `ba-rewards-zoom.png` (Rewards card, top before, bottom after); singles `before-duel.png` / `after-duel.png`.
+
+**Findings:**
+- **Rewards were flat purple pills (fixed):** "JOY +2", "FAME +3", "REP +2", "POWER +0.1" and the gold "MOVE XP Dive Kick" sit as steel chips edged in their stat colours, two rows, and the card still fits at 390×844 with Continue on screen. (The duel is played live, so Dealt/Taken differ by a few points between runs.)
+- **Not seen live:** a lost duel's red loss chips; the loss style is covered by the same component and the ordering by tests.
+- No console errors, no sideways scroll (scroll width 390); the Nov 15-17 save loaded.
+
+## Afternoon pass (2026-11-22 pm): fight callouts in metal
+
+**Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122pm/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card, and two saved finished Arena matches (`save-comeback`, `save-swept`, seeded into `superlife.arena.v1`, opened from the title's Arena button with `results.mjs`). Before = this branch before the change (`origin/devbot/2026-11-22-am`), after = this branch, same dev server (port 8251).
+
+**Before/after:** `/workspace/shots-1122pm/ba-duel.png` (left before, right after), `ba-comeback.png`, `ba-swept.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Best hit was grey text (fixed):** "BEST HIT · Dive Kick · 11 · 18%" sits in a skewed steel callout under the stat tiles; the card still fits at 390×844 with Continue on screen. (The duel is played live, so Taken differs by a point between runs.)
+- **MVP card was a plain glass card (fixed):** the comeback match shows Superman in a gold-rimmed card, "ROUND 2 · HP LEFT", metal "62%" and a gold bar filled to 62%. The swept match has no MVP card, as before.
+- No console errors, no sideways scroll (scroll width 390) on any screen; the Nov 15-17 saves and the saved Arena matches loaded.
+
+## Morning pass (2026-11-22 am): the fight tally in metal
+
+**Checked** at 390×844 (2x) with headless Chrome: a full Duel played out from Powers → Fight (`/workspace/shots-1122am/shoot.mjs`, `saves/fire-m-full.json`) to the K.O. card, and three saved finished Arena matches (`save-comeback`, `-swept`, `-slipped`, seeded into `superlife.arena.v1`, opened from the title's Arena button with `results.mjs`). Before = `origin/devbot/2026-11-21-night` (port 8241), after = this branch (port 8242).
+
+**Before/after:** `/workspace/shots-1122am/ba-duel.png` (left before, right after), `ba-comeback.png`, `ba-swept.png`, `ba-slipped.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **K.O. stat tiles were flat (fixed):** "62 DEALT" in gold metal with a lit underline (you outhit Rent 62 to 40), "40 TAKEN" and "6 TURNS" in steel; the card still fits at 390×844 with Continue on screen. (The duel is played live, so Taken differs by a point between runs.)
+- **Round rows read as small grey text (fixed):** each row shows the two HP bars meeting at a steel pin, "KO" on the empty side, the loser's bar dimmed; the comeback match reads KO/41, 62/KO, 18/KO at a glance. Names still truncate as before; medals unchanged.
+- No console errors, no sideways scroll (scroll width 390) on any screen; the Nov 15-17 saves and the saved Arena matches loaded.
+
+## Night pass (2026-11-21 night): stakes plates on crime scenes and the Duel K.O.
+
+**Checked** at 390×844 (2x) with headless Chrome and `/workspace/shots-1121night/shoot.mjs`: the "Your call" crime scene (`saves/crime.json`, `villain-roof`, painted street villain opposite you), an everyday "Your call" moment (`saves/choice-fire-m.json`, no plate expected) and a full Duel played out from Powers → Fight (`saves/fire-m-full.json`) to the K.O. card. Before = `origin/devbot/2026-11-21-pm` (port 8231), after = this branch (port 8232).
+
+**Before/after:** `/workspace/shots-1121night/ba-crime.png` (left before, right after), `ba-duel.png`, `ba-choice.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Crime scene said nothing (fixed):** "ROOFTOP STANDOFF · They know where you live." sits as a lower-third caption under the figures' feet, so both painted faces stay clear (a first try at the top of the scene covered the villain's head and was moved).
+- **Duel K.O. label was flat (fixed):** "HARD FOUGHT · Toe to toe, and you stood last." in the metal plate with a light streak replaces the small "VICTORY" label; the card still fits at 390×844 with Continue on screen.
+- **Everyday moment:** no plate, unchanged. No console errors, no sideways scroll (scroll width 390) on any screen; the old saves (Nov 15-17) loaded.
+
+## Afternoon pass (2026-11-21 pm): the match verdict
+
+**Checked** at 390×844 (2x) with headless Chrome. One scripted vs-computer match (`/workspace/shots-1121pm/play.mjs`) gave a saved finished match; four variants of it (`save-swept`, `-comeback`, `-sweep` with round 3 unplayed, `-slipped`) were seeded into `superlife.arena.v1` and opened from the title's Arena button with `/workspace/shots-1121pm/results.mjs`, so before and after show the same fighters. Before = `origin/devbot/2026-11-21-am` (port 8221), after = this branch (port 8222).
+
+**Before/after:** `/workspace/shots-1121pm/ba-comeback.png` (left before, right after), `ba-sweep.png`, `ba-swept.png`, `ba-slipped.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Results fell flat after the round slam (fixed):** the metal score and the plate ("COMEBACK · Lost the opener, took the next two.", "SWEPT · Not a round taken.", "CLEAN SWEEP", "SLIPPED AWAY") say how it went at a glance; the lit W/L medals match the rest of the badges.
+- **Layout:** rows, MVP and buttons all fit; "Not played — match decided" still sits on one line. No console errors, no sideways scroll (scroll width 390) on any variant; the saved finished match from before the change loaded.
+
+## Morning pass (2026-11-21 am): the last flat badges
+
+**Checked** at 390×844 (2x) with headless Chrome and `/workspace/shots-1121am/scenes.mjs` (saves from `/workspace/pt1117pm/saves/`): the Pattern minigame (`mini-adult-fire-m-pattern`, idle and with a lit pad frozen by pausing the page clock right after a tap), the Power Lab Book shelf scrolled to "Braid book · locked" (`fire-m`, age 14), and the Arena lobby from the title screen. Before = the merged branch before this change (b70fcd5, port 8211), after = this branch (port 8212).
+
+**Before/after:** `/workspace/shots-1121am/ba-watch.png` (lit Star pad, left before, right after), `ba-arena.png`, `ba-braid.png`, `ba-pattern.png`; singles `before-*.png` / `after-*.png`.
+
+**Findings:**
+- **Pattern pads (fixed):** the five toy-bright glossy tiles are now dark lit badges in their colours; the lit pad flares with a white icon and a wide glow, so the "which one lit" read is stronger than before.
+- **Braid book lock and Arena lobby (fixed):** the flat tinted squares are lit badges; the online badge's radar ping still runs.
+- **Layout:** no text moved; no console errors, no sideways scroll (scroll width 390) on any screen. Old saves (fire-m, the minigame save) loaded.
+
+## Night pass (2026-11-20 night): the round slam
+
+**Checked** at 390×844 (2x) with headless Chrome: a scripted vs-computer Arena match (draft, order, then rounds 1-3, "Play round 3 anyway" when settled) with `/workspace/shots-1120night/arena-rounds.mjs`; every intro frame was frozen at 0.66 s (impact) and 1.6 s (settled) by pausing the page's animations. Before = `origin/devbot/2026-11-19-am` (port 8201), after = this branch (port 8202). Matches are random, so the fighters differ between before and after.
+
+**Before/after:** `/workspace/shots-1120night/ba-round3.png` (1-1 decider, left before, right after), `ba-round2.png` (round 2), `ba-round1.png`; singles `after-intro-r2-450.png` ("Must win", red edge glow), `after-intro-r3-660.png` (impact frame), `before-intro-r*-1600.png`, `after-intro-r*-1600.png`.
+
+**Findings:**
+- **Round 2/3 looked like round 1 (fixed):** the round now reads from across the room: big gold "ROUND 3" with a "DECIDER" plate and "Winner takes the match."; trailing 0-1 shows red "MUST WIN" and "Lose this and it's over." with a red heartbeat glow on the edges.
+- **Readability:** the title sits on the fighters' chests below the faces; names, passives, VS and "Tap to fight" stay clear. No console errors, no sideways scroll (scroll width 390) on any intro, the battle or the results.
+
+## Afternoon pass (2026-11-19 pm): lit emblems on the last flat tiles
+
+**Checked** at 390×844 with headless Chrome and the adult fire (m) save (`/workspace/pt1117pm/tap.mjs`, Life and Work desks). Before = the am branch build, after = this branch (`vite preview`).
+
+**Before/after:** `/workspace/shots-1119pm/ba-life.png`, `ba-work.png` (left before, right after); singles `before-life.png`, `after-life.png`, `before-work.png`, `after-work.png`.
+
+**Findings:**
+- **Chapter strip ("Paid in Daylight")** and the Money Hub net worth / home tiles are now dark beveled badges with a rim light and glowing icon, matching the activity rows.
+- **Layout:** same slots; no console errors, no sideways scroll.
+
+## Morning pass (2026-11-19 am): activity row emblems
+
+**Checked** at 390×844 with headless Chrome and the adult fire (m) save (`/workspace/pt1117pm/tap.mjs`, City/Become/Shadow lists scrolled to the rows). Before = the night branch build, after = this branch (`vite preview`).
+
+**Before/after:** `/workspace/shots-1119am/before-after-action-emblem.png` (left before, right after), zoom `before-after-action-emblem-rows-zoom.png`; singles `before-city-rows.png`, `after-city-rows.png`, `after-become-rows.png`, `after-shadow-rows.png`, `after-app.png`.
+
+**Findings:**
+- **Flat glossy tiles (fixed):** "Walk Metro City", "Find Adspace" and "Leave for another city" now lead with dark beveled badges with a gold rim and glowing icon instead of bright orange app tiles; they match the minigame header emblems.
+- **Locked rows:** "Found an evil crew" shows a cold grey emblem with the lock, still clearly unavailable.
+- **Layout:** same 40 px slot; titles, NEW tags, use counts and chevrons stay put. No console errors, no sideways scroll.
+
+## Night pass (2026-11-18 night): the minigame header emblem
+
+**Checked** at 390×844 (2x) with headless Chrome: the app loads with no console errors, and all seven kinds' headers (chase, strike, read, crack, rescue, press, hold) were rendered over the running app by `scratch/head.tsx` (`scratch/shoot.mjs`). Before = `MINI_EMBLEM` off, after = on.
+
+**Before/after:** `/workspace/shots-1118night/before-after-mini-emblem.png` (left before, right after); singles `before-heads.png`, `after-heads.png`, `before-head-zoom.png`, `after-head-zoom.png`, `before-app.png`, `after-app.png`.
+
+**Findings:**
+- **Flat glossy tile (fixed):** each header now has a dark beveled badge with a coloured rim light, inner ring and glowing icon; it reads as part of the night-city art, and each kind's colour still tells the games apart.
+- **Layout:** title, difficulty pips and subtitle stay where they were; nothing truncates at 390 px.
+
+## Afternoon pass (2026-11-18 pm): the chase road props
+
+**Checked** at 390×844 with the chase saves (`mini-adult-fire-m-chase`, `mini-choice-legend-chase`) using `/workspace/pt1117pm/tap.mjs`. Before = the am branch (port 8128), after = this branch (port 8127).
+
+**Before/after:** `/workspace/shots-1118pm/before-after-chase-props.png` (before at the start, after at the start, after 0.9 s in, the legend save); singles `before-adult-0.png`, `before-mini-choice-legend-chase.png`, `after-adult-0.png`, `after-adult-900.png`, `after-mini-choice-legend-chase.png`.
+
+**Findings:**
+- **Flat striped blocks (fixed):** wrecks are now a lit concrete barrier, a crashed car with taillights and smoke, or a girder pile with embers, each with a shadow on the road.
+- **Glowing dots (fixed):** sparks are spinning gold shards with a halo, pulse ring, glow pool and a streak up the road.
+- **First try fix:** the props rendered squashed flat onto the road because each row's wrapper flattened 3D; the wrapper now keeps 3D (and fills the road so sizes still measure against it), so the props stand upright like the runner.
+- Far props are small (by perspective) but read as cars/barriers once mid-road. No console errors, no sideways scroll.
+
+## Morning pass (2026-11-18 am): the chase runner
+
+**Checked** at 390×844 with the chase saves (`mini-adult-fire-m-chase`, `mini-kid-fire-m-chase`, `mini-powerless-m-chase`, `mini-choice-legend-chase`) using `/workspace/pt1117pm/tap.mjs`. Before = the night branch (port 8126), after = this branch (port 8125).
+
+**Before/after:** `/workspace/shots-1118am/before-after-chase.png` (before adult, after adult, kid 10, Batman legend); singles `before-chase-adult-fire-m.png`, `after-chase-*.png`.
+
+**Findings:**
+- **Drawn runner token (fixed):** the fire (m) 24-year-old now runs as his painted suit cutout in the lane; the 10-year-old and the powerless life show their painted faces in a lit ring; Batman shows his painting cropped to the head.
+- **Double hero (fixed):** the side figure no longer stands in the chase backdrop, so you appear once.
+- **First try fix:** the legend crop showed the whole painting (tiny figure, lots of sky) in the ring; now zoomed to head and shoulders.
+- The spark burst still plays over the runner on a pickup (unchanged). No console errors, no sideways scroll.
+
+## Night pass (2026-11-17 night): case-file villains and press reporters
+
+**Checked** at 390×844 with the adult fire (m) save (Cases → Files) and the press minigame save (`mini-adult-fire-m-press`), using `/workspace/pt1117pm/tap.mjs`. Before = the pm branch (port 8124), after = this branch (port 8125).
+
+**Before/after:** `/workspace/shots-1117night/before-after-cases.png`, `/workspace/shots-1117night/before-after-press.png` (singles: `before-*.png` / `after-*.png`).
+
+**Findings:**
+- **Icon tile on case rows (fixed):** "The Kiln Ledger" row now shows Cinder Mallory as a painted fire villain's face (cropped from `cut-street-fire`) in the case's red tint; the crop lands on the head at 36 px.
+- **Letter tile for reporters (fixed):** Mina (School paper) now shows a painted 9-year-old girl's portrait with a green ring instead of a green "Ma" tile; layout, timer and lines are unchanged.
+- **Still open:** case villains who share a power share a face (Encore and Second Skin, Frost Warden and Undertow) until the named `case-*` portraits are painted.
+- No console errors, no sideways scroll.
+
+## Afternoon pass (2026-11-17 pm): minigames on a painted stage
+
+**Surveyed** every desk and shelf, the event screens and every minigame kind at 390×844 with an adult fire (m) life (`/workspace/pt1117pm/survey/`). Desks, People, Cases and "Your call" already read as painted; the skill minigames didn't. **Played** each kind from crafted mini saves (`/workspace/pt1117pm/saves/mini-*.json`): fire (m) 24 for all seven, fire (m) 10 (kid), a powerless 24 and a God Mode Batman life; a strike game was played to its result and a rescue played out (7 people tapped), both returned to the year with no errors. Before = the am branch code, after = this branch (port 8124).
+
+**Before/after:** `/workspace/shots-1117pm/before-after-mini-stage.png` (pairs: strike adult, hold kid, rescue), `before-after-mini-crack.png`; every kind in `before-mini-*.png` / `after-mini-*.png`, rescue faces `after-rescue-adult.png`, `after-rescue-kid.png`.
+
+**Findings:**
+- **Flat minigame boxes (fixed):** all seven games played on an empty dark gradient. They now stand on your city's painting with you in it: the fire hero's cutout at the left edge, the 10-year-old's painted face (glasses and all) on the right in hold, Batman's painting feathered in, the powerless life's face. The ball, rings, buttons and text all stay clear and readable; nothing moved.
+- **Drawn rescue people (fixed):** the stick-person and baby glyphs are now painted faces in warm window light with the countdown ring around them. One sample frame had three kids in four windows; that's the old glyph mix (one in three a kid), just a run of luck.
+- **First try fixes:** the Batman painting showed a hard edge where its sky ended (now feathered on every edge); the kid's face first sat over the hold weight (now smaller and higher); a ring mask measured from the corner hid the countdown ring (now measured from the side).
+- No console errors, no sideways scroll.
+
+## Morning pass (2026-11-17 am): Arena hit feel
+
+**Played:** three scripted Arena drafts at 390×844 (Hulk, Superman, Thor against the AI's random draft), round 1 played to a K.O. each time (`/workspace/pt1117am/arena-fight.mjs`). Before = the night branch (port 8122), after = this branch (port 8123).
+
+**Before/after:** `/workspace/shots-1117am/before-after-arena-ko.png` (left: before, the K.O. card covers the fall; then after at ~0.25 s, ~0.5 s and ~1.5 s); hit-stop frames `after-arena-hitstop-0.png`, `-1.png`.
+
+**Findings:**
+- **Arena hits had no weight (fixed):** big hits now freeze on a white impact frame for 89–104 ms (measured), then shake. Turns don't feel slower.
+- **The K.O. was invisible (fixed):** before, the dark round-over card came up the instant the loser fell, so the fall and dust never showed. Now Hulk's card tips over grey on the open stage with a warm dust puff at its feet, and the K.O.! card follows about a second later. The first try tinted the dust in the fighter's colour (a green smear under Hulk); it is now mostly warm grey with a hint of their light.
+- No console errors, no sideways scroll.
+
+## Night pass (2026-11-16 night): kids and faceless lives on the stage, hit feel
+
+**Played:** duels against Rent at 390×844 from crafted saves (`/workspace/pt1116night/saves/`): fire (m) at 10 (the power is in, no suit yet) and the same life at 24 played to a K.O.; the Arena draft and pick sheet with that saved life, once with its power family stripped (a temporary local edit, not committed) to stand in for an online opponent, whose snapshot never carries a family. Before = `PORTRAIT_STANDEES` off (same as the pm branch), after = on (port 8122).
+
+**Before/after:** `/workspace/pt1116night/shots/before-after-kid-duel.png` (left before, right after); `before-after-arena-draft.png`, `before-after-arena-pick.png`; K.O. dust frames `after-ko-dust-frames.png`.
+
+**Findings:**
+- **Paper doll in kid fights (fixed):** the 10-year-old fought as the drawn toy-like doll (grown to 16) next to the painted villain. He now stands as his painted portrait (glasses and all) in a lit card, a little shorter than the villain. No console errors, no sideways scroll.
+- **Arena silhouette (fixed):** the saved life with no suit painting showed the drawn SVG silhouette on the draft card and pick sheet; it now shows the painted face. Note: the adult portrait has no glasses although the kid wore them; the painted glasses variants are already on the image list (`/workspace/img-requests-1116am.md`).
+- **Hit-stop:** two big hits in the K.O. run held 92-108 ms, then shook. Feels weightier without slowing turns.
+- **K.O. dust:** visible as a soft cloud rolling out where Rent lands, for about a second, partly under the K.O. light. Subtle by design.
+
+## Afternoon pass (2026-11-16 pm): creator skin tone vs the suit line
+
+**Played:** the Closet at 390×844 from crafted saves (`/workspace/pt1116pm/saves/`): storm (m) 27, dark skin, rolled suit B with a long cape; the same life at 14; mind (f) 27, dark, rolled B; ice (f) 14, dark. Tapped the suit-line picker B → A → B on each. Before = the am branch (port 8120), after = this branch (port 8121).
+
+**Before/after:** `/workspace/shots-1116pm/before-after-storm-m-dark.png` (left before, right after); `before-/after-closet-storm-m-b-teen.png`, `before-/after-closet-mind-f-b-short.png`, `after-closet-ice-f-teen-dark.png`.
+
+**Findings:**
+- **Dark-skinned lives drawn light-skinned (fixed):** storm (m) and mind (f) B lives showed the light/medium B painting; they now open in their dark-skinned suit A, cape and all. The teen storm (m) shows his dark teen A too. Tapping B in the picker switches and stays switched; tapping A switches back. No console errors.
+- **Teens have one tone per suit (honest now):** ice (f) at 14 with dark skin still shows the light teen painting (there's no other yet); the Suit tab says "Your teen A suit is painted in light skin so far. Your dark skin tone painting is on the way." Prompts: `/workspace/img-requests-1116pm.md`.
+
+## Morning pass (2026-11-16 am): the Closet's silent "on"
+
+**Played:** Closet and a duel against Rent at 390×844 from crafted saves (`/workspace/pt1116am/saves/`): veil (m) A with the long cape, veil (f) banner cape, arcane (f) long cape, storm (m) B and mind (f) B with capes, fire (m) with every slot filled. Before = the suits branch (port 8116), after = this branch (port 8120).
+
+**Before/after:** `/workspace/shots-1116am/before-after-cloak-capes.png` (top before, bottom after), `before-after-veil-m-duel.png`, `before-/after-fire-m-full-mask.png`, `before-/after-*-long-cape.png`.
+
+**Findings:**
+- **Capes on cloaked heroes did nothing (fixed):** the Closet said "Long cape is on" but the cutout never changed. The cape now shows as a mantle behind the painted cloak, in the Closet and in the duel. Reads well on veil, storm B and mind B; on arcane (f), whose robe already fills the frame, only the cape's edges and hem show, which is the intended look.
+- **Masks, hands, boots said "on" with no change (honest now):** the Closet says buffs only until their per-hero paintings land (image list `/workspace/img-requests-1116am.md`).
+- **B teen label:** already fixed on the night pass (reads "SUIT LINE B"). No console errors.
+- **Creator, Glasses (honest now):** picking Glasses on a teen face (the creator's preview age) changed nothing, since no teen or adult face is painted with glasses. It now says so under the Face chips (`before-/after-create-glasses.png`). The painted glasses variants are on the image list. A stand-in variant registered for the check swapped in and the note went away (`/workspace/pt1116am/wiring-check-temp-variant.png`, temporary, not committed).
+
 ## Night pass (2026-11-15 night): the "Your call" screen and the B-teen Closet label
 
 **Played:** "Your call" event screens at 390×844 from crafted choice saves (`/workspace/pt1115night/saves/choice-*.json`): fire (m) 14 suit B, ice (f) 14 suit B with a parent named in the text, a 10-year-old (portrait), a God Mode Batman life (legend painting), and a 30-year-old with long text and five choices. The Closet was opened on fire (m) and storm (f) suit-B teens.

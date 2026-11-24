@@ -228,6 +228,53 @@
     color: #fff; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 4px 10px -4px color-mix(in srgb, var(--tile, var(--color-gold)) 80%, transparent);
   }
 
+  /* Minigame header emblem (MINI_EMBLEM): beveled dark badge, kind-colour rim light, top sheen, inner ring, glow. */
+  .mini-emblem {
+    position: relative; display: grid; place-items: center; flex-shrink: 0; border-radius: 0.95rem; padding: 2px;
+    background: linear-gradient(155deg, color-mix(in srgb, var(--tile, var(--color-gold)) 70%, white 30%) 0%, color-mix(in srgb, var(--tile, var(--color-gold)) 55%, black) 45%, color-mix(in srgb, var(--tile, var(--color-gold)) 35%, black) 70%, color-mix(in srgb, var(--tile, var(--color-gold)) 85%, white 15%) 100%);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.55), 0 6px 14px -6px rgb(0 0 0 / 0.8), 0 0 18px -4px color-mix(in srgb, var(--tile, var(--color-gold)) 70%, transparent);
+  }
+  .mini-emblem-core {
+    position: relative; display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; border-radius: calc(0.95rem - 2px);
+    background:
+      radial-gradient(120% 90% at 50% 115%, color-mix(in srgb, var(--tile, var(--color-gold)) 55%, transparent) 0%, transparent 60%),
+      radial-gradient(90% 70% at 30% 10%, rgb(255 255 255 / 0.14), transparent 60%),
+      linear-gradient(180deg, #1b2130 0%, #0b0e15 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 4px rgb(0 0 0 / 0.6), inset 0 0 0 1px color-mix(in srgb, var(--tile, var(--color-gold)) 35%, transparent);
+  }
+  .mini-emblem-core::before {
+    content: ""; position: absolute; inset: 4px; border-radius: 0.6rem; pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--tile, var(--color-gold)) 30%, transparent);
+  }
+  .mini-emblem-core::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 46%; pointer-events: none;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.02));
+    border-radius: inherit;
+  }
+  .mini-emblem-icon {
+    position: relative; z-index: 1;
+    color: color-mix(in srgb, var(--tile, var(--color-gold)) 45%, white);
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.7)) drop-shadow(0 0 6px color-mix(in srgb, var(--tile, var(--color-gold)) 85%, transparent));
+  }
+
+  /* Activity row emblem (ACTION_EMBLEM): reuses .mini-emblem; the passed icon gets the embossed tint and glow. */
+  .act-emblem { border-radius: 0.85rem; }
+  .act-emblem .mini-emblem-core { border-radius: calc(0.85rem - 2px); }
+  .act-emblem .mini-emblem-core::before { inset: 3px; border-radius: 0.55rem; }
+  .act-emblem .mini-emblem-core > svg {
+    position: relative; z-index: 1;
+    color: color-mix(in srgb, var(--tile, var(--color-gold)) 45%, white);
+    filter: drop-shadow(0 1px 0 rgb(0 0 0 / 0.7)) drop-shadow(0 0 5px color-mix(in srgb, var(--tile, var(--color-gold)) 80%, transparent));
+  }
+
+  /* Pattern pads (LAST_EMBLEM): the lit pad flares, brighter rim and a wide glow in its own colour. */
+  .act-emblem.is-hot {
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.55), 0 0 0 2px color-mix(in srgb, var(--tile, var(--color-gold)) 80%, white 20%), 0 0 24px 2px color-mix(in srgb, var(--tile, var(--color-gold)) 85%, transparent);
+    filter: brightness(1.2) saturate(1.15);
+    transition: box-shadow 120ms ease-out, filter 120ms ease-out;
+  }
+  .act-emblem.is-hot .mini-emblem-core > svg { color: #fff; }
+
   /* ---------- Backdrops ---------- */
   .scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
   .scene img, .scene svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -699,6 +746,12 @@
 @keyframes cut-hit { 0% { filter: brightness(3) saturate(0); translate: 0 0; } 25% { translate: -8% 0; rotate: -4deg; } 55% { translate: 4% 0; rotate: 2deg; filter: brightness(1.4); } 100% { translate: 0 0; rotate: 0deg; } }
 .cut-ko { rotate: -78deg; translate: -10% 18%; filter: grayscale(1) brightness(0.55) !important; transition: rotate 0.6s cubic-bezier(.5,0,.75,0), translate 0.6s ease-in, filter 0.6s; }
 @media (prefers-reduced-motion: reduce) { .cut-breathe, .cut-hit { animation: none; } }
+/* Hit-stop (2026-11-16 night): the fighters and the shake hold their impact frame for ~65-95 ms on a big hit. */
+.fx-hitstop.fx-quake, .fx-hitstop .cut-fig, .fx-hitstop .cut-fig *, .fx-hitstop .duel-standee { animation-play-state: paused !important; }
+/* KO dust: puffs roll out from where the fighter lands, then settle. */
+.ko-dust { position: absolute; bottom: 6%; left: 50%; height: 85%; translate: -50% 0; border-radius: 50%; opacity: 0; filter: blur(5px); background: radial-gradient(closest-side, rgb(226 218 202 / 0.8), color-mix(in srgb, var(--glow, #c9c0ad) 22%, rgb(170 162 146 / 0.42)) 52%, transparent); animation: ko-dust 1.25s cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes ko-dust { 0% { opacity: 0; transform: translateX(var(--dx)) scale(0.25, 0.35); } 20% { opacity: 1; } 55% { opacity: 0.7; } 100% { opacity: 0; transform: translateX(calc(var(--dx) + var(--dr))) translateY(-28%) scale(1.5, 1.15); } }
+@media (prefers-reduced-motion: reduce) { .ko-dust { animation: none; opacity: 0; } }
 /* 2026-11-14 night: a painted portrait still loading shows a dark frame with a soft sweep, not the old drawn bust. */
 .photo-wait::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.07) 50%, transparent 70%); background-size: 220% 100%; animation: photo-wait 1.3s linear infinite; }
 @keyframes photo-wait { from { background-position: 120% 0; } to { background-position: -120% 0; } }
@@ -728,6 +781,171 @@
 .ko-godrays { filter: blur(5px); opacity: 0.32; mix-blend-mode: screen; }
 .ko-spot { filter: blur(10px); mix-blend-mode: screen; }
 .ko-title { background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent; letter-spacing: 0.03em; filter: drop-shadow(0 3px 0 rgb(0 0 0 / 0.7)) drop-shadow(0 0 22px color-mix(in srgb, var(--ko, #ffcf4d) 55%, transparent)); }
+
+/* 2026-11-21 night: shared stakes plate (STAKE_PLATES in StakePlate.tsx): "Your call" crime scenes and the Duel K.O. card. */
+.stake-plate-tag {
+  padding: 0.3rem 0.9rem; font-size: 0.75rem; letter-spacing: 0.24em; color: var(--ko); white-space: nowrap;
+  background: linear-gradient(180deg, rgba(14,18,30,.94), rgba(6,8,14,.94));
+  border: 1.5px solid color-mix(in srgb, var(--ko) 75%, transparent); border-radius: 3px; transform: skewX(-10deg);
+  box-shadow: 0 0 18px -2px color-mix(in srgb, var(--ko) 55%, transparent), 0 6px 14px -6px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.12);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--ko) 60%, transparent);
+  animation: stake-plate-tag 360ms calc(var(--plate-delay, 0ms) + 0ms) cubic-bezier(.2,.9,.3,1.2) both;
+}
+.stake-plate-tag.is-compact { padding: 0.22rem 0.7rem; font-size: 0.66rem; letter-spacing: 0.2em; }
+@keyframes stake-plate-tag { from { opacity: 0; transform: skewX(-10deg) translateY(10px) scaleX(.6); } to { opacity: 1; transform: skewX(-10deg); } }
+.stake-plate-line { color: rgba(240,244,250,.92); text-shadow: 0 1px 2px #000, 0 0 10px rgba(0,0,0,.9); animation: stake-plate-line 420ms calc(var(--plate-delay, 0ms) + 180ms) ease-out both; }
+@keyframes stake-plate-line { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.stake-plate-streak {
+  position: absolute; top: 0.85rem; left: -18%; right: -18%; height: 2px; margin-top: -1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ko) 70%, #fff) 30%, #fff 50%, color-mix(in srgb, var(--ko) 70%, #fff) 70%, transparent);
+  box-shadow: 0 0 16px 3px color-mix(in srgb, var(--ko) 70%, transparent); opacity: .35;
+  animation: stake-plate-streak 900ms calc(var(--plate-delay, 0ms) - 140ms) ease-out both;
+}
+@keyframes stake-plate-streak { 0% { opacity: 0; transform: scaleX(0); } 30% { opacity: 1; transform: scaleX(1); } 100% { opacity: .35; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .stake-plate-tag, .stake-plate-line { animation: none !important; }
+  .stake-plate-streak { animation: none !important; opacity: .35; }
+}
+
+/* 2026-11-22 am: fight tally (FIGHT_TALLY in FightTally.tsx): metal K.O. stat tiles and Arena round HP bars. */
+.metal-stat {
+  text-align: center; border-radius: 12px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(58,64,80,.92) 0%, rgba(22,26,36,.96) 46%, rgba(10,12,18,.98) 100%);
+  border: 1px solid rgba(190,205,228,.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -2px 0 rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.35), 0 8px 18px -10px rgba(0,0,0,.95);
+  animation: metal-stat-in 380ms var(--stat-delay, 0ms) cubic-bezier(.2,.9,.3,1.2) both;
+}
+.metal-stat::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: 0; height: 2px; border-radius: 2px; background: rgba(200,214,232,.18); }
+.metal-stat.is-lit { border-color: color-mix(in srgb, var(--ko) 70%, transparent); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 0 -2px 0 rgba(0,0,0,.6), inset 0 0 22px -6px color-mix(in srgb, var(--ko) 55%, transparent), 0 0 18px -4px color-mix(in srgb, var(--ko) 60%, transparent), 0 8px 18px -10px rgba(0,0,0,.95); }
+.metal-stat.is-lit::after { background: var(--ko); box-shadow: 0 0 10px 1px var(--ko); }
+.metal-stat.is-lit .t-label { color: color-mix(in srgb, var(--ko) 80%, #fff); }
+.metal-stat-sheen { position: absolute; inset: 0 0 52% 0; background: linear-gradient(180deg, rgba(255,255,255,.12), transparent); pointer-events: none; }
+.metal-stat-sheen::after { content: ""; position: absolute; top: -40%; bottom: -120%; left: -60%; width: 40%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); animation: metal-stat-glint 900ms calc(var(--stat-delay, 0ms) + 520ms) ease-out both; }
+@keyframes metal-stat-in { from { opacity: 0; transform: translateY(10px) scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes metal-stat-glint { from { left: -60%; } to { left: 130%; } }
+.hp-clash-track { position: relative; flex: 1 1 0; height: 6px; border-radius: 2px; overflow: hidden; display: flex; background: rgba(0,0,0,.55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.09), inset 0 1px 2px rgba(0,0,0,.8); transform: skewX(-14deg); }
+.hp-clash-track.is-mine { justify-content: flex-end; }
+.hp-clash-fill { display: block; height: 100%; transform-origin: left center; animation: hp-clash-fill 620ms calc(var(--clash-delay, 0ms) + 260ms) cubic-bezier(.2,.8,.3,1) both; }
+.is-mine .hp-clash-fill { transform-origin: right center; background: linear-gradient(180deg, #fff1b8, #f2bd4b 45%, #a8661a); box-shadow: 0 0 8px rgba(255,207,77,.55); }
+.is-theirs .hp-clash-fill { background: linear-gradient(180deg, #ffd0cb, #ef5d52 45%, #8a1f18); box-shadow: 0 0 8px rgba(255,90,79,.5); }
+.hp-clash[data-res="1"] .is-mine .hp-clash-fill, .hp-clash[data-res="0"] .is-theirs .hp-clash-fill { filter: saturate(.55) brightness(.8); box-shadow: none; }
+.hp-clash-pin { width: 4px; height: 10px; border-radius: 1px; background: linear-gradient(180deg, #e8eef8, #6d7688); box-shadow: 0 0 0 1px rgba(0,0,0,.6); transform: skewX(-14deg); }
+.hp-clash-num { min-width: 1.35rem; font-size: 10px; font-weight: 800; line-height: 1; text-align: center; }
+.hp-clash-num.is-ko { color: #8e97a8; letter-spacing: .06em; }
+@keyframes hp-clash-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .metal-stat, .hp-clash-fill { animation: none !important; }
+  .metal-stat-sheen::after { display: none; }
+}
+
+/* 2026-11-22 pm: fight callouts (FIGHT_CALLOUT in FightTally.tsx): the K.O. card's best hit and the Arena MVP plate. */
+.best-hit {
+  width: fit-content; border-radius: 8px; overflow: hidden; transform: skewX(-10deg);
+  background: linear-gradient(180deg, rgba(58,64,80,.92) 0%, rgba(22,26,36,.96) 50%, rgba(10,12,18,.98) 100%);
+  border: 1px solid rgba(190,205,228,.26);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -2px 0 rgba(0,0,0,.6), 0 8px 16px -10px rgba(0,0,0,.95);
+  animation: best-hit-in 380ms var(--hit-delay, 0ms) cubic-bezier(.2,.9,.3,1.2) both;
+}
+.best-hit > * { transform: skewX(10deg); }
+.best-hit > .best-hit-sheen { transform: none; }
+.best-hit-tag {
+  padding: .28rem .55rem; border-radius: 5px; font-size: .6rem; letter-spacing: .18em; color: #1a1205;
+  background: linear-gradient(180deg, #fff1b8, #f2bd4b 50%, #b8721e); box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 12px -2px rgba(255,207,77,.6);
+}
+.best-hit-sheen { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.best-hit-sheen::after { content: ""; position: absolute; top: -50%; bottom: -50%; left: -40%; width: 30%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); animation: metal-stat-glint 900ms calc(var(--hit-delay, 0ms) + 420ms) ease-out both; }
+@keyframes best-hit-in { from { opacity: 0; transform: skewX(-10deg) translateX(-14px); } to { opacity: 1; transform: skewX(-10deg); } }
+.mvp-card {
+  position: relative; border-radius: 20px;
+  background: linear-gradient(180deg, rgba(64,52,26,.55) 0%, rgba(20,20,28,.94) 42%, rgba(10,11,16,.97) 100%);
+  border: 1px solid rgba(255,207,77,.42);
+  box-shadow: inset 0 1px 0 rgba(255,236,170,.25), inset 0 0 28px -10px rgba(255,207,77,.45), 0 0 22px -8px rgba(255,207,77,.45), 0 10px 22px -12px rgba(0,0,0,.95);
+}
+.mvp-card-sheen { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.mvp-card-sheen::after { content: ""; position: absolute; top: -40%; bottom: -40%; left: -40%; width: 26%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,236,170,.16), transparent); animation: metal-stat-glint 1100ms 900ms ease-out both; }
+.mvp-card-tag { color: #ffd36a; text-shadow: 0 0 10px rgba(255,207,77,.6); }
+.hp-clash-track.is-solo { height: 7px; width: 100%; }
+.is-solo .hp-clash-fill { transform-origin: left center; background: linear-gradient(180deg, #fff1b8, #f2bd4b 45%, #a8661a); box-shadow: 0 0 8px rgba(255,207,77,.6); }
+@media (prefers-reduced-motion: reduce) {
+  .best-hit { animation: none !important; }
+  .best-hit-sheen::after, .mvp-card-sheen::after { display: none; }
+}
+/* Reward chips (2026-11-22 night, REWARD_CHIPS): the K.O. card's Rewards as skewed steel chips edged in the stat colour. */
+.reward-chip {
+  max-width: 100%; border-radius: 6px; overflow: hidden; transform: skewX(-10deg);
+  background: linear-gradient(180deg, rgba(58,64,80,.9) 0%, rgba(22,26,36,.96) 52%, rgba(10,12,18,.98) 100%);
+  border: 1px solid color-mix(in srgb, var(--chip) 34%, rgba(190,205,228,.2));
+  box-shadow: inset 3px 0 0 var(--chip), inset 0 1px 0 rgba(255,255,255,.16), inset 0 -2px 0 rgba(0,0,0,.55), 0 0 12px -6px var(--chip), 0 6px 12px -8px rgba(0,0,0,.95);
+  animation: reward-chip-in 320ms var(--chip-delay, 0ms) cubic-bezier(.2,.9,.3,1.25) both;
+}
+.reward-chip > * { transform: skewX(10deg); }
+.reward-chip > .reward-chip-sheen { transform: none; }
+.reward-chip > .ko-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reward-chip-icon { color: var(--chip); filter: drop-shadow(0 0 4px color-mix(in srgb, var(--chip) 70%, transparent)); }
+.reward-chip.is-loss { opacity: .86; }
+.reward-chip.is-loss .reward-chip-icon { filter: none; }
+.reward-chip-sheen { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.reward-chip-sheen::after { content: ""; position: absolute; top: -60%; bottom: -60%; left: -60%; width: 34%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); animation: metal-stat-glint 800ms calc(var(--chip-delay, 0ms) + 260ms) ease-out both; }
+@keyframes reward-chip-in { from { opacity: 0; transform: skewX(-10deg) translateY(6px) scale(.86); } to { opacity: 1; transform: skewX(-10deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .reward-chip { animation: none !important; }
+  .reward-chip-sheen::after { display: none; }
+}
+
+/* Next-time plate (2026-11-23 am, NEXT_HINT_PLATE): the hint under a lost boss fight as a red steel plate. */
+.next-hint {
+  border-radius: 14px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(74,30,30,.9) 0%, rgba(28,20,24,.96) 46%, rgba(10,11,16,.98) 100%);
+  border: 1px solid rgba(255,90,79,.42);
+  box-shadow: inset 0 1px 0 rgba(255,200,190,.2), inset 0 -2px 0 rgba(0,0,0,.6), inset 0 0 26px -12px rgba(255,90,79,.55), 0 0 18px -8px rgba(255,90,79,.5), 0 10px 20px -12px rgba(0,0,0,.95);
+  animation: next-hint-in 420ms var(--hint-delay, 0ms) cubic-bezier(.2,.9,.3,1.15) both;
+}
+.next-hint::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: linear-gradient(180deg, #ffb3aa, #ff5a4f 50%, #9a2219); box-shadow: 0 0 10px 1px rgba(255,90,79,.7); }
+.next-hint-tag {
+  padding: .26rem .6rem; border-radius: 5px; font-size: .58rem; letter-spacing: .2em; color: #fff4f2; transform: skewX(-10deg);
+  background: linear-gradient(180deg, #ff9c92, #e8463b 50%, #8a1f18); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(0,0,0,.4), 0 0 12px -2px rgba(255,90,79,.65);
+  text-shadow: 0 1px 1px rgba(0,0,0,.5);
+}
+.next-hint-icon {
+  border-radius: 6px; transform: skewX(-10deg); color: var(--hint);
+  background: linear-gradient(180deg, rgba(58,64,80,.95), rgba(14,16,22,.98)); border: 1px solid color-mix(in srgb, var(--hint) 45%, rgba(190,205,228,.2));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 0 10px -3px var(--hint);
+}
+.next-hint-icon > svg { transform: skewX(10deg); filter: drop-shadow(0 0 4px color-mix(in srgb, var(--hint) 70%, transparent)); }
+.next-hint-counter { border-left: 2px solid #ff5a4f; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+.next-hint-sheen { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.next-hint-sheen::after { content: ""; position: absolute; top: -40%; bottom: -40%; left: -40%; width: 26%; transform: skewX(-18deg); background: linear-gradient(90deg, transparent, rgba(255,210,200,.16), transparent); animation: metal-stat-glint 1000ms calc(var(--hint-delay, 0ms) + 380ms) ease-out both; }
+@keyframes next-hint-in { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .next-hint { animation: none !important; }
+  .next-hint-sheen::after { display: none; }
+}
+
+/* Continue dock (2026-11-23 pm, CONTINUE_DOCK): the Duel K.O. card's Continue pinned to the bottom of the scrolling card. */
+.continue-dock { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
+.continue-dock::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 220ms ease-out;
+  background: linear-gradient(180deg, rgba(10,11,16,0) 0%, rgba(10,11,16,.9) 34%, rgba(10,11,16,.98) 100%);
+  border-top: 1px solid transparent;
+}
+.continue-dock.is-stuck::before { opacity: 1; }
+.continue-dock.is-stuck::after {
+  content: ""; position: absolute; left: 1.25rem; right: 1.25rem; top: 12px; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(201,214,232,.38) 20%, rgba(255,255,255,.55) 50%, rgba(201,214,232,.38) 80%, transparent);
+}
+.continue-dock-more {
+  z-index: 1; border-radius: 6px; color: #dfe7f3; letter-spacing: .16em;
+  background: linear-gradient(180deg, rgba(64,72,90,.98), rgba(18,20,28,.98)); border: 1px solid rgba(190,205,228,.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -1px 0 rgba(0,0,0,.6), 0 6px 14px -6px rgba(0,0,0,.95);
+  animation: continue-dock-more-in 260ms ease-out both;
+}
+.continue-dock-more > svg { animation: continue-dock-nudge 1.4s ease-in-out infinite; }
+@keyframes continue-dock-more-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes continue-dock-nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+@media (prefers-reduced-motion: reduce) {
+  .continue-dock::before { transition: none; }
+  .continue-dock-more, .continue-dock-more > svg { animation: none !important; }
+}
 
 /* "Your call" scene (2026-11-15 night): slow light sweep and drifting dust in the power colour. */
 .event-rays { filter: blur(4px); opacity: 0.22; mix-blend-mode: screen; animation: event-sway 14s ease-in-out infinite alternate; transform-origin: 85% 0%; }

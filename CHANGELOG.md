@@ -1,5 +1,254 @@
 # Changelog
 
+## 2026-11-23 (pm): Continue docked on the K.O. card (`devbot/2026-11-23-pm`)
+
+Built on `origin/devbot/2026-11-23-am` (6b06461, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (404), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1123pm/`.
+
+### Increment 1: Continue is always on screen, with room to breathe
+
+- **The gap (2026-11-23 am PLAYTEST):** on the tallest Duel K.O. card (a lost boss fight: rewards plus the next-time plate) the card runs about 25px taller than the screen. Continue was autofocused, so opening the card jumped the scroll down to it: the K.O. title was nudged up, and Continue sat flush on the bottom edge with no margin (on taller cards it would sit under the fold).
+- **Fix:** Continue rides in a dock pinned to the bottom of the K.O. card with its normal 20px breathing room (more on phones with a home-bar safe area). The card now opens at the K.O. title; whatever is left scrolls under a dark fade with a thin steel line, and a small steel "MORE BELOW ⌄" tab sits at the right of the dock until you scroll to the end. When the card fits (most wins) nothing looks different: same button, same place (checked: Continue at 776-824px before and after). Focus still lands on Continue, without the scroll jump. Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: no fade-in or nudge.
+- **Code:** pure `moreBelow` in `src/game/verdicts.ts` (tests in new `src/game/test/continuedock.test.ts`, +2); `ContinueDock` in `src/components/game/FightTally.tsx` (scroll + ResizeObserver check); `.continue-dock*` in `src/styles.css`; `Duel.tsx` `ResultCard`. Switch: `CONTINUE_DOCK` in `FightTally.tsx` (on; off = the old in-flow autofocused button). No rules, rewards, duel maths or saves change; old saves load.
+
+## 2026-11-23 (am): the next-time plate in red steel (`devbot/2026-11-23-am`)
+
+Built on `origin/devbot/2026-11-22-night` (943bbc4, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (402), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1123am/`.
+
+### Increment 1: the hint under a lost boss fight matches the metal above it
+
+- **The gap (2026-11-22 night BACKLOG):** after a lost or drawn boss fight, everything on the K.O. card is cast metal (title, plate, tiles, best hit, reward chips) except the "Next time, Back Breaker: Every third turn he winds up the Back Breaker. Guard." card at the bottom, which was still a plain glass card with one run-on line.
+- **Fix:** it is a red steel plate with a lit red edge: a skewed red "NEXT TIME" tag, the gimmick's icon on a small steel badge lit in its colour, and the gimmick's name in metal type; under that the tell ("Every third turn he winds up the Back Breaker.") in muted text and the counter ("Guard.") in bold behind a red rule, so the one thing to do next time is what you read. It slides in last, after the reward chips, with a light glint. Same words as before, nothing added or dropped. Also: the best-hit callout and the plate no longer get squashed when the K.O. card runs taller than the screen (they were shrinking inside the scrolling column). Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: no slide or glint.
+- **Code:** pure `hintParts` in `src/game/verdicts.ts` (tests in new `src/game/test/nexthint.test.ts`, +2: the split, and every canon-villain and power gimmick hint gives a counter and rebuilds exactly); `NextHintPlate` in `src/components/game/FightTally.tsx`; `.next-hint-*` in `src/styles.css`; `Duel.tsx` `ResultCard`. Switch: `NEXT_HINT_PLATE` in `FightTally.tsx` (on; off = the old glass card). No rules, rewards, duel maths or saves change; old saves load.
+
+## 2026-11-22 (night): reward chips in steel (`devbot/2026-11-22-night`)
+
+Built on `origin/devbot/2026-11-22-pm` (ab5d6bf, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (400), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122night/`.
+
+### Increment 1: the Rewards row matches the metal above it
+
+- **The gap (2026-11-22 pm BACKLOG):** the K.O. title, plate, stat tiles and best-hit callout are all cast metal, but the Rewards row under them was still flat purple pills ("Joy +2", "Fame +3", "Move XP: Dive Kick"), every stat the same colour.
+- **Fix:** each reward is a small skewed steel chip with a lit edge and icon in its stat's colour (Joy orange, Fame gold, Rep violet, Power cyan, Cash green, Health red and so on), a small caps label and a metal-cast value. Losses read in red and sit a little dimmer, gains come first, and the Move XP chip is gold with the move names in metal. The chips pop in one after another right after the best hit, with a light glint. Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: no pop or glint.
+- **Code:** pure `rewardChips`, `practicedLabel`, `REWARD_LABEL`, `REWARD_TONE` in new `src/game/rewards.ts` (tests in `src/game/test/rewards.test.ts`, +4; the chip list moved out of `Duel.tsx`, same labels and values, now gains before losses); `RewardChips` in `src/components/game/FightTally.tsx`; `.reward-chip-*` in `src/styles.css`; `Duel.tsx` `ResultCard`. Switch: `REWARD_CHIPS` in `FightTally.tsx` (on; off = the old flat pills). No rules, rewards, duel maths or saves change; old saves load.
+
+## 2026-11-22 (pm): fight callouts in metal (`devbot/2026-11-22-pm`)
+
+Built on `origin/devbot/2026-11-22-am` (4474ebd, which carries all the unmerged devbot work; `origin/main` is still at 4f67c05), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (396), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122pm/`.
+
+### Increment 1: the last plain lines after a fight
+
+- **The gap (2026-11-22 am BACKLOG):** the K.O. title, plate and stat tiles are cast metal, but under them the Duel K.O. card still said "Best hit: Dive Kick for 11" in small grey text, and the Arena MVP card said "Won round 2 with 62% HP left." in a plain glass card.
+- **Fix:** the best hit is a skewed steel callout: a gold "BEST HIT" tag, the move name, a metal-cast gold number that counts up, and its share of everything you dealt ("18%"); it slides in after the stat tiles with a light glint. The MVP card is gold-rimmed with a warm inner glow and a slow glint, the "MVP" tag glows, and the line under the fighter's name is "ROUND 2 · HP LEFT" with metal-cast "62%" and a slanted gold HP bar (the same bar as the round rows) that fills as the card rises; a win on almost no HP reads "ROUND 2 · BY A WHISKER". Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: final numbers at once, no slide, glint or fill.
+- **Code:** pure `hitShare`, `mvpRound` in `src/game/verdicts.ts` (tests in `src/game/test/tally.test.ts`, +2; `MvpCard` now picks its round with `mvpRound`, same rule as before); `BestHit`, `MvpPlate` in `src/components/game/FightTally.tsx`; `.best-hit-*`, `.mvp-card-*`, `.hp-clash-track.is-solo` in `src/styles.css`; `Duel.tsx` `ResultCard`, `Arena.tsx` `MvpCard`. Switch: `FIGHT_CALLOUT` in `FightTally.tsx` (on; off = the old plain best-hit line and MVP card). No rules, rewards, duel maths or saves change; old saves and saved Arena matches load.
+
+## 2026-11-22 (am): the fight tally in metal (`devbot/2026-11-22-am`)
+
+Built on `origin/devbot/2026-11-21-night` (4aef2ed, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (394), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1122am/`.
+
+### Increment 1: the numbers after a fight look like the fight
+
+- **The gap (2026-11-21 night BACKLOG):** the K.O. title and the stakes plates are cast metal, but the Duel K.O. card's Dealt / Taken / Turns tiles were plain flat cards with white digits, and each Arena results row said "0% HP left vs 41%" in small grey text.
+- **Fix:** the K.O. card's three tiles are beveled steel tiles with metal-cast digits that count up one after another as the card lands, with a light glint across each. The side that hit harder lights up: a gold Dealt tile when you outhit them, a red Taken tile when they outhit you, neither when it was level. Each Arena results row now shows two thin, slanted fighting-game HP bars meeting at a steel pin: yours in gold on the left, theirs in red on the right, each drained toward the middle, with the number at the outer end and "KO" for an empty bar; the loser's bar dims. The bars fill in as each row rises. Non-character graphics (CSS); painted fighters untouched, no faces drawn. Reduced motion: final numbers at once, no count, glint or fill.
+- **Code:** pure `statLead`, `hpPercent` in `src/game/verdicts.ts` (tests in `src/game/test/tally.test.ts`, +2); `MetalStat`, `HpClash` in the new `src/components/game/FightTally.tsx`; `.metal-stat-*`, `.hp-clash-*` in `src/styles.css`; `Duel.tsx` `ResultCard`, `Arena.tsx` `Results`. Switch: `FIGHT_TALLY` in `FightTally.tsx` (on; off = the old flat stat cards and the plain HP line). No rules, rewards, duel maths or saves change; old saves and saved Arena matches load.
+
+## 2026-11-21 (night): stakes plates on crime scenes and the Duel K.O. (`devbot/2026-11-21-night`)
+
+Built on `origin/devbot/2026-11-21-pm` (50c3a4a, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (392), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1121night/`.
+
+### Increment 1: one plate for every fight beat
+
+- **The gap (2026-11-21 pm BACKLOG):** the Arena now speaks in metal plates (round stakes, match verdict), but the "Your call" crime scenes said nothing about what kind of trouble it was, and the Duel K.O. card still had a small flat "🏆 VICTORY" label under the metal K.O. title.
+- **Fix:** a crime moment's "Your call" scene carries the same skewed metal plate as a lower-third caption on the film still, under the painted figures' feet: "ROOFTOP STANDOFF · They know where you live.", "MUGGING · It's happening now. Seconds to choose.", "THIEF ABOARD · Stuck between stations.", red for trouble happening now, steel for a dark offer ("DIRTY MONEY", "HIRED MUSCLE", "THE MASK"). Everyday moments get no plate. The Duel K.O. card swaps the flat label for the plate with a light streak, naming how the fight went: "Flawless" (took no damage), "By a whisker" (won on 15% HP or less), "Boss down", "Quick work" (3 turns or fewer), "Dominant" (outhit them 2 to 1), "Hard fought"; "Double K.O." / "Standoff" for draws; "Outclassed" (landed nothing), "So close" (they were on 15% or less), "Boss stands", "Beaten" for losses. The foe line ("Rent is on the floor.") stays under it. Non-character graphics (CSS); painted figures untouched, no faces drawn. Reduced motion: no slide-in or streak.
+- **Code:** pure `crimePlate`, `duelVerdict` in the new `src/game/verdicts.ts` (tests in `src/game/test/plates.test.ts`, +3); shared `StakePlate` in the new `src/components/game/StakePlate.tsx`; `.stake-plate-*` in `src/styles.css` (global, so it works outside the Arena chunk); `EventScene.tsx` (plate when the event has the `crime` tag); `Duel.tsx` `ResultCard` (the result now also records both sides' HP left, UI state only). Switch: `STAKE_PLATES` in `StakePlate.tsx` (on; off = no plate on the scene and the old flat K.O. label). No rules, rewards, duel maths or saves change; old saves load.
+
+## 2026-11-21 (pm): the match verdict (`devbot/2026-11-21-pm`)
+
+Built on `origin/devbot/2026-11-21-am` (ba35826, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (389), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1121pm/`.
+
+### Increment 1: the Arena results tell the story of the match
+
+- **The gap (2026-11-20 night / 2026-11-21 am BACKLOG):** the round intros slam in with stakes, but the results screen fell flat after them: plain gold/red score digits, flat W/L dots, and no word on how the match went. A double K.O. MVP also read "Won round 2 with 0% HP left."
+- **Fix:** the score is cast in the same metal as the round slam (gold for you, red for them) and lands with a light streak; under it a stakes plate names the match: "Clean sweep", "Flawless" (3-0), "Comeback" (lost the opener), "Held on" (won the decider after being pegged back), "On points" (level rounds, HP decided), and for losses "Swept", "Slipped away", "Decider lost", with one plain line ("Lost the opener, took the next two."). Each round's W/L is a lit round medal (the same emblem as the badges) instead of a flat dot; an unplayed round is a dim steel dash. The MVP line says "by a whisker" instead of "0% HP left". Non-character graphics (CSS); no faces drawn.
+- **Code:** `matchVerdict` in `src/game/arena.ts` (pure, reads `results` and `winner`; tests in `src/game/test/verdict.test.ts`); `MatchVerdictPlate`, `RoundMedal` in `Arena.tsx` `Results` (used by vs-computer and online results); `.match-verdict-*`, `.round-medal` in `arena.css` (reduced motion: no slam). Switch: `MATCH_VERDICT` in `Arena.tsx` (on; off = the flat score and dots). No rules, purses or saves change; old saves and saved matches load.
+
+## 2026-11-21 (am): the last flat badges (`devbot/2026-11-21-am`)
+
+Built on `origin/devbot/2026-11-20-night` (5a75aca) with `origin/devbot/2026-11-19-pm` (88487b8, `TILE_EMBLEM`) merged in (only the doc tops conflicted; both entries kept), so this branch carries all the unmerged devbot work: merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (386), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1121am/`.
+
+### Increment 1: one badge style, the last holdouts
+
+- **The gap (2026-11-19 pm BACKLOG):** a few icon badges still used the bright glossy app tile or a flat tinted square: the Pattern minigame's five pads, the Power Lab's "Braid book · locked" lock, the Arena lobby's "Vs computer" and "Vs a friend online" badges, the case-file fallback tile, and the gift tile on the classic create screen.
+- **Fix:** they all wear the lit emblem now (dark beveled badge, rim light in their own colour, inner ring, top sheen, glowing embossed icon), the same as the activity rows and minigame headers. A Pattern pad that lights up (during the show, on your tap, or as the hint after a miss) flares: brighter rim, wide glow in its colour, white icon. The online badge keeps its radar ping. Same slots (Pattern pads grow 36 → 40 px inside the same 64 px button). Non-character graphics (CSS); no faces drawn.
+- **Code:** `LAST_EMBLEM` + `hot` prop on `IconTile` in `icons.tsx`; used in `Minigame.tsx` (Pattern), `PowerLab.tsx` (`MixLocked` lock, `CaseFace` fallback), `Arena.tsx` (lobby), `CreateScreen.tsx` (`GiftStep`); `.act-emblem.is-hot` in `src/styles.css`. Switch: `LAST_EMBLEM` in `icons.tsx` (on; off = the old tiles). No rules, scores or saves change; old saves load.
+- **Note:** `GiftStep` (the classic gift picker) is only shown when a life is neither Mystery nor God Mode, which the menus no longer create, so that tile is converted but not reachable in play today. The Closet "YOUR SUIT" on suit-B teens was already fixed on 2026-11-15 night (`suitOfKey`); still reads "Suit line B".
+
+## 2026-11-20 (night): the round slam (`devbot/2026-11-20-night`)
+
+Built on `origin/devbot/2026-11-19-am` (180225d, which carries all the pushed unmerged devbot work), so merge this one PR alone. It does **not** include the unpushed 2026-11-19 pm commit (`TILE_EMBLEM`, 08bb3c8); the two touch different files apart from these docs. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (386), built and loaded at 390×844 with no console errors or sideways scroll before push. Shots: `/workspace/shots-1120night/`.
+
+### Increment 1: rounds 2 and 3 land like escalation
+
+- **The gap (BACKLOG, 2026-11-17 am "next for juice"):** the Arena round intro was identical every round apart from the small "ROUND n" in the banner, so a 1-1 decider looked exactly like the opener and nothing said what was at stake.
+- **Fix:** each round intro now slams in a big metal-cast "ROUND n" title across the split (it drops in from 3x with a blur, overshoots and settles), hitting at the same beat as the VS stamp with a shock ring, a horizontal lens streak, a white impact frame and a camera kick on the painted fighters. Under it a skewed plate names what the round decides, from your side, with one plain line: "First blood" (round 1), "Match point" (gold, you lead 1-0), "Must win" (red, you trail 0-1, with a red heartbeat glow on the screen edges), "Decider" (gold, 1-1), "Final round" / "All square" after drawn rounds, and "For pride" when round 3 is played after the match is settled. Works the same in online matches (they share `RoundIntro`). Everything lands by about 1.2 s inside the existing 2.6 s intro, and tapping still starts the fight at once. Non-character graphics only (CSS); the painted fighters are untouched. Reduced motion shows the title and plate still, with no flash, ring or shake.
+- **Code:** pure `roundStakes` (+ `RoundStakes` type) in `src/game/arena.ts`; `RoundSlam` + `ROUND_SLAM` in `src/components/game/Arena.tsx`; `.round-slam-*` rules in `src/components/game/arena.css`; new `src/game/test/stakes.test.ts` (+2 tests). Switch: `ROUND_SLAM` in `Arena.tsx` (on; off = the intro as it was). No rules, scores or saves change; old saves and saved Arena matches load.
+
+## 2026-11-19 pm — one badge style everywhere
+
+- **Lit emblems on the last flat tiles** (flag `TILE_EMBLEM`, on): the Today chapter strip, the Powers gift card, Market rows and the Money Hub (net worth, homes, markets, businesses, brands) now use the same dark beveled badge as the activity rows and minigame headers instead of the bright glossy app tile. Same slot sizes, no layout change. Flag off = the old flat `ico-tile`.
+
+## 2026-11-19 (am): lit emblems on activity rows (`devbot/2026-11-19-am`)
+
+Built on `origin/devbot/2026-11-18-night` (95cb58a, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1119am/`.
+
+### Increment 1: the activity row badge
+
+- **The gap (night BACKLOG):** every activity row on the Today/City/Become/Shadow lists (and the other desks that use `ActionRow`) led with the flat, bright glossy `ico-tile`, the same toy-like tile the minigame headers lost last pass.
+- **Fix:** the row icon now sits in the same lit emblem as the minigame headers: a dark beveled badge with a rim light in the group's colour, a coloured underglow, an inner keyline ring, a top sheen, an outer glow and an embossed tinted icon. Locked rows keep a cold grey emblem with the lock. Same 40 px slot, so row text does not move. Non-character graphic (CSS); no faces.
+- **Code:** `IconTile` in `icons.tsx` takes `lit` (reuses `.mini-emblem` / `.mini-emblem-core`); `ActionRow` in `GameApp.tsx` passes `lit={ACTION_EMBLEM}`; `.act-emblem` rules in `src/styles.css`. Switch: `ACTION_EMBLEM` in `icons.tsx` (on; off = the flat `ico-tile`). Other `IconTile` users (gift card, Market, MoneyHub) are unchanged. No rules, scores or saves change; old saves load.
+
+## 2026-11-18 (night): a lit emblem on minigame headers (`devbot/2026-11-18-night`)
+
+Built on `origin/devbot/2026-11-18-pm` (a0103e9, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118night/`.
+
+### Increment 1: the header badge
+
+- **The gap (pm BACKLOG):** every minigame header (`MiniHead`) led with a flat, bright app-style icon tile, the last glossy-toy element above the painted stage.
+- **Fix:** the tile is now a lit emblem: a dark beveled badge with a rim light graded in the kind's colour (bright top-left and bottom-right edges, darker sides), a coloured underglow inside, an inner keyline ring, a soft top sheen, an outer glow and an embossed icon tinted in the kind's colour with a drop shadow. Non-character graphic (CSS); no faces. Same size slot (48 px), so the title layout does not move.
+- **Code:** `MiniHead` in `MiniKit.tsx`; `.mini-emblem`, `.mini-emblem-core`, `.mini-emblem-icon` in `src/styles.css`. Switch: `MINI_EMBLEM` in `miniStageState.ts` (on; off = the flat `ico-tile`). No rules, scores or saves change; old saves load.
+
+## 2026-11-18 (pm): a lit chase road (`devbot/2026-11-18-pm`)
+
+Built on `origin/devbot/2026-11-18-am` (6c16673, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118pm/`.
+
+### Increment 1: wrecks, sparks and asphalt that look like a set
+
+- **The gap (am BACKLOG):** with you running the chase as your painted figure, the things on the road were still flat yellow-black striped blocks and plain glowing dots on a flat road.
+- **Fix:** each wreck is now a lit set piece standing up off the road with a contact shadow: a concrete barrier (lit top cap, reflective hazard band, chips, two blinking amber lamps), a crashed car seen from behind (dented bumper, red taillights with one flickering, cracked rear glass catching the chase colour, smoke from the hood) or a pile of crossed girders and concrete slabs with rebar, an ember glow and rising embers. Which wreck stands where is fixed by row and lane, so a replay looks the same. Each spark is a spinning energy shard with a gold halo, a pulse ring, a glow pool on the road and a motion streak trailing up the road. The asphalt gets a fine moving grain and faint speed streaks along the shoulders. Non-character graphics only (SVG); lanes, rows, timing, hit rules and scores are untouched.
+- **Code:** `ChaseWreck`, `ChaseSpark`, `wreckVariant` in the new `src/components/game/ChaseProps.tsx`; `Chase` in `MiniGames.tsx` (each row's wrapper keeps 3D so the props stand upright). Switch: `CHASE_PROPS` in `miniStageState.ts` (on; off = the striped blocks and dots). No rules, scores or saves change.
+
+## 2026-11-18 (am): you run the chase, painted (`devbot/2026-11-18-am`)
+
+Built on `origin/devbot/2026-11-17-night` (4398ea4, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1118am/`.
+
+### Increment 1: the chase runner is you
+
+- **The gap (night BACKLOG):** the chase runner was a drawn orange token with a stick-person icon on the road, the last drawn piece in the minigames, while your painted figure stood off to the side of the same screen.
+- **Fix:** the runner in your lane is now you, painted: your suit cutout from 13 (suit line, tone and Closet layers included, breathing and flinching when you hit a wreck), or before the suit and for powerless lives your painted face in a lit ring in the chase colour, or a God Mode legend's painting cropped to head and shoulders in the same ring. A soft lane glow sits under your feet. The side figure steps out of the backdrop for this game, so you are on screen once; the painted city stays. The token comes back while art loads or if an image is missing. Lanes, rows, timing and scores are untouched.
+- **Code:** `ChaseRunner` in `src/components/game/MiniStage.tsx`; `MiniBackdrop` takes `figure` and `MiniFrame` (`MiniKit.tsx`) takes `stageFigure`; `Chase` in `MiniGames.tsx`. Switch: `CHASE_RUNNER` in `miniStageState.ts` (off = the token and the side figure). No rules, scores or saves change.
+
+## 2026-11-17 (night): painted villain faces on case files, painted reporters (`devbot/2026-11-17-night`)
+
+Built on `origin/devbot/2026-11-17-pm` (b2eeed2, which carries all the unmerged devbot work), so merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (384), built and loaded at 390×844 with no console errors before push. Shots: `/workspace/shots-1117night/`.
+
+### Increment 1: case files show the villain, the press shows the reporter
+
+- **The gap (pm BACKLOG):** the Cases file rows and the open-case card showed an element icon tile where the villain should be, and the Press minigame showed the reporter as a coloured initials tile ("Ma"). Both were the last flat placeholders next to painted art.
+- **Fix:** each case row now shows its villain's painted face: the head and shoulders cropped from the painted street-villain cutout for that villain's power (the same figure you fight), framed in the case's tint. A named `case-<arc id>` painting takes over automatically once imported (10 prompts in `/workspace/img-requests-1117night.md`). Each of the six reporters has a fixed painted face from the portrait sheets (seed, age and sex per reporter; Mina is 9, Hal Brenner is 61), ringed in their colour. Painted art only; the icon and the letter tile come back while art loads or if missing.
+- **Code:** `CaseFace` + `CASE_FACES` in `src/components/game/PowerLab.tsx`; `PRESS_FACES` + `REPORTER_FACE` in `src/components/game/miniStageState.ts`, used by the Press game in `MiniGames.tsx`. No rules, scores or saves change.
+
+## 2026-11-17 (pm): minigames on a painted stage (`devbot/2026-11-17-pm`)
+
+Built on `origin/devbot/2026-11-17-am` (1ccef68, which carries the unmerged night, pm, am and suits work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (384), built and loaded at 390×844 before push. Shots: `/workspace/shots-1117pm/`.
+
+### Increment 1: the skill minigames get a painted stage with you in it
+
+- **The gap:** a UI survey at 390×844 (every desk and shelf, the event screens, every minigame kind) found the skill minigames were the crudest thing left. Strike, read, crack, rescue, press, hold and chase each played on a flat dark gradient box, often 300+ px of empty navy, and a life plays them hundreds of times (PLAYTEST 2026-10-31: 400–900 a life). The duel and the "Your call" scene were already painted; the minigames sat between them looking unfinished.
+- **Fix:** the arena is now a lit film still: your city's painting graded for night, the game's colour pooling low, and you standing in it off to one side, pushed back into the dark so the game on top stays readable. That's your painted suit cutout from 13 (suit line, tone and Closet layers included), a God Mode legend's painting (feathered on every edge), or, for a kid under 13 or a powerless life, your painted face (creator picks included). The hold meter sits left, so in hold you stand right. Painted art only, nothing drawn. The layer never takes a tap and is simply absent when an image is missing.
+- **Code:** `MiniBackdrop` in `src/components/game/MiniStage.tsx`; `MINI_STAGE`, `MiniHeroContext`, `miniFigureKind` in `miniStageState.ts`. `Minigame` passes the hero it already had for duels down through context; `MiniFrame` (`MiniKit.tsx`) and the two arenas in `Minigame.tsx` (strike, read) draw it under the game (`isolate` + z -1); `MiniFrame` takes a `stageSide`. Switch: `MINI_STAGE` off = the flat box. No rules, scores or saves change.
+
+### Increment 2: painted people at the rescue windows
+
+- **The gap:** the rescue game's people were drawn glyphs (a stick person and a baby face) on flat yellow pills.
+- **Fix:** each lit window now shows a painted person (a grown-up, an older neighbour or a little kid, in the same mix as the old glyphs) in a round frame lit warm from inside the room, with the countdown ring around them. The facade lets the painted city show through a little. The same game seed always puts the same faces in the same windows; the layout's random stream is untouched, so timings and scores are exactly as before. The glyph shows until the face sheet loads.
+- **Code:** `rescueFace` in `src/game/minis.ts`; `RescueFace` in `MiniGames.tsx`; switch `RESCUE_FACES` in `miniStageState.ts` (off = the glyphs).
+- **Tests:** +2 (`rescue-faces.test.ts`: faces are stable per seed and spawn; each glyph's age band holds, both sexes appear, faces vary).
+
+## 2026-11-17 (am): Arena hits land like story duels (`devbot/2026-11-17-am`)
+
+Built on `origin/devbot/2026-11-16-night` (f91db5c, which carries the unmerged pm, am and suits work), so merge this one PR alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (382), built and loaded at 390×844 before push. Shots: `/workspace/shots-1117am/`.
+
+### Increment 1: hit-stop and K.O. dust on the Arena fight cards
+
+- **The gap:** last night's hit-stop and K.O. dust only reached story duels. Arena fights use their own tilted fighter cards, so a big Arena hit flowed straight through, and the loser's fall was hidden: the dark round-over card (K.O.! title) came up the same instant the card fell, so nothing of the fall or dust could be seen.
+- **Fix:** on a big Arena hit (the ones that already shake the screen) the struck card flashes white and the whole exchange holds that frame for 65 ms (95 ms when the hit won the edge), then the recoil, the red flash and the shake play. When a fighter goes down, their card tips and greys on the open stage and kicks up a soft puff of warm dust; about a second later the K.O.! card comes up as before. Measured at 390×844: holds of 89–104 ms including frame timing. Reduced motion turns the flash, freeze and dust off.
+- **Code:** `land()` and a `koCard` beat (`KO_BEAT_MS` 950) in `Battle` (`Arena.tsx`); `KoDust` exported from `heroArt.tsx` and drawn under the falling `DuelCard`; CSS `.fx-hitstop .duel-card…` in `arena.css`. Same switch as story duels: `FX_HITSTOP` off = no freeze, no dust and the round-over card comes up at once. No rules, payouts or saves change; online rounds get the same beat.
+
+## 2026-11-16 (night): no more paper dolls on the stage, and hits that land (`devbot/2026-11-16-night`)
+
+Built on `origin/devbot/2026-11-16-pm` (e3a1fde, which carries the unmerged suits and am work), so merge this one PR alone. Each increment typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (382), built and loaded at 390×844 before push. Shots: `/workspace/pt1116night/shots/`.
+
+### Increment 1: painted portrait standees where the paper doll still stood
+
+- **The gap:** a Mystery power manifests between 7 and 15, but painted suits start at 13. So every kid fighting at 7–12 (and any life with no power family) stood in the duel as the old drawn paper doll (a toy-like SVG shown as a 16-year-old) opposite a painted villain. In the Arena, a saved life with no suit painting, which is every online opponent (their snapshot carries no power family), was a drawn SVG silhouette poster.
+- **Fix:** they now stand in as their own painted portrait in a lit fighter card: the same face as the header, the Closet and the "Your call" scene (creator scar/freckles/eyes included), feathered into a night city, rim-lit and glowing in the power colour, with the usual hit, attack, guard and K.O. cues. A kid's card stands shorter (7 → 74%, 12 → 84%), so they read as a kid next to a grown fighter, and from 13 the teen suit takes over as before. In the Arena the draft card, the pick sheet and the fight card all show the painted portrait. Painted art only; nothing drawn.
+- **Code:** `PortraitPoster` in `src/components/game/PortraitStandee.tsx`; `Standee` takes a `scale` and a `kind`; wired in `Duel.tsx`, `Arena.tsx` (`FighterFigure`) and `LifeHeroArt.tsx` (gets the saved life's face). Pure helpers `lifePortraitSeed` (gets a saved life's face back from its Arena seed, `portrait * 7919 + slot`) and `standeeScale` in `src/game/heroArt.ts`. Switch: `PORTRAIT_STANDEES` (off = the doll and the silhouette come back). No rules or saves change.
+- **Tests:** +2 (`standee.test.ts`: the Arena seed gives back the saved face for every slot, odd seeds stay stable; kid cards grow each year and hand over to the teen suit scale at 13).
+
+### Increment 2: hit-stop and K.O. dust
+
+- **Hit-stop:** on a big hit (the ones that already shake the screen) the fighters hold the impact frame for 65 ms (95 ms on a big critical): the struck fighter's white flash freezes, then the recoil and the shake play. Measured in a scripted duel at 390×844: holds of 92–108 ms including frame timing.
+- **K.O. dust:** the fighter who goes down kicks up a soft puff of warm dust, lightly tinted by their power light, as the fall lands (on suit cutouts and on painted cards). Reduced motion turns both off.
+- **Code:** `FX_HITSTOP`, `HITSTOP_MS`, `HITSTOP_CRIT_MS` in `Vfx.tsx`; `land()` in `Duel.tsx`; `KoDust` in `heroArt.tsx`; CSS `.fx-hitstop`, `.ko-dust` in `styles.css`. No rules or saves change.
+
+## 2026-11-16 (pm): your skin tone picks the suit line (`devbot/2026-11-16-pm`)
+
+Built on `origin/devbot/2026-11-16-am` (f6b898a, itself on the unmerged suits branch cd75144), so this branch carries both: merge this one PR alone. Typechecked, linted (no new problems), `npm run test:game` (380), built and loaded at 390×844 before push. Shots: `/workspace/shots-1116pm/`.
+
+- **The bug:** suit A is painted in all four skin tones for most heroes, but suit B (and every teen suit) only in one, and each life's suit line is rolled at birth. So a dark-skinned storm (m) life that rolled B was drawn as a light-skinned man, while his A painting in his own tone sat unused. The creator's skin pick looked ignored.
+- **Fix:** until you pick a line yourself in the Closet, your life wears the line painted closest to your creator skin tone (ties keep the rolled line). Once you tap a line it's yours for good, even if it's the one you were already wearing. Teens use the same line they'll grow into. Applies everywhere your hero is drawn (Closet, duels, the "Your call" scene, the gift card, Arena cards of your saved lives). Pure `wornLine` in `src/game/outfit.ts`, UI helper `lifeLine` in `src/components/game/lifeLine.ts`; switch `TONE_PICKS_LINE` (off = the rolled line, as before).
+- **Honest label:** when the painting you wear isn't in your skin tone yet (suit B, and all teen suits), the Closet's Suit tab says so: "Your teen A suit is painted in light skin so far. Your dark skin tone painting is on the way." No silent mismatch.
+- **Saves:** new optional `Game.suitPicked` (missing on old saves = not picked, so older lives with a mismatched line now show the line in their tone; a line picked in the Closet before this pass is treated as unpicked once, since the save never recorded it). Arena life snapshots carry it.
+- **Images:** teen tone repaints are now the biggest gap. 54 teen suit-A prompts, then the B list: `/workspace/img-requests-1116pm.md` (top priority still storm-m-s1, arcane-f-s3 and glasses from `/workspace/img-requests-1116am.md`). No code needed when they land.
+- **Tests:** +3 (`toneline.test.ts`: the tone picks the line, a pick always wins, never further from your tone than the rolled line across every hero and tone, teen tone keys).
+
+## 2026-11-16 (am): no silent "on" in the Closet (`devbot/2026-11-16-am`)
+
+Built on `origin/devbot/2026-11-16-suits` (cd75144, itself on `main` 4f67c05), so this branch carries the unmerged suits work: merge this one PR alone. Each increment typechecked, linted (no new problems), `npm run test:game`, built and loaded at 390×844 before push. Shots: `/workspace/shots-1116am/`.
+
+### Increment 1: capes on cloaked heroes, and an honest Closet
+
+- **Audit:** every Closet piece was checked against what the painted hero shows. Suit colourways, suit lines and the 5 capes and 5 marks show. Two cases said "on" but changed nothing: (1) any cape on a hero painted in their own cloak or long coat (arcane, veil, and the mind, storm and life-f suit B lines, 37 paintings incl. teens and skin tones); (2) every mask, glove and boot (no paintings yet; they need per-hero layers).
+- **Cloaked heroes wear the cape:** the bought cape now hangs behind the painted cloak as a wider mantle, centred on the cloak and at least 12% wider than its hem (measured per painting: new `cl`/`cr` fields in `heroAnchors.ts`), so its coloured edges, lining and hem show past the cloak, in the Closet, fights and everywhere the cutout appears. Same painted cape art, no drawn shapes. Switch: `CLOAK_CAPES` in `src/game/outfit.ts` (off = named only, as before).
+- **Honest UI for masks, hands and boots:** new pure `partShows(slot, id, heroKey, hasArt)` in `outfit.ts` says whether the painting really shows a piece (a layer painted for that figure, or a generic painted cape/mark the game can fit). Where it doesn't, the Closet's slot reads "Buffs only for now · painted masks for your hero are on the way", and the worn note says the buffs count and the mirror names it but the painting doesn't show it yet. The moment a per-hero layer (`cut-<hero>-part-<slot>-<kind>`) lands, the piece draws and the notes go away. (A code recolour of the painted boots was tried and dropped: it read as a block of dye, not boots.)
+- **Mirror:** the figure stands above the caption now, so feet (and boots, once painted) aren't hidden behind it.
+- **Tests:** +1 (`outfit.test.ts`: every piece either shows or is reported as buffs-only; per-figure layers; every cloaked painting has its hem measured and shows a cape).
+
+### Increment 2: your creator face on painted variants of the same portrait
+
+- **Painted variants, same face:** a life's own portrait now asks for a painted variant of the same person with its creator pick painted in: `pv-<id>-<scar|glasses|freckles>`, `pv-<id>-eyes-<colour>`, or both (`portraitVariantKeys` in `src/game/portraits.ts`, best first), and keeps the base portrait when none exists. A variant with the feature painted in replaces the soft code marks for that face. NPC faces never move (only a life's own pick is passed). Switch: `PORTRAIT_VARIANTS` in `PhotoFace.tsx`. Checked with a temporary stand-in variant that the swap happens (then removed). Paintings: `/workspace/img-requests-1116am.md` sections 2-4; importer `/workspace/pt1116am/import-portrait-variants.py`.
+- **Glasses tell the truth:** no teen or adult portrait is painted with glasses, so picking Glasses in the creator (which previews you at 16) changed nothing. The creator now says "Glasses show on painted faces that wear them. This face's painted pair is on the way, so it reads clear for now." (`featureShows`). The note disappears for faces that have a painted pair.
+- **Eye colour (off):** `Look.eyes` (optional; absent = as painted, never rolled, so NPCs and old saves are unchanged, no migration) and an Eyes pick in the creator (`EYE_NAMES`). It is behind `EYE_PICK` (off) and, even when on, appears only once a `pv-*-eyes-*` painting exists.
+- **Tests:** +3 (`facevariants.test.ts`: variant key order and skips, the glasses truth check, the optional eye colour).
+
+## 2026-11-16 (suits): the painted hero wears the Closet (`devbot/2026-11-16-suits`)
+
+Built on `main` (4f67c05, PR #8). Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game`, built and loaded at 390×844 before push.
+
+### Increment 1: the "it says it's on but nothing changes" bug
+
+- **Root cause:** since the painted art pass (2026-11-14) the Closet mirror, the duel stage, the "Your call" scene and the gift card all draw the painted cutout picked by power family, sex, age and the life's suit line (`stageArtKey(..., game.suit)`), and nothing read `game.wardrobe`. Buying or wearing a piece updated the save, the buffs and the "Wearing" chip, but only the retired paper doll (`Figure`, `ART_HEROES` off) ever drew it. The suit line itself (A/B) was fixed at birth with no way to pick it.
+- **Fix:** new `src/game/outfit.ts` turns the wardrobe into what a painting can show, and every painted drawing of your hero uses it (Closet, duel, event scene, gift card) through `HeroFigure` / `Cutout` in `heroArt.tsx`:
+  - **Suit line picker** in the Closet's Suit tab: your two painted costumes side by side, the worn one ringed in gold ("Wearing A/B"); tapping the other switches the painting everywhere (`suit-line|a|b`, free; hidden when there's no B painting or the suit is locked, like the male speedster's).
+  - **Colourways:** the worn Suit piece recolours the painted suit with an SVG filter (luminance-preserving colour blend on the darker cloth, a soft lift so black suits take it, glows and highlights keep their paint), masked off above the neck by per-painting anchors so face, hair and mask stay as painted. "As painted" (the old street jacket row) keeps the original colours. The piece's trim is the thin rim light.
+  - **Parts** (cape, mask, hands, boots, mark) map to painted overlay layers (`part-<slot>-<kind>`, or a layer painted for one figure, `cut-<hero>-part-<slot>-<kind>`), placed on per-painting anchors (`src/game/heroAnchors.ts`, derived from each cutout's alpha mask). They show as soon as their paintings exist; until then the mirror caption names everything you wear ("Suit line B · Second skin · Full cowl · Long cape") and the slot says the painting is on the way. No code-drawn capes.
+  - The mirror is taller (h-72) so the change reads at a glance.
+- **Switches:** `OUTFIT_ON`, `PART_LAYERS` in `outfit.ts`. No save change (`game.suit` already existed).
+- **Tests:** +6 (`outfit.test.ts`: the wardrobe drives the painting, gentler light colourways, part layers and anchors, the suit line action, anchors for every cutout, the skin-tone lookup).
+
+### Increment 2: your creator look on the painted characters
+
+- **Skin tone picks the painting:** every painted drawing of a life's hero (Closet, duel, event scene, gift card, Arena cards and the saved-lives art) now asks for that character's skin-tone painting first (`cut-mystery-<fam>-<sex>[-b][-teen]-s1..4`: light, medium, brown, dark), then the closest tone painted, then the original (`toneKeys` in `outfit.ts`; each existing painting's own tone is recorded in `heroAnchors.ts`). The paintings are on the image list; the lookup is live, so each one shows the moment it lands. The suit line still wins over tone (B in the closest tone before A in your exact tone).
+- **Face features on your portrait:** a life's own creator pick (never a random NPC roll, so nobody else's face moves) now prefers a portrait with it painted in (the freckled and spectacled portraits are tagged) and keeps painted glasses off faces that didn't pick them. Freckles and a healed cheek scar are laid on softly when the portrait doesn't have them (`FaceMarks` in `PhotoFace.tsx`, multiplied into the paint so they take the skin's own light; `FACE_MARKS` switch). Glasses and eye colour are painted-only (image list).
+- **Tests:** +1 (tone-suffixed keys keep their suit line; the portrait picker honours a life's face feature and leaves NPC picks alone).
+
+### Increment 3: the paintings land (skin tones, capes, marks)
+
+- **52 skin-tone repaints** of the adult suit-A heroes (`cut-mystery-<fam>-<sex>-s1..4`), cut out with the usual importer. Your creator skin now picks the matching painting in the Closet, fights, event scene, gift card and Arena; the original painting still stands for its own tone. Not imported: `arcane-f-s3` (not painted; brown falls back to medium) and `storm-m-s1` (the repaint came out chalk-white; light falls back to medium). B and teen lines still use their original paintings.
+- **Each repaint has its own anchors** (`heroAnchors.ts`), since repaints frame a little differently, and every row gained part-fit fields: shoulder line, shoulder centre and width, waist line, chest height and the cutout's aspect (`/workspace/pt1116suits/fit.py`; measured on the alpha mask when it reads as shoulders, else heroic proportions).
+- **10 painted parts:** capes (short, long, trench coat, banner, tattered wing) and marks (cloth badge, utility belt, champion buckle, fear brand, relic sash). `import-cutouts.py --keep-frame` cuts them out and trims them but keeps their own scale, and measures each cape's collar and shoulder band (`partFrames.ts`). Capes hang behind the hero with their measured shoulder band on the hero's shoulders (so the wide short cape sits like the others) and stop at the ankles; belt and buckle sit across the waist; badge and brand on the chest; the sash runs from shoulder to the opposite hip. Wearing a piece shows it on the painted hero in the Closet, fights and everywhere the cutout appears; taking it off removes it. Heroes painted in their own cloak or long coat (arcane, veil, mind B, storm B, life-f B) keep it, and the cape slot says so.
+- **Tests:** +1 (every repaint registered and anchored with its tone; the lookup picks repaints and falls back as above; every shop cape and mark has a measured painting; a worn cape and belt become the right layers).
+
+
+
 ## 2026-11-16 (pacing): every option up to 3 times a year, BitLife style (`devbot/2026-11-16-pacing`)
 
 Built on `devbot/2026-11-15-villain` (587ff47; itself on `main` b6ed50b), so merge the villain PR first or this one alone. Typechecked, linted (no new problems; the one error is the old `src/lib/app-data/client.server.ts` empty block), `npm run test:game` (365 pass), built and loaded at 390×844 before push.

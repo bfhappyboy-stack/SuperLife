@@ -797,6 +797,69 @@ export function roundsWon(m: ArenaMatch): [number, number] {
   return [m.results.filter((r) => r === 0).length, m.results.filter((r) => r === 1).length];
 }
 
+export type RoundStakesKey = "first" | "even" | "match-point" | "must-win" | "decider" | "final" | "pride";
+export interface RoundStakes {
+  key: RoundStakesKey;
+  /** Short caps tag under the round title on the round intro ("Match point"). */
+  label: string;
+  /** One plain line on what this round decides, from your side. */
+  line: string;
+  /** Colour family for the slam: gold when it favours you, red when you're on the edge, steel when even. */
+  tone: "gold" | "red" | "steel";
+}
+
+/**
+ * What the round about to start means for the match, from side 0's view (2026-11-20 night, ROUND_SLAM).
+ * Pure: reads only `round` and `results`. Best of three, so two wins take it.
+ */
+export function roundStakes(m: Pick<ArenaMatch, "round" | "results">): RoundStakes {
+  const w0 = m.results.filter((r) => r === 0).length;
+  const w1 = m.results.filter((r) => r === 1).length;
+  const need = Math.ceil(TEAM_SIZE / 2);
+  if (m.round <= 0) return { key: "first", label: "First blood", line: "Best of three. Draw first.", tone: "steel" };
+  if (w0 >= need || w1 >= need) return { key: "pride", label: "For pride", line: w0 >= need ? "The match is yours. Make it a sweep." : "The match is gone. Take one back.", tone: "steel" };
+  const last = m.round >= TEAM_SIZE - 1;
+  if (w0 === need - 1 && w1 === need - 1) return { key: "decider", label: "Decider", line: "Winner takes the match.", tone: "gold" };
+  if (w0 === need - 1) return { key: "match-point", label: "Match point", line: "Win this and the match is yours.", tone: "gold" };
+  if (w1 === need - 1) return { key: "must-win", label: "Must win", line: "Lose this and it's over.", tone: "red" };
+  if (last) return { key: "final", label: "Final round", line: "Last fighter in.", tone: "steel" };
+  return { key: "even", label: "All square", line: "Nobody's ahead yet.", tone: "steel" };
+}
+
+export type MatchVerdictKey = "flawless" | "sweep" | "comeback" | "held-on" | "won-points" | "won" | "swept" | "slipped" | "decider-lost" | "lost-points" | "lost";
+export interface MatchVerdict {
+  key: MatchVerdictKey;
+  /** Short caps tag on the results plate ("Comeback"). Fits the ROUND_SLAM plate (12 chars max). */
+  label: string;
+  /** One plain line on how the match went, from your side. */
+  line: string;
+  /** Colour family: gold for a win, red for a loss, steel when it came down to HP. */
+  tone: "gold" | "red" | "steel";
+}
+
+/**
+ * How a finished match went, from side 0's view (2026-11-21 pm, MATCH_VERDICT): the Arena results name the story of
+ * the match ("Clean sweep", "Comeback", "Slipped away") under the score. Pure: reads only `results` and `winner`.
+ */
+export function matchVerdict(m: Pick<ArenaMatch, "results" | "winner">): MatchVerdict {
+  const r = m.results;
+  const w0 = r.filter((x) => x === 0).length;
+  const w1 = r.filter((x) => x === 1).length;
+  const won = m.winner === 0;
+  if (won) {
+    if (w0 === w1) return { key: "won-points", label: "On points", line: "Level on rounds. Your team had more left.", tone: "steel" };
+    if (r[0] === 0 && r[1] === 0) return r[2] === 0 ? { key: "flawless", label: "Flawless", line: "Three rounds, three wins.", tone: "gold" } : { key: "sweep", label: "Clean sweep", line: "Won the first two. Never in doubt.", tone: "gold" };
+    if (r[0] === 1 && r[1] === 0 && r[2] === 0) return { key: "comeback", label: "Comeback", line: "Lost the opener, took the next two.", tone: "gold" };
+    if (r[0] === 0 && r[1] === 1 && r[2] === 0) return { key: "held-on", label: "Held on", line: "Pegged back, then won the decider.", tone: "gold" };
+    return { key: "won", label: "Match won", line: `Took it ${w0}-${w1}.`, tone: "gold" };
+  }
+  if (w0 === w1) return { key: "lost-points", label: "On points", line: "Level on rounds. They had more left.", tone: "steel" };
+  if (r[0] === 1 && r[1] === 1) return { key: "swept", label: "Swept", line: "Not a round taken. Redraft and go again.", tone: "red" };
+  if (r[0] === 0 && r[1] === 1 && r[2] === 1) return { key: "slipped", label: "Slipped away", line: "Took the opener, lost the next two.", tone: "red" };
+  if (r[0] === 1 && r[1] === 0 && r[2] === 1) return { key: "decider-lost", label: "Decider lost", line: "Fought back level, fell in the last round.", tone: "red" };
+  return { key: "lost", label: "Match lost", line: `Lost it ${w0}-${w1}.`, tone: "red" };
+}
+
 /** After a bout ends, record it and either start the next round or finish. */
 export function nextRound(m: ArenaMatch): ArenaMatch {
   if (m.stage !== "bout" || !m.bout?.done) return m;

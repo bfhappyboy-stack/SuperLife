@@ -1,5 +1,145 @@
 # SuperLife — Backlog
 
+## From the 2026-11-23 pm pass
+
+- **Done:** the Duel K.O. card's Continue is docked to the bottom of the card, always on screen with its margin, and the card opens at the K.O. title with a steel "More below" tab when it runs taller than the screen (`CONTINUE_DOCK`). Closes the 2026-11-23 am "Continue sits just below the fold on the tallest card" item.
+- **Next for juice:** the Arena match results and other tall overlays could use the same dock if any of them overflow at 390×844 (not seen yet); the in-fight gimmick strip (the "Back Breaker · Live" bar above the moves) is still a glass pill; a plate could name non-crime "Your call" moments too (family, rivals) if wanted.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring fallback in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
+## From the 2026-11-23 am pass
+
+- **Done:** the "Next time, <gimmick>" hint under a lost boss fight is a red steel plate: red NEXT TIME tag, the gimmick's lit icon, its name in metal, the tell muted and the counter bold behind a red rule (`NEXT_HINT_PLATE`). Closes the 2026-11-22 night "plain glass hint card" item. The best-hit callout no longer squashes when the K.O. card scrolls.
+- **Next for juice:** a plate could name non-crime "Your call" moments too (family, rivals) if wanted; the in-fight gimmick strip (the "Back Breaker · Live" bar above the moves) is still a glass pill and could take the same red steel edge once live.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring fallback in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
+## From the 2026-11-22 night pass
+
+- **Done:** the Duel K.O. card's Rewards are steel chips edged in their stat colours, losses in red, Move XP in gold (`REWARD_CHIPS`). Closes the 2026-11-22 pm "Rewards chips are still flat purple pills" item.
+- **Next for juice:** the "Next time, <gimmick>" hint card under a lost boss fight is still a plain glass card (could take a red steel plate); a plate could name non-crime "Your call" moments too (family, rivals) if wanted.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring fallback in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
+## From the 2026-11-22 pm pass
+
+- **Done:** the Duel K.O. card's best hit is a steel callout with a gold number and its share of your damage; the Arena MVP card is gold-rimmed with a slanted gold HP bar (`FIGHT_CALLOUT`). Closes both remaining 2026-11-22 am "next for juice" items about the MVP line and the best-hit line.
+- **Next for juice:** the K.O. card's Rewards chips are still flat purple pills (could become small steel chips with the stat's colour); a plate could name non-crime "Your call" moments too (family, rivals) if wanted.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring fallback in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
+## From the 2026-11-22 am pass
+
+- **Done:** the Duel K.O. card's Dealt / Taken / Turns tiles take metal digits that count up, with the leading side lit; Arena round rows show two HP bars instead of "0% HP left vs 41%" (`FIGHT_TALLY`). Closes both 2026-11-21 night "next for juice" items about tiles and round rows.
+- **Next for juice:** a plate could name non-crime "Your call" moments too (family, rivals) if wanted; the Arena MVP card's "Won round 2 with 62% HP left." could take the same gold bar; the "Best hit" line on the K.O. card could become a small metal callout.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
+## From the 2026-11-21 night pass
+
+- **Done:** the stakes plate on "Your call" crime scenes ("Rooftop standoff", "Mugging", "Dirty money") and on the Duel K.O. card ("Flawless", "By a whisker", "So close") (`STAKE_PLATES`). Closes the 2026-11-21 pm "same plate on Your call and the Duel K.O." item.
+- **Next for juice:** the Arena round rows' "0% HP left vs 41%" could become two thin HP bars; the Duel K.O. card's Dealt/Taken/Turns tiles could take the metal digits; a plate could name non-crime "Your call" moments too (family, rivals) if wanted.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
+## From the 2026-11-21 pm pass
+
+- **Done:** Arena results show a metal score, a verdict plate ("Clean sweep", "Comeback", "Slipped away"...) and lit W/L round medals (`MATCH_VERDICT`). Closes the "stakes plate on Arena results" half of the 2026-11-20 night item.
+- **Next for juice:** the same plate on the duel's "Your call" crime scenes (e.g. "Repeat offender", "Armed"), and on the Duel K.O. card; the round rows' "0% HP left vs 41%" could become two thin HP bars.
+- **Next for art:** remaining flat tinted circles (the "Start a new life" plus on Lives, the mentor ring in Power Lab); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** the unused `GiftStep` (remove or wire).
+
+## From the 2026-11-21 am pass
+
+- **Done:** the last flat badges (Pattern pads, Braid book lock, Arena lobby, case-file fallback, classic gift tile) wear the lit emblem; lit Pattern pads flare (`LAST_EMBLEM`). Closes the 2026-11-19 pm "last raw `ico-tile` spans" item; `rg "ico-tile" src` now only finds the flag-off fallbacks.
+- **Merged here:** the 2026-11-19 pm `TILE_EMBLEM` branch, so the "push it?" question is settled.
+- **Next for art/juice:** remaining flat tinted circles (the "Start a new life" plus on Lives, the Arena results trophy, the mentor ring in Power Lab) could take the same emblem; the stakes plate on "Your call" crime scenes and Arena results (results done 2026-11-21 pm); a real painted kid set (7-12) would replace the face rings.
+- **Dead path:** `GiftStep` in `CreateScreen.tsx` only shows for a mode the menus no longer make; remove it or wire it, owner's call.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+
+## From the 2026-11-20 night pass
+
+- **Done:** Arena round intros slam in a metal "ROUND n" title with a shock ring, impact flash and camera kick, and name the stakes ("Match point", "Must win", "Decider", "For pride") (`ROUND_SLAM`). Closes the 2026-11-17 am "Arena round transitions" item.
+- **Not in this branch:** the 2026-11-19 pm `TILE_EMBLEM` commit (08bb3c8) is still local and unpushed, waiting on the owner.
+- **Next for juice:** the same stakes plate could sit on the duel's "Your call" crime scenes and on the Arena results ("Swept 2-0", "Comeback"); a low drum/sting `sfx` on the slam if the sound pass happens.
+- **Next for art:** Power Lab and the create screen still have flat `ico-tile`s (after `TILE_EMBLEM` lands); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`? Push the 2026-11-19 pm `TILE_EMBLEM` commit?
+
+## From the 2026-11-19 pm pass
+
+- **Done:** chapter strip, gift card, Market and Money Hub tiles wear the lit emblem (`TILE_EMBLEM`).
+- **Next for art:** the last raw `ico-tile` spans (Power Lab `PowerLab.tsx`, the create screen element tile, `MiniKit`, the minigame result tile); a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
+## From the 2026-11-19 am pass
+
+- **Done:** activity rows (`ActionRow`) wear the lit emblem instead of the flat `ico-tile` (`ACTION_EMBLEM`).
+- **Next for art:** the remaining flat `ico-tile`s: the chapter card tile (Today, "Paid in Daylight"), the gift card, Market/MoneyHub rows, Power Lab and the create screen; pass `lit` to `IconTile` or reuse `.mini-emblem`. A real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
+## From the 2026-11-18 night pass
+
+- **Done:** minigame headers wear a lit emblem (dark beveled badge, rim light, inner ring, glowing icon) instead of the flat icon tile (`MINI_EMBLEM`).
+- **Next for art:** the same emblem could replace the other flat `ico-tile`s (menus, activity rows) for one consistent badge style; a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
+## From the 2026-11-18 pm pass
+
+- **Done:** the chase wrecks (barrier, crashed car, girder pile) and sparks (energy shards) are lit set pieces with shadows and motion streaks, and the road has grain and speed streaks (`CHASE_PROPS`).
+- **Next for art:** the minigame header icon tile (`MiniHead`, the flat `ico-tile` with a line icon) could become a refined lit badge; a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
+## From the 2026-11-18 am pass
+
+- **Done:** the chase runner is your painted figure (cutout, face ring or legend ring) instead of the drawn token (`CHASE_RUNNER`).
+- **Next for art:** the chase wrecks and sparks are still flat striped blocks and glowing dots (painted props, e.g. a crashed car or a barrier, would finish it); kids' minigame heads (`MiniHead`) use an icon tile; a real painted kid set (7-12) would replace the face rings.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, `-1116pm.md`, `-1117night.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
+## From the 2026-11-17 night pass
+
+- **Done:** Cases file rows show the villain's painted face (`CASE_FACES`); press reporters show painted faces (`PRESS_FACES`).
+- **Next for art:** the chase runner (a drawn orange token on a drawn road) is still the last drawn minigame piece; named case-villain portraits (`/workspace/img-requests-1117night.md`, 10 images, after the 1116am/pm lists).
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
+## From the 2026-11-17 pm pass
+
+- **Done:** the skill minigames stand on a painted stage with you in it (`MINI_STAGE`); rescue windows show painted people (`RESCUE_FACES`).
+- **Next for art:** the chase runner is still a drawn orange token on a drawn road (a painted top-down or back view of you would fix it); the press reporter's avatar is a letter tile (a painted reporter face from the adult sheet would do); the Cases file rows show an icon tile where the villain's painted portrait could stand.
+- **Images still come first:** `/workspace/img-requests-1116am.md`, then `-1116pm.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE`?
+
+## From the 2026-11-17 am pass
+
+- **Done:** Arena fight cards get the hit-stop, the white impact frame and K.O. dust, and the K.O. card waits a beat so the fall is seen (`FX_HITSTOP`).
+- **Next for juice:** Arena round transitions (round 2/3 slam-in).
+- **Images still come first:** `/workspace/img-requests-1116am.md`, then `-1116pm.md`. No new image requests this pass.
+- **Still for the owner:** keep `TONE_PICKS_LINE` (a life that never picked a suit line wears the line painted in its skin tone)?
+
+## From the 2026-11-16 night pass
+
+- **Done:** kids 7-12, lives with no power family and online Arena opponents stand as their painted portrait instead of the paper doll or the drawn silhouette (`PORTRAIT_STANDEES`); hit-stop on big hits and K.O. dust (`FX_HITSTOP`).
+- **Still drawn with art on:** the creator and the Closet only fall back to the paper doll with `PAINTED_FACES` / `ART_HEROES` off. The foe-side doll in duels is unreachable with art on (every villain has a street cutout, every hero foe a suit).
+- **Next for art:** a real painted kid set (7-12, full body in street clothes) would replace the portrait cards; per-hero mask/glove/boot layers (still "buffs only"). The image lists in `/workspace/img-requests-1116am.md` and `-1116pm.md` still come first.
+
+## From the 2026-11-16 pm pass
+
+- **Images, in order:** storm-m-s1 redo, arcane-f-s3, glasses variants (`/workspace/img-requests-1116am.md` sections 1-2); then 54 teen suit-A skin-tone repaints and the 102 suit-B ones (`/workspace/img-requests-1116pm.md`). All wire in with no code change.
+- **Decision for the owner:** a life that never picked a suit line now wears the line painted in its skin tone (`TONE_PICKS_LINE`). Keep that, or always keep the rolled line and only show the "not painted in your tone yet" note?
+- Still open from the am pass: per-hero mask, glove and boot layers (Closet says "buffs only" until then), eye-colour variants behind `EYE_PICK`.
+
 ## From the 2026-11-15 night pass
 
 - **Done:** the Closet caption names the suit line on B teens; "Your call" event screens get a painted scene (you, plus whoever the event names).

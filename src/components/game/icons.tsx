@@ -112,7 +112,34 @@ export function actionIcon(id: string, section: string): LucideIcon {
   return Star;
 }
 
-export function IconTile({ color, size = "size-10", children, className = "" }: { color: string; size?: string; children: ReactNode; className?: string }) {
+/**
+ * Activity menu rows wear the lit emblem (2026-11-19 am): the same dark beveled badge as the minigame headers
+ * (rim light in the group's colour, inner ring, top sheen, glow, embossed icon) instead of the flat glossy tile.
+ * Non-character graphic. Off = the flat ico-tile.
+ */
+export const ACTION_EMBLEM = true;
+
+/**
+ * The remaining flat icon tiles (Market and Money Hub rows, the gift card, the chapter strip) wear the same lit emblem
+ * (2026-11-19 pm) so every badge in the game shares one style. Non-character graphic. Off = the flat ico-tile.
+ */
+export const TILE_EMBLEM = true;
+
+/**
+ * The last flat badges wear the lit emblem too (2026-11-21 am): the create screen's gift tile, the Power Lab's braid
+ * book lock and case-file fallback, the Pattern minigame's pads (they flare when lit) and the Arena lobby's
+ * "Vs computer" / "Vs a friend online" badges. Non-character graphic. Off = the flat tiles as they were.
+ */
+export const LAST_EMBLEM = true;
+
+export function IconTile({ color, size = "size-10", children, className = "", lit = false, hot = false }: { color: string; size?: string; children: ReactNode; className?: string; lit?: boolean; hot?: boolean }) {
+  if (lit) {
+    return (
+      <span className={`mini-emblem act-emblem ${hot ? "is-hot" : ""} ${size} ${className}`} style={{ "--tile": color } as CSSProperties}>
+        <span className="mini-emblem-core">{children}</span>
+      </span>
+    );
+  }
   return (
     <span className={`ico-tile ${size} ${className}`} style={{ "--tile": color } as CSSProperties}>
       {children}
